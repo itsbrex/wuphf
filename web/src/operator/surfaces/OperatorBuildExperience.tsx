@@ -9,17 +9,25 @@
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 
+import type { DemoCapture } from "../apps/demoCapture";
 import { AppBuilderChat } from "./AppBuilderChat";
 import { OperatorAppDetail } from "./OperatorAppDetail";
 
 interface OperatorBuildExperienceProps {
   onClose: () => void;
   onFinish: (appId: string) => void;
+  /**
+   * A "Demo workflow to Nex" call's capture: the build starts from it at once
+   * (no describe step), and the captured routine + tools get set up on the new
+   * agent as it builds.
+   */
+  demo?: DemoCapture;
 }
 
 export function OperatorBuildExperience({
   onClose,
   onFinish,
+  demo,
 }: OperatorBuildExperienceProps) {
   // Set the instant the build scaffolds; flips the layout from a centered
   // describe chat to "live preview + docked chat".
@@ -44,7 +52,7 @@ export function OperatorBuildExperience({
           <div className="opr-ask-bar">
             <span className="opr-ask-bar-title">
               <Sparkles size={13} strokeWidth={2} aria-hidden={true} />
-              Building your app
+              Building your agent
             </span>
             <button
               type="button"
@@ -60,6 +68,7 @@ export function OperatorBuildExperience({
         <div className={live ? "opr-ask-body" : "opr-build-exp-chat-full"}>
           <AppBuilderChat
             panelMode={live}
+            demo={demo}
             onClose={onClose}
             onBuildingApp={setBuildingAppId}
             onFinish={onFinish}

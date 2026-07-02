@@ -11,6 +11,8 @@ import { ArrowRight, Check, Send, X } from "lucide-react";
 
 import { type CustomApp, listApps, submitAppEdit } from "../../api/apps";
 import { AppActivity } from "../../components/apps/AppActivity";
+import { tryCreateRoutine } from "../agents/agentStateClient";
+import { capturePromptSeed, type DemoCapture } from "../apps/demoCapture";
 import {
   appBuildState,
   deriveAppName,
@@ -18,6 +20,7 @@ import {
   useBuildApp,
 } from "../apps/useOperatorApps";
 import { Eyebrow } from "../components/primitives";
+import { buildToolFromChat } from "../tools/toolAgentClient";
 
 const BUILD_POLL_MS = 3000;
 // How long a terminal-on-first-sight candidate must STAY terminal before we
@@ -66,6 +69,13 @@ interface AppBuilderChatProps {
    * Ask-AI bar provides the title + close/resize controls instead).
    */
   panelMode?: boolean;
+  /**
+   * A "Demo workflow to Nex" call's capture. The build starts from it at once
+   * (the full capture is the build description; the goal is what the transcript
+   * shows), and the captured routine + tools are created on the new agent the
+   * moment its id resolves.
+   */
+  demo?: DemoCapture;
 }
 
 export function AppBuilderChat({
@@ -74,6 +84,7 @@ export function AppBuilderChat({
   onBuildingApp,
   editApp,
   panelMode,
+  demo,
 }: AppBuilderChatProps) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [draft, setDraft] = useState("");
@@ -88,7 +99,9 @@ export function AppBuilderChat({
         from: "ai",
         body: editApp
           ? `Tell me what to change about “${editApp.name}”. I will apply it and publish a new version.`
-          : "Tell me what this agent should do. I will build it, and it will appear under Agents the moment it is ready.",
+          : demo
+            ? "I caught everything on the call — building your agent from the demo now."
+            : "Tell me what this agent should do. I will build it, and it will appear under Agents the moment it is ready.",
       },
     ];
   });
@@ -159,10 +172,13 @@ export function AppBuilderChat({
     setBuildingAppId(candidate.id);
 
     // Tell the host the app exists the moment it is resolved (even building), so
-    // it can show the live preview beside the chat. New builds only.
+    // it can show the live preview beside the chat. New builds only. A demo-call
+    // build also sets up the captured routine + tools now — both are keyed by
+    // the agent id and do not need the app published.
     if (!refineId && reportedBuildingRef.current !== candidate.id) {
       reportedBuildingRef.current = candidate.id;
       onBuildingApp?.(candidate.id);
+      void setupDemoExtras(candidate.id);
     }
 
     const state = appBuildState(candidate);
@@ -222,9 +238,84 @@ export function AppBuilderChat({
     if (id) appChatHistory.set(id, messages);
   }, [messages, editApp, newAppId]);
 
-  async function send(text?: string): Promise<void> {
+  // A demo-call handoff starts the build at once: the FULL capture is the build
+  // description, the narrated goal is what the transcript shows. One-shot.
+  const demoStartedRef = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fire the demo start once
+  useEffect(() => {
+    if (!demo || editApp || demoStartedRef.current) return;
+    demoStartedRef.current = true;
+    void send(capturePromptSeed(demo), { display: demo.goal });
+  }, []);
+
+  // ── Demo-call extras: the captured routine + tools, created on the new agent ──
+
+  // Fires once per chat, the moment the new agent's id resolves. Failures are
+  // reported honestly in the chat but never block the app build itself.
+  const demoSetupRef = useRef(false);
+  function say(body: string) {
+    setMessages((prev) => [
+      ...prev,
+      { id: `ai-${seqRef.current++}`, from: "ai", body },
+    ]);
+  }
+  async function setupDemoExtras(agentId: string): Promise<void> {
+    if (!demo || demoSetupRef.current) return;
+    const routine = demo.routine;
+    const tools = demo.tools;
+    if (!routine && tools.length === 0) return;
+    demoSetupRef.current = true;
+
+    const planned = [
+      routine ? `the “${routine.name}” routine` : null,
+      tools.length > 0
+        ? `${tools.length} tool${tools.length === 1 ? "" : "s"} (${tools
+            .map((t) => t.name)
+            .join(", ")})`
+        : null,
+    ].filter(Boolean);
+    say(`While it builds, I am also setting up ${planned.join(" and ")}.`);
+
+    const done: string[] = [];
+    const failed: string[] = [];
+    if (routine) {
+      const created = await tryCreateRoutine({
+        agent: agentId,
+        name: routine.name,
+        prompt: routine.prompt,
+        schedule: routine.schedule,
+      });
+      (created ? done : failed).push(`“${routine.name}” (${routine.schedule})`);
+    }
+    for (const tool of tools) {
+      try {
+        await buildToolFromChat(`${tool.name} — ${tool.purpose}`, agentId);
+        done.push(tool.name);
+      } catch {
+        failed.push(tool.name);
+      }
+    }
+    if (done.length > 0) {
+      say(
+        `In place: ${done.join(", ")}. You will find them on the agent's Routines and Tools tabs.`,
+      );
+    }
+    if (failed.length > 0) {
+      say(
+        `I could not set up ${failed.join(", ")} — the workspace may be offline. Ask me again from the agent's chat.`,
+      );
+    }
+  }
+
+  async function send(
+    text?: string,
+    opts?: { display?: string },
+  ): Promise<void> {
     const description = (text ?? draft).trim();
     if (!description || phase === "building") return;
+    // What the transcript shows as the operator's message. A demo-call start
+    // shows the narrated goal, not the full multi-line capture it builds from.
+    const display = opts?.display?.trim() || description;
     setDraft("");
     // Once this chat has produced an app (or it opened to edit one), every
     // follow-up REFINES that app instead of starting a brand-new build — so a
@@ -243,7 +334,7 @@ export function AppBuilderChat({
     setAppName(name);
     setMessages((prev) => [
       ...prev,
-      { id: `you-${seqRef.current++}`, from: "you", body: description },
+      { id: `you-${seqRef.current++}`, from: "you", body: display },
       {
         id: `ai-${seqRef.current++}`,
         from: "ai",

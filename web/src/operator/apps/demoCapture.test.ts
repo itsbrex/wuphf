@@ -163,3 +163,62 @@ describe("demoCaptureFromDraft (real-call converter)", () => {
     expect(capture.transcript).toHaveLength(1);
   });
 });
+
+describe("demo intent (kind / routine / tools)", () => {
+  it("coerces the drafted kind, routine, and tools with safe defaults", () => {
+    const capture = demoCaptureFromDraft(
+      {
+        goal: "Recap the pipeline every Monday.",
+        kind: "ROUTINE",
+        routine: { prompt: "Summarize last week's pipeline." },
+        tools: [
+          { name: "summarizePipeline", purpose: "Read deals and recap moves." },
+          { name: "", purpose: "dropped — no name" },
+        ],
+      },
+      { mode: "build", transcript: [] },
+    );
+    expect(capture.kind).toBe("routine");
+    // Name and schedule default; the prompt is what makes a routine runnable.
+    expect(capture.routine).toEqual({
+      name: "Scheduled routine",
+      prompt: "Summarize last week's pipeline.",
+      schedule: "daily",
+    });
+    expect(capture.tools).toEqual([
+      { name: "summarizePipeline", purpose: "Read deals and recap moves." },
+    ]);
+  });
+
+  it("defaults to an app build and drops a promptless routine", () => {
+    const capture = demoCaptureFromDraft(
+      { goal: "A screen to review refunds.", routine: { name: "no prompt" } },
+      { mode: "build", transcript: [] },
+    );
+    expect(capture.kind).toBe("app");
+    expect(capture.routine).toBeUndefined();
+    expect(capture.tools).toEqual([]);
+  });
+
+  it("seeds the build with the intent, the routine, and the needed tools", () => {
+    const capture = demoCaptureFromDraft(
+      {
+        goal: "Recap the pipeline every Monday.",
+        kind: "both",
+        routine: {
+          name: "Monday recap",
+          prompt: "Summarize last week's pipeline.",
+          schedule: "0 9 * * 1",
+        },
+        tools: [
+          { name: "summarizePipeline", purpose: "Read deals and recap moves." },
+        ],
+      },
+      { mode: "build", transcript: [] },
+    );
+    const seed = capturePromptSeed(capture);
+    expect(seed).toMatch(/What to build: .*BOTH/);
+    expect(seed).toContain('"Monday recap" — runs 0 9 * * 1');
+    expect(seed).toContain("summarizePipeline (Read deals and recap moves.)");
+  });
+});

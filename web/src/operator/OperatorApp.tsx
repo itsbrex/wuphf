@@ -10,7 +10,7 @@ import { useState } from "react";
 import "../styles/operator-shell.css";
 
 import { useAgentNames } from "./agents/agentNames";
-import { capturePromptSeed } from "./apps/demoCapture";
+import { capturePromptSeed, type DemoCapture } from "./apps/demoCapture";
 import {
   appBuildState,
   isRealAppId,
@@ -75,9 +75,11 @@ export function OperatorApp() {
   // working on the demonstrated change.
   const [detailNonce, setDetailNonce] = useState(0);
   // Seeds handed to the build engine by a "Demo workflow to Nex" call so the AI
-  // starts working from the captured context: buildSeed feeds a fresh workflow
-  // build; demoSeed feeds the chat scoped to the tool being modified.
+  // starts working from the captured context: demoBuild feeds a fresh AGENT
+  // build (the real app-builder, plus the captured routine/tools); demoSeed
+  // feeds the chat scoped to the tool being modified.
   const [buildSeed, setBuildSeed] = useState<string | null>(null);
+  const [demoBuild, setDemoBuild] = useState<DemoCapture | null>(null);
   const [demoSeed, setDemoSeed] = useState<string | null>(null);
 
   // The sidebar's collapsible Agents rail: every agent (real + mock), renames
@@ -105,6 +107,7 @@ export function OperatorApp() {
     setBuiltDraft(null);
     setOpenOnWorkflowTab(false);
     setBuildSeed(null);
+    setDemoBuild(null);
     setDemoSeed(null);
   }
 
@@ -201,6 +204,7 @@ export function OperatorApp() {
       <main className="opr-main">
         {appBuilding ? (
           <OperatorBuildExperience
+            demo={demoBuild ?? undefined}
             onClose={() => setAppBuilding(false)}
             onFinish={finishApp}
           />
@@ -236,8 +240,9 @@ export function OperatorApp() {
                 onBuild={(capture) => {
                   // The call captured everything; hand it to the AI, which starts
                   // working at once. A modify call reopens the tool with its chat
-                  // already reworking the demonstrated change; a build call opens the
-                  // workflow builder, already assembling the new tool.
+                  // already reworking the demonstrated change; a build call opens
+                  // the REAL agent build (the app-builder engine), which also sets
+                  // up the captured routine and tools on the new agent.
                   const seed = capturePromptSeed(capture);
                   resetSubState();
                   setCall(null);
@@ -247,8 +252,8 @@ export function OperatorApp() {
                     setSurface("tools");
                     setDetailNonce((n) => n + 1);
                   } else {
-                    setBuildSeed(seed);
-                    setBuilding(true);
+                    setDemoBuild(capture);
+                    setAppBuilding(true);
                     setSurface("tools");
                   }
                 }}

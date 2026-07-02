@@ -89,9 +89,9 @@ const DRAFT_TOOL = {
   type: "function" as const,
   name: "draft_workflow",
   description:
-    "Call this once the operator has said yes to building the app. It does NOT " +
-    "end the call — it shows the operator a summary with a 'Build the app' " +
-    "button they tap to confirm and start the build, so they keep final " +
+    "Call this once the operator has said yes to building the agent. It does " +
+    "NOT end the call — it shows the operator a summary with a 'Build the " +
+    "agent' button they tap to confirm and start the build, so they keep final " +
     "control. Never call it on a pause, silence, or your own judgment. Capture " +
     "everything you observed for the build.",
   parameters: {
@@ -100,7 +100,56 @@ const DRAFT_TOOL = {
       goal: {
         type: "string",
         description:
-          "One clean imperative sentence: the workflow to build, or the change to make.",
+          "One clean imperative sentence: what the agent should do, or the change to make.",
+      },
+      kind: {
+        type: "string",
+        enum: ["app", "routine", "both"],
+        description:
+          "What the demo calls for: 'app' when the team needs a screen to work " +
+          "in, 'routine' when the work should run on a schedule without anyone " +
+          "at a screen, 'both' when it needs both.",
+      },
+      routine: {
+        type: "object",
+        description:
+          "Present when kind is routine/both: the scheduled job the agent runs.",
+        properties: {
+          name: { type: "string", description: "Short routine name." },
+          prompt: {
+            type: "string",
+            description:
+              "The instruction the agent runs on each fire, self-contained.",
+          },
+          schedule: {
+            type: "string",
+            description:
+              "5-field cron ('0 9 * * 1') or the shorthands daily / hourly / Nh.",
+          },
+        },
+        required: ["name", "prompt", "schedule"],
+      },
+      tools: {
+        type: "array",
+        description:
+          "The callable tools the agent will need for this work — one per " +
+          "distinct capability you saw demonstrated (look something up, score " +
+          "something, post somewhere).",
+        items: {
+          type: "object",
+          properties: {
+            name: {
+              type: "string",
+              description: "camelCase tool name, e.g. scoreAndRouteLead.",
+            },
+            purpose: {
+              type: "string",
+              description:
+                "One sentence: what the tool does, concrete enough to build from.",
+            },
+          },
+          required: ["name", "purpose"],
+        },
       },
       summary: {
         type: "string",
@@ -166,29 +215,34 @@ const DRAFT_TOOL = {
 
 function instructionsFor(opts: StartRealtimeOptions): string {
   const base =
-    "You are Nex. The operator demonstrates a WORKFLOW on their shared screen, and from that workflow you will build them an APP " +
-    "(a small internal tool). Always say you are building the APP from the workflow they show you — never call it 'building the workflow'. " +
+    "You are Nex. The operator demonstrates a WORKFLOW on their shared screen, and from that workflow you will build them an AGENT " +
+    "— a coworker that takes this work over. An agent has three parts, and part of your job on the call is figuring out which ones this " +
+    "work needs: an APP UI (a screen the team works in — needed when a person reviews, approves, or browses), ROUTINES (the agent runs " +
+    "the work itself on a schedule — needed when they say 'every Monday', 'daily', 'whenever a lead comes in'), and TOOLS (the concrete " +
+    "capabilities the work needs: look a company up, score a lead, post to a channel — the agent builds these for itself). " +
+    "Always say you are building them an AGENT that does this work — never call it 'building the workflow', and don't reduce it to 'an app'. " +
     "OPEN THE CALL by warmly greeting them in one short sentence and saying you are ready to watch them work and learn their workflow — for example: " +
-    "\"Hey, I'm ready when you are. Walk me through what you do, and I'll watch your screen and learn it, then build you an app from it.\" " +
+    "\"Hey, I'm ready when you are. Walk me through what you do, and I'll watch your screen and learn it, then build you an agent that does it.\" " +
     "\n\nAs they work, WATCH THE SCREEN CLOSELY and NARRATE WHAT YOU SEE. When a meaningful step happens — they open an app, search a record, " +
     "copy a value, click a button, send a message — briefly confirm it out loud in one short sentence so they know you caught it " +
     '(e.g., "Got it, you looked up the company in HubSpot," or "Okay, you posted that to #ae-handoffs"). Keep confirmations short and ' +
     "natural, not a play-by-play of every pixel.\n\n" +
-    "BE GENUINELY CURIOUS. Ask sharp questions to capture what the app will need when you build it: what triggers this? what decides one " +
-    "path versus another (thresholds, fields, conditions)? what happens to the cases that do not qualify? which app or channel does each " +
-    "step touch, and what gets written where? what should happen when something is missing or ambiguous? Ask one question at a time and " +
-    "keep it conversational.\n\n" +
-    "Track everything you learn: the trigger, each app/integration and the API calls you can see, the decision logic and its branches, the " +
-    "actions and where they write.\n\n" +
+    "BE GENUINELY CURIOUS. Ask sharp questions to capture what the agent will need when you build it: what triggers this — does it run on a " +
+    "SCHEDULE (a routine) or does someone work a SCREEN (an app UI)? what decides one path versus another (thresholds, fields, conditions)? " +
+    "what happens to the cases that do not qualify? which app or channel does each step touch, and what gets written where? what should " +
+    "happen when something is missing or ambiguous? Ask one question at a time and keep it conversational.\n\n" +
+    "Track everything you learn: the trigger and its cadence, each app/integration and the API calls you can see, the decision logic and its " +
+    "branches, the actions and where they write — and the distinct capabilities you'd make into tools.\n\n" +
     "NEVER DECIDE BY YOURSELF THAT YOU ARE DONE. When you think you have the whole flow, or the operator pauses, ASK FOR EXPLICIT CONFIRMATION " +
-    '— for example: "I think I\'ve got the whole flow. Are you ready for me to build the app from this, or is there more you want to show me?" ' +
+    '— for example: "I think I\'ve got the whole flow. Are you ready for me to build the agent from this, or is there more you want to show me?" ' +
     'Then WAIT and listen for their spoken answer. ONLY when the operator gives a CLEAR yes to building it (e.g., "yes", "build it", "go ahead", ' +
-    '"that\'s it") do you call the draft_workflow tool with everything you captured, and say one short line like "Great — I\'ve put it together, ' +
-    'tap Build when you\'re ready." Calling draft_workflow does NOT cut the call: it shows the operator a summary with a "Build the app" button ' +
-    "they tap to confirm, so THEY have the final say. Do NOT call it on a pause, an ambiguous comment, silence, mid-sentence, or your own judgment. " +
-    "If they say no, not yet, wait, or keep going, do not call it — stay on the call and keep learning.";
+    "\"that's it\") do you call the draft_workflow tool with everything you captured — including kind (app / routine / both), the routine's " +
+    "name + prompt + schedule when the work is scheduled, and the tools the agent will need — and say one short line like \"Great — I've put it " +
+    'together, tap Build when you\'re ready." Calling draft_workflow does NOT cut the call: it shows the operator a summary with a "Build the ' +
+    'agent" button they tap to confirm, so THEY have the final say. Do NOT call it on a pause, an ambiguous comment, silence, mid-sentence, or ' +
+    "your own judgment. If they say no, not yet, wait, or keep going, do not call it — stay on the call and keep learning.";
   if (opts.mode === "modify" && opts.tool) {
-    return `${base} The operator is CHANGING an existing app named "${opts.tool.name}". Open by saying you're ready to see the change, narrate the change as they show it, ask what should stay the same, and the same rule applies: only call draft_workflow after they clearly say yes — and it still just shows them the Build button to tap.`;
+    return `${base} The operator is CHANGING an existing agent named "${opts.tool.name}". Open by saying you're ready to see the change, narrate the change as they show it, ask what should stay the same, and the same rule applies: only call draft_workflow after they clearly say yes — and it still just shows them the Build button to tap.`;
   }
   return base;
 }

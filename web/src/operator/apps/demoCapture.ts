@@ -60,11 +60,36 @@ export interface DemoCaptureLine {
   text: string;
 }
 
+// What the demonstrated work calls for: an app UI the team works in, a
+// scheduled routine the agent runs itself, or both.
+export type DemoKind = "app" | "routine" | "both";
+
+// A routine the call captured: the scheduled job the built agent should run.
+export interface CapturedRoutine {
+  name: string;
+  prompt: string;
+  /** Cron expression or broker shorthand (daily, hourly, Nh, "0 9 * * 1"). */
+  schedule: string;
+}
+
+// A callable tool the call identified the agent will need.
+export interface CapturedTool {
+  name: string;
+  purpose: string;
+}
+
 export interface DemoCapture {
   mode: "build" | "modify";
   // Present in modify mode: the tool the change was demonstrated on.
   toolId?: string;
   toolName?: string;
+  // What to build from the demo: an app UI, a routine, or both. The agent
+  // always gets built; this decides what gets set up on it.
+  kind: DemoKind;
+  // Present when kind is routine/both: the scheduled job to create.
+  routine?: CapturedRoutine;
+  // The tools the agent will need for this work (created after the build).
+  tools: CapturedTool[];
   // The narrated goal, as a clean instruction the build engine can plan from.
   goal: string;
   // The AI's reflect-back at the end of the call (the drafted tool or change).
@@ -185,6 +210,8 @@ export function assembleDemoCapture(args: {
       mode,
       toolId: tool.id,
       toolName: tool.name,
+      kind: "app",
+      tools: [],
       goal:
         "When a lead scores below 40, archive it instead of adding it to the " +
         "nurture sequence. Leave every other branch unchanged.",
@@ -219,6 +246,18 @@ export function assembleDemoCapture(args: {
 
   return {
     mode: "build",
+    kind: "app",
+    tools: [
+      {
+        name: "scoreAndRouteLead",
+        purpose:
+          "Look the company up in HubSpot, score fit 0-100 from size and industry, and route 70+ to an AE.",
+      },
+      {
+        name: "postHandoffToSlack",
+        purpose: "Post the lead, score, and reason to #ae-handoffs.",
+      },
+    ],
     goal: BUILD_GOAL,
     summary,
     transcript,
@@ -239,6 +278,27 @@ export function capturePromptSeed(capture: DemoCapture): string {
 
   if (capture.summary) {
     lines.push("", `What Nex drafted on the call: ${capture.summary}`);
+  }
+
+  // What the demo calls for, so the build plans an agent, not just a screen.
+  const kindLine =
+    capture.kind === "routine"
+      ? "This work runs on a SCHEDULE (a routine) — the agent does it itself; the app UI is for reviewing outcomes."
+      : capture.kind === "both"
+        ? "This work needs BOTH: an app UI the team works in AND a scheduled routine the agent runs itself."
+        : "This work needs an APP UI the team works in.";
+  lines.push("", `What to build: ${kindLine}`);
+  if (capture.routine) {
+    lines.push(
+      `Routine captured on the call: "${capture.routine.name}" — runs ${capture.routine.schedule} — prompt: ${capture.routine.prompt}`,
+    );
+  }
+  if (capture.tools.length > 0) {
+    lines.push(
+      `Tools the agent will need: ${capture.tools
+        .map((t) => `${t.name} (${t.purpose})`)
+        .join("; ")}`,
+    );
   }
 
   const details: string[] = [];
@@ -317,6 +377,9 @@ export function capturePromptSeed(capture: DemoCapture): string {
 export interface DraftWorkflowArgs {
   goal: string;
   summary?: string;
+  kind?: string;
+  routine?: { name?: string; prompt?: string; schedule?: string };
+  tools?: Array<{ name?: string; purpose?: string }>;
   screens?: Array<{ label?: string; url?: string; dom?: string }>;
   selectors?: Array<{
     label?: string;
@@ -377,10 +440,30 @@ export function demoCaptureFromDraft(
     observed?: ObservedScreen[];
   },
 ): DemoCapture {
+  const kind = (args.kind ?? "").toLowerCase();
+  const routine = args.routine;
+  const routinePrompt = (routine?.prompt ?? "").trim();
   return {
     mode: opts.mode,
     toolId: opts.tool?.id,
     toolName: opts.tool?.name,
+    kind: kind === "routine" || kind === "both" ? kind : "app",
+    // A routine needs a prompt to run; name and schedule get safe defaults.
+    ...(routinePrompt
+      ? {
+          routine: {
+            name: (routine?.name ?? "").trim() || "Scheduled routine",
+            prompt: routinePrompt,
+            schedule: (routine?.schedule ?? "").trim() || "daily",
+          },
+        }
+      : {}),
+    tools: (args.tools ?? [])
+      .filter((t) => (t.name ?? "").trim() && (t.purpose ?? "").trim())
+      .map((t) => ({
+        name: (t.name ?? "").trim(),
+        purpose: (t.purpose ?? "").trim(),
+      })),
     goal: (args.goal ?? "").trim(),
     summary: (args.summary ?? "").trim(),
     transcript: opts.transcript,
