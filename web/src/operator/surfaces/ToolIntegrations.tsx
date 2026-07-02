@@ -3,15 +3,20 @@
 // and the human-interview ConnectIntegrationCard), but render them with operator
 // tokens and operator copy — no main-app chrome, no "agents"/"channels"
 // vocabulary. Connected once for the workspace; shown scoped under each tool.
+//
+// First run: the whole catalog is powered by Composio, so when no Composio key
+// is connected yet there is nothing to browse — the shipped ComposioOnboarding
+// (broker-driven CLI sign-in, manual key-paste fallback) renders instead.
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { AgentRequest } from "../../api/client";
+import { type AgentRequest, getConfig } from "../../api/client";
 import {
   type IntegrationCatalogItem,
   listIntegrations,
 } from "../../api/integrations";
+import { ComposioOnboarding } from "../../components/apps/integrations/ComposioOnboarding";
 import {
   GenericIntegrationLogo,
   ToolkitBrandLogo,
@@ -27,11 +32,23 @@ interface ToolIntegrationsProps {
 export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
   const [search, setSearch] = useState("");
   const [connecting, setConnecting] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Whether a Composio key is connected for this workspace. Without one the
+  // catalog cannot exist, so the onboarding gate below takes over.
+  const cfgQuery = useQuery({
+    queryKey: ["config"],
+    queryFn: getConfig,
+    staleTime: 30_000,
+  });
+  const composioKeySet = cfgQuery.data?.composio_key_set ?? false;
 
   const query = useQuery({
     queryKey: ["operator-integrations"],
     queryFn: () => listIntegrations({ limit: 100 }),
     staleTime: 30_000,
+    // No key → the catalog request can only fail or come back empty.
+    enabled: composioKeySet,
   });
 
   const items = query.data?.items ?? [];
@@ -47,6 +64,23 @@ export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
 
   const connected = filtered.filter((i) => i.state === "connected");
   const available = filtered.filter((i) => i.state !== "connected");
+
+  // First run: connect Composio itself (sign-in or key paste), then the
+  // catalog loads in place.
+  if (cfgQuery.isSuccess && !composioKeySet) {
+    return (
+      <div className="opr-tool-scoped">
+        <ComposioOnboarding
+          onConnected={() => {
+            void cfgQuery.refetch();
+            void queryClient.invalidateQueries({
+              queryKey: ["operator-integrations"],
+            });
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="opr-tool-scoped">
@@ -80,7 +114,7 @@ export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      {query.isLoading ? (
+      {cfgQuery.isLoading || query.isLoading ? (
         <p className="opr-scoped-note">Loading your integrations…</p>
       ) : query.isError ? (
         <p className="opr-scoped-note">
