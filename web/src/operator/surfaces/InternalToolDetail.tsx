@@ -60,7 +60,7 @@ import { KnowledgeSurface } from "./KnowledgeSurface";
 import { ToolIntegrations } from "./ToolIntegrations";
 
 type ToolTab =
-  | "artifacts"
+  | "ui"
   | "workflow"
   | "tools"
   | "data"
@@ -68,7 +68,7 @@ type ToolTab =
   | "knowledge";
 
 const TABS: readonly TabDef<ToolTab>[] = [
-  { id: "artifacts", label: "Artifacts" },
+  { id: "ui", label: "UI" },
   { id: "workflow", label: "Routines" },
   // Tools Nex builds from taught workflows; the app's chat calls them. Additive.
   { id: "tools", label: "Tools" },
@@ -81,7 +81,7 @@ interface InternalToolDetailProps {
   tool: InternalTool;
   onBack: () => void;
   onStartCall: () => void;
-  // Which tab to land on. "Run on test data" hands off to the Workflow tab
+  // Which tab to land on. "Run on test data" hands off to the Routines tab
   // (where run history lives); a plain open stays on the UI tab.
   initialTab?: ToolTab;
   // When set, a "Demo workflow to Nex" call just finished on this tool: open the
@@ -94,7 +94,7 @@ export function InternalToolDetail({
   tool,
   onBack,
   onStartCall,
-  initialTab = "artifacts",
+  initialTab = "ui",
   demoSeed,
 }: InternalToolDetailProps) {
   const [tab, setTab] = useState<ToolTab>(initialTab);
@@ -206,33 +206,28 @@ export function InternalToolDetail({
             id={`opr-panel-${tab}`}
             aria-labelledby={`opr-tab-${tab}`}
           >
-            {tab === "artifacts" && (
-              <ArtifactsTab
-                agentName={tool.name}
-                artifacts={[
-                  {
-                    id: "app",
-                    type: "app",
-                    title: tool.name,
-                    producedBy: "built by Nex",
-                    at: `v${version}`,
-                  },
-                  ...seedArtifacts(),
-                ]}
-                renderApp={() =>
-                  isInbound ? (
-                    <UITab rows={inboundRows} onApprove={approveInbound} />
-                  ) : (
-                    <EmptyState
-                      glyph="◧"
-                      title="No screen built yet"
-                      hint="Build the screen your team will use to run this agent. Demo it to Nex on a call and your AI assembles it."
-                      actionLabel="Demo workflow to Nex"
-                      onAction={onStartCall}
-                    />
-                  )
-                }
-              />
+            {tab === "ui" && (
+              <>
+                {isInbound ? (
+                  <UITab rows={inboundRows} onApprove={approveInbound} />
+                ) : (
+                  <EmptyState
+                    glyph="◧"
+                    title="No screen built yet"
+                    hint="Build the screen your team will use to run this agent. Demo it to Nex on a call and your AI assembles it."
+                    actionLabel="Demo workflow to Nex"
+                    onAction={onStartCall}
+                  />
+                )}
+                {/* The artifacts this agent's runs produced, under its one app. */}
+                <div className="opr-ui-artifacts">
+                  <Eyebrow>Artifacts</Eyebrow>
+                  <ArtifactsTab
+                    agentName={tool.name}
+                    artifacts={seedArtifacts()}
+                  />
+                </div>
+              </>
             )}
             {tab === "workflow" && (
               <RoutinesTab

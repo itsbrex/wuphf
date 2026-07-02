@@ -1,10 +1,9 @@
-// ArtifactsTab — the agent's outcomes, plural. A chip strip of everything the
-// agent produced (its app, PDFs, HTML pages, markdown docs) with a viewer per
-// type below. The app is one artifact among many, rendered by the host detail
-// via `renderApp` (the real detail mounts the live sandboxed app; the mock detail
-// mounts its request table). See web/src/operator/artifacts/artifacts.ts.
+// ArtifactsTab — the file-ish outcomes the agent produced (PDFs, HTML pages,
+// markdown docs) as a chip strip with a viewer per type below. It lives INSIDE
+// the UI tab, under the agent's one live app — the app itself is the tab, not
+// an artifact. See web/src/operator/artifacts/artifacts.ts.
 
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { Download, FileText } from "lucide-react";
 
 import { ARTIFACT_BADGE, type Artifact } from "./artifacts";
@@ -12,15 +11,9 @@ import { ARTIFACT_BADGE, type Artifact } from "./artifacts";
 interface ArtifactsTabProps {
   agentName: string;
   artifacts: Artifact[];
-  /** Render the live app for an `app`-type artifact (host-owned). */
-  renderApp?: (artifact: Artifact) => ReactNode;
 }
 
-export function ArtifactsTab({
-  agentName,
-  artifacts,
-  renderApp,
-}: ArtifactsTabProps) {
+export function ArtifactsTab({ agentName, artifacts }: ArtifactsTabProps) {
   const [selectedId, setSelectedId] = useState<string | null>(
     artifacts[0]?.id ?? null,
   );
@@ -67,31 +60,15 @@ export function ArtifactsTab({
 
       {selected ? (
         <div className="opr-artifact-viewer">
-          <ArtifactViewer artifact={selected} renderApp={renderApp} />
+          <ArtifactViewer artifact={selected} />
         </div>
       ) : null}
     </div>
   );
 }
 
-function ArtifactViewer({
-  artifact,
-  renderApp,
-}: {
-  artifact: Artifact;
-  renderApp?: (artifact: Artifact) => ReactNode;
-}) {
+function ArtifactViewer({ artifact }: { artifact: Artifact }) {
   switch (artifact.type) {
-    case "app":
-      return (
-        <>
-          {renderApp?.(artifact) ?? (
-            <div className="opr-empty-hint">
-              This app has no live preview here.
-            </div>
-          )}
-        </>
-      );
     case "md":
       return (
         <pre className="opr-artifact-md">

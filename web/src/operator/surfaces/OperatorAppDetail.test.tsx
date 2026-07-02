@@ -140,7 +140,7 @@ describe("OperatorAppDetail", () => {
     expect(queryByRole("button", { name: /ask agent/i })).toBeNull();
   });
 
-  it("appends the agent service's artifacts after the live app artifact", async () => {
+  it("collects the agent service's artifacts under the live app on the UI tab", async () => {
     useOperatorAppMock.mockReturnValue({
       data: detail({ status: "ready" }, "<html>hi</html>"),
       isError: false,
@@ -167,16 +167,34 @@ describe("OperatorAppDetail", () => {
       return { ok: false, status: 404, json: async () => ({}) };
     });
     vi.stubGlobal("fetch", fetchMock);
-    const { container, findByText } = render(
+    const { container, findByText, getByTestId, getByText } = render(
       <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
     );
-    // The persisted artifact renders in the strip…
+    // The persisted artifact renders in the strip under the app…
     expect(await findByText("weekly-recap.md")).toBeTruthy();
-    // …AFTER the live app artifact.
+    expect(getByText("Artifacts")).toBeTruthy();
+    // …while the app itself stays THE UI (rendered once, not an artifact chip).
+    expect(getByTestId("app-frame")).toBeTruthy();
     const chips = container.querySelectorAll(".opr-artifact-chip");
-    expect(chips.length).toBe(2);
-    expect(chips[0].textContent).toContain("Open Tasks");
-    expect(chips[1].textContent).toContain("weekly-recap.md");
+    expect(chips.length).toBe(1);
+    expect(chips[0].textContent).toContain("weekly-recap.md");
+  });
+
+  it("shows no artifacts section when the agent has produced nothing", () => {
+    useOperatorAppMock.mockReturnValue({
+      data: detail({ status: "ready" }, "<html>hi</html>"),
+      isError: false,
+    });
+    // The agent service is unreachable: the UI tab is just the app.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })),
+    );
+    const { getByTestId, queryByText } = render(
+      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+    );
+    expect(getByTestId("app-frame")).toBeTruthy();
+    expect(queryByText("Artifacts")).toBeNull();
   });
 
   it("opens Ask AI as a docked drawer (not full screen) when clicked", () => {

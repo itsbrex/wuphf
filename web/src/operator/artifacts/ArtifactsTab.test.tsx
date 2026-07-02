@@ -6,13 +6,6 @@ import type { Artifact } from "./artifacts";
 
 const ARTIFACTS: Artifact[] = [
   {
-    id: "app",
-    type: "app",
-    title: "Pipeline Agent",
-    producedBy: "built by Nex",
-    at: "v3",
-  },
-  {
     id: "m1",
     type: "md",
     title: "weekly-summary.md",
@@ -31,34 +24,24 @@ const ARTIFACTS: Artifact[] = [
 ];
 
 describe("ArtifactsTab", () => {
-  it("lists every artifact and renders the app first via renderApp", () => {
-    const { getByText, getByTestId } = render(
-      <ArtifactsTab
-        agentName="Pipeline Agent"
-        artifacts={ARTIFACTS}
-        renderApp={() => <div data-testid="live-app" />}
-      />,
+  it("lists every artifact and opens the first one's viewer", () => {
+    const { getByText } = render(
+      <ArtifactsTab agentName="Pipeline Agent" artifacts={ARTIFACTS} />,
     );
-    // All artifacts appear as chips (app + md + pdf).
+    // All artifacts appear as chips (md + pdf).
     expect(getByText("weekly-summary.md")).toBeTruthy();
     expect(getByText("brief.pdf")).toBeTruthy();
-    // The first artifact (the app) is selected and rendered via the host slot.
-    expect(getByTestId("live-app")).toBeTruthy();
+    // The first artifact is selected and its viewer is rendered.
+    expect(getByText(/6 deals moved/)).toBeTruthy();
   });
 
   it("switches viewer when another artifact is selected", () => {
-    const { getByText, queryByTestId } = render(
-      <ArtifactsTab
-        agentName="Pipeline Agent"
-        artifacts={ARTIFACTS}
-        renderApp={() => <div data-testid="live-app" />}
-      />,
+    const { getByText, queryByText } = render(
+      <ArtifactsTab agentName="Pipeline Agent" artifacts={ARTIFACTS} />,
     );
-    fireEvent.click(getByText("weekly-summary.md"));
-    expect(queryByTestId("live-app")).toBeNull();
-    expect(getByText(/6 deals moved/)).toBeTruthy();
     // The pdf artifact shows the file card with a download affordance.
     fireEvent.click(getByText("brief.pdf"));
+    expect(queryByText(/6 deals moved/)).toBeNull();
     expect(getByText("Download")).toBeTruthy();
     expect(getByText(/182 KB/)).toBeTruthy();
   });

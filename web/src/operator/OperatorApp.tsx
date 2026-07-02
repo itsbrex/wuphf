@@ -172,7 +172,7 @@ export function OperatorApp() {
               toolName: selectedTool.name,
             })
           }
-          initialTab={openOnWorkflowTab ? "workflow" : "artifacts"}
+          initialTab={openOnWorkflowTab ? "workflow" : "ui"}
           demoSeed={demoSeed ?? undefined}
         />
       );

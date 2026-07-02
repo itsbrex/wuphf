@@ -1,13 +1,12 @@
-// Artifacts — what an AGENT produces. The old "UI" tab showed exactly one built
-// mini-app; the Artifacts tab holds EVERY outcome the agent's work yields: the
-// app itself, PDFs, HTML pages, markdown docs — whatever a run produced. The app
-// is just the first artifact type, not the tab.
+// Artifacts — the file-ish outcomes an AGENT's runs produce: PDFs, HTML pages,
+// markdown docs. The agent's ONE built app is not an artifact — it IS the UI
+// tab; artifacts collect below it as the outputs of routines and tool runs.
 //
-// FE-first: the shapes are real, the non-app seeds are mock (used by the mock
-// agent detail to show the range; a real agent starts with its app artifact and
-// collects more as tools/runs produce them).
+// FE-first: the shapes are real, the seeds are mock (used by the mock agent
+// detail to show the range; a real agent starts empty and collects artifacts as
+// tools/runs produce them).
 
-export type ArtifactType = "app" | "pdf" | "html" | "md";
+export type ArtifactType = "pdf" | "html" | "md";
 
 export interface Artifact {
   id: string;
@@ -17,7 +16,7 @@ export interface Artifact {
   /** What produced it, e.g. "weeklyPipelineSummary" or "built by Nex". */
   producedBy: string;
   at: string;
-  /** Inline content for md/html; absent for app (rendered live) and pdf (mock). */
+  /** Inline content for md/html; absent for pdf (file-ish, download only). */
   content?: string;
   /** Download URL for file-ish artifacts; absent until the file is exported. */
   url?: string;
@@ -27,7 +26,6 @@ export interface Artifact {
 
 /** Short uppercase badge per artifact type. */
 export const ARTIFACT_BADGE: Record<ArtifactType, string> = {
-  app: "APP",
   pdf: "PDF",
   html: "HTML",
   md: "MD",
