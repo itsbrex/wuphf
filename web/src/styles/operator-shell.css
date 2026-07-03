@@ -4285,6 +4285,17 @@
   color: var(--t-faint);
 }
 
+/* A knowledge page's attached artifacts (preserved legacy HTML briefs/PDFs). */
+.opr-page-artifact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+.opr-page-artifact > .opr-btn {
+  align-self: flex-start;
+}
+
 /* ── Artifacts: the outputs the agent produced (pdf, html, md) ─────────────── */
 /* A chip strip of outcomes + a viewer per type, living on the UI tab under the
    agent's one live app. Tokens only. See web/src/operator/artifacts/. */

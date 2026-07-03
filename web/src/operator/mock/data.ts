@@ -568,6 +568,15 @@ export interface KnowledgePage {
   seeAlso: string[]; // page ids
   /** Other apps this page also belongs to (cross-app share). */
   alsoIn?: { appId: string; name: string }[];
+  /** File-ish views attached to this page (preserved legacy HTML briefs /
+   * PDFs). The url is a broker route fetched with auth, rendered sandboxed. */
+  artifacts?: KnowledgeArtifact[];
+}
+
+export interface KnowledgeArtifact {
+  title: string;
+  kind: "html" | "pdf";
+  url: string;
 }
 
 export const KNOWLEDGE: KnowledgePage[] = [

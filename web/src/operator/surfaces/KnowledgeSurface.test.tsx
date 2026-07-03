@@ -10,8 +10,12 @@ import { KnowledgeSurface } from "./KnowledgeSurface";
 // hoisted too or the factory hits the TDZ. KnowledgeSurface reads through
 // getAppKnowledge, which calls this get() — mocking it exercises the real
 // client (including the patient-timeout option it passes).
-const { get } = vi.hoisted(() => ({ get: vi.fn() }));
-vi.mock("../../api/client", () => ({ get }));
+const { get, getText, getBlob } = vi.hoisted(() => ({
+  get: vi.fn(),
+  getText: vi.fn(),
+  getBlob: vi.fn(),
+}));
+vi.mock("../../api/client", () => ({ get, getText, getBlob }));
 
 function wrap(node: ReactNode) {
   const qc = new QueryClient({
@@ -39,6 +43,8 @@ function samplePage(): KnowledgePage {
 describe("KnowledgeSurface", () => {
   beforeEach(() => {
     get.mockReset();
+    getText.mockReset();
+    getBlob.mockReset();
   });
 
   it("requests knowledge with a patient timeout that outlasts the broker's 90s synthesis bound", async () => {
@@ -101,5 +107,51 @@ describe("KnowledgeSurface", () => {
     get.mockResolvedValue({ pages: [], error: "rate_limited" });
     const { getByText } = wrap(<KnowledgeSurface appId="app_abc" />);
     await waitFor(() => expect(getByText(/Knowledge is busy/i)).toBeTruthy());
+  });
+
+  it("renders a page's preserved artifacts and views html in a locked-down sandbox", async () => {
+    const page = {
+      ...samplePage(),
+      artifacts: [
+        {
+          title: "RAG survey figure",
+          kind: "html" as const,
+          url: "/apps/knowledge/legacy-artifacts/ra_abc.html",
+        },
+      ],
+    };
+    get.mockResolvedValue({ pages: [page] });
+    getText.mockResolvedValue("<h1>Survey figure</h1>");
+    const { container, getByText, findByText } = wrap(
+      <KnowledgeSurface appId="app_abc" />,
+    );
+    await findByText("Artifacts");
+    // The artifact fetches through the AUTHED client (an iframe src cannot
+    // carry the auth header) only when opened.
+    expect(getText).not.toHaveBeenCalled();
+    getByText(/RAG survey figure/).click();
+    await waitFor(() =>
+      expect(getText).toHaveBeenCalledWith(
+        "/apps/knowledge/legacy-artifacts/ra_abc.html",
+      ),
+    );
+    await waitFor(() => {
+      const iframe = container.querySelector("iframe.opr-artifact-html");
+      expect(iframe).toBeTruthy();
+      // The EMPTY sandbox attribute is the security boundary for preserved
+      // HTML: no scripts, no navigation, no same-origin. Never loosen it.
+      expect(iframe?.getAttribute("sandbox")).toBe("");
+    });
+  });
+
+  it("shows no References heading when a page has none", async () => {
+    get.mockResolvedValue({ pages: [samplePage()] });
+    const { queryByText, getAllByText } = wrap(
+      <KnowledgeSurface appId="app_abc" />,
+    );
+    await waitFor(() =>
+      expect(getAllByText("Ideal customer profile").length).toBeGreaterThan(0),
+    );
+    expect(queryByText("References")).toBeNull();
   });
 });

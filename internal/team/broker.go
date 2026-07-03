@@ -728,6 +728,9 @@ func (b *Broker) StartOnPort(port int) error {
 	mux.HandleFunc("/apps/integrations/call", b.requireAuth(b.handleAppsIntegrationsCall))
 	mux.HandleFunc("/apps/integrations/catalog", b.requireAuth(b.handleAppsIntegrationsCatalog))
 	mux.HandleFunc("/apps/ai", b.requireAuth(b.handleAppsAI))
+	// Preserved visual artifacts (HTML briefs / PDFs) from the previous
+	// product's wiki, attached to legacy Knowledge pages.
+	mux.HandleFunc(legacyArtifactURLPrefix, b.requireAuth(b.handleLegacyKnowledgeArtifact))
 	mux.HandleFunc("/apps/", b.requireAuth(b.handleAppByID))
 	b.registerKnowledgeRoutes(mux)
 	mux.HandleFunc("/interview", b.requireAuth(b.handleInterview))

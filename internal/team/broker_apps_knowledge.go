@@ -87,6 +87,19 @@ type appKnowledgePage struct {
 	// Computed at read time from the page's app-scope tags — not stored in the
 	// page body — so a page shared across apps shows "Also in: <app>" in each.
 	AlsoIn []appKnowledgeAppRef `json:"alsoIn,omitempty"`
+	// Artifacts are file-ish views attached to this page — today the previous
+	// product's visual artifacts (sanitized HTML briefs, PDFs) preserved with
+	// their legacy pages (broker_apps_knowledge_legacy.go). URL is a broker
+	// route the FE fetches with auth and renders sandboxed.
+	Artifacts []appKnowledgeArtifact `json:"artifacts,omitempty"`
+}
+
+// appKnowledgeArtifact is one attached file-ish view of a knowledge page.
+type appKnowledgeArtifact struct {
+	Title string `json:"title"`
+	// Kind is the render hint: "html" (sandboxed inline view) or "pdf" (download).
+	Kind string `json:"kind"`
+	URL  string `json:"url"`
 }
 
 // appKnowledgeAppRef names another app a shared page belongs to.

@@ -3,7 +3,7 @@
 // roster) and synthesizes cited Wikipedia-style pages grounded in them; the tab
 // renders them exactly like the mock. Cached server-side after first synthesis.
 
-import { get } from "../../api/client";
+import { get, getText } from "../../api/client";
 import type { KnowledgePage } from "../mock/data";
 
 export interface AppKnowledgeResult {
@@ -39,4 +39,14 @@ export async function getAppKnowledge(
     { timeoutMs: KNOWLEDGE_SYNTH_TIMEOUT_MS },
   );
   return { pages: res.pages ?? [], error: res.error };
+}
+
+/**
+ * getKnowledgeArtifactHTML fetches a page artifact's HTML through the authed
+ * client (an iframe src cannot carry the auth header). The caller renders it in
+ * a FULLY sandboxed iframe via srcDoc — never as live DOM; the broker also
+ * serves it with `CSP: sandbox` as defense in depth.
+ */
+export function getKnowledgeArtifactHTML(url: string): Promise<string> {
+  return getText(url);
 }

@@ -52,6 +52,21 @@ func seedLegacyWiki(t *testing.T, home string) {
 	write("agents/rag-engineer/notebook/papers-survey.md", "# RAG papers survey\n\nNotes on 2024-2025 retrieval techniques.\n")
 	write("agents/rag-engineer/notebook/.gitkeep", "")
 	write("agents/outbound/notebook/empty-note.md", "\n\n")
+	// A visual artifact: the sanitized HTML view of the survey note, promoted
+	// into the research brief — its sidecar names both owner pages.
+	write("wiki/visual-artifacts/ra_abc123.html", "<h1>Survey figure</h1>")
+	write("wiki/visual-artifacts/ra_abc123.json", `{
+		"title": "RAG survey figure",
+		"htmlPath": "wiki/visual-artifacts/ra_abc123.html",
+		"sourceMarkdownPath": "agents/rag-engineer/notebook/papers-survey.md",
+		"promotedWikiPath": "team/research/rag-brief.md"
+	}`)
+	// A sidecar whose file is GONE must attach nowhere.
+	write("wiki/visual-artifacts/ra_gone.json", `{
+		"title": "Deleted view",
+		"htmlPath": "wiki/visual-artifacts/ra_gone.html",
+		"sourceMarkdownPath": "agents/rag-engineer/notebook/papers-survey.md"
+	}`)
 }
 
 func TestLoadLegacyKnowledgePages(t *testing.T) {
@@ -104,6 +119,74 @@ func TestLoadLegacyKnowledgePages(t *testing.T) {
 	note, ok := byID["legacy-notebook-"+slugifyKnowledgeID("rag-engineer-papers-survey.md")]
 	if !ok || note.Category != "Notebook · rag-engineer" || note.Title != "RAG papers survey" {
 		t.Fatalf("notebook page = %+v ok=%v", note, ok)
+	}
+
+	// The visual artifact attaches to BOTH owner pages its sidecar names —
+	// the source notebook note and the promoted wiki article.
+	wantURL := legacyArtifactURLPrefix + "ra_abc123.html"
+	for _, p := range []appKnowledgePage{brief, note} {
+		if len(p.Artifacts) != 1 || p.Artifacts[0].URL != wantURL {
+			t.Fatalf("%s artifacts = %+v, want the ra_abc123 html view", p.ID, p.Artifacts)
+		}
+		if p.Artifacts[0].Kind != "html" || p.Artifacts[0].Title != "RAG survey figure" {
+			t.Fatalf("%s artifact meta = %+v", p.ID, p.Artifacts[0])
+		}
+	}
+	// A sidecar whose file is gone attaches nowhere (note would have had 2).
+	if decision.Artifacts != nil {
+		t.Fatalf("decision page must carry no artifacts, got %+v", decision.Artifacts)
+	}
+}
+
+// TestLegacyKnowledgeArtifactEndpoint locks the artifact route's contract: the
+// file serves sandboxed with the right content type, and the filename alphabet
+// is the whole trust boundary — traversal and non-artifact extensions 404.
+func TestLegacyKnowledgeArtifactEndpoint(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("WUPHF_RUNTIME_HOME", home)
+	seedLegacyWiki(t, home)
+
+	b := newTestBroker(t)
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("start broker: %v", err)
+	}
+	defer b.Stop()
+	base := fmt.Sprintf("http://%s", b.Addr())
+
+	get := func(path string, auth bool) *http.Response {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodGet, base+path, nil)
+		if auth {
+			req.Header.Set("Authorization", "Bearer "+b.Token())
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET %s: %v", path, err)
+		}
+		t.Cleanup(func() { _ = res.Body.Close() })
+		return res
+	}
+
+	res := get(legacyArtifactURLPrefix+"ra_abc123.html", true)
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("artifact GET = %d", res.StatusCode)
+	}
+	if ct := res.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
+		t.Fatalf("content-type = %q", ct)
+	}
+	// Defense in depth: the response document is sandboxed even when opened
+	// directly, independent of the FE iframe sandbox. Never loosen silently.
+	if csp := res.Header.Get("Content-Security-Policy"); csp != "sandbox" {
+		t.Fatalf("CSP = %q, want sandbox", csp)
+	}
+
+	if res := get(legacyArtifactURLPrefix+"ra_abc123.html", false); res.StatusCode == http.StatusOK {
+		t.Fatalf("unauthenticated artifact GET must not serve, got %d", res.StatusCode)
+	}
+	for _, bad := range []string{"..%2f..%2fconfig.json", ".hidden.html", "ra_abc123.json", "nope.html"} {
+		if res := get(legacyArtifactURLPrefix+bad, true); res.StatusCode != http.StatusNotFound {
+			t.Fatalf("GET %q = %d, want 404", bad, res.StatusCode)
+		}
 	}
 }
 

@@ -1,9 +1,12 @@
 package team
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -45,6 +48,9 @@ func (b *Broker) legacyKnowledgePages() []appKnowledgePage {
 // wiki root. A missing root, or one with no markdown, yields nil.
 func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 	var pages []appKnowledgePage
+	// Root-relative source path (e.g. "team/research/brief.md") → index into
+	// pages, so visual artifacts can attach to the pages they belong to.
+	byRel := map[string]int{}
 
 	// Team wiki articles: team/<category>/**.md (the category is the first
 	// folder under team/; root-level files read as plain "Team wiki").
@@ -71,6 +77,7 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 			category = "Team wiki · " + strings.SplitN(filepath.ToSlash(dir), "/", 2)[0]
 		}
 		if page, ok := legacyPageFromFile(path, "legacy-wiki-"+slugifyKnowledgeID(filepath.ToSlash(rel)), category); ok {
+			byRel["team/"+filepath.ToSlash(rel)] = len(pages)
 			pages = append(pages, page)
 		}
 		return nil
@@ -92,10 +99,13 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 			path := filepath.Join(root, "agents", agent, "notebook", note.Name())
 			id := "legacy-notebook-" + slugifyKnowledgeID(agent+"-"+note.Name())
 			if page, ok := legacyPageFromFile(path, id, "Notebook · "+agent); ok {
+				byRel["agents/"+agent+"/notebook/"+note.Name()] = len(pages)
 				pages = append(pages, page)
 			}
 		}
 	}
+
+	attachLegacyArtifacts(root, pages, byRel)
 
 	// Stable order: wiki articles first (the reviewed, promoted knowledge), then
 	// notebooks (draft scratch); alphabetical within.
@@ -119,6 +129,126 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 		pages = pages[:legacyKnowledgeMaxPages]
 	}
 	return pages
+}
+
+// ── Visual artifacts: the previous product's HTML briefs and PDFs ─────────────
+
+// legacyArtifactSidecar is the metadata file the previous product wrote next to
+// each visual artifact (wiki/visual-artifacts/ra_*.json). The two path fields
+// name exactly which pages the artifact belongs to.
+type legacyArtifactSidecar struct {
+	Title              string `json:"title"`
+	HTMLPath           string `json:"htmlPath"`
+	PDFPath            string `json:"pdfPath"`
+	SourceMarkdownPath string `json:"sourceMarkdownPath"`
+	PromotedWikiPath   string `json:"promotedWikiPath"`
+}
+
+// legacyArtifactsRelDir is where the previous product kept visual artifacts,
+// relative to the legacy wiki root.
+const legacyArtifactsRelDir = "wiki/visual-artifacts"
+
+// legacyArtifactURLPrefix is the broker route serving preserved artifact files
+// (handleLegacyKnowledgeArtifact). The FE fetches these with auth and renders
+// HTML sandboxed / PDFs as downloads.
+const legacyArtifactURLPrefix = "/apps/knowledge/legacy-artifacts/"
+
+// attachLegacyArtifacts reads every artifact sidecar and attaches the artifact
+// to the pages its metadata names (the source notebook note and the promoted
+// wiki article). Artifacts without a parseable sidecar, or whose files are
+// gone, attach nowhere — a page never links a view that cannot be served.
+func attachLegacyArtifacts(root string, pages []appKnowledgePage, byRel map[string]int) {
+	dir := filepath.Join(root, legacyArtifactsRelDir)
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.EqualFold(filepath.Ext(entry.Name()), ".json") {
+			continue
+		}
+		raw, readErr := os.ReadFile(filepath.Join(dir, entry.Name()))
+		if readErr != nil {
+			continue
+		}
+		var side legacyArtifactSidecar
+		if json.Unmarshal(raw, &side) != nil {
+			continue
+		}
+		for _, rel := range []string{side.HTMLPath, side.PDFPath} {
+			file := filepath.Base(strings.TrimSpace(rel))
+			if file == "." || file == "" || !legacyArtifactNameRe.MatchString(file) {
+				continue
+			}
+			if _, statErr := os.Stat(filepath.Join(dir, file)); statErr != nil {
+				continue
+			}
+			kind := strings.TrimPrefix(strings.ToLower(filepath.Ext(file)), ".")
+			if kind != "html" && kind != "pdf" {
+				continue
+			}
+			title := side.Title
+			if title == "" {
+				title = humanizeLegacyName(strings.TrimSuffix(file, filepath.Ext(file)))
+			}
+			art := appKnowledgeArtifact{Title: title, Kind: kind, URL: legacyArtifactURLPrefix + file}
+			for _, owner := range []string{side.SourceMarkdownPath, side.PromotedWikiPath} {
+				idx, ok := byRel[strings.TrimSpace(owner)]
+				if !ok {
+					continue
+				}
+				if hasLegacyArtifact(pages[idx].Artifacts, art.URL) {
+					continue
+				}
+				pages[idx].Artifacts = append(pages[idx].Artifacts, art)
+			}
+		}
+	}
+}
+
+func hasLegacyArtifact(list []appKnowledgeArtifact, url string) bool {
+	for _, a := range list {
+		if a.URL == url {
+			return true
+		}
+	}
+	return false
+}
+
+// legacyArtifactNameRe is the whole trust boundary for the artifact file route:
+// a bare filename, no separators, no leading dot — path traversal cannot be
+// expressed in this alphabet.
+var legacyArtifactNameRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
+// handleLegacyKnowledgeArtifact serves one preserved visual-artifact file. The
+// HTML was sanitized by the previous product, but we do not lean on that: the
+// response carries `CSP: sandbox` and the FE additionally renders it inside a
+// fully sandboxed iframe (no scripts, no navigation, no same-origin).
+func (b *Broker) handleLegacyKnowledgeArtifact(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	name := strings.TrimPrefix(r.URL.Path, legacyArtifactURLPrefix)
+	ext := strings.ToLower(filepath.Ext(name))
+	if !legacyArtifactNameRe.MatchString(name) || (ext != ".html" && ext != ".pdf") {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	path := filepath.Join(config.RuntimeHomeDir(), ".wuphf", "wiki", legacyArtifactsRelDir, name)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
+	if ext == ".pdf" {
+		w.Header().Set("Content-Type", "application/pdf")
+	} else {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	}
+	w.Header().Set("Content-Security-Policy", "sandbox")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	_, _ = w.Write(raw)
 }
 
 // legacyPageFromFile turns one legacy markdown file into a verbatim Knowledge

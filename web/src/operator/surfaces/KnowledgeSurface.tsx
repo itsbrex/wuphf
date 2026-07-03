@@ -12,11 +12,16 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 
-import { getAppKnowledge } from "../apps/knowledgeClient";
+import { getBlob } from "../../api/client";
+import {
+  getAppKnowledge,
+  getKnowledgeArtifactHTML,
+} from "../apps/knowledgeClient";
 import { EmptyState } from "../components/EmptyState";
 import { Eyebrow } from "../components/primitives";
 import {
   KNOWLEDGE,
+  type KnowledgeArtifact,
   type KnowledgePage,
   type KnowledgeRef,
   type KnowledgeSourceKind,
@@ -35,6 +40,82 @@ const KIND_LABEL: Record<KnowledgeSourceKind, string> = {
 // unmount the hash-routed shell, so we scroll to the target imperatively.
 function jumpToRef(n: number) {
   document.getElementById(`ref-${n}`)?.scrollIntoView({ block: "start" });
+}
+
+// ── Page artifacts: preserved file-ish views (legacy HTML briefs / PDFs) ──────
+
+// One attached artifact. HTML opens inline in a FULLY sandboxed iframe (the
+// content is fetched through the authed client and rendered via srcDoc — no
+// scripts, no navigation, no same-origin); a PDF downloads through the authed
+// client (a plain <a href> cannot carry the auth header).
+function ArtifactItem({ artifact }: { artifact: KnowledgeArtifact }) {
+  const [open, setOpen] = useState(false);
+  const [html, setHtml] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  async function view() {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    if (artifact.kind === "html" && html === null) {
+      try {
+        setHtml(await getKnowledgeArtifactHTML(artifact.url));
+      } catch {
+        setFailed(true);
+      }
+    }
+  }
+
+  async function download() {
+    try {
+      const blob = await getBlob(artifact.url);
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `${artifact.title}.pdf`;
+      a.click();
+      URL.revokeObjectURL(href);
+    } catch {
+      setFailed(true);
+    }
+  }
+
+  return (
+    <div className="opr-page-artifact">
+      <button
+        type="button"
+        className="opr-btn opr-btn-sm"
+        onClick={() => void (artifact.kind === "pdf" ? download() : view())}
+      >
+        <span className={`opr-artifact-badge is-${artifact.kind}`}>
+          {artifact.kind.toUpperCase()}
+        </span>
+        {artifact.title}
+        {artifact.kind === "html" ? (open ? " · hide" : " · view") : ""}
+      </button>
+      {failed ? (
+        <p className="opr-scoped-note">
+          Could not load this artifact right now.
+        </p>
+      ) : null}
+      {open && artifact.kind === "html" ? (
+        html === null ? (
+          <p className="opr-scoped-note">Loading…</p>
+        ) : (
+          // The EMPTY sandbox attribute is the security boundary for preserved
+          // HTML: no scripts, no navigation, no same-origin. Never loosen it.
+          <iframe
+            className="opr-artifact-html"
+            title={artifact.title}
+            sandbox=""
+            srcDoc={html}
+          />
+        )
+      ) : null}
+    </div>
+  );
 }
 
 // A single [n] citation with a hover/focus popover over its source.
@@ -338,15 +419,31 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
                 </section>
               ))}
 
-              <h2>References</h2>
-              <ol className="opr-refs">
-                {page.references.map((ref) => (
-                  // Key by page identity + n: ref numbers reset per page, so a
-                  // bare ref.n would reuse instances (and leak open state)
-                  // across page switches.
-                  <ReferenceItem key={`${page.id}-${ref.n}`} source={ref} />
-                ))}
-              </ol>
+              {page.artifacts && page.artifacts.length > 0 ? (
+                <>
+                  <h2>Artifacts</h2>
+                  {page.artifacts.map((artifact) => (
+                    <ArtifactItem
+                      key={`${page.id}-${artifact.url}`}
+                      artifact={artifact}
+                    />
+                  ))}
+                </>
+              ) : null}
+
+              {page.references.length > 0 ? (
+                <>
+                  <h2>References</h2>
+                  <ol className="opr-refs">
+                    {page.references.map((ref) => (
+                      // Key by page identity + n: ref numbers reset per page,
+                      // so a bare ref.n would reuse instances (and leak open
+                      // state) across page switches.
+                      <ReferenceItem key={`${page.id}-${ref.n}`} source={ref} />
+                    ))}
+                  </ol>
+                </>
+              ) : null}
 
               {page.seeAlso.length > 0 ? (
                 <>
