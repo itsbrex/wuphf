@@ -116,4 +116,17 @@ describe("AppBuilderChat demo handoff", () => {
       "app_new1",
     );
   });
+
+  it("does not claim an offline (never-persisted) tool is in place", async () => {
+    // buildToolFromChat returns offline:true when the agent service was
+    // unreachable and only a local mock was made — the tool exists in memory
+    // and was NEVER persisted on the agent. The chat must report it as failed,
+    // not "In place".
+    buildToolMock.mockResolvedValueOnce({ tool: {}, offline: true });
+    const { findByText, queryByText } = renderChat();
+    // The honest failure names the tool that only built offline.
+    await findByText(/could not set up[\s\S]*summarizePipeline/);
+    // …and it must never be claimed as persisted.
+    expect(queryByText(/In place:[\s\S]*summarizePipeline/)).toBeNull();
+  });
 });
