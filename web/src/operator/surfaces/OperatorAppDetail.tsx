@@ -1,8 +1,8 @@
 // OperatorAppDetail — the detail view for a REAL built app (id `app_…`). It
-// keeps the operator App's tab model (UI / Workflow / Data / Integrations /
-// Knowledge); the UI tab renders the live, persisted app inside the shipped
-// hardened sandbox (CustomAppFrame + Bridge v2). The other tabs are honest
-// empty states for this slice — the workflow/data/knowledge wiring lands next.
+// keeps the operator App's tab model (UI / Routines / Tools / Data / Knowledge /
+// Integrations); the UI tab renders the agent's ONE live app inside the shipped
+// hardened sandbox (CustomAppFrame + Bridge v2), with the artifacts its runs
+// produced (md/html/pdf) collected below the app.
 
 import { useEffect, useRef, useState } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
@@ -33,7 +33,7 @@ import {
 import { ArtifactsTab } from "../artifacts/ArtifactsTab";
 import type { Artifact } from "../artifacts/artifacts";
 import { EmptyState } from "../components/EmptyState";
-import { type TabDef, Tabs } from "../components/primitives";
+import { Eyebrow, type TabDef, Tabs } from "../components/primitives";
 import { RoutinesTab } from "../routines/RoutinesTab";
 import { ToolsProvider } from "../tools/toolsContext";
 import { AppDataTab } from "./AppDataTab";
@@ -44,7 +44,7 @@ import { ToolIntegrations } from "./ToolIntegrations";
 type PanelSize = "dock" | "wide" | "modal";
 
 type AppTab =
-  | "artifacts"
+  | "ui"
   | "workflow"
   | "tools"
   | "data"
@@ -52,7 +52,7 @@ type AppTab =
   | "knowledge";
 
 const TABS: readonly TabDef<AppTab>[] = [
-  { id: "artifacts", label: "Artifacts" },
+  { id: "ui", label: "UI" },
   { id: "workflow", label: "Routines" },
   // Tools: the callable tools Nex builds from taught workflows; the app's chat
   // calls them. Additive — the Workflow tab is unchanged.
@@ -78,7 +78,7 @@ export function OperatorAppDetail({
   onBack,
   buildWalk,
 }: OperatorAppDetailProps) {
-  const [tab, setTab] = useState<AppTab>("artifacts");
+  const [tab, setTab] = useState<AppTab>("ui");
   const [chatOpen, setChatOpen] = useState(false);
   // A routine's "Open its chat" jumps the Ask Agent dock to that session.
   const [requestedSession, setRequestedSession] = useState<string | null>(null);
@@ -93,12 +93,12 @@ export function OperatorAppDetail({
   const ready = state === "ready" && !!detail?.html;
 
   // The agent's persisted artifacts (routine outcomes) from the agent service,
-  // appended after the live app artifact. Refreshed each time the Artifacts tab
+  // collected below the live app on the UI tab. Refreshed each time the UI tab
   // becomes active; stays empty when the service is unreachable.
   const [remoteArtifacts, setRemoteArtifacts] = useState<Artifact[]>([]);
   const agentId = app?.id;
   useEffect(() => {
-    if (tab !== "artifacts" || !agentId) return;
+    if (tab !== "ui" || !agentId) return;
     let cancelled = false;
     void tryListArtifacts(agentId).then((wire) => {
       if (cancelled || !wire) return;
@@ -130,7 +130,7 @@ export function OperatorAppDetail({
       window.setTimeout(() => setTab("workflow"), 900),
       window.setTimeout(() => setTab("data"), 3200),
       window.setTimeout(() => setTab("knowledge"), 5500),
-      window.setTimeout(() => setTab("artifacts"), 8000),
+      window.setTimeout(() => setTab("ui"), 8000),
     ];
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [buildWalk, ready]);
@@ -227,34 +227,29 @@ export function OperatorAppDetail({
             id={`opr-panel-${tab}`}
             aria-labelledby={`opr-tab-${tab}`}
           >
-            {/* The Artifacts tab (hosting the live app frame) stays MOUNTED
-                across tab switches — hidden, not unmounted — so returning to it
-                does NOT reload the iframe and re-run the app every time. The
-                other tabs mount only while active. */}
-            <div style={tab === "artifacts" ? undefined : { display: "none" }}>
-              <ArtifactsTab
-                agentName={app?.name ?? "This agent"}
-                artifacts={[
-                  {
-                    id: "app",
-                    type: "app",
-                    title: app?.name ?? "App",
-                    producedBy: "built by Nex",
-                    at: app ? `v${app.version}` : "",
-                  },
-                  ...remoteArtifacts,
-                ]}
-                renderApp={() => (
-                  <UiTab
-                    query={query}
-                    failed={failed}
-                    onRemove={removeAndBack}
-                    removing={remove.isPending}
-                  />
-                )}
+            {/* The UI tab (hosting the live app frame) stays MOUNTED across
+                tab switches — hidden, not unmounted — so returning to it does
+                NOT reload the iframe and re-run the app every time. The other
+                tabs mount only while active. */}
+            <div style={tab === "ui" ? undefined : { display: "none" }}>
+              <UiTab
+                query={query}
+                failed={failed}
+                onRemove={removeAndBack}
+                removing={remove.isPending}
               />
+              {/* The artifacts the agent's runs produced, under its one app. */}
+              {remoteArtifacts.length > 0 ? (
+                <div className="opr-ui-artifacts">
+                  <Eyebrow>Artifacts</Eyebrow>
+                  <ArtifactsTab
+                    agentName={app?.name ?? "This agent"}
+                    artifacts={remoteArtifacts}
+                  />
+                </div>
+              ) : null}
             </div>
-            {tab !== "artifacts" ? (
+            {tab !== "ui" ? (
               <TabBody
                 tab={tab}
                 query={query}

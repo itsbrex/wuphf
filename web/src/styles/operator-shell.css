@@ -4285,9 +4285,15 @@
   color: var(--t-faint);
 }
 
-/* ── Artifacts tab: everything the agent produced (app, pdf, html, md) ──────── */
-/* A chip strip of outcomes + a viewer per type. The app is one artifact among
-   many. Tokens only. See web/src/operator/artifacts/. */
+/* ── Artifacts: the outputs the agent produced (pdf, html, md) ─────────────── */
+/* A chip strip of outcomes + a viewer per type, living on the UI tab under the
+   agent's one live app. Tokens only. See web/src/operator/artifacts/. */
+.opr-ui-artifacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
 .opr-artifacts {
   display: flex;
   flex-direction: column;
