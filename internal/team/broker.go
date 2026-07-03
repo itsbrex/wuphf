@@ -194,16 +194,21 @@ type Broker struct {
 	// knowledgeBrainOverride substitutes the Knowledge surface's brain in tests
 	// (set before Start; nil in production).
 	knowledgeBrainOverride knowledgeBrain
-	inboxCursorMu          sync.RWMutex
-	userInboxCursors       map[string]InboxCursor
-	factLog                *FactLog
-	readLog                *ReadLog
-	entityGraph            *EntityGraph
-	entitySynthesizer      *EntitySynthesizer
-	wikiCompressor         *WikiCompressor
-	teamLearningLog        *LearningLog
-	playbookSynthesizer    *PlaybookSynthesizer
-	pamDispatcher          *PamDispatcher
+	// legacyKnowledge holds the previous product's wiki articles + notebook
+	// notes preserved as Knowledge pages, loaded once per broker from the
+	// legacy wiki tree (broker_apps_knowledge_legacy.go).
+	legacyKnowledgeOnce sync.Once
+	legacyKnowledge     []appKnowledgePage
+	inboxCursorMu       sync.RWMutex
+	userInboxCursors    map[string]InboxCursor
+	factLog             *FactLog
+	readLog             *ReadLog
+	entityGraph         *EntityGraph
+	entitySynthesizer   *EntitySynthesizer
+	wikiCompressor      *WikiCompressor
+	teamLearningLog     *LearningLog
+	playbookSynthesizer *PlaybookSynthesizer
+	pamDispatcher       *PamDispatcher
 	// sourceCaptureDispatcher drains S2 source-capture jobs off-lock (see
 	// source_capture.go). Held as an atomic pointer so captureSource can read
 	// it WITHOUT b.mu — capture hooks fire while b.mu is held, so the read

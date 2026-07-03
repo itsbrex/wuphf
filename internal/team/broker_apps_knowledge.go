@@ -107,6 +107,20 @@ type knowledgeSource struct {
 
 // ── HTTP ─────────────────────────────────────────────────────────────────────
 
+// writeAppKnowledge serves a knowledge payload with the previous product's
+// preserved wiki/notebook pages appended (broker_apps_knowledge_legacy.go).
+// Legacy pages ride along on EVERY outcome — cache hit, fresh synthesis, and
+// the rate-limited/unavailable states — because they exist independent of the
+// AI provider; a workspace without a legacy tree appends nothing.
+func (b *Broker) writeAppKnowledge(w http.ResponseWriter, pages []appKnowledgePage, errCode string) {
+	all := append(append([]appKnowledgePage{}, pages...), b.legacyKnowledgePages()...)
+	resp := map[string]any{"pages": all}
+	if errCode != "" {
+		resp["error"] = errCode
+	}
+	writeJSON(w, http.StatusOK, resp)
+}
+
 func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -131,7 +145,7 @@ func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id s
 			pages, err := b.readAppKnowledgeFromGBrain(ctx, gbClient, id)
 			switch {
 			case err == nil && len(pages) > 0:
-				writeJSON(w, http.StatusOK, map[string]any{"pages": pages})
+				b.writeAppKnowledge(w, pages, "")
 				return
 			case err != nil:
 				// The brain is UNREACHABLE (dead serve, lock contention, missing
@@ -143,10 +157,7 @@ func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id s
 				// be resurrected from a stale cache.
 				fmt.Fprintf(os.Stderr, "broker: app knowledge gbrain read failed: %v\n", err)
 				if cached, ok, cerr := store.ReadAppKnowledge(id); cerr == nil && ok {
-					if cached == nil {
-						cached = []appKnowledgePage{}
-					}
-					writeJSON(w, http.StatusOK, map[string]any{"pages": cached})
+					b.writeAppKnowledge(w, cached, "")
 					return
 				}
 			default:
@@ -156,19 +167,19 @@ func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id s
 				// this, every request for an empty app would re-run the full LLM
 				// synthesis.
 				if cached, ok, cerr := store.ReadAppKnowledge(id); cerr == nil && ok && len(cached) == 0 {
-					writeJSON(w, http.StatusOK, map[string]any{"pages": []appKnowledgePage{}})
+					b.writeAppKnowledge(w, nil, "")
 					return
 				}
 			}
 		} else if pages, ok, err := store.ReadAppKnowledge(id); err == nil && ok {
-			writeJSON(w, http.StatusOK, map[string]any{"pages": pages})
+			b.writeAppKnowledge(w, pages, "")
 			return
 		}
 	}
 
 	// Budget the synthesis per-app like ai() — it is an LLM completion.
 	if _, limited := b.consumeAppAIBudget(appBudgetKey(id, r)); limited {
-		writeJSON(w, http.StatusOK, map[string]any{"pages": []appKnowledgePage{}, "error": "rate_limited"})
+		b.writeAppKnowledge(w, nil, "rate_limited")
 		return
 	}
 
@@ -177,7 +188,7 @@ func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id s
 		fmt.Fprintf(os.Stderr, "broker: app knowledge synth failed: %v\n", err)
 		// Expected product state (no provider / empty brain): let the FE render a
 		// graceful "no knowledge yet" rather than an error toast.
-		writeJSON(w, http.StatusOK, map[string]any{"pages": []appKnowledgePage{}, "error": "ai_unavailable"})
+		b.writeAppKnowledge(w, nil, "ai_unavailable")
 		return
 	}
 
@@ -199,7 +210,7 @@ func (b *Broker) handleAppKnowledge(w http.ResponseWriter, r *http.Request, id s
 	} else if err := store.WriteAppKnowledge(id, pages); err != nil {
 		fmt.Fprintf(os.Stderr, "broker: app knowledge cache write failed: %v\n", err)
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"pages": pages})
+	b.writeAppKnowledge(w, pages, "")
 }
 
 // ── gbrain-backed store: knowledge pages live in the shared brain ─────────────
