@@ -7,7 +7,7 @@
 // the broker's scheduler registry, so there is no routine CRUD here.
 
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createServer } from "./service.js";
@@ -23,12 +23,13 @@ async function* fakeBuild() {
 }
 
 let tmp: string;
+let dataDir: string;
 let server: ReturnType<typeof createServer>;
 let base: string;
 beforeAll(() => {
 	tmp = mkdtempSync(join(tmpdir(), "wuphf-agent-svc-"));
-	const data = join(tmp, "data");
-	server = createServer({ port: 0, buildStream: fakeBuild, store: new AgentStore(data), sessions: new PiSessions(data) });
+	dataDir = join(tmp, "data");
+	server = createServer({ port: 0, buildStream: fakeBuild, store: new AgentStore(dataDir), sessions: new PiSessions(dataDir) });
 	base = server.url.toString().replace(/\/$/, "");
 });
 afterAll(() => {
@@ -141,6 +142,26 @@ test("validation ladder: bad JSON, bad shape, schema mismatch, missing agent", a
 	for (const path of ["/tools", "/sessions", "/artifacts", "/tools?agent=..", "/sessions?agent=%20"]) {
 		expect((await fetch(`${base}${path}`)).status).toBe(400);
 	}
+});
+
+test("POST /tools/build recovers from a corrupt app file instead of 500ing (HIGH-2)", async () => {
+	// QA repro: a torn/corrupt per-agent store file made the store throw, so
+	// /tools/build 500'd and the FE (buildToolFromChat) fell back to offline.
+	// Pre-fix this is 500; post-fix the corrupt file is quarantined and the build
+	// succeeds. Message mirrors the reported one ("<name> — <instruction>").
+	mkdirSync(dataDir, { recursive: true });
+	writeFileSync(join(dataDir, "app_torn.json"), "{ corrupt, not json");
+	const res = await post("/tools/build", {
+		schema_version: 1,
+		message: "postHandoffToSlack — Post the lead, score, and reason to #ae-handoffs.",
+		app: "app_torn",
+	});
+	expect(res.status).toBe(200);
+	const body = (await res.json()) as { tool: StoredTool };
+	expect(body.tool.name).toBeTruthy();
+	expect(body.tool.version).toBe(1); // fresh file after quarantine
+	const listed = (await (await fetch(`${base}/tools?agent=app_torn`)).json()) as { tools: StoredTool[] };
+	expect(listed.tools).toHaveLength(1);
 });
 
 test("GET routes read empty for an unknown agent (no 500s from a missing file)", async () => {

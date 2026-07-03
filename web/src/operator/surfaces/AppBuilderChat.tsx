@@ -289,8 +289,17 @@ export function AppBuilderChat({
     }
     for (const tool of tools) {
       try {
-        await buildToolFromChat(`${tool.name} — ${tool.purpose}`, agentId);
-        done.push(tool.name);
+        const built = await buildToolFromChat(
+          `${tool.name} — ${tool.purpose}`,
+          agentId,
+        );
+        // Two ways a "success" is not the tool we promised: offline:true (the
+        // agent service was unreachable — only a local mock exists, nothing
+        // persisted) and a NAME MISMATCH (the service authored/returned a
+        // different tool than the one requested). Both report as failed, never
+        // "In place".
+        const isRequested = built.tool?.name === tool.name;
+        (built.offline || !isRequested ? failed : done).push(tool.name);
       } catch {
         failed.push(tool.name);
       }
@@ -484,8 +493,8 @@ export function AppBuilderChat({
         <div className="opr-composer">
           <input
             className="opr-composer-input"
-            aria-label="Describe the app you want to build"
-            placeholder="Describe what this app should do..."
+            aria-label="Describe what this agent should do"
+            placeholder="Describe what this agent should do…"
             value={draft}
             disabled={phase === "building"}
             onChange={(e) => setDraft(e.target.value)}

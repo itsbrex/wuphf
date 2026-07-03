@@ -12,11 +12,16 @@ import { type ReactNode, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 
-import { getAppKnowledge } from "../apps/knowledgeClient";
+import { getBlob } from "../../api/client";
+import {
+  getAppKnowledge,
+  getKnowledgeArtifactHTML,
+} from "../apps/knowledgeClient";
 import { EmptyState } from "../components/EmptyState";
 import { Eyebrow } from "../components/primitives";
 import {
   KNOWLEDGE,
+  type KnowledgeArtifact,
   type KnowledgePage,
   type KnowledgeRef,
   type KnowledgeSourceKind,
@@ -35,6 +40,82 @@ const KIND_LABEL: Record<KnowledgeSourceKind, string> = {
 // unmount the hash-routed shell, so we scroll to the target imperatively.
 function jumpToRef(n: number) {
   document.getElementById(`ref-${n}`)?.scrollIntoView({ block: "start" });
+}
+
+// ── Page artifacts: preserved file-ish views (legacy HTML briefs / PDFs) ──────
+
+// One attached artifact. HTML opens inline in a FULLY sandboxed iframe (the
+// content is fetched through the authed client and rendered via srcDoc — no
+// scripts, no navigation, no same-origin); a PDF downloads through the authed
+// client (a plain <a href> cannot carry the auth header).
+function ArtifactItem({ artifact }: { artifact: KnowledgeArtifact }) {
+  const [open, setOpen] = useState(false);
+  const [html, setHtml] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  async function view() {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    if (artifact.kind === "html" && html === null) {
+      try {
+        setHtml(await getKnowledgeArtifactHTML(artifact.url));
+      } catch {
+        setFailed(true);
+      }
+    }
+  }
+
+  async function download() {
+    try {
+      const blob = await getBlob(artifact.url);
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `${artifact.title}.pdf`;
+      a.click();
+      URL.revokeObjectURL(href);
+    } catch {
+      setFailed(true);
+    }
+  }
+
+  return (
+    <div className="opr-page-artifact">
+      <button
+        type="button"
+        className="opr-btn opr-btn-sm"
+        onClick={() => void (artifact.kind === "pdf" ? download() : view())}
+      >
+        <span className={`opr-artifact-badge is-${artifact.kind}`}>
+          {artifact.kind.toUpperCase()}
+        </span>
+        {artifact.title}
+        {artifact.kind === "html" ? (open ? " · hide" : " · view") : ""}
+      </button>
+      {failed ? (
+        <p className="opr-scoped-note">
+          Could not load this artifact right now.
+        </p>
+      ) : null}
+      {open && artifact.kind === "html" ? (
+        html === null ? (
+          <p className="opr-scoped-note">Loading…</p>
+        ) : (
+          // The EMPTY sandbox attribute is the security boundary for preserved
+          // HTML: no scripts, no navigation, no same-origin. Never loosen it.
+          <iframe
+            className="opr-artifact-html"
+            title={artifact.title}
+            sandbox=""
+            srcDoc={html}
+          />
+        )
+      ) : null}
+    </div>
+  );
 }
 
 // A single [n] citation with a hover/focus popover over its source.
@@ -156,6 +237,20 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
     queryFn: () => getAppKnowledge(appId ?? ""),
     enabled: Boolean(appId),
     staleTime: 5 * 60_000,
+    // A first synthesis is slow (getAppKnowledge waits patiently for it) but can
+    // still miss — a transient blip, or the very first read losing the race to
+    // warm the cache. Keep polling while there are no pages AND the broker has
+    // returned no real verdict; the synthesis warms the cache server-side, so a
+    // later poll lands on ready pages. Stop once pages arrive or the broker
+    // reports a real provider/rate-limit verdict (data.error). This is the
+    // "keep working" backstop; automatic retry is inherited from the client.
+    refetchInterval: (q) => {
+      if (!appId) return false;
+      const data = q.state.data;
+      if (data?.pages?.length) return false;
+      if (data?.error) return false;
+      return q.state.status === "error" ? 6_000 : false;
+    },
   });
 
   const pages: KnowledgePage[] = appId ? (query.data?.pages ?? []) : KNOWLEDGE;
@@ -168,22 +263,38 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
     [page],
   );
 
-  // Real synthesis takes a few seconds on first open (cached after).
-  const synthesizing = Boolean(appId) && query.isLoading;
-  // Synthesis failures are NOT an empty brain: the broker reports them as
-  // { error: "ai_unavailable" | "rate_limited" }, and a transport failure
-  // surfaces as query.isError. Render those honestly, distinct from "no
-  // knowledge yet". If cached pages arrived alongside an error, the pages win.
-  const backendError = appId ? query.data?.error : undefined;
-  const knowledgeFailed =
+  // A first synthesis is slow (up to ~90s server-side, cached after). While the
+  // query is loading OR re-fetching a slow/failed attempt with nothing to show
+  // yet, we are still working — never flip to an error mid-flight.
+  const working =
     Boolean(appId) &&
-    !query.isLoading &&
     pages.length === 0 &&
-    (query.isError || Boolean(backendError));
+    (query.isLoading || query.isFetching);
+
+  // Error taxonomy. A REAL provider verdict comes back in the RESPONSE BODY
+  // ({ error: "ai_unavailable" | "rate_limited" }) with HTTP 200 — that is the
+  // ONLY signal that the AI provider is down or throttled. A timeout, abort, or
+  // transport failure is query.isError with NO body: that means "the synthesis
+  // did not finish in time", which is a "still working" state, never a provider
+  // verdict. Keeping the two apart is the fix for a slow first synthesis being
+  // mislabeled "your AI provider is not reachable".
+  const backendError = appId ? query.data?.error : undefined;
+  const providerUnavailable =
+    Boolean(appId) && pages.length === 0 && backendError === "ai_unavailable";
+  const rateLimited =
+    Boolean(appId) && pages.length === 0 && backendError === "rate_limited";
+  const stillWorking =
+    Boolean(appId) &&
+    !working &&
+    pages.length === 0 &&
+    !backendError &&
+    query.isError;
   const emptyBrain =
     Boolean(appId) &&
-    !query.isLoading &&
-    !knowledgeFailed &&
+    !working &&
+    !stillWorking &&
+    !providerUnavailable &&
+    !rateLimited &&
     pages.length === 0;
 
   return (
@@ -208,37 +319,41 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
         )}
       </div>
 
-      {synthesizing ? (
+      {working || stillWorking ? (
         <div className="opr-app-building" role="status">
           <span className="opr-work-dots" aria-hidden={true}>
             <span />
             <span />
             <span />
           </span>
-          <div className="opr-empty-title">Reading what your AI knows…</div>
+          <div className="opr-empty-title">
+            {stillWorking
+              ? "Still reading what your AI knows…"
+              : "Reading what your AI knows…"}
+          </div>
           <div className="opr-empty-hint">
-            Synthesizing cited pages from this app's real sources.
+            {stillWorking
+              ? "This is taking longer than usual. Hang tight — it keeps trying, and the cited pages appear the moment they are ready."
+              : "Synthesizing cited pages from everything your AI has learned."}
           </div>
         </div>
-      ) : knowledgeFailed ? (
-        backendError === "rate_limited" ? (
-          <EmptyState
-            glyph="⚠"
-            title="Knowledge is busy — try again in a minute."
-            hint="Your AI hit a rate limit while synthesizing this app's pages. Nothing is lost — reopen this tab shortly."
-          />
-        ) : (
-          <EmptyState
-            glyph="⚠"
-            title="Knowledge is unavailable right now."
-            hint="Your AI provider is not reachable or not configured, so cited pages could not be synthesized. Once it is back, they appear here."
-          />
-        )
+      ) : rateLimited ? (
+        <EmptyState
+          glyph="⚠"
+          title="Knowledge is busy — try again in a minute."
+          hint="Your AI hit a rate limit while synthesizing these pages. Nothing is lost — reopen this tab shortly."
+        />
+      ) : providerUnavailable ? (
+        <EmptyState
+          glyph="⚠"
+          title="Knowledge is unavailable right now."
+          hint="Your AI provider is not reachable or not configured, so cited pages could not be synthesized. Once it is back, they appear here."
+        />
       ) : emptyBrain ? (
         <EmptyState
           glyph="📖"
           title="No knowledge yet"
-          hint="Your AI has not written any cited pages about this app yet. As it learns from the app and your workspace, they appear here."
+          hint="Your AI has not written any cited pages yet. As it learns from your workspace, they appear here."
         />
       ) : (
         <div className="opr-wiki">
@@ -304,15 +419,31 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
                 </section>
               ))}
 
-              <h2>References</h2>
-              <ol className="opr-refs">
-                {page.references.map((ref) => (
-                  // Key by page identity + n: ref numbers reset per page, so a
-                  // bare ref.n would reuse instances (and leak open state)
-                  // across page switches.
-                  <ReferenceItem key={`${page.id}-${ref.n}`} source={ref} />
-                ))}
-              </ol>
+              {page.artifacts && page.artifacts.length > 0 ? (
+                <>
+                  <h2>Artifacts</h2>
+                  {page.artifacts.map((artifact) => (
+                    <ArtifactItem
+                      key={`${page.id}-${artifact.url}`}
+                      artifact={artifact}
+                    />
+                  ))}
+                </>
+              ) : null}
+
+              {page.references.length > 0 ? (
+                <>
+                  <h2>References</h2>
+                  <ol className="opr-refs">
+                    {page.references.map((ref) => (
+                      // Key by page identity + n: ref numbers reset per page,
+                      // so a bare ref.n would reuse instances (and leak open
+                      // state) across page switches.
+                      <ReferenceItem key={`${page.id}-${ref.n}`} source={ref} />
+                    ))}
+                  </ol>
+                </>
+              ) : null}
 
               {page.seeAlso.length > 0 ? (
                 <>

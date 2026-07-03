@@ -432,11 +432,12 @@ function TabBody({
   }
 }
 
-// The broker's app-scoped integration catalog: the CONNECTED platforms an app
-// (and the agent behind it) can call. Mirrors appIntegrationCatalogResponse in
-// internal/team/broker_apps_integrations.go. Passing the connected names into
-// ToolIntegrations stops the tab from falsely claiming "does not use any
-// integrations"; a fetch failure degrades to the previous empty state.
+// The broker's app-scoped integration catalog: the workspace's CONNECTED
+// platforms this app (and the agent behind it) can call. Mirrors
+// appIntegrationCatalogResponse in internal/team/broker_apps_integrations.go.
+// These are the workspace's connected integrations the agent CAN use — not
+// integrations "used by this tool" — so the tab is framed honestly below. A
+// fetch failure degrades to the previous empty state.
 interface AppIntegrationCatalogItem {
   platform: string;
   name: string;
@@ -465,7 +466,13 @@ function AppIntegrationsTab() {
       cancelled = true;
     };
   }, []);
-  return <ToolIntegrations usedNames={connectedNames} />;
+  return (
+    <ToolIntegrations
+      usedNames={connectedNames}
+      usedHeading="Connected for your workspace"
+      usedEmptyNote="No integrations connected yet. Connect from your catalog below and this agent can use them."
+    />
+  );
 }
 
 function UiTab({

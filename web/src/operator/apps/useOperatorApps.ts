@@ -163,7 +163,10 @@ export function resolveNewAppId(
 // operator jobs; anything else becomes "<Lead words> Agent".
 const AGENT_ROLES: ReadonlyArray<[RegExp, string]> = [
   [
-    /\b(crm|hygiene|dedupe|duplicate|clean[- ]?up|data quality)\b/i,
+    // NOT "crm": a bare CRM mention (or a HubSpot/Salesforce endpoint like
+    // /crm/v3/... in the captured build seed) means the workflow USES a CRM,
+    // not that it cleans one. Hygiene is signalled by dedupe/cleanup terms.
+    /\b(hygiene|dedupe|duplicate|clean[- ]?up|data quality)\b/i,
     "CRM Hygiene Agent",
   ],
   [

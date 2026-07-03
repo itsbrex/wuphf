@@ -308,6 +308,27 @@ export async function getText(
   return r.text();
 }
 
+/** Authenticated binary GET — for file-ish payloads (PDFs) that a plain <a>
+ * cannot fetch because the auth header does not travel with link navigation. */
+export async function getBlob(
+  path: string,
+  options?: GetOptions,
+): Promise<Blob> {
+  let r: Response;
+  try {
+    r = await fetch(baseURL() + path, {
+      headers: authHeaders(),
+      signal: getRequestSignal(options),
+    });
+  } catch (err) {
+    throw describeGetError(err) ?? err;
+  }
+  if (!r.ok) {
+    throw await apiErrorFromResponse(r);
+  }
+  return r.blob();
+}
+
 export async function post<T = unknown>(
   path: string,
   body?: unknown,

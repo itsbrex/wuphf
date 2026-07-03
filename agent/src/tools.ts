@@ -91,39 +91,89 @@ function camel(words: string[]): string {
 	return words.map((w, i) => (i === 0 ? w : w[0].toUpperCase() + w.slice(1))).join("");
 }
 
+// Coordinating conjunctions where a long instruction can be cut without leaving a
+// dangling fragment: "count the open tasks AND tell me the number" -> stop before
+// "and". Kept to coordinators (not "to"/"if") so short imperatives are not clipped.
+const CLAUSE_BREAK = new Set(["and", "or", "then", "but", "so", "plus", "also", "nor"]);
+const TITLE_MAX_WORDS = 6;
+const TITLE_MIN_WORDS = 3;
+
+function bareWord(w: string): string {
+	return w.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/** Trim a lead phrase to a title-length budget WITHOUT cutting mid-clause. When
+ * the phrase is longer than the budget, end it at the last natural boundary inside
+ * the kept window — before a coordinating conjunction, or after a comma — so we
+ * never emit "… and tell". Short phrases pass through whole. */
+function naturalTitle(lead: string): string {
+	const words = lead.split(/\s+/).filter(Boolean);
+	if (words.length <= TITLE_MAX_WORDS) return words.join(" ");
+	const window = words.slice(0, TITLE_MAX_WORDS);
+	let cut = window.length;
+	for (let i = window.length - 1; i >= TITLE_MIN_WORDS; i--) {
+		if (CLAUSE_BREAK.has(bareWord(window[i]))) {
+			cut = i; // drop the conjunction and everything the truncation orphaned after it
+			break;
+		}
+		if (/[,;]$/.test(window[i])) {
+			cut = i + 1; // a clause that ends on this word is complete — keep through it
+			break;
+		}
+	}
+	return window.slice(0, cut).join(" ");
+}
+
 /** Human title from a described workflow: drop a leading "When ... ," trigger,
- * sentence-case the rest. Shared by the stub author and the model path (when the
- * model omits a title). */
+ * cut to a title length at a natural clause boundary, sentence-case the rest.
+ * Shared by the stub author and the model path (when the model omits a title). */
 function humanTitle(description: string, fallback: string): string {
 	const lead = description.trim().replace(/^when\b[^,]*,\s*/i, "");
-	const titleWords = lead.split(/\s+/).slice(0, 6).join(" ");
+	const titleWords = naturalTitle(lead);
 	return (titleWords ? titleWords[0].toUpperCase() + titleWords.slice(1) : fallback).replace(/[.,;:]+$/, "");
 }
 
+// An instruction can LEAD with an explicit camelCase tool name — the demo-call
+// handoff always sends "postHandoffToSlack — Post the lead, score, …". Strict
+// camelCase (an interior capital) so prose with a dash ("ok — do this") never
+// reads as a name.
+const EXPLICIT_NAME = /^\s*([a-z][a-z0-9]*[A-Z][A-Za-z0-9]*)\s*[—–:-]\s+(.+)$/s;
+
 /** Derive a create_tool spec from a described workflow — a known shape, else a
- * synthesized camelCase name + plain-language title. Deterministic. */
+ * synthesized camelCase name + plain-language title. Deterministic.
+ *
+ * An explicit leading name is an ORDER, not a hint: a keyword shape applies only
+ * when it AGREES on the name. Without this, purpose words like "lead"/"score" in
+ * "postHandoffToSlack — Post the lead, score, …" hijacked the request into the
+ * scoreAndRouteLead template — the service returned 200 with the WRONG tool and
+ * the requested one silently never existed. */
 export function authorTool(description: string): Tool {
 	const desc = description.trim();
-	const shape = SHAPES.find((s) => s.test.test(desc));
+	const explicit = EXPLICIT_NAME.exec(desc);
+	const requested = explicit?.[1];
+	// What the tool is ABOUT: the purpose after an explicit name, else the whole
+	// instruction. Titles, purposes, and the code comment derive from this.
+	const about = explicit?.[2].trim() || desc;
+	const shape = SHAPES.find((s) => s.test.test(desc) && (!requested || s.name === requested));
 	if (shape) {
 		return { name: shape.name, title: shape.title, purpose: shape.purpose, inputs: toInputs(shape.inputs), code: shape.code };
 	}
-	const words = desc
+	const words = about
 		.toLowerCase()
 		.replace(/[^a-z0-9\s]/g, " ")
 		.split(/\s+/)
 		.filter((w) => w && !STOPWORDS.has(w));
-	const rawName = words.length ? camel(words.slice(0, 3)) : "runWorkflow";
+	const rawName = requested ?? (words.length ? camel(words.slice(0, 3)) : "runWorkflow");
 	// A digit-leading word would yield `async function 2026RenewalSync` — not a
 	// legal identifier. Prefix "run" (keeping the camelCase tail) when needed.
 	const name = /^[A-Za-z_$]/.test(rawName) ? rawName : `run${rawName[0].toUpperCase()}${rawName.slice(1)}`;
 	// The description is interpolated into a `//` line comment: a newline in it
 	// would terminate the comment and spill raw text into the function body.
-	const commentDesc = desc.replace(/\s+/g, " ");
+	const commentDesc = about.replace(/\s+/g, " ");
 	return {
 		name,
-		title: humanTitle(desc, name),
-		purpose: desc ? desc[0].toUpperCase() + desc.slice(1) : name,
+		title: humanTitle(about, name),
+		purpose: about ? about[0].toUpperCase() + about.slice(1) : name,
 		inputs: [{ name: "input", type: "string" }],
 		code: `async function ${name}(input) {\n  // Nex scripted this from: "${commentDesc}"\n  return nex.run(input);\n}`,
 	};

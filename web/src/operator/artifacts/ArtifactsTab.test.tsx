@@ -88,6 +88,30 @@ describe("ArtifactsTab", () => {
     expect(anchor?.getAttribute("href")).toBe("/artifacts/brief.pdf");
   });
 
+  it("humanizes ISO artifact timestamps and passes non-date stamps through", () => {
+    const iso: Artifact = {
+      id: "i1",
+      type: "md",
+      title: "recap.md",
+      producedBy: "weeklyPipelineSummary",
+      at: "2026-07-03T01:08:04.821Z",
+      content: "# hi",
+    };
+    const { container, getByText } = render(
+      <ArtifactsTab
+        agentName="Pipeline Agent"
+        artifacts={[iso, ...ARTIFACTS]}
+      />,
+    );
+    const meta = container.querySelector(".opr-artifact-meta");
+    // The raw ISO stamp never reaches the UI…
+    expect(meta?.textContent).not.toContain("2026-07-03T01:08:04.821Z");
+    // …it renders as a short local "Mon D" date.
+    expect(meta?.textContent).toMatch(/[A-Z][a-z]{2}\s+\d{1,2}/);
+    // A non-date stamp (a seeded label) is left untouched.
+    expect(getByText(/weeklyPipelineSummary · Monday/)).toBeTruthy();
+  });
+
   it("shows the honest empty state when nothing was produced yet", () => {
     const { getByText } = render(
       <ArtifactsTab agentName="Pipeline Agent" artifacts={[]} />,

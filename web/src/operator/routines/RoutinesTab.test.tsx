@@ -95,6 +95,7 @@ describe("RoutinesTab (live broker scheduler)", () => {
     onPatch?: () => unknown;
     onCreate?: () => unknown;
     jobs?: () => unknown[];
+    runs?: () => unknown[];
   }) {
     return vi.fn(async (url: string, init?: RequestInit) => {
       if (init?.method === "PATCH") {
@@ -107,7 +108,14 @@ describe("RoutinesTab (live broker scheduler)", () => {
         return ok({ job: job() });
       }
       if (url.endsWith("/revisions")) {
-        return ok({ revisions: [{ version: 2, created_at: "", label: "Live recap", enabled: true }] });
+        return ok({
+          revisions: [
+            { version: 2, created_at: "", label: "Live recap", enabled: true },
+          ],
+        });
+      }
+      if (url.endsWith("/runs")) {
+        return ok({ runs: overrides.runs?.() ?? [] });
       }
       return ok({ jobs: overrides.jobs?.() ?? [job()] });
     });
@@ -200,7 +208,11 @@ describe("RoutinesTab (live broker scheduler)", () => {
   it("Add routine registers a scheduler routine (purpose + cron + owner)", async () => {
     const fetchMock = brokerFetch({
       onCreate: () =>
-        job({ slug: "routine-chase-legal", label: "Chase legal", payload: "Email me anything stuck in legal" }),
+        job({
+          slug: "routine-chase-legal",
+          label: "Chase legal",
+          payload: "Email me anything stuck in legal",
+        }),
     });
     vi.stubGlobal("fetch", fetchMock);
     const { findByText, getByLabelText, getByText } = render(
@@ -223,5 +235,35 @@ describe("RoutinesTab (live broker scheduler)", () => {
       owner: "app_x",
       created_by: "operator",
     });
+  });
+
+  it("expands Recent runs and lists the routine's run history (first line only)", async () => {
+    const fetchMock = brokerFetch({
+      runs: () => [
+        {
+          slug: "routine-live-recap",
+          started_at: "2026-07-02T09:02:00Z",
+          status: "ok",
+          output_summary: "Recap saved to Artifacts.\nFull detail below.",
+        },
+      ],
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { findByText, getByText, queryByText } = render(
+      <RoutinesTab agentName="Pipeline Agent" agentId="app_x" />,
+    );
+    await findByText("Live recap");
+    // Runs load lazily: nothing fetched until the disclosure is expanded.
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).endsWith("/runs")),
+    ).toBe(false);
+    fireEvent.click(getByText("Recent runs"));
+    expect(await findByText("Recap saved to Artifacts.")).toBeTruthy();
+    // Only the first summary line is shown, not the whole thing.
+    expect(queryByText("Full detail below.")).toBeNull();
+    const runsCall = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/runs"),
+    );
+    expect(runsCall?.[0]).toBe("/api/scheduler/routine-live-recap/runs");
   });
 });

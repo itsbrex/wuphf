@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { CustomApp } from "../../api/apps";
+import { assembleDemoCapture, capturePromptSeed } from "./demoCapture";
 import {
   APP_ID_PREFIX,
   appBuildState,
@@ -95,6 +96,30 @@ describe("deriveAppName", () => {
     expect(deriveAppName("a weekly pipeline summary I can glance at")).toBe(
       "Pipeline Agent",
     );
+  });
+
+  it("names a lead-scoring/routing demo for its role, not CRM hygiene", () => {
+    // The narrated goal for the inbound demo-request scenario. Scoring and
+    // routing is the job; a CRM is merely one of the systems it touches.
+    const goal =
+      "When a demo request comes in, look up the company in HubSpot, score " +
+      "fit 0 to 100 from company size and industry, route 70 and up to an AE " +
+      "in Slack #ae-handoffs with the reason, and nurture the rest.";
+    expect(deriveAppName(goal)).not.toBe("CRM Hygiene Agent");
+    expect(deriveAppName(goal)).toBe("Lead Routing Agent");
+  });
+
+  it("does not read a CRM API endpoint in the build seed as a hygiene job", () => {
+    // The demo handoff derives the name from the FULL capture seed, which
+    // embeds the observed HubSpot endpoint /crm/v3/objects/companies/search.
+    // A bare "crm" mention means the workflow USES a CRM, not that it cleans
+    // one — the name must follow the actual work (lead scoring + routing).
+    const seed = capturePromptSeed(
+      assembleDemoCapture({ mode: "build", transcript: [] }),
+    );
+    expect(seed).toContain("/crm/v3/objects/companies/search");
+    expect(deriveAppName(seed)).not.toBe("CRM Hygiene Agent");
+    expect(deriveAppName(seed)).toBe("Lead Routing Agent");
   });
 
   it("synthesizes <lead words> Agent for an unknown domain", () => {

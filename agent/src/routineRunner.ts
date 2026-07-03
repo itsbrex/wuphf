@@ -112,7 +112,11 @@ export async function runRoutine(agent: string, routine: RoutineRunRequest, deps
 		const execute = deps.execute ?? runTool;
 		const capabilities = deps.capabilities ?? buildCapabilities(capabilityConfigFromEnv());
 		const timeoutMs = Number(process.env.TOOL_CALL_TIMEOUT_MS) || undefined;
-		const r = await execute(tool, {}, { approved: false, capabilities, timeoutMs });
+		// Give the tool the routine's prompt as `input`. A synthesized fallback tool
+		// takes a single `input` param (tools.ts authorTool) — without this it ran on
+		// "" and the digest read "Ran on  (simulated).". Tools with named params
+		// (lead, deal, …) ignore it, so this only enriches the generic case.
+		const r = await execute(tool, { input: routine.prompt }, { approved: false, capabilities, timeoutMs });
 		status = r.status;
 		outcome = outcomeText(r);
 	} else {

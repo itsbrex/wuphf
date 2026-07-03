@@ -107,8 +107,15 @@ describe("AgentSessions", () => {
 
   it("hydrates sessions + the persisted transcript from the service", async () => {
     vi.stubGlobal("fetch", serviceFetch());
+    // Explicitly open the routine session (as "Open its chat" would): the
+    // DEFAULT now lands on a manual session, so request s1 to exercise routine
+    // transcript hydration.
     const { findByText, getByTestId, queryByText } = render(
-      <AgentSessions agentName="Pipeline Agent" agentId="app_x" />,
+      <AgentSessions
+        agentName="Pipeline Agent"
+        agentId="app_x"
+        requestedSessionId="s1"
+      />,
     );
     expect(await findByText("Weekly recap run")).toBeTruthy();
     // The seeds were replaced by the service's sessions.
@@ -125,7 +132,11 @@ describe("AgentSessions", () => {
     const fetchMock = serviceFetch();
     vi.stubGlobal("fetch", fetchMock);
     const { findByText, getByTestId, getByText } = render(
-      <AgentSessions agentName="Pipeline Agent" agentId="app_x" />,
+      <AgentSessions
+        agentName="Pipeline Agent"
+        agentId="app_x"
+        requestedSessionId="s1"
+      />,
     );
     // Wait for the HYDRATED pane (the seeded pane has no mirroring hook).
     await findByText("Weekly recap run");
@@ -195,5 +206,104 @@ describe("AgentSessions", () => {
     await waitFor(() => expect(requested?.className).toContain("is-active"));
     const first = (await findByText("Weekly recap run")).closest("button");
     expect(first?.className).not.toContain("is-active");
+  });
+
+  it("defaults to a fresh manual chat when the service has only routine sessions (regression)", async () => {
+    // A real agent whose sessions are all ROUTINE runs used to open the routine
+    // session by default, so manual chatting polluted its run transcript. The
+    // default must be a MANUAL chat instead.
+    const routineOnly = [
+      {
+        id: "s1",
+        agent: "app_x",
+        title: "Weekly recap run",
+        kind: "routine",
+        at: "Monday 9:02",
+        routine: "routine-recap",
+      },
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url === "/agent/sessions?agent=app_x") {
+          return ok({ sessions: routineOnly });
+        }
+        throw new Error(`unexpected fetch ${url}`);
+      }),
+    );
+    const { findByText, getByText } = render(
+      <AgentSessions agentName="Pipeline Agent" agentId="app_x" />,
+    );
+    // The routine session still shows in the strip…
+    expect(await findByText("Weekly recap run")).toBeTruthy();
+    // …but the ACTIVE default is a fresh manual chat, not the routine's run.
+    const manual = getByText("Chat with your agent").closest("button");
+    await waitFor(() => expect(manual?.className).toContain("is-active"));
+    const routine = getByText("Weekly recap run").closest("button");
+    expect(routine?.className).not.toContain("is-active");
+  });
+
+  it("creates the draft manual session on the first sent turn (not before)", async () => {
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url === "/agent/sessions?agent=app_x") {
+        return ok({
+          sessions: [
+            {
+              id: "s1",
+              agent: "app_x",
+              title: "Weekly recap run",
+              kind: "routine",
+              at: "Monday 9:02",
+            },
+          ],
+        });
+      }
+      if (url === "/agent/sessions" && init?.method === "POST") {
+        return ok({
+          session: {
+            id: "s9",
+            agent: "app_x",
+            title: "Chat with your agent",
+            kind: "manual",
+            at: "just now",
+          },
+        });
+      }
+      if (url.endsWith("/message") && init?.method === "POST") {
+        return ok({ ok: true });
+      }
+      throw new Error(`unexpected fetch ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const { findByText, getByText } = render(
+      <AgentSessions agentName="Pipeline Agent" agentId="app_x" />,
+    );
+    await findByText("Chat with your agent");
+    // No session was created just to have a default (no POST /sessions yet).
+    expect(
+      fetchMock.mock.calls.some(
+        ([url, init]) => url === "/agent/sessions" && init?.method === "POST",
+      ),
+    ).toBe(false);
+    // The first turn persists the session, then mirrors both messages to it.
+    fireEvent.click(getByText("emit turn"));
+    await waitFor(() => {
+      const mirrored = fetchMock.mock.calls.filter(
+        ([url]) => typeof url === "string" && url.endsWith("/message"),
+      );
+      expect(mirrored).toHaveLength(2);
+    });
+    const created = fetchMock.mock.calls.filter(
+      ([url, init]) => url === "/agent/sessions" && init?.method === "POST",
+    );
+    expect(created).toHaveLength(1);
+    const mirroredUrls = fetchMock.mock.calls
+      .filter(([url]) => typeof url === "string" && url.endsWith("/message"))
+      .map(([url]) => url);
+    // Both turns mirror to the SAME newly-created session id.
+    expect(mirroredUrls).toEqual([
+      "/agent/sessions/s9/message",
+      "/agent/sessions/s9/message",
+    ]);
   });
 });

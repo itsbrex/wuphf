@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { Download, FileText } from "lucide-react";
 
+import { formatStamp } from "../routines/routines";
 import { ARTIFACT_BADGE, type Artifact } from "./artifacts";
 
 interface ArtifactsTabProps {
@@ -51,7 +52,7 @@ export function ArtifactsTab({ agentName, artifacts }: ArtifactsTabProps) {
             <span className="opr-artifact-chip-body">
               <span className="opr-artifact-title">{a.title}</span>
               <span className="opr-artifact-meta">
-                {a.producedBy} · {a.at}
+                {a.producedBy} · {formatStamp(a.at)}
               </span>
             </span>
           </button>
@@ -94,7 +95,8 @@ function ArtifactViewer({ artifact }: { artifact: Artifact }) {
           <div className="opr-artifact-file-body">
             <div className="opr-artifact-title">{artifact.title}</div>
             <div className="opr-artifact-meta">
-              {artifact.size ?? "PDF"} · {artifact.producedBy} · {artifact.at}
+              {artifact.size ?? "PDF"} · {artifact.producedBy} ·{" "}
+              {formatStamp(artifact.at)}
             </div>
           </div>
           {artifact.url ? (

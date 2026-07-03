@@ -63,6 +63,36 @@ test("GATED_CAPABILITIES lists every mutating capability the send-gate must hold
 	expect(GATED_CAPABILITIES.has("nex.browser")).toBe(true);
 });
 
+// --- simulated fallbacks (empty input honesty) ----------------------------------
+
+test("simulated nex.run with a blank input is honest, not 'Ran on  (simulated).'", async () => {
+	// QA HIGH-1: a routine ran a generic tool with no bound input, so nex.run("")
+	// interpolated an empty string -> "Ran on  (simulated)." (double space, zero
+	// information). The digest must not carry that string and must say WHY nothing
+	// ran (no model/broker connected).
+	const tree = buildCapabilities({});
+	const out = String(await cap(tree, "nex.run")(""));
+	expect(out).not.toContain("Ran on  (simulated)."); // the double-space bug
+	expect(out).not.toMatch(/on\s{2,}/); // no empty interpolation anywhere
+	expect(out.toLowerCase()).toContain("simulated");
+	expect(out).toContain("no model"); // honest about why
+});
+
+test("simulated nex.run names the input it would have acted on", async () => {
+	const tree = buildCapabilities({});
+	const out = String(await cap(tree, "nex.run")("Summarize the open office tasks"));
+	expect(out).toContain("Summarize the open office tasks");
+	expect(out.toLowerCase()).toContain("simulated");
+});
+
+test("labelOf-backed sims never leave a blank hole for an empty argument", async () => {
+	const tree = buildCapabilities({});
+	// nex.send / nex.ai.write route their arg through labelOf; a blank must render
+	// the neutral marker, not a double space.
+	expect(String(await cap(tree, "nex.send")(""))).not.toMatch(/\s{2,}/);
+	expect(String(await cap(tree, "nex.ai.write")(""))).not.toMatch(/Drafted\s{2,}/);
+});
+
 // --- real nex.ai (stubbed complete) ---------------------------------------------
 
 test("real nex.ai.score parses the model's integer and clamps it", async () => {

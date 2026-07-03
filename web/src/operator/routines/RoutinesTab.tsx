@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import {
   CalendarClock,
   CheckCircle2,
+  ChevronRight,
   MessageSquareText,
   Play,
   Plus,
@@ -24,15 +25,18 @@ import {
 
 import {
   tryCreateRoutine,
+  tryListRoutineRuns,
   tryListRoutines,
   tryPatchRoutine,
   tryRunRoutineNow,
   type WireRoutine,
+  type WireRoutineRun,
 } from "../agents/agentStateClient";
 import { isRealAppId } from "../apps/useOperatorApps";
 import { Eyebrow } from "../components/primitives";
 import {
   formatLastRun,
+  formatStamp,
   humanSchedule,
   newRoutine,
   type Routine,
@@ -40,6 +44,27 @@ import {
   SCHEDULE_PRESETS,
   seedRoutines,
 } from "./routines";
+
+// A run's status maps to a colored dot: succeeded → green, failed → red,
+// anything mid-flight or unknown → the muted default.
+function runStatusClass(status: string): string {
+  const s = status.toLowerCase();
+  if (s === "ok" || s === "success" || s === "succeeded" || s === "done") {
+    return "is-ok";
+  }
+  if (s === "failed" || s === "error" || s === "errored") return "is-bad";
+  return "is-pending";
+}
+
+// The first non-empty line of a run summary — the glanceable outcome.
+function firstLine(text: string): string {
+  return (
+    text
+      .split("\n")
+      .map((line) => line.trim())
+      .find((line) => line.length > 0) ?? ""
+  );
+}
 
 interface RoutinesTabProps {
   agentName: string;
@@ -79,6 +104,12 @@ export function RoutinesTab({
   // Run-now feedback: which routine is mid-queue, and which just queued/ran.
   const [runningId, setRunningId] = useState<string | null>(null);
   const [ranJustNowId, setRanJustNowId] = useState<string | null>(null);
+  // Recent-runs disclosure: which routine cards are expanded, and their loaded
+  // run history (undefined = not fetched yet, null = fetched but unavailable).
+  const [expandedRuns, setExpandedRuns] = useState<Set<string>>(new Set());
+  const [runsById, setRunsById] = useState<
+    Record<string, WireRoutineRun[] | null>
+  >({});
 
   const realId = isRealAppId(agentId) ? agentId : undefined;
 
@@ -97,6 +128,24 @@ export function RoutinesTab({
 
   function patch(id: string, up: (r: Routine) => Routine) {
     setRoutines((prev) => prev.map((r) => (r.id === id ? up(r) : r)));
+  }
+
+  // Expand/collapse a routine's run history; load it lazily on first expand
+  // (the broker keeps a per-slug run ring). Offline/mock agents just resolve
+  // null and the card shows the honest empty note.
+  function toggleRuns(r: Routine) {
+    const wasOpen = expandedRuns.has(r.id);
+    setExpandedRuns((prev) => {
+      const next = new Set(prev);
+      if (next.has(r.id)) next.delete(r.id);
+      else next.add(r.id);
+      return next;
+    });
+    if (!(wasOpen || r.id in runsById)) {
+      void tryListRoutineRuns(r.id).then((runs) => {
+        setRunsById((prev) => ({ ...prev, [r.id]: runs }));
+      });
+    }
   }
 
   function toggleEnabled(r: Routine) {
@@ -281,6 +330,23 @@ export function RoutinesTab({
                 Open its chat
               </button>
             </div>
+
+            <div className="opr-routine-runs">
+              <button
+                type="button"
+                className={`opr-routine-runs-toggle${
+                  expandedRuns.has(r.id) ? " is-open" : ""
+                }`}
+                aria-expanded={expandedRuns.has(r.id)}
+                onClick={() => toggleRuns(r)}
+              >
+                <ChevronRight size={11} strokeWidth={2} aria-hidden={true} />
+                Recent runs
+              </button>
+              {expandedRuns.has(r.id) ? (
+                <RecentRuns runs={runsById[r.id]} />
+              ) : null}
+            </div>
           </div>
         ))}
       </div>
@@ -333,5 +399,35 @@ export function RoutinesTab({
         </div>
       </div>
     </div>
+  );
+}
+
+// The routine's recent runs from the broker's per-slug run ring: status dot,
+// when it ran (humanized), and the first line of its outcome. `undefined` while
+// loading; `null`/empty shows the honest empty note.
+function RecentRuns({ runs }: { runs: WireRoutineRun[] | null | undefined }) {
+  if (runs === undefined) {
+    return <p className="opr-scoped-note">Loading recent runs…</p>;
+  }
+  if (!runs || runs.length === 0) {
+    return <p className="opr-scoped-note">No runs recorded yet.</p>;
+  }
+  return (
+    <ul className="opr-routine-runs-list">
+      {runs.slice(0, 5).map((run, i) => (
+        <li className="opr-routine-run" key={`${run.started_at}-${i}`}>
+          <span
+            className={`opr-run-led ${runStatusClass(run.status)}`}
+            aria-hidden={true}
+          />
+          <span className="opr-routine-run-when">
+            {formatStamp(run.started_at)}
+          </span>
+          <span className="opr-routine-run-summary">
+            {firstLine(run.output_summary || run.message || "") || run.status}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
