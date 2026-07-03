@@ -25,11 +25,23 @@ import { ConnectIntegrationCard } from "../../components/messages/ConnectIntegra
 import { Eyebrow } from "../components/primitives";
 
 interface ToolIntegrationsProps {
-  /** Integration names the tool's workflow references (from its steps). */
+  /** Integration names shown as scoped chips above the full catalog. For a tool
+   * these are the integrations its workflow steps reference; for an agent app
+   * they are the workspace's connected integrations the agent can use. */
   usedNames: string[];
+  /** Heading over the scoped chips. Defaults to the tool framing; the agent-app
+   * path passes an honest workspace-connected framing instead (the chips are
+   * NOT "used by this tool" — they are what the agent CAN use). */
+  usedHeading?: string;
+  /** Note shown in place of the chips when there are no scoped names. */
+  usedEmptyNote?: string;
 }
 
-export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
+export function ToolIntegrations({
+  usedNames,
+  usedHeading = "Used by this tool",
+  usedEmptyNote = "This tool does not use any integrations yet.",
+}: ToolIntegrationsProps) {
   const [search, setSearch] = useState("");
   const [connecting, setConnecting] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -86,7 +98,7 @@ export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
     <div className="opr-tool-scoped">
       {usedNames.length > 0 ? (
         <>
-          <Eyebrow>Used by this tool</Eyebrow>
+          <Eyebrow>{usedHeading}</Eyebrow>
           <ul className="opr-scoped-chips">
             {usedNames.map((name) => (
               <li key={name} className="opr-scoped-chip">
@@ -96,9 +108,7 @@ export function ToolIntegrations({ usedNames }: ToolIntegrationsProps) {
           </ul>
         </>
       ) : (
-        <p className="opr-scoped-note">
-          This tool does not use any integrations yet.
-        </p>
+        <p className="opr-scoped-note">{usedEmptyNote}</p>
       )}
       <p className="opr-scoped-note">
         Connected once for your workspace and reused across tools. Search and

@@ -89,6 +89,16 @@ export function AgentSessions({
   // "Open its chat"). The list hydration below resolves LATER and must not
   // clobber it back to the first session.
   const pickedRef = useRef<string | null>(null);
+  // The synthesized default manual chat used when the service has ONLY routine
+  // sessions: it never opens a routine's run transcript by default (manual
+  // chatting would pollute the run history). It stays LOCAL and is created on
+  // the service only when the operator first sends a message. draftServiceRef
+  // memoizes that one-time create so both turns of the first exchange land in
+  // the same real session.
+  const draftManualIdRef = useRef<string | null>(null);
+  const draftServiceRef = useRef<Map<string, Promise<string | null>>>(
+    new Map(),
+  );
 
   useEffect(() => {
     if (!realId) return;
@@ -96,23 +106,36 @@ export function AgentSessions({
     void tryListSessions(realId).then(async (remote) => {
       if (cancelled || !remote) return; // unreachable — keep the seeded state
       const picked = pickedRef.current;
+      // Default to a MANUAL session, never a routine's run transcript — manual
+      // chatting/teaching in a routine session would pollute its run history.
+      // An explicitly requested session (a routine's "Open its chat") wins.
       const target =
-        (picked && remote.find((s) => s.id === picked)) || remote[0];
+        (picked && remote.find((s) => s.id === picked)) ||
+        remote.find((s) => s.kind === "manual") ||
+        null;
       // Fetch the target session's transcript BEFORE mounting its pane: a pane
       // reads its initialTranscript only at mount.
       const detail = target ? await tryGetSession(target.id, realId) : null;
       if (cancelled) return;
       setLive(true);
-      setSessions(remote.map(toMeta));
       if (target) {
+        setSessions(remote.map(toMeta));
         setTranscripts({
           [target.id]: detail ? toTranscript(detail.messages) : null,
         });
         setActiveId(target.id);
         setMounted([target.id]);
       } else {
-        setActiveId("");
-        setMounted([]);
+        // Only routine sessions exist (or none): present a fresh local manual
+        // chat as the default so the operator lands in a clean chat instead of
+        // a routine's run transcript. It persists to the service only on the
+        // first sent message (see turnHandlerFor).
+        const draft = newSession("Chat with your agent", "manual");
+        draftManualIdRef.current = draft.id;
+        setSessions([draft, ...remote.map(toMeta)]);
+        setTranscripts({ [draft.id]: [] });
+        setActiveId(draft.id);
+        setMounted([draft.id]);
       }
     });
     return () => {
@@ -172,6 +195,32 @@ export function AgentSessions({
     openNew(newSession(title, "manual"));
   }
 
+  // Where a chat turn's live mirror goes. A normal session mirrors each turn to
+  // the service fire-and-forget. The synthesized default manual chat is LOCAL
+  // until its first turn: it then creates the real session once and mirrors this
+  // and every later turn to it, so an unused default never litters the service.
+  function turnHandlerFor(
+    s: ChatSessionMeta,
+  ): ((from: "you" | "nex", body: string) => void) | undefined {
+    if (!(live && realId)) return undefined;
+    const agent = realId;
+    if (s.id !== draftManualIdRef.current) {
+      return (from, body) => trySendSessionMessage(s.id, { agent, from, body });
+    }
+    return (from, body) => {
+      let created = draftServiceRef.current.get(s.id);
+      if (!created) {
+        created = tryCreateSession(agent, s.title).then((c) =>
+          c ? c.id : null,
+        );
+        draftServiceRef.current.set(s.id, created);
+      }
+      void created.then((sid) => {
+        if (sid) trySendSessionMessage(sid, { agent, from, body });
+      });
+    };
+  }
+
   // What a pane starts from: the persisted transcript when the service has
   // one, the mock routine transcript for offline routine sessions, else the
   // chat's own greeting.
@@ -228,16 +277,7 @@ export function AgentSessions({
                     : undefined
                 }
                 initialTranscript={initialTranscriptFor(s)}
-                onTurn={
-                  live && realId
-                    ? (from, body) =>
-                        trySendSessionMessage(s.id, {
-                          agent: realId,
-                          from,
-                          body,
-                        })
-                    : undefined
-                }
+                onTurn={turnHandlerFor(s)}
               />
             </div>
           ))}

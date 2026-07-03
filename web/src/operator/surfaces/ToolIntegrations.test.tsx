@@ -28,13 +28,18 @@ vi.mock("../../components/apps/integrations/ComposioOnboarding", () => ({
   ComposioOnboarding: () => <div data-testid="composio-onboarding" />,
 }));
 
-function renderTab() {
+function renderTab(
+  props: Partial<{ usedNames: string[]; usedHeading: string }> = {},
+) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
   return render(
     <QueryClientProvider client={client}>
-      <ToolIntegrations usedNames={[]} />
+      <ToolIntegrations
+        usedNames={props.usedNames ?? []}
+        usedHeading={props.usedHeading}
+      />
     </QueryClientProvider>,
   );
 }
@@ -76,5 +81,19 @@ describe("ToolIntegrations", () => {
     expect(getByText("GitHub")).toBeTruthy();
     expect(getByText("Connect")).toBeTruthy();
     expect(queryByTestId("composio-onboarding")).toBeNull();
+  });
+
+  it("frames the scoped chips under the caller's heading (not always 'Used by this tool')", async () => {
+    getConfigMock.mockResolvedValue({ composio_key_set: true });
+    listIntegrationsMock.mockResolvedValue({ items: [] });
+    const { findByText, queryByText } = renderTab({
+      usedNames: ["GitHub"],
+      usedHeading: "Connected for your workspace",
+    });
+    // The agent-app path relabels the chips honestly.
+    expect(await findByText("Connected for your workspace")).toBeTruthy();
+    expect(await findByText("GitHub")).toBeTruthy();
+    // …and drops the misleading "Used by this tool" framing.
+    expect(queryByText("Used by this tool")).toBeNull();
   });
 });

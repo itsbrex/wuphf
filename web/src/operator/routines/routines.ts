@@ -54,9 +54,11 @@ export function humanSchedule(schedule: string): string {
   return preset ? preset.label : schedule;
 }
 
-/** Render a last-run stamp: broker RFC3339 becomes a short local time; a
- * seeded human label ("12 minutes ago") renders as-is. */
-export function formatLastRun(value: string): string {
+/** Humanize a timestamp: an ISO/RFC3339 string becomes a short local
+ * "Mon D, HH:MM"; a value that isn't a date (a seeded label like "12 minutes
+ * ago", or "v3") passes through untouched. Shared by routine run-stamps and
+ * artifact chips so both humanize the same way. */
+export function formatStamp(value: string): string {
   const t = Date.parse(value);
   if (Number.isNaN(t)) return value;
   return new Date(t).toLocaleString(undefined, {
@@ -65,6 +67,12 @@ export function formatLastRun(value: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+/** Render a last-run stamp: broker RFC3339 becomes a short local time; a
+ * seeded human label ("12 minutes ago") renders as-is. */
+export function formatLastRun(value: string): string {
+  return formatStamp(value);
 }
 
 let seq = 0;
