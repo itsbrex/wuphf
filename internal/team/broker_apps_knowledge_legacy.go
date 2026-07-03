@@ -48,10 +48,13 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 
 	// Team wiki articles: team/<category>/**.md (the category is the first
 	// folder under team/; root-level files read as plain "Team wiki").
+	// A walk error (missing tree, unreadable entry) ends the walk; whatever was
+	// collected up to that point is still preserved — this is best-effort
+	// archaeology, not a transaction.
 	teamRoot := filepath.Join(root, "team")
-	_ = filepath.Walk(teamRoot, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil // unreadable subtree — preserve what we can
+	_ = filepath.Walk(teamRoot, func(path string, info os.FileInfo, werr error) error {
+		if werr != nil {
+			return werr
 		}
 		if info.IsDir() {
 			// Editor/system dirs (.obsidian, .git) are not articles.
@@ -60,10 +63,9 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 			}
 			return nil
 		}
-		rel, relErr := filepath.Rel(teamRoot, path)
-		if relErr != nil {
-			return nil
-		}
+		// Walk only yields paths under teamRoot, so a prefix trim IS the
+		// relative path — no error case to swallow.
+		rel := strings.TrimPrefix(path, teamRoot+string(filepath.Separator))
 		category := "Team wiki"
 		if dir := filepath.Dir(rel); dir != "." {
 			category = "Team wiki · " + strings.SplitN(filepath.ToSlash(dir), "/", 2)[0]
