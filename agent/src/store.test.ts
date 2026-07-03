@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AgentStore, defaultDataDir, sanitizeAgentId } from "./store.js";
@@ -90,4 +90,27 @@ test("data survives a fresh store instance over the same dir (atomic file write)
 	expect(reopened.listArtifacts("a1")).toHaveLength(1);
 	// No stray tmp file left behind.
 	expect(readdirSync(dir).filter((f) => f.endsWith(".tmp"))).toEqual([]);
+});
+
+test("a corrupt data file is quarantined and read as empty — authoring recovers, not a 500", () => {
+	// Repro of the QA HIGH-2 symptom: a torn/corrupt per-agent file made load()
+	// throw, so every /tools/build for that app 500'd and the FE fell back to
+	// offline. Pre-fix this test throws on listTools; post-fix it recovers.
+	const { store, dir } = tmpStore();
+	mkdirSync(dir, { recursive: true });
+	const file = join(dir, "app_x.json");
+	writeFileSync(file, "{ torn write, not valid json");
+
+	// Reads recover to empty instead of throwing.
+	expect(store.listTools("app_x")).toEqual([]);
+	// The corrupt bytes are preserved under a quarantine name, not clobbered.
+	const quarantined = readdirSync(dir).filter((f) => f.startsWith("app_x.json.corrupt-"));
+	expect(quarantined).toHaveLength(1);
+	expect(readFileSync(join(dir, quarantined[0]), "utf8")).toBe("{ torn write, not valid json");
+
+	// Authoring now succeeds and writes a fresh, valid file.
+	store.upsertTool("app_x", TOOL);
+	expect(store.listTools("app_x")).toHaveLength(1);
+	// The recovered agent is not double-counted, and quarantine files are not agents.
+	expect(store.agents()).toEqual(["app_x"]);
 });

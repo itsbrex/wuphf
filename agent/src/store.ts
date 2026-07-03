@@ -5,11 +5,17 @@
 //
 //   - Data dir: WUPHF_AGENT_DATA_DIR, default agent/.wuphf-agent-data/ relative
 //     to this package. Created lazily on first save.
-//   - Writes are atomic-ish: write <file>.tmp, then rename over the target.
+//   - Writes are atomic-ish: write a UNIQUE <file>.<pid>.<rand>.tmp, then rename
+//     over the target. The temp name is per-write so two concurrent writers (e.g.
+//     two service instances sharing WUPHF_AGENT_DATA_DIR) never scribble over one
+//     shared temp and rename a torn file into place.
 //   - Agent ids are sanitized into safe filenames (path separators and other
 //     unsafe characters normalize to "_"; empty / dot-only ids are rejected).
-//   - A missing file reads as the empty shape; a CORRUPT file throws (loading
-//     it as empty would clobber the operator's data on the next save).
+//   - A missing file reads as the empty shape. A CORRUPT file is QUARANTINED
+//     (renamed to <file>.corrupt-<ts>) and read as empty: the operator's tool
+//     authoring recovers instead of dead-ending in an opaque 500 (which the FE
+//     shows as "offline"), and the unparseable bytes are preserved for recovery
+//     rather than clobbered on the next save.
 
 import { mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -67,14 +73,25 @@ export class AgentStore {
 	}
 
 	load(agent: string): AgentData {
+		const file = this.fileFor(agent);
 		let raw: string;
 		try {
-			raw = readFileSync(this.fileFor(agent), "utf8");
+			raw = readFileSync(file, "utf8");
 		} catch (e) {
 			if (isEnoent(e)) return emptyData();
-			throw e;
+			throw e; // a transient read error (EACCES etc.) must NOT quarantine good data
 		}
-		const parsed = JSON.parse(raw) as Partial<AgentData>;
+		let parsed: Partial<AgentData>;
+		try {
+			parsed = JSON.parse(raw) as Partial<AgentData>;
+		} catch {
+			// Corrupt JSON (e.g. a torn write from a pre-fix concurrent writer): move
+			// it aside so this agent's authoring recovers on the next save instead of
+			// every store-backed request 500ing. The bytes survive under the quarantine
+			// name for manual recovery — we never clobber them in place.
+			this.quarantine(file);
+			return emptyData();
+		}
 		// Tolerate older/partial files: missing sections read as empty (a file
 		// from the pre-rework store may also carry routines/sessions keys —
 		// ignored here; the broker and pi sessions own those now).
@@ -84,10 +101,23 @@ export class AgentStore {
 		};
 	}
 
+	/** Rename an unparseable data file aside so it stops wedging reads, keeping the
+	 * bytes for recovery. Best-effort: a failure here must not mask the original. */
+	private quarantine(file: string): void {
+		try {
+			renameSync(file, `${file}.corrupt-${Date.now()}`);
+		} catch {
+			// If we cannot move it aside, fall through — the next save overwrites the
+			// target, which is still better than a permanently 500ing agent.
+		}
+	}
+
 	save(agent: string, data: AgentData): void {
 		mkdirSync(this.dir, { recursive: true }); // lazy dir creation
 		const file = this.fileFor(agent);
-		const tmp = `${file}.tmp`;
+		// Unique temp per write: concurrent writers each own their temp, so a rename
+		// only ever publishes a fully-written file — no torn bytes reach the target.
+		const tmp = `${file}.${process.pid}.${crypto.randomUUID().slice(0, 8)}.tmp`;
 		writeFileSync(tmp, JSON.stringify(data, null, 2));
 		renameSync(tmp, file); // atomic-ish: readers never see a half-written file
 	}

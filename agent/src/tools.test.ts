@@ -39,6 +39,17 @@ test("authorTool synthesizes a name + plain title for an unknown workflow", () =
 	expect(t.inputs.map((i) => i.name)).toEqual(["input"]);
 });
 
+test("authorTool title cuts at a natural boundary, not mid-clause (LOW-9)", () => {
+	// QA LOW-9: this exact instruction produced "Count the open tasks and tell" —
+	// truncated mid-clause after a dangling "and". The title must end before the
+	// coordinating conjunction instead.
+	const t = authorTool("When I ask, count the open tasks and tell me the number.");
+	expect(t.title).toBe("Count the open tasks");
+	expect(t.title).not.toContain("and tell");
+	// A short instruction (<= budget) is still kept whole.
+	expect(authorTool("When it fires, archive the stale records").title).toBe("Archive the stale records");
+});
+
 test("authorTool synthesizes a valid identifier from a digit-leading workflow", () => {
 	// "2026" leads after stopword filtering — bare camelCasing would emit
 	// `async function 2026RenewalSync(...)`, which is not legal JS.

@@ -66,7 +66,10 @@ const DEFAULT_CAP_TIMEOUT_MS = 60_000;
 
 function labelOf(v: unknown): string {
 	if (v == null) return "…";
-	if (typeof v === "string") return v;
+	// A blank/whitespace-only string must NOT interpolate as "" — that produced
+	// digests like "Ran on  (simulated)." (double space, zero information) when a
+	// routine ran a tool with no bound input. Fall back to the neutral marker.
+	if (typeof v === "string") return v.trim() ? v : "…";
 	if (typeof v === "object") {
 		const o = v as Record<string, unknown>;
 		if (typeof o.name === "string") return o.name;
@@ -106,6 +109,22 @@ function simSummarize(items: unknown): string {
 	return `${list.length} item${list.length === 1 ? "" : "s"} — ${names || "nothing notable"} (simulated recap)`;
 }
 
+/** The generic fallback capability (nex.run) has no domain shape to imitate, so a
+ * simulated run must be HONEST about why nothing happened rather than emit a
+ * hollow "Ran on X" line. It names the input it would have acted on and points at
+ * the two knobs that make it real. One line — it is the routine's digest/artifact. */
+function simRun(input: unknown): string {
+	let subject = "";
+	if (typeof input === "string") {
+		const trimmed = input.replace(/\s+/g, " ").trim();
+		subject = trimmed.length > 80 ? `${trimmed.slice(0, 77)}…` : trimmed;
+	} else if (input != null) {
+		subject = preview(input);
+	}
+	const on = subject ? ` of "${subject}"` : "";
+	return `Simulated run${on}: no model or integrations are connected on this host, so nothing actually ran — set TOOL_RUNTIME_MODEL=1 or connect the broker (WUPHF_BROKER_URL/WUPHF_BROKER_TOKEN) to run it for real.`;
+}
+
 /** The all-simulated runtime: deterministic, no network, no model. */
 export function simulatedCapabilities(): CapabilityTree {
 	return {
@@ -115,7 +134,7 @@ export function simulatedCapabilities(): CapabilityTree {
 				summarize: (items: unknown) => simSummarize(items),
 				write: (kind: unknown) => `Drafted ${labelOf(kind)} — warm, brief, ready to review (simulated).`,
 			},
-			run: (input: unknown) => `Ran on ${labelOf(input)} (simulated).`,
+			run: (input: unknown) => simRun(input),
 			send: (target: unknown) => `Sent to ${labelOf(target)} (simulated).`,
 			browser: (goal: unknown) => `Would drive the browser: ${labelOf(goal)} (browser engine not configured).`,
 		},
