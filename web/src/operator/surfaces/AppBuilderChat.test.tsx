@@ -32,8 +32,9 @@ vi.mock("../agents/agentStateClient", () => ({
   tryCreateRoutine: (input: unknown) => createRoutineMock(input),
 }));
 
-const buildToolMock = vi.fn(async (_instruction: string, _agent: string) => ({
-  tool: {},
+// Happy path: the service persists the REQUESTED tool (name echoed back).
+const buildToolMock = vi.fn(async (instruction: string, _agent: string) => ({
+  tool: { name: instruction.split(" — ")[0] },
   offline: false,
 }));
 vi.mock("../tools/toolAgentClient", () => ({
@@ -117,12 +118,28 @@ describe("AppBuilderChat demo handoff", () => {
     );
   });
 
+  it("does not claim a tool the service swapped for a different one", async () => {
+    // QA HIGH-2 (clean rerun): the service can answer 200 with the WRONG tool
+    // (a keyword template hijacking the request). A name mismatch means the
+    // requested tool does not exist — it must be reported, never "In place".
+    buildToolMock.mockResolvedValueOnce({
+      tool: { name: "scoreAndRouteLead" },
+      offline: false,
+    });
+    const { findByText, queryByText } = renderChat();
+    await findByText(/could not set up[\s\S]*summarizePipeline/);
+    expect(queryByText(/In place:[\s\S]*summarizePipeline/)).toBeNull();
+  });
+
   it("does not claim an offline (never-persisted) tool is in place", async () => {
     // buildToolFromChat returns offline:true when the agent service was
     // unreachable and only a local mock was made — the tool exists in memory
     // and was NEVER persisted on the agent. The chat must report it as failed,
     // not "In place".
-    buildToolMock.mockResolvedValueOnce({ tool: {}, offline: true });
+    buildToolMock.mockResolvedValueOnce({
+      tool: { name: "summarizePipeline" },
+      offline: true,
+    });
     const { findByText, queryByText } = renderChat();
     // The honest failure names the tool that only built offline.
     await findByText(/could not set up[\s\S]*summarizePipeline/);

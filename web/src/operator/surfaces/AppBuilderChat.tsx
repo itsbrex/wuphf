@@ -293,10 +293,13 @@ export function AppBuilderChat({
           `${tool.name} — ${tool.purpose}`,
           agentId,
         );
-        // offline:true means the agent service was unreachable and only a local
-        // mock was authored — the tool was NEVER persisted on the agent. Report
-        // it honestly as failed, not "In place".
-        (built.offline ? failed : done).push(tool.name);
+        // Two ways a "success" is not the tool we promised: offline:true (the
+        // agent service was unreachable — only a local mock exists, nothing
+        // persisted) and a NAME MISMATCH (the service authored/returned a
+        // different tool than the one requested). Both report as failed, never
+        // "In place".
+        const isRequested = built.tool?.name === tool.name;
+        (built.offline || !isRequested ? failed : done).push(tool.name);
       } catch {
         failed.push(tool.name);
       }

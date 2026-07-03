@@ -31,6 +31,31 @@ test("authorTool matches a known workflow shape", () => {
 	expect(t.code).toContain("async function scoreAndRouteLead(lead)");
 });
 
+test("authorTool honors an explicit leading name over a keyword-hijacked shape", () => {
+	// QA HIGH-2 (clean-workspace rerun): this exact demo-handoff instruction
+	// returned the scoreAndRouteLead TEMPLATE — "lead"/"score" in the purpose
+	// matched shape 1 and the explicitly requested tool silently never existed.
+	const t = authorTool("postHandoffToSlack — Post the lead, score, and reason to #ae-handoffs.");
+	expect(t.name).toBe("postHandoffToSlack");
+	expect(t.code).toContain("async function postHandoffToSlack(input)");
+	// The purpose/title come from the text AFTER the name, not the name itself.
+	expect(t.purpose).toBe("Post the lead, score, and reason to #ae-handoffs.");
+	expect(t.title.toLowerCase()).not.toContain("posthandofftoslack");
+});
+
+test("authorTool still uses a shape when the explicit name AGREES with it", () => {
+	const t = authorTool("scoreAndRouteLead — Score a lead's fit and route hot ones to the right AE.");
+	expect(t.name).toBe("scoreAndRouteLead");
+	expect(t.title).toBe("Score & route a lead");
+	expect(t.code).toContain("nex.ai.score");
+});
+
+test("authorTool does not read prose with a dash as an explicit name", () => {
+	// No interior capital → not camelCase → not a name; shape matching applies.
+	const t = authorTool("okay — score its fit and route hot leads to the AE");
+	expect(t.name).toBe("scoreAndRouteLead");
+});
+
 test("authorTool synthesizes a name + plain title for an unknown workflow", () => {
 	const t = authorTool("When an invoice arrives, archive old records nightly");
 	// Trigger clause dropped for the title; stopwords dropped + camelCased for name.

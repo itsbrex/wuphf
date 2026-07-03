@@ -133,30 +133,47 @@ function humanTitle(description: string, fallback: string): string {
 	return (titleWords ? titleWords[0].toUpperCase() + titleWords.slice(1) : fallback).replace(/[.,;:]+$/, "");
 }
 
+// An instruction can LEAD with an explicit camelCase tool name — the demo-call
+// handoff always sends "postHandoffToSlack — Post the lead, score, …". Strict
+// camelCase (an interior capital) so prose with a dash ("ok — do this") never
+// reads as a name.
+const EXPLICIT_NAME = /^\s*([a-z][a-z0-9]*[A-Z][A-Za-z0-9]*)\s*[—–:-]\s+(.+)$/s;
+
 /** Derive a create_tool spec from a described workflow — a known shape, else a
- * synthesized camelCase name + plain-language title. Deterministic. */
+ * synthesized camelCase name + plain-language title. Deterministic.
+ *
+ * An explicit leading name is an ORDER, not a hint: a keyword shape applies only
+ * when it AGREES on the name. Without this, purpose words like "lead"/"score" in
+ * "postHandoffToSlack — Post the lead, score, …" hijacked the request into the
+ * scoreAndRouteLead template — the service returned 200 with the WRONG tool and
+ * the requested one silently never existed. */
 export function authorTool(description: string): Tool {
 	const desc = description.trim();
-	const shape = SHAPES.find((s) => s.test.test(desc));
+	const explicit = EXPLICIT_NAME.exec(desc);
+	const requested = explicit?.[1];
+	// What the tool is ABOUT: the purpose after an explicit name, else the whole
+	// instruction. Titles, purposes, and the code comment derive from this.
+	const about = explicit?.[2].trim() || desc;
+	const shape = SHAPES.find((s) => s.test.test(desc) && (!requested || s.name === requested));
 	if (shape) {
 		return { name: shape.name, title: shape.title, purpose: shape.purpose, inputs: toInputs(shape.inputs), code: shape.code };
 	}
-	const words = desc
+	const words = about
 		.toLowerCase()
 		.replace(/[^a-z0-9\s]/g, " ")
 		.split(/\s+/)
 		.filter((w) => w && !STOPWORDS.has(w));
-	const rawName = words.length ? camel(words.slice(0, 3)) : "runWorkflow";
+	const rawName = requested ?? (words.length ? camel(words.slice(0, 3)) : "runWorkflow");
 	// A digit-leading word would yield `async function 2026RenewalSync` — not a
 	// legal identifier. Prefix "run" (keeping the camelCase tail) when needed.
 	const name = /^[A-Za-z_$]/.test(rawName) ? rawName : `run${rawName[0].toUpperCase()}${rawName.slice(1)}`;
 	// The description is interpolated into a `//` line comment: a newline in it
 	// would terminate the comment and spill raw text into the function body.
-	const commentDesc = desc.replace(/\s+/g, " ");
+	const commentDesc = about.replace(/\s+/g, " ");
 	return {
 		name,
-		title: humanTitle(desc, name),
-		purpose: desc ? desc[0].toUpperCase() + desc.slice(1) : name,
+		title: humanTitle(about, name),
+		purpose: about ? about[0].toUpperCase() + about.slice(1) : name,
 		inputs: [{ name: "input", type: "string" }],
 		code: `async function ${name}(input) {\n  // Nex scripted this from: "${commentDesc}"\n  return nex.run(input);\n}`,
 	};
