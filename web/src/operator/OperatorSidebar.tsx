@@ -21,6 +21,9 @@ export interface SidebarAgent {
   name: string;
   glyph: string;
   building?: boolean;
+  /** Mock draft suggestion, not real inventory: excluded from the Agents
+   * count and rendered ghosted under a "Suggested" section label. */
+  suggested?: boolean;
 }
 
 interface NavDef {
@@ -56,6 +59,32 @@ export function OperatorSidebar({
   // The rail is collapsible so a long roster doesn't crowd the nav.
   const [agentsOpen, setAgentsOpen] = useState(true);
 
+  // Product honesty: the count badge is inventory, so it counts REAL agents
+  // only. Suggestions render below the roster, ghosted, as ideas.
+  const realAgents = agents.filter((a) => !a.suggested);
+  const suggestedAgents = agents.filter((a) => a.suggested);
+
+  function railItem(a: SidebarAgent) {
+    return (
+      <button
+        key={a.id}
+        type="button"
+        className={`opr-agent-rail-item${a.suggested ? " is-suggested" : ""}${
+          a.id === activeAgentId ? " is-active" : ""
+        }`}
+        onClick={() => onOpenAgent?.(a.id)}
+      >
+        <span className="opr-agent-rail-glyph" aria-hidden={true}>
+          {a.glyph}
+        </span>
+        <span className="opr-agent-rail-name">{a.name}</span>
+        {a.building ? (
+          <span className="opr-led opr-led-draft" title="Building" />
+        ) : null}
+      </button>
+    );
+  }
+
   return (
     <aside className="opr-sidebar">
       <div className="opr-brand">
@@ -86,8 +115,8 @@ export function OperatorSidebar({
                   <item.icon size={15} strokeWidth={1.8} />
                 </span>
                 {item.label}
-                {item.id === "tools" && agents.length > 0 ? (
-                  <span className="opr-nav-count">{agents.length}</span>
+                {item.id === "tools" && realAgents.length > 0 ? (
+                  <span className="opr-nav-count">{realAgents.length}</span>
                 ) : null}
               </button>
               {item.id === "tools" && agents.length > 0 ? (
@@ -109,28 +138,20 @@ export function OperatorSidebar({
             </div>
 
             {item.id === "tools" && agentsOpen && agents.length > 0 ? (
-              <div className="opr-agent-rail" aria-label="Your agents">
-                {agents.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    className={`opr-agent-rail-item${
-                      a.id === activeAgentId ? " is-active" : ""
-                    }`}
-                    onClick={() => onOpenAgent?.(a.id)}
-                  >
-                    <span className="opr-agent-rail-glyph" aria-hidden={true}>
-                      {a.glyph}
-                    </span>
-                    <span className="opr-agent-rail-name">{a.name}</span>
-                    {a.building ? (
-                      <span
-                        className="opr-led opr-led-draft"
-                        title="Building"
-                      />
-                    ) : null}
-                  </button>
-                ))}
+              <div
+                className="opr-agent-rail"
+                role="group"
+                aria-label="Your agents"
+              >
+                {realAgents.map(railItem)}
+                {suggestedAgents.length > 0 ? (
+                  <>
+                    <div className="opr-eyebrow opr-agent-rail-label">
+                      Suggested
+                    </div>
+                    {suggestedAgents.map(railItem)}
+                  </>
+                ) : null}
               </div>
             ) : null}
           </div>

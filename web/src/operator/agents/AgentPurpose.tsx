@@ -12,6 +12,10 @@ import { useAppTools } from "../tools/toolsContext";
 interface AgentPurposeProps {
   /** The build-time description of the agent (may be empty). */
   summary?: string;
+  /** Render the "from N conversations" source chip (default true). Mock
+   * suggestion surfaces pass false: their tool seeds came from fixtures, so
+   * the chip's count would fabricate conversations that never happened. */
+  showSourceChip?: boolean;
 }
 
 function sentenceCase(s: string): string {
@@ -24,7 +28,10 @@ function lowerLead(s: string): string {
   return t ? t[0].toLowerCase() + t.slice(1) : t;
 }
 
-export function AgentPurpose({ summary }: AgentPurposeProps) {
+export function AgentPurpose({
+  summary,
+  showSourceChip = true,
+}: AgentPurposeProps) {
   const { tools } = useAppTools();
   const taught = tools.map((t) => lowerLead(t.purpose)).filter(Boolean);
 
@@ -43,7 +50,7 @@ export function AgentPurpose({ summary }: AgentPurposeProps) {
           </>
         ) : null}
       </p>
-      {taught.length > 0 ? (
+      {showSourceChip && taught.length > 0 ? (
         <span
           className="opr-agent-purpose-chip"
           title="Summarized from the workflows you taught this agent in chat"

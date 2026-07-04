@@ -82,8 +82,9 @@ export function OperatorApp() {
   const [demoBuild, setDemoBuild] = useState<DemoCapture | null>(null);
   const [demoSeed, setDemoSeed] = useState<string | null>(null);
 
-  // The sidebar's collapsible Agents rail: every agent (real + mock), renames
-  // applied, so the operator can jump straight to one.
+  // The sidebar's collapsible Agents rail: REAL agents (broker apps) first,
+  // renames applied; the mock drafts from mock/data ride along marked as
+  // SUGGESTIONS so the sidebar never counts or presents them as inventory.
   const appsQuery = useOperatorApps();
   const nameOverrides = useAgentNames();
   const sidebarAgents: SidebarAgent[] = [
@@ -97,6 +98,7 @@ export function OperatorApp() {
       id: t.id,
       name: nameOverrides[t.id] ?? t.name,
       glyph: sigil(t.name),
+      suggested: true,
     })),
   ];
 
