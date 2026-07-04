@@ -104,6 +104,8 @@ function ActivityRow({ item }: { item: BuildActivityItem }) {
           <span className="app-build-activity__spinner" />
         ) : item.status === "error" ? (
           "✗"
+        ) : item.status === "interrupted" ? (
+          "◦"
         ) : (
           "✓"
         )}
