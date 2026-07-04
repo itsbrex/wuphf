@@ -3,6 +3,7 @@ package team
 import (
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -290,6 +291,44 @@ func TestScaffoldEmbedExcludesBuildArtifacts(t *testing.T) {
 			"`rm -rf templates/app-scaffold/node_modules templates/app-scaffold/dist` "+
 			"before building, and never commit them. First few: %v",
 			len(leaked), leaked[:min(5, len(leaked))])
+	}
+}
+
+// TestScaffoldBridgeActionStatusContract pins the approval-poll contract into
+// the scaffold every generated App is built from: callIntegration on a
+// mutating action returns {status:"needs_approval", request_id}, and the app
+// MUST be able to poll that id to resolution. The bridge must ship the
+// getActionStatus helper and AI_RULES.md must mandate polling it — otherwise
+// generated apps leave rows "Awaiting" forever after the human decides.
+func TestScaffoldBridgeActionStatusContract(t *testing.T) {
+	readScaffoldFile := func(rel string) string {
+		t.Helper()
+		raw, err := fs.ReadFile(templates.AppScaffold, path.Join(templates.AppScaffoldRoot, rel))
+		if err != nil {
+			t.Fatalf("read embedded scaffold file %q: %v", rel, err)
+		}
+		return string(raw)
+	}
+
+	bridge := readScaffoldFile("src/wuphf-bridge.ts")
+	for _, want := range []string{
+		"export function getActionStatus",
+		`"/requests?id="`,
+		"encodeURIComponent(requestId)",
+	} {
+		if !strings.Contains(bridge, want) {
+			t.Errorf("wuphf-bridge.ts missing %q — apps cannot poll a needs_approval request_id", want)
+		}
+	}
+
+	rules := readScaffoldFile("AI_RULES.md")
+	for _, want := range []string{
+		"getActionStatus",
+		"MUST poll",
+	} {
+		if !strings.Contains(rules, want) {
+			t.Errorf("AI_RULES.md missing %q — the polling mandate is not part of the app-builder contract", want)
+		}
 	}
 }
 

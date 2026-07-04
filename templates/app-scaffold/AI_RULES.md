@@ -168,6 +168,31 @@ loudly — apps are read-mostly by design. Don't try to work around this.
   MUTATING action is never executed by the app — the broker raises a human
   approval card and the list comes back empty here. You can also call
   `callIntegration(platform, action, params)` directly from `wuphf-bridge.ts`.
+- **MANDATE — poll every `needs_approval` to resolution.** When
+  `callIntegration()` returns `{ status: "needs_approval", request_id }`, the
+  action has NOT run — a human still has to approve the card. The app
+  **MUST poll** `getActionStatus(request_id)` (e.g. every 5 seconds while the
+  tab is open) and reflect the outcome in its UI: the row resolves to
+  approved/posted on `"approved"` and to rejected on `"rejected"`, then polling
+  STOPS. A row must NEVER stay "Awaiting" forever after the human decided.
+  Minimal worked example:
+
+  ```tsx
+  import { callIntegration, getActionStatus } from "./wuphf-bridge";
+
+  const res = await callIntegration("slack", "SLACK_SEND_MESSAGE", params);
+  if (res.status === "needs_approval" && res.request_id) {
+    setRow({ state: "awaiting" }); // show "Awaiting approval"
+    const poll = window.setInterval(async () => {
+      const { state } = await getActionStatus(res.request_id!);
+      if (state === "approved" || state === "rejected") {
+        window.clearInterval(poll); // stop once resolved — never poll forever
+        setRow({ state }); // reflect approved/posted or rejected in the UI
+      }
+    }, 5_000);
+    // Also clear the interval on unmount (useEffect cleanup).
+  }
+  ```
 - **AI-powered apps.** `ai(prompt, input?, { json? })` runs a bounded one-shot LLM
   step over data you already fetched through the bridge (summarize / score /
   classify). It is read-only reasoning, not a network call. With `{ json: true }`
@@ -281,9 +306,10 @@ async function ensureModel() {
 5. **Protected files — use, don't rewrite.**
    - `src/wuphf-bridge.ts` — the only channel out of the sandbox. Its helpers
      (`callBroker`, `getTasks`, `getOfficeMembers`, `createTask`,
-     `callIntegration`, `listIntegrations`, `ai`, `getEmails`, `download`, and the
-     `db` store) are already correct (e.g. `getTasks()` returns ALL channels, not
-     just "general"). Import and call them as-is.
+     `callIntegration`, `getActionStatus`, `listIntegrations`, `ai`,
+     `getEmails`, `download`, and the `db` store) are already correct (e.g.
+     `getTasks()` returns ALL channels, not just "general"). Import and call
+     them as-is.
    - `src/bridgeDataProvider.ts` — refine's `DataProvider` over the bridge. Import
      `bridgeDataProvider`; do NOT reimplement it. Add a resource by extending its
      `readers` map or passing `meta:{platform,action}` for an integration.
