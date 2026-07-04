@@ -123,12 +123,52 @@ describe("deriveAppName", () => {
   });
 
   it("synthesizes <lead words> Agent for an unknown domain", () => {
+    // "for" is a function word — the clause is cut before it, so the
+    // preposition never lands in the name.
     expect(deriveAppName("a refund form for vendors")).toBe(
-      "Refund Form For Agent",
+      "Refund Form Agent",
     );
   });
 
-  it("caps the synthesized lead at three words", () => {
+  it("cuts the synthesized name before a relative pronoun", () => {
+    expect(
+      deriveAppName(
+        "A refund-approval form that posts approved refunds to Slack",
+      ),
+    ).toBe("Refund-approval Form Agent");
+  });
+
+  it("cuts the synthesized name before other function words", () => {
+    // "of" right after the head noun: cut leaves a single word.
+    expect(deriveAppName("a checklist of vendor contracts")).toBe(
+      "Checklist Agent",
+    );
+    // "with" mid-clause.
+    expect(deriveAppName("a vendor portal with login")).toBe(
+      "Vendor Portal Agent",
+    );
+  });
+
+  it("routes role-keyword descriptions through the role table, not the clause cut", () => {
+    // "dashboard" is a reporting keyword — the role table wins before any
+    // clause parsing ("Dashboard Of Our Agent" must never appear).
+    expect(deriveAppName("A dashboard of our open tasks with their status")).toBe(
+      "Reporting Agent",
+    );
+    // "escalation" is a support keyword, so the role table names it even
+    // though the clause cut alone would give "Escalation Queue Agent".
+    expect(deriveAppName("an escalation queue for our support team")).toBe(
+      "Support Triage Agent",
+    );
+  });
+
+  it("caps a function-word cut at four words", () => {
+    expect(
+      deriveAppName("a vendor contract renewal reminder tool for legal"),
+    ).toBe("Vendor Contract Renewal Reminder Agent");
+  });
+
+  it("caps the synthesized lead at three words when no function word appears", () => {
     expect(
       deriveAppName("create one two three four five six seven eight nine"),
     ).toBe("One Two Three Agent");

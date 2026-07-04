@@ -183,6 +183,29 @@ const AGENT_ROLES: ReadonlyArray<[RegExp, string]> = [
   [/\b(hiring|recruit|candidate|interview)\b/i, "Recruiting Agent"],
 ];
 
+// Relative pronouns, prepositions, and other connectives that must never land
+// in a synthesized name ("refund-approval form THAT posts…" → cut before
+// "that"). A clause head — position 0 — is exempt so a degenerate clause that
+// starts with one of these keeps the plain word-cap behavior.
+const NAME_FUNCTION_WORDS = new Set([
+  "that",
+  "which",
+  "who",
+  "to",
+  "for",
+  "of",
+  "with",
+  "so",
+  "and",
+  "i",
+  "you",
+  "we",
+  "my",
+  "our",
+  "their",
+  "it",
+]);
+
 export function deriveAppName(description: string): string {
   const role = AGENT_ROLES.find(([test]) => test.test(description));
   if (role) return role[1];
@@ -195,7 +218,14 @@ export function deriveAppName(description: string): string {
     prev = firstClause;
     firstClause = firstClause.replace(leadIn, "").trim();
   }
-  const words = firstClause.split(/\s+/).filter(Boolean).slice(0, 3);
+  const allWords = firstClause.split(/\s+/).filter(Boolean);
+  // Cut before the first function word (never at position 0) and cap the cut
+  // at 4 words; with no function word, keep the plain 3-word cap.
+  const cut = allWords.findIndex(
+    (w, i) => i > 0 && NAME_FUNCTION_WORDS.has(w.toLowerCase()),
+  );
+  const words =
+    cut > 0 ? allWords.slice(0, Math.min(cut, 4)) : allWords.slice(0, 3);
   if (words.length === 0) return "Untitled Agent";
   const titled = words
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
