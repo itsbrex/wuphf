@@ -192,7 +192,7 @@ export function InternalToolDetail({
 
           {/* No source chip: "from N conversations" would be fabricated for a
               mock draft — no conversations produced these seeds. */}
-          <AgentPurpose summary={tool.summary} showSourceChip={false} />
+          <AgentPurpose summary={tool.summary} />
 
           <Tabs
             tabs={TABS}

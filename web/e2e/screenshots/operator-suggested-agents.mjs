@@ -1,15 +1,14 @@
-// Capture the operator sidebar's honest real-vs-suggested split and the
-// suggested-agent detail (PR #1162): the Agents badge counts REAL agents
-// only, mock drafts sit under a ghosted "Suggested" section, and their
-// detail pill reads "Suggested" (no fabricated "from N conversations"
-// chip, artifacts headed "Example artifacts").
+// Capture the operator sidebar's real-inventory-only Agents rail (PR #1163):
+// the rail and its count badge show ONLY agents actually built on the broker —
+// no mock drafts, no "Suggested" section, and an honest empty state before the
+// first build.
 //
 // Run via the wrapper:
 //   web/e2e/screenshots/publish.sh operator-suggested-agents <pr-number>
 
 import process from "node:process";
 
-import { DEFAULT_BASE, launchBrowser, shotElement, shotPage } from "./lib.mjs";
+import { DEFAULT_BASE, launchBrowser, shotElement } from "./lib.mjs";
 
 const OUT = process.env.WUPHF_SCREENSHOTS_OUT;
 if (!OUT) {
@@ -44,12 +43,8 @@ const { browser, context, page } = await launchBrowser();
 
 // The operator shell mounts at /#/operator ahead of the office gates, so no
 // bootShell/store flip is needed — just a deterministic /apps payload.
-await context.route("**/api/apps", (r) =>
-  r.fulfill({ json: { apps: REAL_APPS } }),
-);
-await context.route("**/api/apps/**", (r) =>
-  r.fulfill({ json: { app: REAL_APPS[0], html: "<!doctype html><p>app</p>" } }),
-);
+let apps = REAL_APPS;
+await context.route("**/api/apps", (r) => r.fulfill({ json: { apps } }));
 await context.route("**/api/requests*", (r) =>
   r.fulfill({ json: { requests: [] } }),
 );
@@ -62,20 +57,16 @@ await page.goto(`${DEFAULT_BASE}/?token=screenshot-token#/operator`, {
 });
 await page.waitForSelector(".opr-sidebar", { timeout: 15_000 });
 
-// 1. Sidebar: badge counts the 2 real agents; mocks ghosted under SUGGESTED.
-await page.waitForSelector(".opr-agent-rail-item.is-suggested", {
-  timeout: 10_000,
-});
-await shotElement(page, ".opr-sidebar", OUT, "01-sidebar-suggested-section");
+// 1. Two real agents: badge says 2, the rail lists exactly them, and there is
+//    no Suggested section anywhere.
+await page.waitForSelector(".opr-agent-rail-item", { timeout: 10_000 });
+await shotElement(page, ".opr-sidebar", OUT, "01-sidebar-real-agents-only");
 
-// 2. Suggested detail: "Suggested" pill, no fabricated source chip,
-//    "Example artifacts" heading.
-await page
-  .locator(".opr-agent-rail-item.is-suggested", {
-    hasText: "Support escalation triage",
-  })
-  .click();
-await page.waitForSelector("text=Suggested", { timeout: 10_000 });
-await shotPage(page, OUT, "02-suggested-detail-honest");
+// 2. Empty workspace: no badge, no mock drafts — just the build affordances.
+apps = [];
+await page.reload({ waitUntil: "load" });
+await page.waitForSelector(".opr-sidebar", { timeout: 15_000 });
+await page.waitForTimeout(600);
+await shotElement(page, ".opr-sidebar", OUT, "02-sidebar-empty-honest");
 
 await browser.close();

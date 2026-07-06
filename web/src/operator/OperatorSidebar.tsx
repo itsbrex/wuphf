@@ -21,9 +21,6 @@ export interface SidebarAgent {
   name: string;
   glyph: string;
   building?: boolean;
-  /** Mock draft suggestion, not real inventory: excluded from the Agents
-   * count and rendered ghosted under a "Suggested" section label. */
-  suggested?: boolean;
 }
 
 interface NavDef {
@@ -59,17 +56,12 @@ export function OperatorSidebar({
   // The rail is collapsible so a long roster doesn't crowd the nav.
   const [agentsOpen, setAgentsOpen] = useState(true);
 
-  // Product honesty: the count badge is inventory, so it counts REAL agents
-  // only. Suggestions render below the roster, ghosted, as ideas.
-  const realAgents = agents.filter((a) => !a.suggested);
-  const suggestedAgents = agents.filter((a) => a.suggested);
-
   function railItem(a: SidebarAgent) {
     return (
       <button
         key={a.id}
         type="button"
-        className={`opr-agent-rail-item${a.suggested ? " is-suggested" : ""}${
+        className={`opr-agent-rail-item${
           a.id === activeAgentId ? " is-active" : ""
         }`}
         onClick={() => onOpenAgent?.(a.id)}
@@ -115,8 +107,8 @@ export function OperatorSidebar({
                   <item.icon size={15} strokeWidth={1.8} />
                 </span>
                 {item.label}
-                {item.id === "tools" && realAgents.length > 0 ? (
-                  <span className="opr-nav-count">{realAgents.length}</span>
+                {item.id === "tools" && agents.length > 0 ? (
+                  <span className="opr-nav-count">{agents.length}</span>
                 ) : null}
               </button>
               {item.id === "tools" && agents.length > 0 ? (
@@ -143,15 +135,7 @@ export function OperatorSidebar({
                 role="group"
                 aria-label="Your agents"
               >
-                {realAgents.map(railItem)}
-                {suggestedAgents.length > 0 ? (
-                  <>
-                    <div className="opr-eyebrow opr-agent-rail-label">
-                      Suggested
-                    </div>
-                    {suggestedAgents.map(railItem)}
-                  </>
-                ) : null}
+                {agents.map(railItem)}
               </div>
             ) : null}
           </div>

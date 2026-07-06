@@ -1,7 +1,6 @@
-// Shell-level regression guard for product honesty in the sidebar: the merge
-// of REAL agents (broker apps) and MOCK drafts (mock/data TOOLS) must mark the
-// mocks as suggestions, so the Agents badge counts real inventory only and the
-// mock rows read as suggestions.
+// Shell-level regression guard: the sidebar rail is the REAL inventory only.
+// Mock drafts (mock/data TOOLS) must never appear in the rail or inflate the
+// Agents badge — the operator sees exactly the agents they built.
 
 import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -44,7 +43,7 @@ function app(id: string, name: string): CustomApp {
 }
 
 describe("OperatorApp sidebar composition", () => {
-  it("badges the REAL agent count and files every mock draft under Suggested", () => {
+  it("rails and badges ONLY the real agents; mock drafts never render", () => {
     useOperatorAppsMock.mockReturnValue({
       data: [
         app("app_1111111111111111", "Renewal radar"),
@@ -52,17 +51,23 @@ describe("OperatorApp sidebar composition", () => {
       ],
       isLoading: false,
     });
-    const { container, getByText } = render(<OperatorApp />);
+    const { container, queryByText } = render(<OperatorApp />);
 
-    // 2 real agents; the mock TOOLS must not inflate the count.
     const badge = container.querySelector(".opr-nav-count");
     expect(badge?.textContent).toBe("2");
 
-    // Every mock draft renders as a ghosted suggestion in the rail.
-    expect(getByText("Suggested")).toBeTruthy();
+    // Exactly the two real agents in the rail, in inventory order.
+    const railNames = [
+      ...container.querySelectorAll(
+        ".opr-agent-rail-item .opr-agent-rail-name",
+      ),
+    ].map((el) => el.textContent);
+    expect(railNames).toEqual(["Renewal radar", "Digest bot"]);
+
+    // No Suggested section, and no mock draft anywhere in the shell.
+    expect(queryByText("Suggested")).toBeNull();
     for (const t of TOOLS) {
-      const row = getByText(t.name).closest(".opr-agent-rail-item");
-      expect(row?.className).toContain("is-suggested");
+      expect(queryByText(t.name)).toBeNull();
     }
   });
 });

@@ -19,9 +19,8 @@ import {
 import { useRealtimeConfig } from "./apps/useRealtimeConfig";
 import { ApprovalPrompt } from "./components/ApprovalPrompt";
 import { CallModal } from "./components/CallModal";
-import { sigil } from "./components/primitives";
 import { RealCallModal } from "./components/RealCallModal";
-import { getTool, TOOLS } from "./mock/data";
+import { getTool } from "./mock/data";
 import {
   OperatorSidebar,
   type OperatorSurface,
@@ -82,25 +81,17 @@ export function OperatorApp() {
   const [demoBuild, setDemoBuild] = useState<DemoCapture | null>(null);
   const [demoSeed, setDemoSeed] = useState<string | null>(null);
 
-  // The sidebar's collapsible Agents rail: REAL agents (broker apps) first,
-  // renames applied; the mock drafts from mock/data ride along marked as
-  // SUGGESTIONS so the sidebar never counts or presents them as inventory.
+  // The sidebar's collapsible Agents rail: REAL agents (broker apps) only,
+  // renames applied. Nothing mock rides along — the rail is the operator's
+  // actual inventory, and it is empty until they build something.
   const appsQuery = useOperatorApps();
   const nameOverrides = useAgentNames();
-  const sidebarAgents: SidebarAgent[] = [
-    ...(appsQuery.data ?? []).map((a) => ({
-      id: a.id,
-      name: nameOverrides[a.id] ?? a.name,
-      glyph: a.icon || "🤖",
-      building: appBuildState(a) === "building",
-    })),
-    ...TOOLS.map((t) => ({
-      id: t.id,
-      name: nameOverrides[t.id] ?? t.name,
-      glyph: sigil(t.name),
-      suggested: true,
-    })),
-  ];
+  const sidebarAgents: SidebarAgent[] = (appsQuery.data ?? []).map((a) => ({
+    id: a.id,
+    name: nameOverrides[a.id] ?? a.name,
+    glyph: a.icon || "🤖",
+    building: appBuildState(a) === "building",
+  }));
 
   function resetSubState() {
     setSelectedId(null);

@@ -4491,22 +4491,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Suggested (mock draft) agents: a small section label below the real roster,
-   rows ghosted so they read as ideas, not inventory. */
-.opr-agent-rail-label {
-  margin: var(--space-2) var(--space-2) 2px;
-}
-.opr-agent-rail-item.is-suggested {
-  color: var(--t-faint);
-}
-.opr-agent-rail-item.is-suggested .opr-agent-rail-glyph {
-  opacity: 0.55;
-}
-.opr-agent-rail-item.is-suggested:hover {
-  color: var(--t-dim);
-  background: var(--t-elevated);
-}
-
 /* ── Agent name (renameable) + purpose summary ─────────────────────────────── */
 .opr-agent-name {
   display: inline-flex;

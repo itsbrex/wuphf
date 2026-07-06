@@ -1,15 +1,27 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { authorToolFromDescription } from "../tools/mockTools";
 import { ToolsProvider } from "../tools/toolsContext";
 import { AppToolsChat } from "./AppToolsChat";
 import { AppToolsTab } from "./AppToolsTab";
 
 // Slice 2: teaching a workflow in the app's chat calls create_tool; the tool-call
 // renders in the chat AND the new tool appears in the shared Tools tab.
+// The provider seeds NOTHING in product code (agents start with no tools), so
+// these tests seed their fixture toolbox explicitly through the test seam.
+function fixtureTools() {
+  return [
+    authorToolFromDescription("Every Monday, summarize last week's pipeline"),
+    authorToolFromDescription(
+      "When a new lead comes in, score its fit and route hot ones to the right AE",
+    ),
+  ];
+}
+
 function renderApp() {
   return render(
-    <ToolsProvider appName="Pipeline">
+    <ToolsProvider appName="Pipeline" initialTools={fixtureTools()}>
       <AppToolsChat appName="Pipeline" />
       <AppToolsTab appName="Pipeline" />
     </ToolsProvider>,
