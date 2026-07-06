@@ -51,4 +51,11 @@ describe("InternalToolDetail (mock agent)", () => {
     const { getByRole } = renderDetail(mustGetTool("expense-exceptions"));
     expect(getByRole("button", { name: /build it/i })).toBeTruthy();
   });
+
+  it("shows Build it on a draft-status fixture too — pill and CTA never desync", () => {
+    // support-escalations carries status "draft": the pill says Suggested, so
+    // the primary CTA must render as well, not stay gated on the old status.
+    const { getByRole } = renderDetail(mustGetTool("support-escalations"));
+    expect(getByRole("button", { name: /build it/i })).toBeTruthy();
+  });
 });

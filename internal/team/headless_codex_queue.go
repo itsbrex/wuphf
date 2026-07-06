@@ -546,7 +546,7 @@ func (l *Launcher) runHeadlessCodexQueue(lane headlessLane, stop <-chan struct{}
 				retryTurn.TransientRetries++
 				retryTurn.EnqueuedAt = time.Now()
 				appendHeadlessCodexLog(slug, fmt.Sprintf("transient-retry: connection dropped, retrying same turn (retry %d/%d)", retryTurn.TransientRetries, headlessCodexTransientTurnRetryLimit))
-				l.emitHeadlessReconnecting(slug, turn)
+				l.emitHeadlessReconnecting(slug, turn, startedAt)
 				l.updateHeadlessProgress(slug, "active", "queued", "connection dropped — retrying", headlessProgressMetrics{})
 				l.enqueueHeadlessCodexTurnRecord(slug, retryTurn)
 			default:
@@ -986,18 +986,21 @@ func isTransientProviderErrorText(detail string) bool {
 // error/manifest HeadlessEvent the runner emitted before returning. The queue
 // never sees the runner's turn id directly (each runner mints its own), so
 // this is how the "reconnecting" event correlates to the turn it retries.
-// Best-effort: returns "" when the tail has no attributable event (e.g. the
-// runner died before emitting anything).
-func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string) string {
+// Events stamped before notBefore are skipped: they belong to an EARLIER
+// attempt, and attributing the retry to one would tag the reconnecting row
+// with a stale turn. Best-effort: returns "" when the tail has no
+// attributable event (e.g. the runner died before emitting anything).
+func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string, notBefore time.Time) string {
 	if stream == nil || strings.TrimSpace(taskID) == "" {
 		return ""
 	}
 	lines := stream.recentTask(taskID)
 	for i := len(lines) - 1; i >= 0; i-- {
 		var evt struct {
-			Kind   string `json:"kind"`
-			Type   string `json:"type"`
-			TurnID string `json:"turn_id"`
+			Kind      string `json:"kind"`
+			Type      string `json:"type"`
+			TurnID    string `json:"turn_id"`
+			StartedAt string `json:"started_at"`
 		}
 		if err := json.Unmarshal([]byte(strings.TrimSpace(lines[i])), &evt); err != nil {
 			continue
@@ -1005,9 +1008,16 @@ func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string) string {
 		if evt.Kind != HeadlessEventKind || strings.TrimSpace(evt.TurnID) == "" {
 			continue
 		}
-		if evt.Type == HeadlessEventTypeError || evt.Type == HeadlessEventTypeManifest {
-			return strings.TrimSpace(evt.TurnID)
+		if evt.Type != HeadlessEventTypeError && evt.Type != HeadlessEventTypeManifest {
+			continue
 		}
+		// pushHeadlessEvent stamps every event, so a parse failure means an
+		// old/foreign line — skip it rather than trust its turn id.
+		ts, err := time.Parse(time.RFC3339, strings.TrimSpace(evt.StartedAt))
+		if err != nil || ts.Before(notBefore) {
+			continue
+		}
+		return strings.TrimSpace(evt.TurnID)
 	}
 	return ""
 }
@@ -1017,7 +1027,7 @@ func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string) string {
 // channel the /apps/{id}/activity SSE serves — so the build feed shows the
 // retry instead of a silent stall. The type string is a wire contract with
 // the web feed (see HeadlessEventTypeReconnecting).
-func (l *Launcher) emitHeadlessReconnecting(slug string, turn headlessCodexTurn) {
+func (l *Launcher) emitHeadlessReconnecting(slug string, turn headlessCodexTurn, attemptStartedAt time.Time) {
 	if l == nil || l.broker == nil {
 		return
 	}
@@ -1026,7 +1036,7 @@ func (l *Launcher) emitHeadlessReconnecting(slug string, turn headlessCodexTurn)
 		taskID = l.agentActiveTaskID(slug)
 	}
 	stream := l.broker.AgentStream(slug)
-	turnID := headlessLastErrorTurnID(stream, taskID)
+	turnID := headlessLastErrorTurnID(stream, taskID, attemptStartedAt)
 	if turnID == "" {
 		turnID = newHeadlessTurnID()
 	}

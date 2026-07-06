@@ -183,6 +183,7 @@ loudly — apps are read-mostly by design. Don't try to work around this.
   const res = await callIntegration("slack", "SLACK_SEND_MESSAGE", params);
   if (res.status === "needs_approval" && res.request_id) {
     setRow({ state: "awaiting" }); // show "Awaiting approval"
+    // wuphf-allow: poll — approval status must resolve promptly after the human decides
     const poll = window.setInterval(async () => {
       const { state } = await getActionStatus(res.request_id!);
       if (state === "approved" || state === "rejected") {
@@ -193,6 +194,10 @@ loudly — apps are read-mostly by design. Don't try to work around this.
     // Also clear the interval on unmount (useEffect cleanup).
   }
   ```
+
+  The `// wuphf-allow: poll` annotation is REQUIRED on this interval: Hard Rule 8
+  rejects sub-30s polling at publish, and this bounded, self-stopping approval
+  poll is the sanctioned exception — copy the annotation with the interval.
 - **AI-powered apps.** `ai(prompt, input?, { json? })` runs a bounded one-shot LLM
   step over data you already fetched through the bridge (summarize / score /
   classify). It is read-only reasoning, not a network call. With `{ json: true }`

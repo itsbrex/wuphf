@@ -178,15 +178,16 @@ export function InternalToolDetail({
                 Ask Agent
               </button>
 
-              {tool.status === "suggested" && (
-                <button
-                  type="button"
-                  className="opr-btn opr-btn-primary opr-btn-sm"
-                >
-                  <Plus size={13} strokeWidth={1.9} aria-hidden={true} />
-                  Build it
-                </button>
-              )}
+              {/* Pill and CTA agree: everything here is a suggestion, so the
+                  build affordance renders unconditionally — a row labeled
+                  Suggested without its primary CTA would be a dead end. */}
+              <button
+                type="button"
+                className="opr-btn opr-btn-primary opr-btn-sm"
+              >
+                <Plus size={13} strokeWidth={1.9} aria-hidden={true} />
+                Build it
+              </button>
             </div>
           </div>
 
