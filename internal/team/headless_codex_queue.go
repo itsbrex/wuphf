@@ -1012,9 +1012,12 @@ func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string, notBefore
 			continue
 		}
 		// pushHeadlessEvent stamps every event, so a parse failure means an
-		// old/foreign line — skip it rather than trust its turn id.
+		// old/foreign line — skip it rather than trust its turn id. The stamp
+		// is second-precision RFC3339, so compare against a second-truncated
+		// notBefore: an event from the same second as the attempt start must
+		// be accepted (a fast-failing attempt dies within its first second).
 		ts, err := time.Parse(time.RFC3339, strings.TrimSpace(evt.StartedAt))
-		if err != nil || ts.Before(notBefore) {
+		if err != nil || ts.Before(notBefore.Truncate(time.Second)) {
 			continue
 		}
 		return strings.TrimSpace(evt.TurnID)

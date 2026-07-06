@@ -66,7 +66,12 @@ await shotElement(page, ".opr-sidebar", OUT, "01-sidebar-real-agents-only");
 apps = [];
 await page.reload({ waitUntil: "load" });
 await page.waitForSelector(".opr-sidebar", { timeout: 15_000 });
-await page.waitForTimeout(600);
+// Assert the rail is actually gone (not a fixed sleep): capturing a stale
+// rail here would silently reintroduce the bug this spec guards against.
+await page.waitForFunction(
+  () => !document.querySelector(".opr-agent-rail-item"),
+  { timeout: 10_000 },
+);
 await shotElement(page, ".opr-sidebar", OUT, "02-sidebar-empty-honest");
 
 await browser.close();
