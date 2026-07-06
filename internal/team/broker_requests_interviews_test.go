@@ -1244,3 +1244,123 @@ func TestAlsoAskingSurvivesRestart(t *testing.T) {
 		t.Fatal("non-subscriber must not be parked")
 	}
 }
+
+// TestGetRequestsFilterByID locks the poll-by-id contract an App relies on
+// after callIntegration returns {status:"needs_approval", request_id}: GET
+// /requests?id=<request_id> returns ONLY that request (still visible after it
+// is answered, so the App can observe the terminal decision), an unknown id
+// yields an empty list with HTTP 200, and the id filter is applied AFTER the
+// visibility filtering so it can never widen what a viewer may see.
+func TestGetRequestsFilterByID(t *testing.T) {
+	b := newTestBroker(t)
+	// A viewer with access to #backend only — used to prove the id filter
+	// cannot leak a #general request to a viewer who may not see it.
+	ensureTestMemberAccess(b, "backend", "scout", "Scout")
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("failed to start broker: %v", err)
+	}
+	defer b.Stop()
+
+	base := fmt.Sprintf("http://%s", b.Addr())
+	createRequest := func(title string) string {
+		t.Helper()
+		body, _ := json.Marshal(map[string]any{
+			"kind":     "approval",
+			"from":     "ceo",
+			"channel":  "general",
+			"title":    title,
+			"question": "Run " + title + "?",
+			"blocking": false,
+		})
+		req, _ := http.NewRequest(http.MethodPost, base+"/requests", bytes.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+b.Token())
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("create request %q failed: %v", title, err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			raw, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 200 creating %q, got %d: %s", title, resp.StatusCode, raw)
+		}
+		var created struct {
+			Request humanInterview `json:"request"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
+			t.Fatalf("decode create response: %v", err)
+		}
+		if created.Request.ID == "" {
+			t.Fatalf("create %q returned no request id", title)
+		}
+		return created.Request.ID
+	}
+	listRequests := func(query string) []humanInterview {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodGet, base+"/requests?"+query, nil)
+		req.Header.Set("Authorization", "Bearer "+b.Token())
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /requests?%s failed: %v", query, err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			raw, _ := io.ReadAll(resp.Body)
+			t.Fatalf("GET /requests?%s: expected 200, got %d: %s", query, resp.StatusCode, raw)
+		}
+		var listing struct {
+			Requests []humanInterview `json:"requests"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&listing); err != nil {
+			t.Fatalf("decode listing for %q: %v", query, err)
+		}
+		return listing.Requests
+	}
+
+	firstID := createRequest("App action: Slack post")
+	secondID := createRequest("App action: Gmail send")
+
+	// Sanity: both are visible in the default channel view.
+	if got := listRequests("channel=general"); len(got) != 2 {
+		t.Fatalf("expected 2 requests before filtering, got %d: %+v", len(got), got)
+	}
+
+	// ?id= narrows the listing to exactly the matching request.
+	got := listRequests("id=" + firstID)
+	if len(got) != 1 || got[0].ID != firstID {
+		t.Fatalf("expected only %s for ?id=%s, got %+v", firstID, firstID, got)
+	}
+
+	// An unknown id yields an empty list with HTTP 200 (asserted in the helper).
+	if got := listRequests("id=request-nonexistent"); len(got) != 0 {
+		t.Fatalf("expected empty list for unknown id, got %+v", got)
+	}
+
+	// Answer the first request; a by-id poll must STILL see it (with the
+	// decision) — that is the whole point of the App polling the request_id.
+	answerBody, _ := json.Marshal(map[string]any{"id": firstID, "choice_id": "reject"})
+	req, _ := http.NewRequest(http.MethodPost, base+"/requests/answer", bytes.NewReader(answerBody))
+	req.Header.Set("Authorization", "Bearer "+b.Token())
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("answer request failed: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200 answering request, got %d", resp.StatusCode)
+	}
+	answered := listRequests("id=" + firstID)
+	if len(answered) != 1 || answered[0].ID != firstID {
+		t.Fatalf("expected answered request for ?id=%s, got %+v", firstID, answered)
+	}
+	if answered[0].Answered == nil || answered[0].Answered.ChoiceID != "reject" {
+		t.Fatalf("expected the rejection to be visible on the id poll, got %+v", answered[0])
+	}
+
+	// The id filter must be applied AFTER visibility filtering: a viewer with
+	// no access to the request's channel gets an empty list, not the request.
+	if got := listRequests("scope=all&viewer_slug=scout&id=" + secondID); len(got) != 0 {
+		t.Fatalf("id filter widened visibility for an unauthorized viewer: %+v", got)
+	}
+}

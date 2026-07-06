@@ -117,16 +117,53 @@ describe("reduceBuildActivity", () => {
     expect(items[0].status).toBe("done");
   });
 
-  it("marks open rows in a turn as error on an error event", () => {
+  it("marks a dangling tool_use as interrupted (not error) on a turn error event", () => {
+    // A turn-level error means the SESSION died (e.g. provider connection
+    // error); a tool call that simply never got its result was interrupted,
+    // it did not fail. It must not render as a red ✗.
+    const items = reduceBuildActivity([
+      ev({
+        type: "tool_use",
+        toolName: "mcp__wuphf-office__team_status",
+        detail: '{"task_id":"task-office-71"}',
+      }),
+      ev({ type: "error", text: "provider connection error" }),
+    ]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      verb: "Team Status",
+      target: "task-office-71",
+      status: "interrupted",
+    });
+  });
+
+  it("resolves open rows to interrupted and appends a resolved Reconnecting row on a reconnecting event", () => {
     const items = reduceBuildActivity([
       ev({
         type: "tool_use",
         toolName: "Bash",
         detail: '{"command":"bun run build"}',
       }),
-      ev({ type: "error", text: "exit 1" }),
+      ev({ type: "reconnecting", text: "connection dropped — retrying" }),
     ]);
-    expect(items[0].status).toBe("error");
+    expect(items).toHaveLength(2);
+    expect(items[0].status).toBe("interrupted");
+    // The appended row is already resolved — never a zombie spinner.
+    expect(items[1]).toMatchObject({
+      verb: "Reconnecting",
+      status: "done",
+      note: "connection dropped — retrying",
+    });
+  });
+
+  it("defaults the Reconnecting note when the event carries no text", () => {
+    const items = reduceBuildActivity([ev({ type: "reconnecting" })]);
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      verb: "Reconnecting",
+      status: "done",
+      note: "connection dropped — retrying",
+    });
   });
 
   it("matches results FIFO across two calls of the same tool", () => {

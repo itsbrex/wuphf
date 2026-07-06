@@ -31,6 +31,16 @@ describe("isAllowedGetPath", () => {
     expect(isAllowedGetPath("/wiki/list")).toBe(true);
   });
 
+  it("allows the approval-status poll the bridge's getActionStatus issues", () => {
+    // callIntegration on a mutating action returns {status:"needs_approval",
+    // request_id}; the app polls GET /requests?id=<request_id> to resolution.
+    // The allowlist matches on the path with the query stripped, so the id
+    // param must pass through — a regression here would strand app rows on
+    // "Awaiting" forever.
+    expect(isAllowedGetPath("/requests?id=request-123")).toBe(true);
+    expect(isAllowedGetPath("/requests")).toBe(true);
+  });
+
   it("rejects non-whitelisted, mutating, or off-broker paths", () => {
     // Not on the allowlist.
     expect(isAllowedGetPath("/config")).toBe(false);
@@ -170,6 +180,10 @@ describe("appBrokerPath", () => {
   it("leaves other allowlisted paths untouched", () => {
     expect(appBrokerPath("/office-members")).toBe("/office-members");
     expect(appBrokerPath("/wiki/list")).toBe("/wiki/list");
+    // The approval-status poll must reach the broker with its id intact.
+    expect(appBrokerPath("/requests?id=request-123")).toBe(
+      "/requests?id=request-123",
+    );
   });
 });
 

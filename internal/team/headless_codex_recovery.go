@@ -306,7 +306,15 @@ func headlessFailedRetryPrompt(slug string, prompt string, detail string, attemp
 	return strings.TrimSpace(prompt) + "\n\n" + note
 }
 
-func shouldRetryHeadlessTurn(task *teamTask, turn headlessCodexTurn) bool {
+// headlessCodexOfficeTransientRetryLimit caps the recovery-layer retries an
+// office-mode task gets when its turn failed on a TRANSIENT provider/stream
+// error. One retry: the queue's fast path (headlessCodexTransientTurnRetryLimit
+// immediate re-enqueues) has already burned through the reconnect budget by the
+// time a transient failure reaches recoverFailedHeadlessTurn, so this is the
+// final, prompt-annotated attempt before BlockTask.
+const headlessCodexOfficeTransientRetryLimit = 1
+
+func shouldRetryHeadlessTurn(task *teamTask, turn headlessCodexTurn, transientFailure bool) bool {
 	if task == nil {
 		return false
 	}
@@ -315,6 +323,12 @@ func shouldRetryHeadlessTurn(task *teamTask, turn headlessCodexTurn) bool {
 	}
 	if taskRequiresRealExternalExecution(task) {
 		return turn.Attempts < headlessCodexExternalActionRetryLimit
+	}
+	if transientFailure {
+		// Office-mode tasks historically never retried, which turned every
+		// provider connection blip into a blocked task. A transient failure
+		// is not the agent's fault — allow ONE recovery retry before blocking.
+		return turn.Attempts < headlessCodexOfficeTransientRetryLimit
 	}
 	return false
 }
@@ -332,7 +346,10 @@ func (l *Launcher) recoverTimedOutHeadlessTurn(slug string, turn headlessCodexTu
 		appendHeadlessCodexLog(slug, fmt.Sprintf("timeout-recovery: %s already produced durable progress; leaving task state unchanged", task.ID))
 		return
 	}
-	if shouldRetryHeadlessTurn(task, turn) {
+	// Timeouts are never classified as transient stream failures — the
+	// provider was reachable, the turn just ran long — so the transient
+	// office retry does not apply here.
+	if shouldRetryHeadlessTurn(task, turn, false) {
 		retryTurn := turn
 		retryTurn.Attempts++
 		retryTurn.EnqueuedAt = time.Now()
@@ -375,13 +392,18 @@ func (l *Launcher) recoverFailedHeadlessTurn(slug string, turn headlessCodexTurn
 		appendHeadlessCodexLog(slug, fmt.Sprintf("error-recovery: %s already produced durable progress; leaving task state unchanged", task.ID))
 		return
 	}
-	if shouldRetryHeadlessTurn(task, turn) && !isDurabilityFailure(detail) {
+	// Only the detail string survives to this layer, so classify transience
+	// from it — same marker set the queue's fast path uses on the error.
+	transient := isTransientProviderErrorText(detail)
+	if shouldRetryHeadlessTurn(task, turn, transient) && !isDurabilityFailure(detail) {
 		retryTurn := turn
 		retryTurn.Attempts++
 		retryTurn.EnqueuedAt = time.Now()
 		retryTurn.Prompt = headlessFailedRetryPrompt(slug, turn.Prompt, detail, retryTurn.Attempts, taskRequiresRealExternalExecution(task))
-		limit := headlessCodexLocalWorktreeRetryLimit
-		if taskRequiresRealExternalExecution(task) {
+		limit := headlessCodexOfficeTransientRetryLimit
+		if strings.EqualFold(strings.TrimSpace(task.ExecutionMode), "local_worktree") {
+			limit = headlessCodexLocalWorktreeRetryLimit
+		} else if taskRequiresRealExternalExecution(task) {
 			limit = headlessCodexExternalActionRetryLimit
 		}
 		appendHeadlessCodexLog(slug, fmt.Sprintf("error-recovery: requeueing %s after failed turn (attempt %d/%d)", task.ID, retryTurn.Attempts, limit))

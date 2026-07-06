@@ -72,11 +72,7 @@ describe("callTool", () => {
 });
 
 describe("seedToolsForApp", () => {
-  it("lists the app's already-built tools (no create-a-tool UI here)", () => {
-    const seeded = seedToolsForApp("Pipeline");
-    expect(seeded.map((t) => t.name)).toEqual([
-      "weeklyPipelineSummary",
-      "scoreAndRouteLead",
-    ]);
+  it("seeds nothing — an agent shows only the tools actually taught to it", () => {
+    expect(seedToolsForApp("Pipeline")).toEqual([]);
   });
 });

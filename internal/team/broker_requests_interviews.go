@@ -550,6 +550,15 @@ func (b *Broker) handleGetRequests(w http.ResponseWriter, r *http.Request) {
 	}
 	viewerSlug := strings.TrimSpace(r.URL.Query().Get("viewer_slug"))
 	includeResolved := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("include_resolved")), "true")
+	// id narrows the listing to one request. A by-id poll exists to observe a
+	// request's TERMINAL state — an App polls the request_id it got from a
+	// needs_approval callIntegration reply — so it implies include_resolved:
+	// hiding the answered request would make the poll go empty at exactly the
+	// moment the caller needs the decision.
+	requestID := strings.TrimSpace(r.URL.Query().Get("id"))
+	if requestID != "" {
+		includeResolved = true
+	}
 	b.mu.Lock()
 	if !allChannels && !b.canAccessChannelLocked(viewerSlug, channel) {
 		b.mu.Unlock()
@@ -573,6 +582,18 @@ func (b *Broker) handleGetRequests(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		requests = append(requests, cloneHumanInterview(req))
+	}
+	// The id filter is applied AFTER the visibility filtering above, so it can
+	// only ever NARROW what this viewer may already see — never widen it. An
+	// unknown (or not-visible) id yields an empty list with HTTP 200.
+	if requestID != "" {
+		matched := make([]humanInterview, 0, 1)
+		for _, req := range requests {
+			if req.ID == requestID {
+				matched = append(matched, req)
+			}
+		}
+		requests = matched
 	}
 	pending := firstBlockingRequest(requests)
 	b.mu.Unlock()

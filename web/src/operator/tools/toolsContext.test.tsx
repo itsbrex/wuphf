@@ -70,27 +70,28 @@ describe("ToolsProvider hydration (agent service)", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("/agent/tools?agent=app_x");
   });
 
-  it("falls back to the seeds when the service is unreachable", async () => {
+  it("stays empty when the service is unreachable — never invents tools", async () => {
     const fetchMock = vi.fn().mockRejectedValue(new Error("agent down"));
     vi.stubGlobal("fetch", fetchMock);
-    const { getByText } = render(
+    const { queryByText } = render(
       <ToolsProvider appName="Pipeline" agentId="app_x">
         <Probe />
       </ToolsProvider>,
     );
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    expect(getByText("Weekly pipeline summary")).toBeTruthy();
+    // No fabricated seeds: an unreachable service reads as "no tools yet".
+    expect(queryByText("Weekly pipeline summary")).toBeNull();
   });
 
-  it("does not touch the service for a mock agent (no real id)", () => {
+  it("does not touch the service for a mock agent (no real id) and seeds nothing", () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    const { getByText, getByTestId } = render(
+    const { queryByText, getByTestId } = render(
       <ToolsProvider appName="Pipeline">
         <Probe />
       </ToolsProvider>,
     );
-    expect(getByText("Weekly pipeline summary")).toBeTruthy();
+    expect(queryByText("Weekly pipeline summary")).toBeNull();
     expect(getByTestId("agent-id").textContent).toBe("none");
     expect(fetchMock).not.toHaveBeenCalled();
   });

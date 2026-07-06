@@ -295,10 +295,23 @@ func legacyPageFromFile(path, id, category string) (appKnowledgePage, bool) {
 	}, true
 }
 
+// legacyHTMLCommentRe matches HTML comments, including multi-line ones. The
+// previous product embedded machine metadata this way (e.g. the
+// "<!-- wuphf:entity-article ... -->" marker on generated entity articles);
+// comments are never article content and must not render as body text.
+//
+// Known limitation, accepted for legacy archaeology: this is a plain regex
+// with no code-fence awareness, so a literal "<!-- ... -->" inside a fenced
+// code block is stripped too. The legacy generators never wrote such fences,
+// and stripping a rare fenced example beats rendering machine metadata on
+// every preserved entity page. An unterminated "<!--" is left as-is.
+var legacyHTMLCommentRe = regexp.MustCompile(`(?s)<!--.*?-->`)
+
 // parseLegacyMarkdown splits a legacy article into the page shape the reader
-// renders: an optional YAML frontmatter title, the text before the first "## "
-// as the lead, and one section per "## " heading. Content is preserved verbatim
-// as paragraphs — no rewriting, no citations.
+// renders: a title from YAML frontmatter or the first "# " heading, the text
+// before the first "## " as the lead, and one section per "## " heading. HTML
+// comments are machine metadata and are stripped; everything else is preserved
+// verbatim as paragraphs — no rewriting, no citations.
 func parseLegacyMarkdown(raw string) (title, lead string, sections []appKnowledgeSection) {
 	body := strings.ReplaceAll(raw, "\r\n", "\n")
 
@@ -315,6 +328,8 @@ func parseLegacyMarkdown(raw string) (title, lead string, sections []appKnowledg
 			body = strings.TrimPrefix(rest, "\n")
 		}
 	}
+
+	body = legacyHTMLCommentRe.ReplaceAllString(body, "")
 
 	current := appKnowledgeSection{}
 	flush := func() {
@@ -341,7 +356,11 @@ func parseLegacyMarkdown(raw string) (title, lead string, sections []appKnowledg
 	for _, line := range strings.Split(body, "\n") {
 		trimmed := strings.TrimSpace(line)
 		switch {
-		case strings.HasPrefix(trimmed, "# ") && title == "" && current.Heading == "" && len(current.Paras) == 0 && len(para) == 0:
+		// The first "# " heading is the title wherever it sits — the real
+		// legacy articles put prose (and formerly a metadata comment) before
+		// it, and the filename-slug fallback mangles names ("Add diana").
+		// With a frontmatter title already set, an H1 stays body text.
+		case strings.HasPrefix(trimmed, "# ") && title == "":
 			title = strings.TrimSpace(trimmed[2:])
 		case strings.HasPrefix(trimmed, "## "):
 			endPara()

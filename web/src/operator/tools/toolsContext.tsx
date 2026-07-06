@@ -73,14 +73,20 @@ function feTool(w: WireTool): Tool {
 export function ToolsProvider({
   appName,
   agentId,
+  initialTools,
   children,
 }: {
   appName: string;
   /** Real agent id (app_…); hydrates tools from the agent service when set. */
   agentId?: string;
+  /** Explicit starting toolbox — a seam for tests and stories. Product code
+   * omits it: agents start with NO tools until the operator teaches them. */
+  initialTools?: Tool[];
   children: ReactNode;
 }) {
-  const [tools, setTools] = useState<Tool[]>(() => seedToolsForApp(appName));
+  const [tools, setTools] = useState<Tool[]>(
+    () => initialTools ?? seedToolsForApp(appName),
+  );
 
   const realId = isRealAppId(agentId) ? agentId : undefined;
 

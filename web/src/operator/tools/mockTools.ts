@@ -219,15 +219,12 @@ export function sampleArgsFor(tool: Tool): Record<string, string> {
 }
 
 /**
- * Seed the app's Tools tab with a couple of tools, as if Nex had already built
- * them from workflows the operator taught this app — so the tab is not empty. The
- * app name only tailors copy; the shapes are the illustrative ICP examples.
+ * Seed the app's Tools tab. Empty on purpose: an agent shows ONLY the tools the
+ * operator actually taught it. Fabricated "as if Nex had already built them"
+ * seeds leaked into the purpose line and the "from N conversations" chip and
+ * made real agents claim conversations that never happened; the Tools tab has
+ * an honest empty state instead.
  */
 export function seedToolsForApp(_appName?: string): Tool[] {
-  return [
-    authorToolFromDescription("Every Monday, summarize last week's pipeline"),
-    authorToolFromDescription(
-      "When a new lead comes in, score its fit and route hot ones to the right AE",
-    ),
-  ];
+  return [];
 }

@@ -150,6 +150,13 @@ type headlessCodexTurn struct {
 	TaskID     string
 	Attempts   int
 	EnqueuedAt time.Time
+	// TransientRetries counts fast-path re-enqueues after transient
+	// provider/stream failures (connection drop, reset, provider 5xx). It is
+	// tracked separately from Attempts: Attempts feeds the slow recovery
+	// ladder (recoverFailedHeadlessTurn retry prompts + BlockTask), while
+	// TransientRetries only budgets the immediate same-turn reconnect retries
+	// in runHeadlessCodexQueue (see headlessCodexTransientTurnRetryLimit).
+	TransientRetries int
 	// FromHuman marks turns originating from a real person's chat message
 	// (channel post or DM, tagged or not). Human-originated turns bypass
 	// the lead queue-hold, the lead queue cap, the same-task dedup drop,

@@ -112,6 +112,14 @@ const (
 	// "Plan ready — review & approve" card so the human can act on the plan
 	// without digging through the raw tool stream.
 	HeadlessEventTypePlan = "plan"
+	// HeadlessEventTypeReconnecting is emitted by the dispatch queue when a
+	// turn died on a TRANSIENT provider/stream failure (connection drop,
+	// reset, provider 5xx) and the same turn is being re-enqueued
+	// immediately (see runHeadlessCodexQueue). WIRE CONTRACT: the web
+	// build-activity feed renders type "reconnecting" as a resolved
+	// "Reconnecting" row — keep this string in lockstep with
+	// web/src/components/apps/buildActivity.ts.
+	HeadlessEventTypeReconnecting = "reconnecting"
 
 	HeadlessProviderClaude       = "claude"
 	HeadlessProviderCodex        = "codex"

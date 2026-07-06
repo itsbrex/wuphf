@@ -10,9 +10,13 @@ package team
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"regexp"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -142,7 +146,13 @@ func (l *Launcher) enqueueHeadlessCodexTurnRecord(slug string, turn headlessCode
 			// Human turns bypass the same-task drop: a person sending a
 			// follow-up message during an in-flight turn must always be
 			// absorbed, never silently coalesced into the existing work.
-			if !humanPriority && !(isLead && urgentLeadTurn) && turn.Attempts <= active.Turn.Attempts {
+			// A transient-failure retry (higher TransientRetries) also
+			// bypasses it: the failing turn is still registered as active
+			// while its own retry is enqueued from inside the worker, and
+			// dropping the retry here would silently strand the task.
+			if !humanPriority && !(isLead && urgentLeadTurn) &&
+				turn.Attempts <= active.Turn.Attempts &&
+				turn.TransientRetries <= active.Turn.TransientRetries {
 				l.headless.mu.Unlock()
 				if isLead {
 					appendHeadlessCodexLog(slug, "queue-drop: lead already handling same task")
@@ -521,6 +531,24 @@ func (l *Launcher) runHeadlessCodexQueue(lane headlessLane, stop <-chan struct{}
 				exhaustedTurn := turn
 				exhaustedTurn.Attempts = headlessCodexLocalWorktreeRetryLimit
 				l.recoverFailedHeadlessTurn(slug, exhaustedTurn, startedAt, err.Error())
+			case isTransientProviderError(err) && turn.TransientRetries < headlessCodexTransientTurnRetryLimit:
+				// Transient provider/stream failure (connection drop, reset,
+				// provider 5xx): the work itself was fine — the pipe died.
+				// Re-enqueue the SAME turn immediately on this lane instead
+				// of falling through to recoverFailedHeadlessTurn/BlockTask,
+				// and tell the run's event stream we are retrying so the UI
+				// shows progress instead of a silent stall (live incident:
+				// a 60s app build became 9.5 minutes with zero feedback).
+				// The worker loop picks the retry up in this same cycle; no
+				// backoff is needed — the subprocess restart is the backoff.
+				appendHeadlessCodexLog(slug, fmt.Sprintf("error: %v", err))
+				retryTurn := turn
+				retryTurn.TransientRetries++
+				retryTurn.EnqueuedAt = time.Now()
+				appendHeadlessCodexLog(slug, fmt.Sprintf("transient-retry: connection dropped, retrying same turn (retry %d/%d)", retryTurn.TransientRetries, headlessCodexTransientTurnRetryLimit))
+				l.emitHeadlessReconnecting(slug, turn, startedAt)
+				l.updateHeadlessProgress(slug, "active", "queued", "connection dropped — retrying", headlessProgressMetrics{})
+				l.enqueueHeadlessCodexTurnRecord(slug, retryTurn)
 			default:
 				appendHeadlessCodexLog(slug, fmt.Sprintf("error: %v", err))
 				detail := err.Error()
@@ -871,6 +899,158 @@ func (l *Launcher) headlessCodexStaleCancelAfterForTurn(slug string, turn headle
 		}
 	}
 	return headlessCodexStaleCancelAfter
+}
+
+// headlessCodexTransientTurnRetryLimit bounds how many times the queue
+// re-enqueues the SAME turn after a transient provider/stream failure before
+// falling through to the slow recovery path (recoverFailedHeadlessTurn).
+// Live incident (2026-07-04, OFFICE-857): a provider connection drop killed
+// an app-builder office turn; without a fast retry the task fell to
+// BlockTask/self-heal and a 60s build stalled ~3 minutes twice.
+const headlessCodexTransientTurnRetryLimit = 2
+
+// bareExitStatusPattern matches turn errors that carry NOTHING beyond the
+// subprocess exit status — the shape runHeadlessClaudeTurn produces when the
+// claude CLI dies on a dropped provider stream with an empty stderr and no
+// result-line error ("exit status 1: exit status 1", because the detail
+// fallback is err.Error() itself). Observed live 2026-07-04 (OFFICE-857):
+// the connection drop surfaced exactly this way. A deterministic CLI failure
+// virtually always says something (stderr or a result error), which makes the
+// message non-bare and keeps it out of this match.
+var bareExitStatusPattern = regexp.MustCompile(`^exit status \d+(: exit status \d+)?$`)
+
+// isTransientProviderError reports whether a headless turn failure looks like
+// a transient provider/stream connectivity failure that is safe to retry by
+// re-running the same turn: the work itself was fine — the pipe to the
+// provider died. Timeouts and cancellations are excluded; they are owned by
+// their own branches in runHeadlessCodexQueue.
+func isTransientProviderError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+		return false
+	}
+	// Chain-typed stream failures: the claude runner's parse path wraps the
+	// underlying pipe/read error ("read claude json stream: %w"), so these
+	// survive errors.Is through the chain.
+	if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) || errors.Is(err, io.ErrClosedPipe) {
+		return true
+	}
+	if errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.ECONNREFUSED) ||
+		errors.Is(err, syscall.ECONNABORTED) || errors.Is(err, syscall.EPIPE) {
+		return true
+	}
+	return isTransientProviderErrorText(err.Error())
+}
+
+// isTransientProviderErrorText is the string-form classifier used both by
+// isTransientProviderError (on err.Error()) and by recoverFailedHeadlessTurn,
+// which only has the failure detail string. The markers cover how provider
+// stream failures actually surface from the runners: the claude CLI's
+// result-line errors and stderr (Node network errors), the codex/opencode
+// stream tails, and provider 5xx/overload responses.
+func isTransientProviderErrorText(detail string) bool {
+	s := strings.ToLower(strings.TrimSpace(detail))
+	if s == "" {
+		return false
+	}
+	markers := []string{
+		"connection error",
+		"connection reset",
+		"connection refused",
+		"connection closed",
+		"broken pipe",
+		"socket hang up",
+		"stream closed",
+		"unexpected eof",
+		"econnreset",
+		"etimedout",
+		"fetch failed",
+		"overloaded",
+		"internal server error",
+		"bad gateway",
+		"service unavailable",
+		"api error: 5", // claude CLI shape for provider 5xx ("API Error: 529 …")
+	}
+	for _, marker := range markers {
+		if strings.Contains(s, marker) {
+			return true
+		}
+	}
+	return bareExitStatusPattern.MatchString(s)
+}
+
+// headlessLastErrorTurnID recovers the turn id of the runner turn that just
+// failed by scanning the task-scoped stream tail for the terminal
+// error/manifest HeadlessEvent the runner emitted before returning. The queue
+// never sees the runner's turn id directly (each runner mints its own), so
+// this is how the "reconnecting" event correlates to the turn it retries.
+// Events stamped before notBefore are skipped: they belong to an EARLIER
+// attempt, and attributing the retry to one would tag the reconnecting row
+// with a stale turn. Best-effort: returns "" when the tail has no
+// attributable event (e.g. the runner died before emitting anything).
+func headlessLastErrorTurnID(stream *agentStreamBuffer, taskID string, notBefore time.Time) string {
+	if stream == nil || strings.TrimSpace(taskID) == "" {
+		return ""
+	}
+	lines := stream.recentTask(taskID)
+	for i := len(lines) - 1; i >= 0; i-- {
+		var evt struct {
+			Kind      string `json:"kind"`
+			Type      string `json:"type"`
+			TurnID    string `json:"turn_id"`
+			StartedAt string `json:"started_at"`
+		}
+		if err := json.Unmarshal([]byte(strings.TrimSpace(lines[i])), &evt); err != nil {
+			continue
+		}
+		if evt.Kind != HeadlessEventKind || strings.TrimSpace(evt.TurnID) == "" {
+			continue
+		}
+		if evt.Type != HeadlessEventTypeError && evt.Type != HeadlessEventTypeManifest {
+			continue
+		}
+		// pushHeadlessEvent stamps every event, so a parse failure means an
+		// old/foreign line — skip it rather than trust its turn id. The stamp
+		// is second-precision RFC3339, so compare against a second-truncated
+		// notBefore: an event from the same second as the attempt start must
+		// be accepted (a fast-failing attempt dies within its first second).
+		ts, err := time.Parse(time.RFC3339, strings.TrimSpace(evt.StartedAt))
+		if err != nil || ts.Before(notBefore.Truncate(time.Second)) {
+			continue
+		}
+		return strings.TrimSpace(evt.TurnID)
+	}
+	return ""
+}
+
+// emitHeadlessReconnecting pushes the "reconnecting" HeadlessEvent for a
+// transient-failure retry onto the agent's stream — the same task-scoped
+// channel the /apps/{id}/activity SSE serves — so the build feed shows the
+// retry instead of a silent stall. The type string is a wire contract with
+// the web feed (see HeadlessEventTypeReconnecting).
+func (l *Launcher) emitHeadlessReconnecting(slug string, turn headlessCodexTurn, attemptStartedAt time.Time) {
+	if l == nil || l.broker == nil {
+		return
+	}
+	taskID := strings.TrimSpace(turn.TaskID)
+	if taskID == "" {
+		taskID = l.agentActiveTaskID(slug)
+	}
+	stream := l.broker.AgentStream(slug)
+	turnID := headlessLastErrorTurnID(stream, taskID, attemptStartedAt)
+	if turnID == "" {
+		turnID = newHeadlessTurnID()
+	}
+	pushHeadlessEvent(stream, HeadlessEvent{
+		Type:   HeadlessEventTypeReconnecting,
+		Agent:  slug,
+		TurnID: turnID,
+		TaskID: taskID,
+		Text:   "Connection dropped — retrying",
+		Status: "active",
+	})
 }
 
 func headlessCodexTaskID(prompt string) string {

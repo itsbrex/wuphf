@@ -15,15 +15,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  CheckCircle2,
   ChevronsLeft,
   ChevronsRight,
   Maximize2,
   Minimize2,
   PhoneCall,
-  Play,
   Plus,
-  Power,
   Send,
   Sparkles,
   X,
@@ -50,8 +47,6 @@ import {
   type InboundRequest,
   type InternalTool,
   TODAY_DIGEST,
-  type ToolVersion,
-  type WorkflowStep,
 } from "../mock/data";
 import { RoutinesTab } from "../routines/RoutinesTab";
 import { ToolsProvider } from "../tools/toolsContext";
@@ -153,7 +148,10 @@ export function InternalToolDetail({
                 <AgentName id={tool.id} fallback={tool.name} />
               </div>
               <div className="opr-tool-meta">
-                <ToolStatusBadge status={tool.status} />
+                {/* Every tool here is a mock draft (real agents render
+                    OperatorAppDetail), so the pill says Suggested — it must
+                    not impersonate a real lifecycle state. */}
+                <ToolStatusBadge status="suggested" />
                 <span className="opr-meta-dot">
                   v{version} · built from {tool.builtFrom}
                 </span>
@@ -180,18 +178,21 @@ export function InternalToolDetail({
                 Ask Agent
               </button>
 
-              {tool.status === "suggested" && (
-                <button
-                  type="button"
-                  className="opr-btn opr-btn-primary opr-btn-sm"
-                >
-                  <Plus size={13} strokeWidth={1.9} aria-hidden={true} />
-                  Build it
-                </button>
-              )}
+              {/* Pill and CTA agree: everything here is a suggestion, so the
+                  build affordance renders unconditionally — a row labeled
+                  Suggested without its primary CTA would be a dead end. */}
+              <button
+                type="button"
+                className="opr-btn opr-btn-primary opr-btn-sm"
+              >
+                <Plus size={13} strokeWidth={1.9} aria-hidden={true} />
+                Build it
+              </button>
             </div>
           </div>
 
+          {/* No source chip: "from N conversations" would be fabricated for a
+              mock draft — no conversations produced these seeds. */}
           <AgentPurpose summary={tool.summary} />
 
           <Tabs
@@ -219,9 +220,10 @@ export function InternalToolDetail({
                     onAction={onStartCall}
                   />
                 )}
-                {/* The artifacts this agent's runs produced, under its one app. */}
+                {/* Seeded example artifacts — labeled as examples because no
+                    run of this mock draft actually produced them. */}
                 <div className="opr-ui-artifacts">
-                  <Eyebrow>Artifacts</Eyebrow>
+                  <Eyebrow>Example artifacts</Eyebrow>
                   <ArtifactsTab
                     agentName={tool.name}
                     artifacts={seedArtifacts()}

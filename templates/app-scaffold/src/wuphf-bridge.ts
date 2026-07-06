@@ -338,6 +338,97 @@ export function getTasks(): Promise<{ tasks: OfficeTask[] }> {
   );
 }
 
+// ── Poll a mutating action's approval (callIntegration → needs_approval) ────
+
+/** The derived decision on a mutating action's approval request. */
+export type ActionApprovalState =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "unknown";
+
+/** The approval request as the broker returns it (the fields an app needs). */
+export interface ActionStatusRequest {
+  id: string;
+  /** Broker lifecycle status: "pending" | "answered" | "canceled". */
+  status?: string;
+  /** Present once a human decided; `choice_id` carries the decision. */
+  answered?: {
+    choice_id?: string;
+    choice_text?: string;
+    custom_text?: string;
+    answered_at?: string;
+  };
+}
+
+export interface ActionStatusResult {
+  /** The matching request, or undefined when the id is unknown. */
+  request?: ActionStatusRequest;
+  /**
+   * The decision, derived for you:
+   *   - "pending"  — still awaiting the human. Keep polling.
+   *   - "approved" — approve / approve_with_note. Stop polling.
+   *   - "rejected" — reject / reject_with_steer, a cancellation, or any other
+   *                  terminal answer (e.g. needs_more_info): THIS request will
+   *                  not run the action. Stop polling; re-raise by calling the
+   *                  integration again if the human asks for it.
+   *   - "unknown"  — no such request, or the poll itself failed (see `error`).
+   */
+  state: ActionApprovalState;
+  /** Set when the poll itself failed (transport error); state is "unknown". */
+  error?: string;
+}
+
+/**
+ * getActionStatus polls the human approval a mutating callIntegration() call
+ * raised. When callIntegration returns { status:"needs_approval", request_id },
+ * the action did NOT run — a human has to approve the card first. Poll this
+ * request_id (e.g. every 5 seconds while the tab is open) and reflect the
+ * outcome in the UI; STOP polling once `state` is "approved" or "rejected".
+ * Never leave a row "Awaiting" forever. NEVER THROWS on a normal failure —
+ * a transport error resolves as { state: "unknown", error }.
+ */
+export function getActionStatus(
+  requestId: string,
+): Promise<ActionStatusResult> {
+  return callBroker<{ requests?: ActionStatusRequest[] }>(
+    "/requests?id=" + encodeURIComponent(requestId),
+  )
+    .then((res) => {
+      const request = Array.isArray(res.requests)
+        ? res.requests.find((r) => r?.id === requestId)
+        : undefined;
+      return { request, state: deriveActionState(request) };
+    })
+    .catch((err: unknown) => ({
+      state: "unknown" as const,
+      error:
+        err instanceof Error ? err.message : "Could not read the request.",
+    }));
+}
+
+/**
+ * deriveActionState maps the broker's request shape onto the app-facing
+ * decision. Mirrors the broker's own approval classification: "approve" and
+ * "approve_with_note" proceed; every other terminal outcome (an explicit
+ * reject, needs_more_info, or a cancellation) means this request will not
+ * execute the action.
+ */
+function deriveActionState(
+  request?: ActionStatusRequest,
+): ActionApprovalState {
+  if (!request) return "unknown";
+  const choice = (request.answered?.choice_id ?? "").trim().toLowerCase();
+  if (choice === "approve" || choice === "approve_with_note") {
+    return "approved";
+  }
+  const status = (request.status ?? "").trim().toLowerCase();
+  if (request.answered || status === "answered" || status === "canceled") {
+    return "rejected";
+  }
+  return "pending";
+}
+
 // ── Read-only Gmail (metadata + snippet only) ───────────────────────────────
 
 /**
