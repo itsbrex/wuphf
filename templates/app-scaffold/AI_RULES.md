@@ -129,6 +129,22 @@ The `useTable` return is `{ reactTable, refineCore }`:
   `tableQuery.data?.total`, plus `setFilters` / `setSorters` for server-driven
   filtering.
 
+**NEVER memoize on the `reactTable` instance.** The instance is a STABLE
+reference — it never changes identity when data arrives — so
+`useMemo(() => reactTable.getRowModel().rows.filter(...), [reactTable, ...])`
+computes once against an EMPTY table and never recomputes: your counts update
+(they derive from `tableQuery.data`) while the list renders "no rows" forever.
+This shipped as a live bug. Read `getRowModel()` during render, or derive rows
+from `tableQuery.data` and depend on that:
+
+```tsx
+// WRONG — frozen on the empty initial table:
+const rows = useMemo(() => reactTable.getRowModel().rows.filter(f), [reactTable, f]);
+// RIGHT — recomputes when the data actually changes:
+const data = tableQuery.data?.data ?? [];
+const rows = useMemo(() => data.filter(f), [data, f]);
+```
+
 ### A simple list — `useList`
 
 ```tsx
