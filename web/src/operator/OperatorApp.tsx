@@ -63,6 +63,13 @@ export function OperatorApp() {
   // Two builders: the app builder (primary, real) and the legacy workflow
   // builder (kept for the workflow-tab path).
   const [appBuilding, setAppBuilding] = useState(false);
+  // Set → the build experience opens in EDIT mode scoped to this app (the
+  // "Edit app" affordance on the detail). Cleared with the rest of the
+  // sub-state on close/finish.
+  const [editingApp, setEditingApp] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [building, setBuilding] = useState(false);
   // The workflow just built in the builder, carried so its clarified steps
   // survive the handoff instead of falling back to the seeded mock.
@@ -96,6 +103,7 @@ export function OperatorApp() {
   function resetSubState() {
     setSelectedId(null);
     setAppBuilding(false);
+    setEditingApp(null);
     setBuilding(false);
     setBuiltDraft(null);
     setOpenOnWorkflowTab(false);
@@ -152,6 +160,7 @@ export function OperatorApp() {
           key={selectedId}
           appId={selectedId as string}
           onBack={() => setSelectedId(null)}
+          onEditApp={setEditingApp}
         />
       );
     }
@@ -195,10 +204,15 @@ export function OperatorApp() {
       />
 
       <main className="opr-main">
-        {appBuilding ? (
+        {appBuilding || editingApp ? (
           <OperatorBuildExperience
+            key={editingApp?.id ?? "new"}
             demo={demoBuild ?? undefined}
-            onClose={() => setAppBuilding(false)}
+            editApp={editingApp ?? undefined}
+            onClose={() => {
+              setAppBuilding(false);
+              setEditingApp(null);
+            }}
             onFinish={finishApp}
           />
         ) : building ? (
