@@ -205,3 +205,70 @@ func patchAppRename(t *testing.T, url, token, agentSlug, body string) (int, map[
 	}
 	return resp.StatusCode, out
 }
+
+// TestAppImproveOwnerToken locks in the OWNER lane on app mutations: the
+// human owner authenticates with the bare web token and NO agent identity
+// header (agents always claim a slug via X-WUPHF-Agent). Regression for the
+// live 2026-07-06 finding where the operator UI's own submitAppEdit path
+// 403'd — appWriterAllowed knew only the app-builder slug and cookie-session
+// humans, so the single-owner localhost human could never improve an app.
+func TestAppImproveOwnerToken(t *testing.T) {
+	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
+
+	b := newTestBroker(t)
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("start broker: %v", err)
+	}
+	defer b.Stop()
+	base := fmt.Sprintf("http://%s", b.Addr())
+
+	body, _ := json.Marshal(map[string]any{"name": "Editable", "html": validAppHTML})
+	created := postAppsAsAgent(t, base+"/apps", b.Token(), appBuilderSlug, body)
+	app, _ := created["app"].(map[string]any)
+	id, _ := app["id"].(string)
+	if id == "" {
+		t.Fatalf("no app id in register response: %v", created)
+	}
+
+	post := func(sub, agentSlug, payload string) (int, map[string]any) {
+		req, _ := http.NewRequest(http.MethodPost, base+"/apps/"+id+sub, strings.NewReader(payload))
+		req.Header.Set("Authorization", "Bearer "+b.Token())
+		req.Header.Set("Content-Type", "application/json")
+		if agentSlug != "" {
+			req.Header.Set("X-WUPHF-Agent", agentSlug)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("POST %s: %v", sub, err)
+		}
+		defer resp.Body.Close()
+		raw, _ := io.ReadAll(resp.Body)
+		var out map[string]any
+		if len(raw) > 0 {
+			_ = json.Unmarshal(raw, &out)
+		}
+		return resp.StatusCode, out
+	}
+
+	// The owner (token, no agent header) may improve; the reply carries the
+	// settled edit channel.
+	status, out := post("/improve", "", `{"change":"make the header sticky"}`)
+	if status != http.StatusOK {
+		t.Fatalf("owner POST /improve status = %d (%v), want 200", status, out)
+	}
+	if ch, _ := out["channel"].(string); strings.TrimSpace(ch) == "" {
+		t.Fatalf("owner improve returned no channel: %v", out)
+	}
+
+	// Same for opening the edit session directly.
+	status, out = post("/edit-session", "", `{}`)
+	if status != http.StatusOK {
+		t.Fatalf("owner POST /edit-session status = %d (%v), want 200", status, out)
+	}
+
+	// A non-app-builder AGENT identity stays rejected.
+	status, _ = post("/improve", "pam", `{"change":"nope"}`)
+	if status != http.StatusForbidden {
+		t.Fatalf("agent POST /improve status = %d, want 403", status)
+	}
+}
