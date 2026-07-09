@@ -330,6 +330,18 @@ func TestScaffoldBridgeActionStatusContract(t *testing.T) {
 			t.Errorf("AI_RULES.md missing %q — the polling mandate is not part of the app-builder contract", want)
 		}
 	}
+
+	// Regression for the live 2026-07-06 generated-app bug: a filter memo keyed
+	// on the STABLE reactTable instance froze against the empty initial table
+	// (counts updated, rows never rendered). The rules must warn against it.
+	for _, want := range []string{
+		"NEVER memoize on the `reactTable` instance",
+		"tableQuery.data",
+	} {
+		if !strings.Contains(rules, want) {
+			t.Errorf("AI_RULES.md missing %q — the stale-memo table rule is not part of the app-builder contract", want)
+		}
+	}
 }
 
 func TestParseAppBuilderTaskAppID(t *testing.T) {

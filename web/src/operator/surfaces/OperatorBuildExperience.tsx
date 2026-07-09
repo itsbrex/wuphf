@@ -22,16 +22,26 @@ interface OperatorBuildExperienceProps {
    * agent as it builds.
    */
   demo?: DemoCapture;
+  /**
+   * Edit mode: the chat opens scoped to an EXISTING app (AppBuilderChat's
+   * editApp → the broker improve path) with the live app already docked
+   * beside it, so a change request republishes a new version in place.
+   */
+  editApp?: { id: string; name: string };
 }
 
 export function OperatorBuildExperience({
   onClose,
   onFinish,
   demo,
+  editApp,
 }: OperatorBuildExperienceProps) {
   // Set the instant the build scaffolds; flips the layout from a centered
-  // describe chat to "live preview + docked chat".
-  const [buildingAppId, setBuildingAppId] = useState<string | null>(null);
+  // describe chat to "live preview + docked chat". Edit mode starts live:
+  // the app already exists, so the preview docks immediately.
+  const [buildingAppId, setBuildingAppId] = useState<string | null>(
+    editApp?.id ?? null,
+  );
   const live = Boolean(buildingAppId);
 
   return (
@@ -42,7 +52,9 @@ export function OperatorBuildExperience({
             key={buildingAppId}
             appId={buildingAppId}
             onBack={onClose}
-            buildWalk={true}
+            // The tab walk is a first-build ceremony; an edit republishes in
+            // place, so the operator stays on the tab they are looking at.
+            buildWalk={!editApp}
           />
         </div>
       ) : null}
@@ -52,7 +64,7 @@ export function OperatorBuildExperience({
           <div className="opr-ask-bar">
             <span className="opr-ask-bar-title">
               <Sparkles size={13} strokeWidth={2} aria-hidden={true} />
-              Building your agent
+              {editApp ? `Editing ${editApp.name}` : "Building your agent"}
             </span>
             <button
               type="button"
@@ -69,6 +81,7 @@ export function OperatorBuildExperience({
           <AppBuilderChat
             panelMode={live}
             demo={demo}
+            editApp={editApp}
             onClose={onClose}
             onBuildingApp={setBuildingAppId}
             onFinish={onFinish}

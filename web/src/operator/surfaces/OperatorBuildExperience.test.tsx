@@ -10,11 +10,17 @@ vi.mock("./AppBuilderChat", () => ({
   AppBuilderChat: ({
     panelMode,
     onBuildingApp,
+    editApp,
   }: {
     panelMode?: boolean;
     onBuildingApp?: (id: string) => void;
+    editApp?: { id: string; name: string };
   }) => (
-    <div data-testid="builder-chat" data-panel={String(Boolean(panelMode))}>
+    <div
+      data-testid="builder-chat"
+      data-panel={String(Boolean(panelMode))}
+      data-edit-app={editApp?.id ?? ""}
+    >
       <button type="button" onClick={() => onBuildingApp?.("app_live123")}>
         scaffold
       </button>
@@ -59,5 +65,24 @@ describe("OperatorBuildExperience", () => {
     expect(detail.getAttribute("data-build-walk")).toBe("true");
     expect(getByTestId("builder-chat").getAttribute("data-panel")).toBe("true");
     expect(container.querySelector(".opr-build-exp.is-live")).not.toBeNull();
+  });
+
+  it("edit mode starts LIVE on the existing app: docked chat, no tab walk, editApp scoped", () => {
+    const { getByTestId, getByText } = render(
+      <OperatorBuildExperience
+        onClose={() => {}}
+        onFinish={() => {}}
+        editApp={{ id: "app_live123", name: "Open Tasks" }}
+      />,
+    );
+    // No describe phase: the app already exists, so the layout opens live.
+    const detailEl = getByTestId("app-detail");
+    expect(detailEl.getAttribute("data-app-id")).toBe("app_live123");
+    // An edit republishes in place — the first-build tab walk must not run.
+    expect(detailEl.getAttribute("data-build-walk")).toBe("false");
+    const chat = getByTestId("builder-chat");
+    expect(chat.getAttribute("data-panel")).toBe("true");
+    expect(chat.getAttribute("data-edit-app")).toBe("app_live123");
+    expect(getByText("Editing Open Tasks")).toBeTruthy();
   });
 });

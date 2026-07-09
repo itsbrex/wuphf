@@ -12,6 +12,7 @@ import {
   ChevronsRight,
   Maximize2,
   Minimize2,
+  Pencil,
   Sparkles,
   Trash2,
   X,
@@ -71,12 +72,21 @@ interface OperatorAppDetailProps {
    * the UI. Used by the build experience; a manual tab click cancels the walk.
    */
   buildWalk?: boolean;
+  /**
+   * Opens the app-EDIT chat (AppBuilderChat in editApp mode → the broker's
+   * improve path, which republishes a new version). This is deliberately a
+   * SEPARATE affordance from Ask Agent: Ask Agent teaches/runs the agent's
+   * tools, and a UI change or bug report sent there would be misauthored as
+   * a tool. Absent in the build experience (the build chat is already docked).
+   */
+  onEditApp?: (app: { id: string; name: string }) => void;
 }
 
 export function OperatorAppDetail({
   appId,
   onBack,
   buildWalk,
+  onEditApp,
 }: OperatorAppDetailProps) {
   const [tab, setTab] = useState<AppTab>("ui");
   const [chatOpen, setChatOpen] = useState(false);
@@ -194,6 +204,16 @@ export function OperatorAppDetail({
             </div>
             {ready ? (
               <div className="opr-detail-actions">
+                {app && onEditApp ? (
+                  <button
+                    type="button"
+                    className="opr-btn opr-btn-sm"
+                    onClick={() => onEditApp({ id: app.id, name: app.name })}
+                  >
+                    <Pencil size={13} strokeWidth={1.9} aria-hidden={true} />
+                    Edit app
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="opr-btn opr-btn-sm"

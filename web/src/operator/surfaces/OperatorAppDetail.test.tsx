@@ -216,3 +216,48 @@ describe("OperatorAppDetail", () => {
     );
   });
 });
+
+describe("OperatorAppDetail edit affordance", () => {
+  it("offers Edit app on a ready agent and hands back the app identity", () => {
+    useOperatorAppMock.mockReturnValue({
+      data: detail({ status: "ready" }, "<html>hi</html>"),
+      isError: false,
+    });
+    const onEditApp = vi.fn();
+    const { getByRole } = render(
+      <OperatorAppDetail
+        appId="app_abc"
+        onBack={() => {}}
+        onEditApp={onEditApp}
+      />,
+    );
+    fireEvent.click(getByRole("button", { name: /edit app/i }));
+    expect(onEditApp).toHaveBeenCalledWith({
+      id: "app_abc",
+      name: "Open Tasks",
+    });
+  });
+
+  it("hides Edit app while building and when no handler is wired", () => {
+    useOperatorAppMock.mockReturnValue({
+      data: detail({ status: "building" }, ""),
+      isError: false,
+    });
+    const { queryByRole, rerender } = render(
+      <OperatorAppDetail
+        appId="app_abc"
+        onBack={() => {}}
+        onEditApp={vi.fn()}
+      />,
+    );
+    expect(queryByRole("button", { name: /edit app/i })).toBeNull();
+
+    // Ready but no handler (e.g. inside the build experience): no dead button.
+    useOperatorAppMock.mockReturnValue({
+      data: detail({ status: "ready" }, "<html>hi</html>"),
+      isError: false,
+    });
+    rerender(<OperatorAppDetail appId="app_abc" onBack={() => {}} />);
+    expect(queryByRole("button", { name: /edit app/i })).toBeNull();
+  });
+});
