@@ -46,6 +46,21 @@ func TestBinaryPathExplicitCommandMissingDoesNotFallBack(t *testing.T) {
 	}
 }
 
+func TestBinaryPathExplicitBareNameResolvesViaPath(t *testing.T) {
+	dir := t.TempDir()
+	wrapper := filepath.Join(dir, "gbrain-wrapper")
+	if err := os.WriteFile(wrapper, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+		t.Fatalf("write wrapper: %v", err)
+	}
+	t.Setenv("PATH", dir)
+	// A bare name (no path separator) is resolved through PATH by
+	// exec.LookPath — same authoritative semantics as an absolute path.
+	t.Setenv("WUPHF_GBRAIN_COMMAND", "gbrain-wrapper")
+	if got := BinaryPath(); got != wrapper {
+		t.Fatalf("BinaryPath() = %q, want bare name resolved via PATH to %q", got, wrapper)
+	}
+}
+
 func TestBinaryPathEmptyCommandUsesPathFallback(t *testing.T) {
 	dir := t.TempDir()
 	fake := writeFakeGbrain(t, dir)
