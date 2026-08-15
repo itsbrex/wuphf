@@ -1,18 +1,27 @@
-// Settings — kept deliberately small. Voice (the call) economics are the
-// load-bearing decision here: bring your own OpenAI Realtime key, or let Nex
-// host it; with no key the call is optional and chat-authoring is the floor.
-// The Voice group is REAL (persists to the broker config); the rest is mock.
+// Settings — kept deliberately small, and HONEST: every control on this
+// surface is real. Voice persists to the broker config. Runtime is read-only
+// status (set during onboarding). The earlier mock groups — a digest toggle,
+// a "Deliver to #revops · maya@company.com" input, an approvals toggle, and a
+// dead Delete-workspace button — presented non-functional controls as real
+// (the approvals toggle misrepresented a safety property in both directions)
+// and were removed in the 2026-08 QA pass.
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { type ConfigStatus, get, post } from "../../api/client";
+import { type ConfigStatus, get, getConfig, post } from "../../api/client";
+import { getUsage } from "../../api/platform";
 import { Eyebrow, SurfaceHeader } from "../components/primitives";
+
+/** 4.6M / 227k style token formatting for the usage readout. */
+function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${Math.round(n / 1_000)}k`;
+  return String(n);
+}
 
 export function SettingsSurface() {
   const [nexHosted, setNexHosted] = useState(false);
-  const [digestOn, setDigestOn] = useState(true);
-  const [approvalsOn, setApprovalsOn] = useState(true);
 
   // The Voice group persists to the broker config so the real call can mint
   // ephemeral Realtime tokens from the key. The key itself is write-only: we
@@ -23,6 +32,22 @@ export function SettingsSurface() {
     queryFn: () => get<ConfigStatus>("/config"),
   });
   const keySet = Boolean(config.data?.openai_key_set);
+  // Live usage — the cost readout the retired office shell used to own. The
+  // operator is the only front door now, so what the agents spend must be
+  // visible here.
+  const usage = useQuery({
+    queryKey: ["operator-usage"],
+    queryFn: () => getUsage().catch(() => null),
+    refetchInterval: 30_000,
+    retry: false,
+  });
+  // Full config snapshot for the read-only Runtime readout.
+  const snapshot = useQuery({
+    queryKey: ["operator-config-snapshot"],
+    queryFn: () => getConfig().catch(() => null),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
   const [keyInput, setKeyInput] = useState("");
   const [modelInput, setModelInput] = useState("");
   const save = useMutation({
@@ -134,69 +159,39 @@ export function SettingsSurface() {
         </div>
 
         <div className="opr-set-group">
-          <Eyebrow>Notifications</Eyebrow>
+          <Eyebrow>Usage</Eyebrow>
           <div className="opr-set-row">
             <div>
-              <div className="opr-set-label">Daily digest</div>
+              <div className="opr-set-label">What your agents have spent</div>
               <div className="opr-set-help">
-                A morning summary of what your tools did, and anything that
-                needs you, in Slack and email.
+                All-time inference on this workspace, on your account. Builds
+                and routine runs both land here.
               </div>
             </div>
-            <button
-              type="button"
-              aria-pressed={digestOn}
-              aria-label="Daily digest"
-              className={`opr-toggle${digestOn ? " is-on" : ""}`}
-              onClick={() => setDigestOn((v) => !v)}
-            />
-          </div>
-          <div className="opr-set-row">
-            <div>
-              <div className="opr-set-label">Deliver to</div>
-              <div className="opr-set-help">Where digests and alerts go.</div>
-            </div>
-            <input
-              className="opr-input"
-              aria-label="Deliver digests and alerts to"
-              defaultValue="#revops · maya@company.com"
-            />
+            <span className="opr-usage-readout">
+              {usage.data?.total
+                ? `$${usage.data.total.cost_usd.toFixed(2)} · ${formatTokens(
+                    usage.data.total.total_tokens,
+                  )} tokens · ${usage.data.total.requests} runs`
+                : "no spend recorded yet"}
+            </span>
           </div>
         </div>
 
         <div className="opr-set-group">
-          <Eyebrow>Approvals</Eyebrow>
+          <Eyebrow>Runtime</Eyebrow>
           <div className="opr-set-row">
             <div>
-              <div className="opr-set-label">Ask before sending externally</div>
+              <div className="opr-set-label">Default runtime</div>
               <div className="opr-set-help">
-                Your AI checks with you before any tool writes to an outside app
-                such as posting to Slack or updating the CRM. Recommended on.
+                The engine new agents run on, picked during setup. Per-agent
+                runtime switching lands here next; until then this is
+                read-only.
               </div>
             </div>
-            <button
-              type="button"
-              aria-pressed={approvalsOn}
-              aria-label="Ask before sending externally"
-              className={`opr-toggle${approvalsOn ? " is-on" : ""}`}
-              onClick={() => setApprovalsOn((v) => !v)}
-            />
-          </div>
-        </div>
-
-        <div className="opr-set-group">
-          <Eyebrow>Danger zone</Eyebrow>
-          <div className="opr-set-row">
-            <div>
-              <div className="opr-set-label opr-danger">Delete workspace</div>
-              <div className="opr-set-help">
-                Removes every tool, its data, and the connected apps. Cannot be
-                undone.
-              </div>
-            </div>
-            <button type="button" className="opr-btn opr-btn-sm opr-danger">
-              Delete
-            </button>
+            <span className="opr-pill opr-pill-muted">
+              {snapshot.data?.llm_provider || "not set"}
+            </span>
           </div>
         </div>
       </div>

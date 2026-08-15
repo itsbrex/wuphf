@@ -6,12 +6,17 @@
 // operator-skinned front door onto the existing one.
 
 import { useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Check, Send, X } from "lucide-react";
 
 import { type CustomApp, listApps, submitAppEdit } from "../../api/apps";
 import { AppActivity } from "../../components/apps/AppActivity";
 import { tryCreateRoutine } from "../agents/agentStateClient";
+import {
+  type DescribedIntegration,
+  describedIntegrations,
+  missingIntegrations,
+} from "../builder/describedIntegrations";
 import { capturePromptSeed, type DemoCapture } from "../apps/demoCapture";
 import {
   appBuildState,
@@ -76,6 +81,13 @@ interface AppBuilderChatProps {
    * moment its id resolves.
    */
   demo?: DemoCapture;
+  /**
+   * A workflow description to send the moment the chat mounts — the
+   * onboarding "first workflow" handoff. The text appears as the user's
+   * message and the build starts at once, honoring the "Start your first
+   * workflow" CTA that carried it here. Ignored in edit/demo mode.
+   */
+  initialPrompt?: string;
 }
 
 export function AppBuilderChat({
@@ -85,6 +97,7 @@ export function AppBuilderChat({
   editApp,
   panelMode,
   demo,
+  initialPrompt,
 }: AppBuilderChatProps) {
   const [phase, setPhase] = useState<Phase>("intro");
   const [draft, setDraft] = useState("");
@@ -123,6 +136,17 @@ export function AppBuilderChat({
   // chat already built). null means it is a brand-new build. Drives completion
   // detection so a follow-up amends instead of spawning a second build.
   const activeRefineRef = useRef<string | null>(null);
+  // The described workflow of the in-flight NEW build — consumed once by the
+  // completion hook to create the agent's starter routine.
+  const starterRoutineRef = useRef<string | null>(null);
+  // Pre-build integration gate (ask, never silently re-scope): set when the
+  // described workflow names external systems that are not connected. Holds
+  // the send until the operator picks a path.
+  const [pendingGate, setPendingGate] = useState<{
+    description: string;
+    display?: string;
+    missing: DescribedIntegration[];
+  } | null>(null);
   // App ids we have OBSERVED in a "building" state during this in-flight build.
   // A new build only completes on a building -> terminal transition: without
   // this, resolveNewAppId can latch onto a stale already-ready app and declare
@@ -135,6 +159,7 @@ export function AppBuilderChat({
   const terminalSinceRef = useRef<{ id: string; at: number } | null>(null);
 
   const build = useBuildApp();
+  const queryClient = useQueryClient();
 
   // Poll the app list only while a build is in flight; a new build is the app
   // whose id was not present when we started (robust to a renamed display
@@ -145,6 +170,20 @@ export function AppBuilderChat({
     refetchInterval: phase === "building" ? BUILD_POLL_MS : false,
     enabled: phase === "building",
   });
+
+  // Belt-and-braces poll: with several observers sharing ["operator-apps"]
+  // (the shell's inventory + this chat), the per-observer refetchInterval has
+  // been observed not to tick after `enabled` flips true mid-mount — the
+  // first build then hangs on "Building your agent…" forever while the broker
+  // has long since scaffolded the app. An explicit invalidation loop is
+  // deterministic regardless of observer bookkeeping.
+  useEffect(() => {
+    if (phase !== "building") return;
+    const tick = window.setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ["operator-apps"] });
+    }, BUILD_POLL_MS);
+    return () => window.clearInterval(tick);
+  }, [phase, queryClient]);
 
   useEffect(() => {
     if (phase !== "building") return;
@@ -209,6 +248,27 @@ export function AppBuilderChat({
     setNewAppId(candidate.id);
     setPhase("done");
     const failed = state === "failed";
+    // First-build ceremony: a brand-new agent (not a refine, not a demo-call
+    // build, which creates its own captured routine) gets a starter routine —
+    // the described workflow on a weekly schedule. Told, not asked: the chat
+    // reports it with a one-line veto path (pause on the Routines tab).
+    if (!failed && !refineId && !demo && starterRoutineRef.current) {
+      const routinePrompt = starterRoutineRef.current;
+      starterRoutineRef.current = null;
+      void (async () => {
+        const created = await tryCreateRoutine({
+          agent: candidate.id,
+          name: `Weekly ${appName.replace(/\s*Agent$/i, "").trim() || appName} run`,
+          prompt: routinePrompt,
+          schedule: "0 9 * * 1",
+        });
+        if (created) {
+          say(
+            "I also set up its weekly routine — Mondays 9:00, running the workflow you described. Pause or reword it any time on the Routines tab.",
+          );
+        }
+      })();
+    }
     setMessages((prev) => [
       ...prev,
       {
@@ -246,6 +306,17 @@ export function AppBuilderChat({
     if (!demo || editApp || demoStartedRef.current) return;
     demoStartedRef.current = true;
     void send(capturePromptSeed(demo), { display: demo.goal });
+  }, []);
+
+  // The onboarding first-workflow handoff starts the build the same way: the
+  // user already pressed "Start your first workflow", so the text is sent as
+  // their message and the build kicks off on arrival. One-shot.
+  const initialStartedRef = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fire the seed start once
+  useEffect(() => {
+    if (!initialPrompt || demo || editApp || initialStartedRef.current) return;
+    initialStartedRef.current = true;
+    void send(initialPrompt);
   }, []);
 
   // ── Demo-call extras: the captured routine + tools, created on the new agent ──
@@ -318,10 +389,24 @@ export function AppBuilderChat({
 
   async function send(
     text?: string,
-    opts?: { display?: string },
+    opts?: { display?: string; skipIntegrationGate?: boolean },
   ): Promise<void> {
     const description = (text ?? draft).trim();
     if (!description || phase === "building") return;
+    // Ask before building: when a NEW build's description names external
+    // systems that are not connected, hold the send and put the choice to the
+    // operator instead of letting the builder silently re-scope the job onto
+    // whatever data it can reach.
+    if (!opts?.skipIntegrationGate && !(editApp?.id ?? newAppId) && !demo) {
+      const refs = describedIntegrations(description);
+      const missing = await missingIntegrations(refs);
+      if (missing.length > 0) {
+        setDraft("");
+        setPendingGate({ description, display: opts?.display, missing });
+        return;
+      }
+    }
+    setPendingGate(null);
     // What the transcript shows as the operator's message. A demo-call start
     // shows the narrated goal, not the full multi-line capture it builds from.
     const display = opts?.display?.trim() || description;
@@ -334,6 +419,9 @@ export function AppBuilderChat({
       ? appName || deriveAppName(description)
       : deriveAppName(description);
     activeRefineRef.current = refineId;
+    // A brand-new build remembers its description so the completion hook can
+    // mint the starter routine from it (the workflow IS the recurring job).
+    if (!refineId) starterRoutineRef.current = description;
     // Fresh build/refine: forget any building-state we observed for a prior run.
     sawBuildingRef.current = new Set();
     terminalSinceRef.current = null;
@@ -425,6 +513,60 @@ export function AppBuilderChat({
               </div>
             </div>
           ))}
+
+          {pendingGate ? (
+            <div className="opr-edit-msgwrap">
+              <div className="opr-msg opr-msg-ai opr-gate-card">
+                <div>
+                  This workflow mentions{" "}
+                  {pendingGate.missing.map((m) => m.label).join(" and ")} — not
+                  connected yet. I can build against your live workspace data
+                  now and wire {pendingGate.missing.length === 1 ? "it" : "them"}{" "}
+                  in when you connect, or hold on while you connect first.
+                </div>
+                <div className="opr-gate-actions">
+                  <button
+                    type="button"
+                    className="opr-btn opr-btn-primary opr-btn-sm"
+                    onClick={() => {
+                      const gate = pendingGate;
+                      setPendingGate(null);
+                      const names = gate.missing
+                        .map((m) => m.label)
+                        .join(", ");
+                      void send(
+                        `${gate.description}\n\nNote: ${names} ${
+                          gate.missing.length === 1 ? "is" : "are"
+                        } not connected in this workspace yet. Ground the workflow in live workspace data for now, say so plainly in the app, and structure it so the integration can be wired in once connected.`,
+                        {
+                          display: gate.display ?? gate.description,
+                          skipIntegrationGate: true,
+                        },
+                      );
+                    }}
+                  >
+                    Build with workspace data
+                  </button>
+                  <button
+                    type="button"
+                    className="opr-btn opr-btn-sm"
+                    onClick={() => {
+                      const gate = pendingGate;
+                      setPendingGate(null);
+                      // Put the described workflow back in the composer so
+                      // nothing typed is lost while they go connect.
+                      setDraft(gate.description);
+                      say(
+                        "Holding off. Connect it from any agent's Integrations tab (connections are shared across the office) — your description is still in the composer for when you are back.",
+                      );
+                    }}
+                  >
+                    I will connect it first
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
 
           {phase === "building" ? (
             <div className="opr-build-activity">

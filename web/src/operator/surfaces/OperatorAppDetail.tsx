@@ -5,6 +5,7 @@
 // produced (md/html/pdf) collected below the app.
 
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -22,6 +23,7 @@ import type { CustomApp, CustomAppDetail } from "../../api/apps";
 import { get } from "../../api/client";
 import { AppLivePreview } from "../../components/apps/AppLivePreview";
 import { CustomAppFrame } from "../../components/apps/CustomAppFrame";
+import { PixelAvatar } from "../../components/ui/PixelAvatar";
 import { AgentName } from "../agents/AgentName";
 import { AgentPurpose } from "../agents/AgentPurpose";
 import { AgentSessions } from "../agents/AgentSessions";
@@ -102,6 +104,21 @@ export function OperatorAppDetail({
   const failed = state === "failed";
   const ready = state === "ready" && !!detail?.html;
 
+  // Deterministic refresh while the app builds. useOperatorApp's own
+  // refetchInterval has been observed not to tick (same failure family as the
+  // build chat's poll — see AppBuilderChat), leaving the header stuck on
+  // "Building · v0" after the broker published. Explicit invalidation is
+  // immune to observer bookkeeping.
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    if (ready || failed) return;
+    const tick = window.setInterval(() => {
+      void queryClient.invalidateQueries({ queryKey: ["operator-app", appId] });
+      void queryClient.invalidateQueries({ queryKey: ["operator-apps"] });
+    }, 3000);
+    return () => window.clearInterval(tick);
+  }, [ready, failed, appId, queryClient]);
+
   // The agent's persisted artifacts (routine outcomes) from the agent service,
   // collected below the live app on the UI tab. Refreshed each time the UI tab
   // becomes active; stays empty when the service is unreachable.
@@ -171,8 +188,12 @@ export function OperatorAppDetail({
           </button>
 
           <div className="opr-detail-head">
-            <span className="opr-tool-emoji" aria-hidden={true}>
-              {app?.icon || "🧩"}
+            <span
+              className="opr-tool-emoji opr-portrait-frame"
+              title={app?.icon || undefined}
+              aria-hidden={true}
+            >
+              <PixelAvatar slug={appId} size={34} />
             </span>
             <div className="opr-detail-titles">
               <div className="opr-detail-name">
@@ -272,6 +293,7 @@ export function OperatorAppDetail({
             {tab !== "ui" ? (
               <TabBody
                 tab={tab}
+                appId={appId}
                 query={query}
                 onOpenRoutineSession={(sessionId) => {
                   setRequestedSession(sessionId);
@@ -404,10 +426,12 @@ function AskAiDock({
 
 function TabBody({
   tab,
+  appId,
   query,
   onOpenRoutineSession,
 }: {
   tab: AppTab;
+  appId: string;
   query: UseQueryResult<CustomAppDetail>;
   onOpenRoutineSession?: (sessionId: string) => void;
 }) {
@@ -429,6 +453,7 @@ function TabBody({
       ) : (
         <EmptyState
           glyph="▦"
+          portraitSlug={appId}
           title="No data yet"
           hint="The data this agent reads and writes appears here once it has finished building."
         />
@@ -443,6 +468,7 @@ function TabBody({
       ) : (
         <EmptyState
           glyph="📖"
+          portraitSlug={appId}
           title="No knowledge yet"
           hint="Your AI writes cited pages about this agent once it has finished building."
         />
