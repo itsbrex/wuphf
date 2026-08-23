@@ -83,7 +83,15 @@ export function MessageBubble({
   channel,
 }: MessageBubbleProps) {
   const routeChannel = useChannelSlug();
-  const currentChannel = channel ?? routeChannel ?? "general";
+  // A bubble's channel comes from the MESSAGE it renders before it comes from
+  // the URL, and never from a "general" default. The old
+  // `channel ?? routeChannel ?? "general"` is two bugs: `??` is nullish, so an
+  // empty string passed through, and the tail sent reactions to #general from
+  // any surface where useChannelSlug() is null — which already happened once
+  // on the task-detail chat (see TaskChannelChat's comment). message.channel
+  // is a required field, so this is also strictly more correct than the URL.
+  const currentChannel =
+    channel?.trim() || message.channel?.trim() || routeChannel?.trim() || "";
   // When the chat is rendered inside a task-detail route, this is that
   // task's id. Task-pointer cards (created / lifecycle) use it to detect a
   // self-reference: a card pointing at the very task you are already viewing
@@ -360,6 +368,15 @@ export function MessageBubble({
                 key={r.emoji}
                 className="reaction-pill"
                 onClick={() => {
+                  // No channel means no room to react in. Say so rather than
+                  // posting the reaction into whatever #general resolves to.
+                  if (!currentChannel) {
+                    showNotice(
+                      "This message has no channel, so the reaction has nowhere to go.",
+                      "error",
+                    );
+                    return;
+                  }
                   toggleReaction(message.id, r.emoji, currentChannel).catch(
                     (e: Error) =>
                       showNotice(`Reaction failed: ${e.message}`, "error"),

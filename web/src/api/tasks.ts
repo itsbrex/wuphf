@@ -529,9 +529,6 @@ export function createSubTask(opts: {
   return trackOn(
     post<TaskResponse>("/tasks", {
       action: "create",
-      // Omitted entirely when the parent has no home, rather than sent empty:
-      // an absent key and an empty string are different requests, and only the
-      // absent one leaves the server free to decide.
       ...(parentChannel ? { channel: parentChannel } : {}),
       title: opts.title,
       details: opts.details || "",

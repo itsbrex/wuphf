@@ -57,7 +57,13 @@ export function messagesAfterClearMarker(
  * hook before branching, so the inner feed below is only ever mounted with a
  * genuinely non-empty channel and never fires a query for one.
  */
-export function MessageFeed({ channel }: { channel?: string } = {}) {
+export function MessageFeed({
+  channel,
+  readOnly,
+}: {
+  channel?: string;
+  readOnly?: boolean;
+} = {}) {
   // Prefer an explicit channel (the task-detail chat passes the task's channel,
   // where useChannelSlug() is null). Fall back to the channel route slug.
   const routeChannel = useChannelSlug();
@@ -77,11 +83,23 @@ export function MessageFeed({ channel }: { channel?: string } = {}) {
     );
   }
 
-  return <ChannelMessageFeed channel={currentChannel} />;
+  return (
+    <ChannelMessageFeed channel={currentChannel} readOnly={readOnly ?? false} />
+  );
 }
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Existing cognitive complexity is baselined for a focused follow-up refactor.
-function ChannelMessageFeed({ channel }: { channel: string }) {
+function ChannelMessageFeed({
+  channel,
+  readOnly,
+}: {
+  channel: string;
+  /** Viewing a conversation you are not in (a consult opened from a relay
+   *  marker). Suppresses reactions — a reaction is a mark left ON someone
+   *  else's conversation, so it is participation even though it is not
+   *  speech. Reading and navigating stay available. */
+  readOnly: boolean;
+}) {
   // Non-empty by construction — MessageFeed above is the only caller and
   // guards it, so nothing here has to re-check.
   const currentChannel = channel;
@@ -101,10 +119,18 @@ function ChannelMessageFeed({ channel }: { channel: string }) {
   };
 
   const { data: rawMessages = [], isLoading } = useMessages(currentChannel);
-  const messages = useMemo(
-    () => messagesAfterClearMarker(rawMessages, clearMarkerId),
-    [rawMessages, clearMarkerId],
-  );
+  const messages = useMemo(() => {
+    const visible = messagesAfterClearMarker(rawMessages, clearMarkerId);
+    if (!readOnly) return visible;
+    // Read-only: drop reactions from the DATA rather than hiding the pills
+    // with CSS. The pill IS the toggle — there is no separate add-reaction
+    // control — so a `display: none` would leave a keyboard-reachable button
+    // that posts a reaction into a conversation the viewer is only permitted
+    // to read. Removing the data removes the control with it.
+    return visible.map((m) =>
+      m.reactions ? { ...m, reactions: undefined } : m,
+    );
+  }, [rawMessages, clearMarkerId, readOnly]);
 
   // Auto-scroll when new messages arrive
   useEffect(() => {

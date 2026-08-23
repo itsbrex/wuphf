@@ -1,6 +1,12 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Message, OfficeMember } from "../../api/client";
@@ -166,5 +172,58 @@ describe("ThreadPanel autocomplete popovers", () => {
     expect(useAppStore.getState().activeThread).not.toBeNull();
     // Draft preserved (closing the panel would also reset text to "").
     expect(textarea.value).toBe("/");
+  });
+});
+
+// A thread whose channelSlug is empty used to reply into #general — the
+// comment above `currentChannel` in ThreadPanel warns about exactly that
+// failure, and then the old `?? "general"` on the next line caused it.
+//
+// Order matters here: the send goes through a react-query mutation, so it
+// fires on a microtask AFTER the keydown. Asserting "not called" immediately
+// would pass even if the guard did nothing, so the positive control below
+// establishes that postMessage DOES fire within the awaited window, and the
+// refusal test flushes the same window before asserting it did not.
+describe("ThreadPanel reply channel", () => {
+  async function typeAndSend(text: string) {
+    const textarea = screen.getByPlaceholderText("Reply to thread…");
+    fireEvent.change(textarea, { target: { value: text } });
+    fireEvent.keyDown(textarea, { key: "Enter" });
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+
+  it("still sends into a real thread channel", async () => {
+    const client = await import("../../api/client");
+    const postMessage = vi.mocked(client.postMessage);
+    postMessage.mockClear();
+
+    useAppStore.getState().setActiveThread({
+      id: "thread-1",
+      channelSlug: "eng",
+    });
+
+    render(wrap(<ThreadPanel />));
+    await typeAndSend("shipping it");
+
+    await waitFor(() => expect(postMessage).toHaveBeenCalled());
+    expect(postMessage.mock.calls[0][1]).toBe("eng");
+  });
+
+  it("refuses to send a reply when the thread has no channel", async () => {
+    const client = await import("../../api/client");
+    const postMessage = vi.mocked(client.postMessage);
+    postMessage.mockClear();
+
+    useAppStore.getState().setActiveThread({
+      id: "thread-1",
+      channelSlug: "",
+    });
+
+    render(wrap(<ThreadPanel />));
+    await typeAndSend("does this land?");
+
+    expect(postMessage).not.toHaveBeenCalled();
   });
 });

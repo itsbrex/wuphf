@@ -127,13 +127,18 @@ function renderDoc(
 
 // ── Suite ──────────────────────────────────────────────────────────────
 
-// FIXME(v3-mvp): full-file vitest run hangs the worker at module-load
-// phase. Filtered -t runs (and the normalizeTaskDocument describe in
-// isolation) work fine in <1s. Root cause not yet isolated — likely a
-// transitive timer/SSE handle that survives teardown despite mocks for
-// EventSource, getTaskActivity, getSubTasks, and useOfficeMembers.
-// Tracking issue: TODO. Re-enable once the trigger is identified.
-describe.skip("<TaskDocument>", () => {
+// This describe (and "— parked Start" below) carried a FIXME and a
+// describe.skip: the full file hung the vitest worker, suspected to be "a
+// transitive timer/SSE handle that survives teardown". Both are un-skipped
+// now and the file runs green in under a second.
+//
+// The trigger looks to have been the real TaskChannelChat: mounting it pulls
+// in MessageFeed + Composer and their polling/SSE, which the existing mocks
+// for EventSource / getTaskActivity / getSubTasks / useOfficeMembers did not
+// cover. Stubbing TaskChannelChat (see above) removes that whole subtree, and
+// with it the hang. If this file ever hangs again, that mock is the first
+// thing to check.
+describe("<TaskDocument>", () => {
   beforeEach(() => {
     // Clear sessionStorage to keep tests independent.
     try {
@@ -302,8 +307,7 @@ describe("normalizeTaskDocument", () => {
 
 // ── Parked Start button ───────────────────────────────────────────────
 
-// FIXME(v3-mvp): same hang as <TaskDocument> above. Re-enable when fixed.
-describe.skip("<TaskDocument> — parked Start", () => {
+describe("<TaskDocument> — parked Start", () => {
   beforeEach(() => {
     try {
       sessionStorage.clear();
@@ -357,8 +361,8 @@ describe.skip("<TaskDocument> — parked Start", () => {
 
 // ── StartParkedTaskButton (ceremony retirement regression) ──────────────
 //
-// Pure component — tested directly (not via the full <TaskDocument>
-// mount, which is describe.skip'd above pending the vitest hang FIXME).
+// Pure component — tested directly rather than through a full <TaskDocument>
+// mount, because the assertions here are about the button itself.
 // Pins the retirement of the Approve & Start ceremony: the start button
 // reads "Start"-family copy and posts the decision approve on click; the
 // old "Waiting on you — press Approve & Start" chat hint is gone.
@@ -417,8 +421,12 @@ describe("<TaskDocument> with no conversation home", () => {
     expect(screen.getByTestId("issue-doc-no-conversation")).toBeInTheDocument();
     // The bug: this rendered TaskDocumentError with a Retry that could never
     // succeed, so the whole detail page was dead.
-    expect(screen.queryByTestId("issue-document-error")).not.toBeInTheDocument();
-    expect(screen.queryByText(/task channel is missing/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("issue-document-error"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/task channel is missing/i),
+    ).not.toBeInTheDocument();
   });
 
   it("says what to do about it, and never names #general", () => {

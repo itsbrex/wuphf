@@ -38,9 +38,12 @@ import {
 /** How many sent messages to keep in per-channel history. */
 const COMPOSER_HISTORY_LIMIT = 20;
 
-/** sessionStorage key shape: `wuphf:composer-history:<channel>`. */
+/** sessionStorage key shape: `wuphf:composer-history:<channel>`.
+ *  No "general" default: the only caller is ChannelComposer, whose channel is
+ *  non-empty by construction, and bucketing a channel-less history under
+ *  #general mixed unrelated drafts into the retired room's key. */
 function historyKey(channel: string): string {
-  return `wuphf:composer-history:${channel || "general"}`;
+  return `wuphf:composer-history:${channel}`;
 }
 
 function readHistory(channel: string): string[] {
@@ -139,13 +142,49 @@ function emptyHistoryState(): HistoryState {
   return { index: -1, draftStash: null, entries: [] };
 }
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: Existing function length is baselined for a focused follow-up refactor.
+/**
+ * Composer — the human's message box.
+ *
+ * The channel is resolved HERE and nowhere below, because this is the highest
+ * consequence of the three places the old `channel ?? routeChannel ??
+ * "general"` lived: line 259 posts a message. With no channel that post went
+ * to #general, the human watched their message appear, and nothing told them
+ * it had landed somewhere nobody reads.
+ *
+ * Resolution happens in this outer component, which calls one hook and then
+ * branches, so ChannelComposer below is only ever mounted with a genuinely
+ * non-empty channel — the invariant is structural, not a guard someone can
+ * delete later.
+ */
 export function Composer({ channel }: { channel?: string } = {}) {
   // Prefer an explicit channel (the task-detail chat passes the task's channel,
   // where useChannelSlug() is null). Fall back to the channel route slug so the
   // channel surface behaves exactly as before.
   const routeChannel = useChannelSlug();
-  const currentChannel = channel ?? routeChannel ?? "general";
+  const currentChannel = channel?.trim() || routeChannel?.trim() || "";
+
+  if (!currentChannel) {
+    return (
+      <div
+        className="composer composer--no-channel"
+        data-testid="composer-no-channel"
+      >
+        <p className="composer-no-channel-note">
+          No conversation to post into yet. Assign an owner and the conversation
+          starts in their DM.
+        </p>
+      </div>
+    );
+  }
+
+  return <ChannelComposer channel={currentChannel} />;
+}
+
+// biome-ignore lint/complexity/noExcessiveLinesPerFunction: Existing function length is baselined for a focused follow-up refactor.
+function ChannelComposer({ channel }: { channel: string }) {
+  // Non-empty by construction — Composer above is the only caller and guards
+  // it, so nothing here has to re-check.
+  const currentChannel = channel;
   const setLastMessageId = useAppStore((s) => s.setLastMessageId);
   const setChannelClearMarker = useAppStore((s) => s.setChannelClearMarker);
   const pendingComposerDraft = useAppStore((s) => s.pendingComposerDraft);

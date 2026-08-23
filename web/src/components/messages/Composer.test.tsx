@@ -60,7 +60,12 @@ describe("per-channel composer history", () => {
 
   it("uses a stable key shape", () => {
     expect(historyKey("eng")).toBe("wuphf:composer-history:eng");
-    expect(historyKey("")).toBe("wuphf:composer-history:general");
+    // No "general" default any more. historyKey's only caller is
+    // ChannelComposer, whose channel is non-empty by construction, and
+    // bucketing a channel-less history under #general mixed unrelated drafts
+    // into the retired room's key. Real channels keep the same key shape, so
+    // no existing history is orphaned.
+    expect(historyKey("")).toBe("wuphf:composer-history:");
   });
 
   it("handles corrupt JSON gracefully", () => {
