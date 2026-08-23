@@ -403,7 +403,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		), handleTeamBridge)
 		mcp.AddTool(server, officeWriteTool(
 			"team_channel",
-			"Create or remove an office channel. When creating a channel, include a clear description of what work belongs there and the initial roster that should be in it. Only do this when the human explicitly wants channel structure.",
+			"Propose creating (or remove) an office channel. Reuse an existing channel whenever the work fits in one. Creating a NEW channel ALWAYS requires explicit human approval: this tool raises an approval request and blocks until the human decides, then returns an error if they decline so you post in an existing channel instead. When proposing, include a clear description of what work belongs there and the initial roster that should be in it.",
 		), handleTeamChannel)
 		mcp.AddTool(server, officeWriteTool(
 			"team_channel_member",

@@ -340,6 +340,11 @@ func TestHandleTeamMemberCreateTriggersReconfigure(t *testing.T) {
 
 func TestHandleTeamChannelCreateTriggersReconfigure(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// This test exercises the create mechanics (broker POST + reconfigure), not
+	// the human-approval gate (which has its own tests in channel_approval_test.go).
+	// WUPHF_UNSAFE=1 is the intended bypass so the create proceeds without a human
+	// answering the approval card.
+	t.Setenv("WUPHF_UNSAFE", "1")
 	ctx := context.Background()
 	b := newTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {

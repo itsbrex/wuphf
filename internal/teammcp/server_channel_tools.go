@@ -100,6 +100,14 @@ func handleTeamChannel(ctx context.Context, _ *mcp.CallToolRequest, args TeamCha
 	default:
 		channel = resolveConversationChannel(ctx, slug, args.Channel)
 	}
+	if action == "create" {
+		// A channel is durable office structure, so the human owns the call:
+		// the agent proposes, this blocks until they decide. Same gate shape as
+		// team_member create (channel_approval.go).
+		if err := requireTeamChannelApproval(ctx, resolveSlugOptional(args.MySlug), args); err != nil {
+			return toolError(err), nil, nil
+		}
+	}
 	if err := brokerPostJSON(ctx, "/channels", map[string]any{
 		"action":      action,
 		"slug":        channel,
