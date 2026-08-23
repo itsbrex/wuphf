@@ -1,10 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveKnownPortraitSprite } from "./avatarSprites.generated";
 import {
+  KNOWN_AVATAR_SLUG_MAP,
+  KNOWN_AVATAR_SPRITES,
+  resolveKnownPortraitSprite,
+} from "./avatarSprites.generated";
+import {
+  baseSpriteID,
   getAgentColor,
+  getAgentEyeColor,
   paintPixelAvatarData,
   resolvePortraitSprite,
+  SPRITE_EYE_CELLS,
 } from "./pixelAvatar";
 
 describe("pixel avatar sprite resolution", () => {
@@ -103,6 +110,109 @@ describe("pixel avatar sprite resolution", () => {
     expect(getAgentColor("archivist")).toBe(getAgentColor("pam"));
     expect(getAgentColor("librarian")).toBe(getAgentColor("pam"));
     expect(getAgentColor("operator")).toBe(getAgentColor("nex"));
+  });
+
+  it("has gawk eye cells for every sprite an agent can actually render", () => {
+    // The whole point of the explicit table: if someone adds a sprite to the
+    // catalog, or repoints a slug, this fails loudly instead of that agent
+    // quietly rendering with no eyes while everyone else has them.
+    const reachable = new Set<string>(Object.values(KNOWN_AVATAR_SLUG_MAP));
+    for (const slug of [
+      "jim",
+      "halpert",
+      "jim-halpert",
+      "archivist",
+      "librarian",
+    ]) {
+      reachable.add(baseSpriteID(resolvePortraitSprite(slug).id));
+    }
+    // Sample the procedural pool that unknown slugs land in.
+    for (let i = 0; i < 250; i++) {
+      reachable.add(baseSpriteID(resolvePortraitSprite(`agent-${i}`).id));
+    }
+
+    // Guard against the assertion below going vacuous if resolution changes.
+    expect(reachable.size).toBeGreaterThan(15);
+
+    const missing = [...reachable].filter((id) => !SPRITE_EYE_CELLS[id]);
+    expect(missing).toEqual([]);
+  });
+
+  it("keeps every eye cell inside its own sprite's bounds", () => {
+    // hybridJim is 24x17 while everything else is 16x16, so a hardcoded 16
+    // anywhere in the supersampler or the table would land off-sprite.
+    for (const [id, cells] of Object.entries(SPRITE_EYE_CELLS)) {
+      const sprite = KNOWN_AVATAR_SPRITES[id];
+      expect(sprite, `unknown sprite id in eye table: ${id}`).toBeDefined();
+      if (!sprite) continue;
+      const rows = sprite.portrait.length;
+      const cols = sprite.portrait[0]?.length ?? 0;
+      for (const [cx, cy] of cells) {
+        expect(cx, `${id} eye column`).toBeGreaterThanOrEqual(0);
+        expect(cx, `${id} eye column`).toBeLessThan(cols);
+        expect(cy, `${id} eye row`).toBeGreaterThanOrEqual(0);
+        expect(cy, `${id} eye row`).toBeLessThan(rows);
+      }
+    }
+  });
+
+  it("derives eye colour from the slug so it is stable and roster-independent", () => {
+    expect(getAgentEyeColor("ceo")).toBe(getAgentEyeColor("ceo"));
+    expect(getAgentEyeColor(" CEO ")).toBe(getAgentEyeColor("ceo"));
+    // Aliases are the same teammate, so they must wear the same eyes.
+    expect(getAgentEyeColor("planner")).toBe(getAgentEyeColor("pm"));
+    expect(getAgentEyeColor("archivist")).toBe(getAgentEyeColor("pam"));
+    expect(getAgentEyeColor("custom-ops-agent")).toMatch(/^#[0-9a-f]{6}$/i);
+  });
+
+  it("keeps eye colours clear of the accent, the danger colour, and the skin/brow bands", () => {
+    const seen = new Set<string>();
+    for (let i = 0; i < 300; i++) seen.add(getAgentEyeColor(`agent-${i}`));
+
+    for (const hex of seen) {
+      const [r, g, b] = [1, 3, 5].map((o) =>
+        Number.parseInt(hex.slice(o, o + 2), 16),
+      ) as [number, number, number];
+      const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+      // Mid band only. Darker merges into the brow directly above the eye,
+      // lighter merges into the surrounding skin.
+      expect(luminance, `${hex} too dark (merges with brow)`).toBeGreaterThan(
+        80,
+      );
+      expect(luminance, `${hex} too light (merges with skin)`).toBeLessThan(
+        140,
+      );
+
+      // Never the product accent (purple) or the danger colour (red).
+      const isPurple = b > r && b > g && r > g && b - g > 60;
+      const isRed = r > 150 && r - g > 80 && r - b > 80;
+      expect(isPurple, `${hex} collides with the accent`).toBe(false);
+      expect(isRed, `${hex} collides with the danger colour`).toBe(false);
+    }
+    expect(seen.size).toBeGreaterThan(1);
+  });
+
+  it("spreads eye colours across a roster instead of collapsing onto a few", () => {
+    // A fixed ten-swatch palette collided four ways on a ten-agent roster,
+    // which is exactly the failure that makes the feature pointless. Distinct
+    // teammates must be distinctly coloured.
+    const roster = [
+      "ceo",
+      "eng",
+      "pm",
+      "designer",
+      "gtm",
+      "qa",
+      "pam",
+      "jim",
+      "research",
+      "cro",
+      "cmo",
+      "ai",
+    ];
+    const colours = new Set(roster.map(getAgentEyeColor));
+    expect(colours.size).toBe(roster.length);
   });
 
   it("treats missing cells in short sprite rows as transparent", () => {

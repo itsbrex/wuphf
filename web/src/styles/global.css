@@ -79,7 +79,13 @@
   --bg-card: #ffffff;
   --text: var(--neutral-900);
   --text-secondary: var(--neutral-500);
-  --text-tertiary: var(--neutral-400);
+  /* Not --neutral-400 (#85898b) directly: that is 3.53:1 on a white card,
+     below AA, and it is what agent-card roles, wiki bylines, composer chip
+     labels and — the reason this moved — the agent-detail TAB LABELS are
+     painted with. Navigation should not be sub-AA. Mixed off the ramp
+     rather than hardcoded so it still tracks a palette retune. Clears
+     4.6:1 on --bg-card; ~4.1:1 on --bg-warm, see the note below. */
+  --text-tertiary: color-mix(in srgb, var(--neutral-500) 70%, var(--neutral-400));
   --text-disabled: var(--neutral-300);
   --accent: var(--tertiary-400);
   --accent-warm: var(--tertiary-500);
@@ -1622,21 +1628,39 @@ body {
   pointer-events: none;
 }
 
-/* Transport-presence indicator on agent avatars. Sits at top-right so it
-   does not collide with the harness badge at bottom-right. Rendered only
-   when the member's `online` flag is true (see AgentList SidebarAgentRow);
-   absence of the dot encodes "offline OR never connected" — the peek card
-   surfaces the distinction via "Last seen". */
+/* Top-right of the agent avatar. Exactly one of these renders at a time, and
+   they are deliberately NOT the same weight.
+
+   .working-badge  the agent is processing right now. Green, full size.
+   .online-badge   the adapter is merely reachable. Smaller and muted.
+
+   These used to be one badge: `online` rendered in green, which meant the
+   most prominent indicator in the rail marked "connected" rather than
+   "actually doing something". Keeping the idle one green would reinstate that
+   ambiguity, so it is a neutral outline instead. The peek card still states
+   presence textually via "Online" / "Last seen Xm ago". */
+.working-badge,
 .online-badge {
   position: absolute;
   top: -2px;
   right: -2px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.working-badge {
   width: 7px;
   height: 7px;
-  border-radius: 50%;
   background: var(--green, #03a04c);
   box-shadow: 0 0 0 1.5px var(--bg-card, #fff);
-  pointer-events: none;
+}
+
+.online-badge {
+  width: 5px;
+  height: 5px;
+  background: var(--text-tertiary, #8a8a8a);
+  opacity: 0.75;
+  box-shadow: 0 0 0 1.5px var(--bg-card, #fff);
 }
 
 /* ─── Status Dot ─── */

@@ -35,7 +35,14 @@ vi.mock("../agents/AgentWizard", () => ({
 }));
 
 vi.mock("../ui/PixelAvatar", () => ({
-  PixelAvatar: () => null,
+  // Surfaces the `working` prop so the "only the working agent animates"
+  // contract is observable without a canvas.
+  PixelAvatar: ({ slug, working }: { slug: string; working?: boolean }) => (
+    <span
+      data-testid={`avatar-${slug}`}
+      data-working={working ? "true" : "false"}
+    />
+  ),
 }));
 
 vi.mock("../ui/HarnessBadge", () => ({
@@ -457,5 +464,90 @@ describe("<AgentList>", () => {
     expect(
       container.querySelector('[data-testid="online-badge-devon"]'),
     ).toBeNull();
+  });
+});
+
+// Split from the block above so neither describe runs long. These cover one
+// concern: the working / merely-online distinction and what animates.
+describe("<AgentList> presence and activity", () => {
+  // ─── working vs merely online ────────────────────────────────────────────
+  // These two states used to render the same green dot, so "connected" looked
+  // exactly like "doing something". They must now be visually distinct, and
+  // the avatar must only carry one of them.
+  it("shows the working badge, not the online badge, for an agent that is processing", () => {
+    setMembers([
+      {
+        slug: "tess",
+        name: "Tess",
+        role: "engineer",
+        online: true,
+        status: "active",
+        task: "writing code",
+      },
+    ]);
+
+    const { container } = renderList();
+    expect(
+      container.querySelector('[data-testid="working-badge-tess"]'),
+    ).not.toBeNull();
+    // Critically: NOT both. Two dots on one avatar reinstates the ambiguity.
+    expect(
+      container.querySelector('[data-testid="online-badge-tess"]'),
+    ).toBeNull();
+  });
+
+  it("shows the online badge for an agent that is reachable but idle", () => {
+    setMembers([
+      {
+        slug: "ava",
+        name: "Ava",
+        role: "designer",
+        online: true,
+        status: "idle",
+      },
+    ]);
+
+    const { container } = renderList();
+    expect(
+      container.querySelector('[data-testid="online-badge-ava"]'),
+    ).not.toBeNull();
+    expect(
+      container.querySelector('[data-testid="working-badge-ava"]'),
+    ).toBeNull();
+  });
+
+  it("animates only the working agent's avatar", () => {
+    setMembers([
+      { slug: "tess", name: "Tess", role: "engineer", status: "active" },
+      { slug: "ava", name: "Ava", role: "designer", online: true },
+      { slug: "devon", name: "Devon", role: "engineer", status: "idle" },
+    ]);
+
+    const { container } = renderList();
+    expect(
+      container
+        .querySelector('[data-testid="avatar-tess"]')
+        ?.getAttribute("data-working"),
+    ).toBe("true");
+    for (const slug of ["ava", "devon"]) {
+      expect(
+        container
+          .querySelector(`[data-testid="avatar-${slug}"]`)
+          ?.getAttribute("data-working"),
+        `${slug} must not animate`,
+      ).toBe("false");
+    }
+  });
+
+  it("leaves the row status dot unanimated so the eyes carry the motion", () => {
+    setMembers([
+      { slug: "tess", name: "Tess", role: "engineer", status: "active" },
+    ]);
+
+    const { container } = renderList();
+    const dot = container.querySelector(".status-dot");
+    expect(dot?.className).toContain("active");
+    // A pulsing dot beside animating eyes is two clocks for one fact.
+    expect(dot?.className).not.toContain("pulse");
   });
 });

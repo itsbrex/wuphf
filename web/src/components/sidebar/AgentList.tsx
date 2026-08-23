@@ -32,9 +32,22 @@ function classifyActivity(member: OfficeMember | undefined) {
     /think|plan|queue|review|sync|debug|trace|investigat/.test(activity)
   )
     return { state: "plotting", label: "plotting", dotClass: "plotting" };
+  // No `pulse` here on purpose. The agent's EYES now animate while it works,
+  // and a pulsing dot beside animating eyes is two clocks for one fact. The
+  // dot stays categorical and still; the eyes carry the motion.
   if (status === "active")
-    return { state: "talking", label: "talking", dotClass: "active pulse" };
+    return { state: "talking", label: "talking", dotClass: "active" };
   return { state: "lurking", label: "lurking", dotClass: "lurking" };
+}
+
+/**
+ * "Working" means processing right now, derived from `status`. It is NOT
+ * `online`, which only says an adapter session is reachable. The two were
+ * conflated in the UI before: both rendered as a green dot, and the louder of
+ * the two meant the less useful thing.
+ */
+function isWorking(member: OfficeMember): boolean {
+  return (member.status || "").toLowerCase() === "active";
 }
 
 interface SidebarAgentRowProps {
@@ -62,6 +75,7 @@ function SidebarAgentRow({
   const peek = useAgentEventPeek(agent.slug);
   const anchorRef = useRef<HTMLDivElement>(null);
   const ac = classifyActivity(agent);
+  const working = isWorking(agent);
   const harness = resolveHarness(agent.provider, defaultHarness);
   const displayName = agent.name || agent.slug;
 
@@ -90,22 +104,36 @@ function SidebarAgentRow({
             slug={agent.slug}
             size={24}
             className="pixel-avatar-sidebar"
+            working={working}
           />
           <HarnessBadge
             kind={harness}
             size={10}
             className="harness-badge-on-avatar"
           />
-          {/* Transport-presence dot. Top-right corner so it does not collide
-              with the harness badge at bottom-right. Hidden entirely when the
-              member has never been upserted (built-ins without an adapter)
-              so we do not invent an "offline" state for members that never
-              had a connection concept. */}
-          {agent.online ? (
-            // Decorative: the same presence state is conveyed textually in
-            // the peek card ("Online" / "Last seen Xm ago"), so the badge
-            // itself is hidden from assistive tech to avoid announcing the
-            // same fact on every row.
+          {/* Top-right of the avatar carries exactly ONE dot, and which one
+              depends on the more important fact being true.
+
+              Green means WORKING: the agent is processing right now. That is
+              the state a human actually wants to spot in a rail of a dozen
+              teammates, so it gets the loud treatment and the position the
+              eye lands on.
+
+              The transport-presence dot is the fallback, shown only when the
+              agent is reachable but idle. It is deliberately smaller and
+              muted rather than green — two green dots on one row would put
+              the old ambiguity straight back.
+
+              Both are decorative: the peek card states presence textually
+              ("Online" / "Last seen Xm ago") and the row's status dot carries
+              activity, so announcing either here would just repeat it. */}
+          {working ? (
+            <span
+              className="working-badge"
+              data-testid={`working-badge-${agent.slug}`}
+              aria-hidden="true"
+            />
+          ) : agent.online ? (
             <span
               className="online-badge"
               data-testid={`online-badge-${agent.slug}`}
