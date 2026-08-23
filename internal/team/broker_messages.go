@@ -711,6 +711,16 @@ func (b *Broker) handleGetMessages(w http.ResponseWriter, r *http.Request) {
 		}
 		messages = append(messages, msg)
 	}
+	// Consult relay markers: response-only rows showing that this agent
+	// messaged a peer, or heard back. Derived from the real agent-to-agent
+	// messages (see broker_consult_relay.go), never stored. Only on the main
+	// flow — inside a thread view they would be noise, and they belong to no
+	// thread. Merged by timestamp so they interleave where they happened.
+	if threadID == "" {
+		if markers := b.deriveConsultMarkersLocked(channel); len(markers) > 0 {
+			messages = mergeByTimestamp(messages, markers)
+		}
+	}
 	if sinceID != "" {
 		for i, m := range messages {
 			if m.ID == sinceID {

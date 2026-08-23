@@ -168,11 +168,15 @@ func (b *Broker) serveOfficeMemberMutation(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	action := strings.TrimSpace(body.Action)
-	slug := normalizeChannelSlug(body.Slug)
-	if slug == "" {
+	// Member slug: actor normaliser, raw emptiness first. normalizeChannelSlug
+	// turned a missing slug into "general", so this 400 was unreachable and a
+	// member mutation with no slug silently targeted a member named after a
+	// channel instead of being rejected at the boundary.
+	if strings.TrimSpace(body.Slug) == "" {
 		http.Error(w, "slug required", http.StatusBadRequest)
 		return
 	}
+	slug := normalizeChannelSlug(body.Slug)
 
 	b.officeMemberMutationMu.Lock()
 	defer b.officeMemberMutationMu.Unlock()

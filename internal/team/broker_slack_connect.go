@@ -185,9 +185,12 @@ func isSlackChannelID(s string) bool {
 // prefixed "slack-" so Slack channels are visually grouped and never collide
 // with a same-named native channel.
 func slackChannelSlug(name string) string {
-	s := normalizeChannelSlug(name)
-	if s == "" {
-		s = "channel"
+	// Raw emptiness before normalising: an unnamed Slack channel became
+	// "general" here, so the "channel" default never applied and the bridge was
+	// minted as "slack-general" instead of "slack-channel".
+	s := "channel"
+	if strings.TrimSpace(name) != "" {
+		s = normalizeChannelSlug(name)
 	}
 	if !strings.HasPrefix(s, "slack-") {
 		s = "slack-" + s

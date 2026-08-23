@@ -670,13 +670,17 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 	}
 
 	if action == "create" {
-		if b.findChannelLocked(channel) == nil {
+		// A create with no resolved channel is legal once tasks can be
+		// homeless; nothing to look up. `channel` is A_lobby-sourced upstream
+		// and deliberately left alone — this only stops the lookup 404ing on
+		// an empty value.
+		if channel != "" && b.findChannelLocked(channel) == nil {
 			return TaskResponse{}, taskMutationError(TaskMutationNotFound, "channel not found", nil)
 		}
 		if strings.TrimSpace(body.Title) == "" || actor == "" {
 			return TaskResponse{}, taskMutationError(TaskMutationInvalid, "title and created_by required", nil)
 		}
-		if !b.canAccessChannelLocked(actor, channel) {
+		if channel != "" && !b.canAccessChannelLocked(actor, channel) {
 			return TaskResponse{}, taskMutationError(TaskMutationForbidden, "channel access denied", nil)
 		}
 
@@ -707,6 +711,21 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 				existing.Details = details
 			}
 			if owner := strings.TrimSpace(body.Owner); owner != "" {
+				// TODO(#general-flip): reassignment must MOVE the task's home,
+				// not widen it. Once a task's channel is a 1:1 DM slug (see
+				// preferredTaskChannelLocked), handing this task from designer
+				// to engineer and then running the owner promotion below adds
+				// engineer to the human<->designer DM — reconstructing the
+				// three-participant room that retiring group DMs exists to
+				// prevent, and putting the new owner in front of a
+				// conversation history they were never party to.
+				//
+				// Decided shape: on reassign the task's home becomes the NEW
+				// owner's DM; the old conversation stays where it is, with its
+				// two original participants, as history. Deliberately NOT
+				// built here — it is downstream of the flip and needs an
+				// answer for what happens to the existing conversation when a
+				// task's home moves. Do not flip #general without resolving it.
 				existing.Owner = owner
 				existing.status = "in_progress"
 			}
@@ -959,15 +978,27 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 		rollbackTask := func() {
 			mutationSnapshot.restore(b)
 		}
-		taskChannel := normalizeChannelSlug(task.Channel)
+		// Raw emptiness first, so the fallback below can actually fire. With
+		// the normalise in front of it, a task carrying NO channel arrived
+		// here as "general" and this fallback was dead — which is why editing
+		// a channel-less task would have returned "channel not found" the
+		// moment #general stopped existing, six callers away from the switch.
+		// The author's intent (fall back to the request's channel) is
+		// preserved; `channel` itself is an A_lobby site and stays untouched.
+		taskChannel := ""
+		if raw := strings.TrimSpace(task.Channel); raw != "" {
+			taskChannel = normalizeChannelSlug(raw)
+		}
 		if taskChannel == "" {
 			taskChannel = channel
 		}
-		if b.findChannelLocked(taskChannel) == nil {
+		// A task with no home at all is legal; there is nothing to look up or
+		// authorize against, so skip rather than 404.
+		if taskChannel != "" && b.findChannelLocked(taskChannel) == nil {
 			return TaskResponse{}, taskMutationError(TaskMutationNotFound, "channel not found", nil)
 		}
 		// Authorize against the task's actual channel, not caller-supplied body.Channel.
-		if !b.canAccessChannelLocked(actor, taskChannel) {
+		if taskChannel != "" && !b.canAccessChannelLocked(actor, taskChannel) {
 			return TaskResponse{}, taskMutationError(TaskMutationForbidden, "channel access denied", nil)
 		}
 		appendDetails := false

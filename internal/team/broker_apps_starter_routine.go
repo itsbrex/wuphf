@@ -67,10 +67,12 @@ func deriveStarterSchedule(description string) (expr, prefix string) {
 // back unchanged and this returned "" for every app, silently emptying the
 // operator's own words out of the generated playbook.
 func (b *Broker) buildDescriptionForApp(app CustomApp) string {
-	channel := normalizeChannelSlug(strings.TrimSpace(app.EditChannel))
-	if channel == "" {
+	// Raw emptiness before normalising; same dead-refusal shape as
+	// broker_apps_knowledge.go.
+	if strings.TrimSpace(app.EditChannel) == "" {
 		return ""
 	}
+	channel := normalizeChannelSlug(app.EditChannel)
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	for i := range b.tasks {

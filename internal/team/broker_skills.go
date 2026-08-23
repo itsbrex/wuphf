@@ -165,7 +165,15 @@ func (b *Broker) findSkillByWorkflowKeyLocked(key string) *teamSkill {
 }
 
 func (b *Broker) handleGetSkills(w http.ResponseWriter, r *http.Request) {
-	channelFilter := normalizeChannelSlug(r.URL.Query().Get("channel"))
+	// An absent ?channel= means NO FILTER — list every skill. Normalising an
+	// empty query value first would turn it into "general" (that is
+	// normalizeChannelSlug's lobby fallback), so the `channelFilter != ""`
+	// test below could never be false and an unfiltered request silently
+	// returned only #general's skills. Test the raw value, then normalise.
+	channelFilter := ""
+	if raw := strings.TrimSpace(r.URL.Query().Get("channel")); raw != "" {
+		channelFilter = normalizeChannelSlug(raw)
+	}
 
 	b.mu.Lock()
 	result := make([]teamSkill, 0, len(b.skills))
@@ -628,8 +636,15 @@ func (b *Broker) handleInvokeSkill(w http.ResponseWriter, r *http.Request) {
 	sk.UsageCount++
 	sk.UpdatedAt = now
 
-	channel := normalizeChannelSlug(body.Channel)
-	if channel == "" {
+	// Raw emptiness so the sk.Channel fallback can actually run: with the
+	// normalise first, an invoke with no body.Channel became "general" and the
+	// skill's OWN channel was never consulted. The final "general" default is an
+	// A_lobby site and is deliberately left for S3.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
+	if channel == "" && strings.TrimSpace(sk.Channel) != "" {
 		channel = normalizeChannelSlug(sk.Channel)
 	}
 	if channel == "" {
@@ -722,7 +737,11 @@ func (b *Broker) createSkillRunTaskLocked(sk *teamSkill, channel, invoker, now s
 	if err := b.syncTaskWorktreeLocked(&task); err != nil {
 		return "", fmt.Errorf("syncTaskWorktree: %w", err)
 	}
-	b.ensureTaskOwnerChannelMembershipLocked(channel, task.Owner)
+	// channel is A_lobby-sourced above and left alone; this only stops the
+	// promotion writing into a room that no longer exists once it can be empty.
+	if channel != "" {
+		b.ensureTaskOwnerChannelMembershipLocked(channel, task.Owner)
+	}
 	b.queueTaskBehindActiveOwnerLaneLocked(&task)
 	b.scheduleTaskLifecycleLocked(&task)
 	b.tasks = append(b.tasks, task)

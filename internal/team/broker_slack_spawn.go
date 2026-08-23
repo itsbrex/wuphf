@@ -228,6 +228,8 @@ func (b *Broker) handleSlackAgentsSpawnComplete(w http.ResponseWriter, r *http.R
 		http.Error(w, "slug required", http.StatusBadRequest)
 		return
 	}
+	// AGENT slug. Empty is already rejected with a 400 above, so only the
+	// normaliser changes here.
 	slug := normalizeChannelSlug(body.Slug)
 	userID, created, err := b.CompleteSlackAgentSpawn(r.Context(), slug)
 	switch {

@@ -146,9 +146,12 @@ func operatorWorkflowKey(plan action.Plan) string {
 	if base == "" {
 		base = strings.TrimSpace(plan.Name)
 	}
-	slug := normalizeChannelSlug(base)
-	if slug == "" {
-		slug = "plan"
+	// Raw emptiness before normalising. With the normalise first an empty base
+	// became "general", so this "plan" default never applied and the lane was
+	// minted into the shared room instead of its own channel.
+	slug := "plan"
+	if strings.TrimSpace(base) != "" {
+		slug = normalizeChannelSlug(base)
 	}
 	return "operator-" + slug
 }

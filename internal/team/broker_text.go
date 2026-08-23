@@ -49,10 +49,16 @@ func uniqueSlugs(items []string) []string {
 	seen := make(map[string]struct{}, len(items))
 	out := make([]string, 0, len(items))
 	for _, item := range items {
-		item = normalizeChannelSlug(item)
-		if item == "" {
+		// Raw emptiness before normalising. uniqueSlugs is a GENERIC helper —
+		// callers pass channel-slug lists AND actor-slug member lists — so the
+		// normaliser deliberately stays normalizeChannelSlug and only the skip
+		// moves. That skip was dead, which meant a blank entry in a member list
+		// was silently deduped into "general" and #general joined the channel as
+		// a member.
+		if strings.TrimSpace(item) == "" {
 			continue
 		}
+		item = normalizeChannelSlug(item)
 		if _, ok := seen[item]; ok {
 			continue
 		}

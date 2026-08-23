@@ -41,9 +41,11 @@ type workflowReader interface {
 // operatorAppWorkflowKey is the stable storage key for an app's frozen workflow.
 func operatorAppWorkflowKey(appID string) string {
 	base := strings.TrimPrefix(strings.TrimSpace(appID), "app_")
-	slug := normalizeChannelSlug(base)
-	if slug == "" {
-		slug = "app"
+	// Raw emptiness before normalising; same shape as broker_operator.go — an
+	// empty base became "general" rather than the intended "app" default.
+	slug := "app"
+	if strings.TrimSpace(base) != "" {
+		slug = normalizeChannelSlug(base)
 	}
 	return "operator-app-" + slug
 }

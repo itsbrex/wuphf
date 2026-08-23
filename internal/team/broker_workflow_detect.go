@@ -247,11 +247,13 @@ func (b *Broker) queueInlineWorkflowDetection(slug, channel string) {
 	if b == nil || !b.workflowDetectionEnabled {
 		return
 	}
+	// Raw emptiness before normalising — the channel half of this refusal was
+	// dead, so detection ran against #general for a channel-less trigger.
 	slug = strings.TrimSpace(slug)
-	channel = normalizeChannelSlug(channel)
-	if slug == "" || channel == "" || strings.EqualFold(slug, appBuilderSlug) {
+	if slug == "" || strings.TrimSpace(channel) == "" || strings.EqualFold(slug, appBuilderSlug) {
 		return
 	}
+	channel = normalizeChannelSlug(channel)
 	// Single-flight: at most one inline detection runs at a time, so a burst of
 	// task-less turns can't spawn unbounded goroutines, concurrent full-corpus
 	// reads, or concurrent judge calls. Excess turns are dropped (the next one
@@ -363,10 +365,11 @@ func (b *Broker) proposedFingerprintsLocked() map[string]bool {
 // renderTaskTranscriptLocked renders the recent human+agent messages in a task's
 // channel into a capped plain-text transcript for the judge. Caller holds b.mu.
 func (b *Broker) renderTaskTranscriptLocked(channel string) string {
-	channel = normalizeChannelSlug(channel)
-	if channel == "" {
+	// Raw emptiness before normalising; see the sibling above.
+	if strings.TrimSpace(channel) == "" {
 		return ""
 	}
+	channel = normalizeChannelSlug(channel)
 	msgs := make([]channelMessage, 0, workflowDetectMaxTranscriptMsgs)
 	for _, m := range b.messages {
 		if normalizeChannelSlug(m.Channel) != channel {

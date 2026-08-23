@@ -975,10 +975,12 @@ func (b *Broker) createChannelLocked(in channelCreateInput) (*teamChannel, *chan
 	if strings.TrimSpace(in.Slug) == "" {
 		return nil, &channelCreateError{Code: http.StatusBadRequest, Msg: "slug required"}
 	}
+	// The raw-emptiness guard immediately above is the real one. A second
+	// `slug == ""` test after the normalise used to sit here and could never
+	// fire, because normalizeChannelSlug returns "general" for empty input —
+	// removed rather than left in place, since dead code that looks like a
+	// guard invites the next reader to trust it.
 	slug := normalizeChannelSlug(in.Slug)
-	if slug == "" {
-		return nil, &channelCreateError{Code: http.StatusBadRequest, Msg: "slug required"}
-	}
 	if reservedChannelSlugs[slug] {
 		return nil, &channelCreateError{Code: http.StatusBadRequest, Msg: "slug is reserved"}
 	}
@@ -1226,12 +1228,16 @@ func (b *Broker) handleChannelMembers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		channel := normalizeChannelSlug(body.Channel)
-		member := normalizeChannelSlug(body.Slug)
 		action := strings.TrimSpace(body.Action)
-		if member == "" {
+		// body.Slug names a MEMBER here, not a channel: actor normaliser, and
+		// the 400 tests the raw value. normalizeChannelSlug turned a missing
+		// member slug into "general", so this rejection never fired and the
+		// handler went on to add or remove a "member" named after a channel.
+		if strings.TrimSpace(body.Slug) == "" {
 			http.Error(w, "slug required", http.StatusBadRequest)
 			return
 		}
+		member := normalizeChannelSlug(body.Slug)
 		b.mu.Lock()
 		ch := b.findChannelLocked(channel)
 		if ch == nil {
@@ -1338,7 +1344,10 @@ func (b *Broker) handleMembers(w http.ResponseWriter, r *http.Request) {
 	oneOnOneSlug := b.oneOnOneAgent
 	memberProfiles := make(map[string]memberView, len(b.members))
 	for _, member := range b.members {
-		memberProfiles[normalizeChannelSlug(member.Slug)] = memberView{name: member.Name, role: member.Role}
+		// Member slugs key this map, so all three touch points below use the
+		// ACTOR normaliser. They must agree: a map written under one normaliser
+		// and read under the other misses for any slug the two disagree on.
+		memberProfiles[normalizeActorSlug(member.Slug)] = memberView{name: member.Name, role: member.Role}
 	}
 	members := make(map[string]memberView)
 	if ch := b.findChannelLocked(channel); ch != nil {
@@ -1347,7 +1356,7 @@ func (b *Broker) handleMembers(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			info := memberView{disabled: containsString(ch.Disabled, member)}
-			if office, ok := memberProfiles[normalizeChannelSlug(member)]; ok {
+			if office, ok := memberProfiles[normalizeActorSlug(member)]; ok {
 				info.name = office.name
 				info.role = office.role
 			}
@@ -1387,7 +1396,7 @@ func (b *Broker) handleMembers(w http.ResponseWriter, r *http.Request) {
 		info.lastMessage = content
 		info.lastTime = msg.Timestamp
 		if info.name == "" {
-			if office, ok := memberProfiles[normalizeChannelSlug(msg.From)]; ok {
+			if office, ok := memberProfiles[normalizeActorSlug(msg.From)]; ok {
 				info.name = office.name
 				info.role = office.role
 			}

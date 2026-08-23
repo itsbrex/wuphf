@@ -364,8 +364,14 @@ func (w *watchdogScheduler) processWorkflowJob(job schedulerJob) {
 		_ = w.broker.UpdateSchedulerJobState(job.Slug, time.Time{}, "done")
 		return
 	}
-	channel := normalizeChannelSlug(payload.Channel)
-	if channel == "" {
+	// Raw emptiness before normalising: a payload with no channel became
+	// "general", so the job.Channel fallback below never ran and the job fired
+	// into the shared room instead of its own configured channel.
+	channel := ""
+	if raw := strings.TrimSpace(payload.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
+	if channel == "" && strings.TrimSpace(job.Channel) != "" {
 		channel = normalizeChannelSlug(job.Channel)
 	}
 	if channel == "" {
@@ -542,7 +548,15 @@ func (w *watchdogScheduler) processAgentJob(job schedulerJob) {
 	// owner-specific payloads (drafts, prompts, status pings) that
 	// should never leak into a shared channel because of a transient
 	// channel-store error. Record the fire as failed and skip posting.
-	channel := normalizeChannelSlug(job.Channel)
+	// Raw emptiness before normalising. This one is the sharpest instance in
+	// the codebase: the comment further down says "never silently route to
+	// general", and yet a job with no channel normalised straight to "general"
+	// so the DM fallback beneath was unreachable. The code did precisely what
+	// it documented itself as preventing.
+	channel := ""
+	if raw := strings.TrimSpace(job.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
 		dm, err := w.broker.EnsureDirectChannel(agentSlug)
 		if err != nil {
@@ -561,7 +575,11 @@ func (w *watchdogScheduler) processAgentJob(job schedulerJob) {
 			})
 			return
 		}
-		channel = normalizeChannelSlug(dm)
+		// Raw emptiness again: a blank DM slug became "general", defeating the
+		// explicit refusal immediately below.
+		if raw := strings.TrimSpace(dm); raw != "" {
+			channel = normalizeChannelSlug(raw)
+		}
 	}
 	if channel == "" {
 		// Explicit empty job.Channel + a DM that came back blank. Treat

@@ -90,8 +90,14 @@ func (b *Broker) migrateLegacyChannelsIntoArchivedTasksLocked() {
 	candidates := make([]string, 0, len(b.channels)+len(hasHistory))
 	seen := make(map[string]bool)
 	addCandidate := func(raw string) {
+		// Raw emptiness before normalising: an empty candidate slug became
+		// "general" and was then considered for archival folding, which is
+		// exactly what the owned["general"] guard above exists to prevent.
+		if strings.TrimSpace(raw) == "" {
+			return
+		}
 		s := normalizeChannelSlug(raw)
-		if s == "" || seen[s] {
+		if seen[s] {
 			return
 		}
 		seen[s] = true

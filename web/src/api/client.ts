@@ -526,7 +526,22 @@ export interface Message {
   reply_to?: string;
   thread_id?: string;
   thread_count?: number;
-  reactions?: Record<string, string[]>;
+  /**
+   * Two shapes reach the client and both are real.
+   *
+   * The map form is `{ "👀": ["ceo", "eng"] }` — emoji to the slugs that
+   * reacted. The array form is a pre-counted `[{ emoji, count }]`. MessageBubble
+   * has always handled both, branching on Array.isArray and casting, because
+   * the cast was the only way past a type that claimed only one of them existed.
+   *
+   * The type was the wrong half of that disagreement, not the code. A cast that
+   * exists to work around a declaration is a note saying the declaration is
+   * lying; widening it removes the cast and lets a test construct either shape
+   * without pretending.
+   */
+  reactions?:
+    | Record<string, string[]>
+    | Array<{ emoji: string; count?: number; reacted?: boolean }>;
   tagged?: string[];
   usage?: TokenUsage;
 }

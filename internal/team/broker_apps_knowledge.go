@@ -707,10 +707,13 @@ func (b *Broker) gatherKnowledgeSources(id string) []knowledgeSource {
 // into a bounded transcript, so the synthesis is grounded in what the user
 // actually asked for. Skips machine event rows; keeps human + agent prose.
 func (b *Broker) appBuildChatSnippet(editChannel string) string {
-	editChannel = normalizeChannelSlug(strings.TrimSpace(editChannel))
-	if editChannel == "" {
+	// Raw emptiness before normalising: the TrimSpace was already here but fed
+	// INTO the normaliser, which turns "" into "general", so the refusal was
+	// dead and an app with no edit channel resolved against #general.
+	if strings.TrimSpace(editChannel) == "" {
 		return ""
 	}
+	editChannel = normalizeChannelSlug(editChannel)
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	var lines []string

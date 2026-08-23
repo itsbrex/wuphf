@@ -552,10 +552,17 @@ func blankSlateOfficeMembersFromAgents(agents []operations.StarterAgent, leadSlu
 	members := make([]officeMember, 0, len(agents))
 	now := time.Now().UTC().Format(time.RFC3339)
 	for _, agent := range agents {
-		slug := normalizeChannelSlug(operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name)))
-		if slug == "" {
+		// The skip tests the RAW value: normalizeChannelSlug turns a nameless
+		// starter agent into an agent literally called "general".
+		//
+		// Normaliser deliberately UNCHANGED — this becomes officeMember.Slug,
+		// which is persisted and looked up by findMemberLocked. Switching it is
+		// a migration; see broker_indexes.go.
+		raw := operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name))
+		if strings.TrimSpace(raw) == "" {
 			continue
 		}
+		slug := normalizeChannelSlug(raw)
 		if filter != nil && !filter(slug) {
 			continue
 		}
@@ -585,10 +592,17 @@ func blankSlateOfficeMembersFromAgents(agents []operations.StarterAgent, leadSlu
 func starterAgentSlugSet(agents []operations.StarterAgent) map[string]struct{} {
 	out := make(map[string]struct{}, len(agents))
 	for _, agent := range agents {
-		slug := normalizeChannelSlug(operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name)))
-		if slug == "" {
+		// The skip tests the RAW value: normalizeChannelSlug turns a nameless
+		// starter agent into an agent literally called "general".
+		//
+		// Normaliser deliberately UNCHANGED — this becomes officeMember.Slug,
+		// which is persisted and looked up by findMemberLocked. Switching it is
+		// a migration; see broker_indexes.go.
+		raw := operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name))
+		if strings.TrimSpace(raw) == "" {
 			continue
 		}
+		slug := normalizeChannelSlug(raw)
 		out[slug] = struct{}{}
 	}
 	return out
@@ -604,10 +618,11 @@ func selectionLooksStaleForStarterAgents(selectedAgents []string, leadSlug strin
 	hasUnknown := false
 	hasKnownNonLead := false
 	for _, raw := range selectedAgents {
-		slug := normalizeChannelSlug(raw)
-		if slug == "" {
+		// Agent slugs from the wizard selection: actor normaliser, raw skip.
+		if strings.TrimSpace(raw) == "" {
 			continue
 		}
+		slug := normalizeChannelSlug(raw)
 		if _, ok := availableSlugs[slug]; !ok {
 			hasUnknown = true
 			continue
@@ -669,18 +684,24 @@ func blankSlateOfficeChannelsFromBlueprint(blueprint operations.Blueprint, membe
 		})
 	}
 	for _, starter := range blueprint.Starter.Channels {
-		slug := normalizeChannelSlug(operationRenderTemplateString(starter.Slug, replacements))
+		rawSlug := operationRenderTemplateString(starter.Slug, replacements)
+		slug := normalizeChannelSlug(rawSlug)
 		// A blueprint that declares general is skipped either way: when the
 		// switch is on it is already channels[0] above, and when it is off it
 		// must not come back in through the blueprint.
-		if slug == "" || slug == GeneralChannelSlug {
+		// Cosmetic: an empty starter slug already normalised to "general" and
+		// was caught by the second clause, so this is honest tidying, not a fix.
+		if strings.TrimSpace(rawSlug) == "" || slug == GeneralChannelSlug {
 			continue
 		}
 		membersList := make([]string, 0, len(starter.Members))
 		for _, member := range starter.Members {
-			memberSlug := normalizeChannelSlug(operationRenderTemplateString(member, replacements))
-			if memberSlug != "" {
-				membersList = append(membersList, memberSlug)
+			// Channel MEMBERS are actor slugs. Under the channel normaliser a
+			// blank entry became "general" and the `!= ""` test kept it, so a
+			// starter channel silently listed #general as one of its members.
+			rawMember := operationRenderTemplateString(member, replacements)
+			if strings.TrimSpace(rawMember) != "" {
+				membersList = append(membersList, normalizeChannelSlug(rawMember))
 			}
 		}
 		channels = append(channels, teamChannel{

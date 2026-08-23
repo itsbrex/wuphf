@@ -332,10 +332,15 @@ func (b *Broker) WikiIndex() *WikiIndex {
 }
 
 func (b *Broker) UpdateAgentActivity(update agentActivitySnapshot) {
-	slug := normalizeChannelSlug(update.Slug)
-	if slug == "" {
+	// update.Slug is an AGENT slug, so it takes the actor normaliser, and the
+	// emptiness test runs on the RAW value first. Previously this normalised
+	// with normalizeChannelSlug, whose empty-input fallback returns "general":
+	// the `slug == ""` refusal below could never fire, and an activity update
+	// carrying no agent was recorded against a CHANNEL named "general".
+	if strings.TrimSpace(update.Slug) == "" {
 		return
 	}
+	slug := normalizeChannelSlug(update.Slug)
 	if update.LastTime == "" {
 		update.LastTime = time.Now().UTC().Format(time.RFC3339)
 	}

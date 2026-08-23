@@ -86,8 +86,16 @@ func parseGeneratedMemberTemplate(raw string) (generatedMemberTemplate, error) {
 	if err := json.Unmarshal([]byte(raw), &tmpl); err != nil {
 		return generatedMemberTemplate{}, fmt.Errorf("parse generated agent template: %w", err)
 	}
+	// A generated MEMBER slug: actor normaliser, and reject on the raw value.
+	// normalizeChannelSlug turned an empty generated slug into "general", so
+	// the `== ""` rejection never fired and a model that returned no slug
+	// minted an agent named after a channel. This one is PERSISTED once the
+	// template is accepted.
+	if strings.TrimSpace(tmpl.Slug) == "" {
+		return generatedMemberTemplate{}, fmt.Errorf("generated invalid slug %q", tmpl.Slug)
+	}
 	tmpl.Slug = normalizeChannelSlug(tmpl.Slug)
-	if tmpl.Slug == "" || tmpl.Slug == "ceo" {
+	if tmpl.Slug == "ceo" {
 		return generatedMemberTemplate{}, fmt.Errorf("generated invalid slug %q", tmpl.Slug)
 	}
 	if tmpl.Name == "" {
@@ -268,8 +276,17 @@ func parseGeneratedChannelTemplate(raw string) (generatedChannelTemplate, error)
 	if err := json.Unmarshal([]byte(raw), &tmpl); err != nil {
 		return generatedChannelTemplate{}, fmt.Errorf("parse generated channel template: %w", err)
 	}
+	// This one IS a channel slug, so normalizeChannelSlug is correct and stays.
+	// Only the emptiness test moves ahead of it. Behaviour is unchanged: an
+	// empty generated slug normalised to "general" and was already rejected by
+	// the second clause, so this is honest tidying rather than a bug fix — but
+	// it stops the rejection depending on a coincidence between the lobby
+	// fallback and the value this function happens to blacklist.
+	if strings.TrimSpace(tmpl.Slug) == "" {
+		return generatedChannelTemplate{}, fmt.Errorf("generated invalid slug %q", tmpl.Slug)
+	}
 	tmpl.Slug = normalizeChannelSlug(tmpl.Slug)
-	if tmpl.Slug == "" || tmpl.Slug == "general" {
+	if tmpl.Slug == GeneralChannelSlug {
 		return generatedChannelTemplate{}, fmt.Errorf("generated invalid slug %q", tmpl.Slug)
 	}
 	if tmpl.Name == "" {

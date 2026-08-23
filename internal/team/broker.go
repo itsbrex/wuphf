@@ -1088,10 +1088,18 @@ func (b *Broker) WebURL() string {
 // an existing slug is a no-op. CreatedBy tags the source (e.g. "openclaw") so
 // the UI can distinguish bridged agents from built-ins or user-generated ones.
 func (b *Broker) EnsureBridgedMember(slug, name, createdBy string) error {
-	slug = normalizeChannelSlug(slug)
-	if slug == "" {
+	// Raw emptiness first: normalizeChannelSlug turns a blank slug into
+	// "general", so this "slug required" error was unreachable and a bridge
+	// with no slug registered a member named after a channel instead.
+	//
+	// Normaliser deliberately UNCHANGED (normalizeChannelSlug): this slug is
+	// PERSISTED, and changing what a stored value normalises to is a migration,
+	// not a rename. Only the emptiness fix lands here. Paired with
+	// findMemberLocked (broker_indexes.go) — move neither alone.
+	if strings.TrimSpace(slug) == "" {
 		return fmt.Errorf("slug required")
 	}
+	slug = normalizeChannelSlug(slug)
 	ensureNotebookDirsAfterUnlock := false
 	defer func() {
 		if ensureNotebookDirsAfterUnlock {
@@ -1188,10 +1196,13 @@ func (b *Broker) PostInboundSurfaceMessageInThread(from, channel, content, provi
 func (b *Broker) postInboundSurfaceMessage(from, channel, content, provider, threadRootKey string) (channelMessage, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	channel = normalizeChannelSlug(channel)
-	if channel == "" {
+	// Raw emptiness before normalising: "" became "general", so this "channel
+	// required" error was unreachable and an inbound surface message with no
+	// destination was posted into the shared room.
+	if strings.TrimSpace(channel) == "" {
 		return channelMessage{}, fmt.Errorf("channel required for surface message")
 	}
+	channel = normalizeChannelSlug(channel)
 	if b.findChannelLocked(channel) == nil {
 		if IsDMSlug(channel) {
 			if dm := b.ensureDMConversationLocked(channel); dm != nil {

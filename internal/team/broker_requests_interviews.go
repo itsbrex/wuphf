@@ -424,7 +424,14 @@ func (b *Broker) cancelRequestLocked(req *humanInterview, actor, reason string) 
 
 func (b *Broker) cancelActiveHumanInterviewsLocked(actor, reason, channel, replyTo string) int {
 	count := 0
-	targetChannel := normalizeChannelSlug(channel)
+	// An empty channel means NO FILTER — cancel across every channel.
+	// Normalising first would make it "general" (normalizeChannelSlug's lobby
+	// fallback), so `targetChannel != ""` could never be false and a
+	// cancel-everywhere call silently cancelled only #general's interviews.
+	targetChannel := ""
+	if raw := strings.TrimSpace(channel); raw != "" {
+		targetChannel = normalizeChannelSlug(raw)
+	}
 	targetReplyTo := strings.TrimSpace(replyTo)
 	for i := range b.requests {
 		if !requestIsHumanInterview(b.requests[i]) || !requestIsActive(b.requests[i]) {

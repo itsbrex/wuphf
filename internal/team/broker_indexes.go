@@ -53,7 +53,14 @@ func (b *Broker) ensureDMConversationLocked(slug string) *teamChannel {
 	}
 	agentSlug := DMTargetAgent(slug)
 	if agentSlug == "" {
-		return nil
+		// No human side. An agent-to-agent pair ("ceo__designer") is a real
+		// conversation — it is how one agent consults another — but
+		// DMTargetAgent is human-relative and returns "" for it, so without
+		// this branch the pair DM is never created and the first send 404s
+		// with "channel not found". Handled separately rather than by
+		// loosening DMTargetAgent, whose human-relative meaning a dozen call
+		// sites depend on (see its doc comment).
+		return b.ensureAgentPairDMLocked(slug)
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	// Register in channelStore for proper type-based DM detection.
@@ -79,6 +86,19 @@ func (b *Broker) ensureDMConversationLocked(slug string) *teamChannel {
 	return &b.channels[len(b.channels)-1]
 }
 
+// findMemberLocked looks a member up by slug.
+//
+// PAIRED WITH normalizeLoadedStateLocked (broker_defaults.go), which normalises
+// member.Slug on load. Both use normalizeChannelSlug and MUST move together:
+// membership written under one normaliser and looked up under the other means a
+// member that demonstrably exists is never found.
+//
+// A member slug is conceptually an ACTOR slug, so normalizeActorSlug is arguably
+// the right normaliser here — but this value is PERSISTED, and changing what a
+// stored slug normalises to is a MIGRATION (read-both-forms shim or a one-shot
+// rewrite), not a rename. It is deliberately left for its own change. The two
+// normalisers differ only on "", a leading "#", and "__", none of which
+// operationSlug can produce, so the mismatch is latent rather than live.
 func (b *Broker) findMemberLocked(slug string) *officeMember {
 	slug = normalizeChannelSlug(slug)
 	if len(b.memberIndex) != len(b.members) {

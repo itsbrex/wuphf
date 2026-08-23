@@ -810,10 +810,13 @@ func teamTrimItems(s *onboarding.State) []map[string]interface{} {
 	}
 	items := make([]map[string]interface{}, 0, len(bp.Starter.Agents))
 	for _, agent := range bp.Starter.Agents {
-		slug := normalizeChannelSlug(operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name)))
-		if slug == "" {
+		// AGENT slug: actor normaliser, raw skip. See the sibling in
+		// broker_onboarding.go.
+		raw := operationFirstNonEmpty(agent.Slug, agent.EmployeeBlueprint, operationSlug(agent.Name))
+		if strings.TrimSpace(raw) == "" {
 			continue
 		}
+		slug := normalizeChannelSlug(raw)
 		label := strings.TrimSpace(agent.Name)
 		if label == "" {
 			label = humanizeSlug(slug)

@@ -65,8 +65,12 @@ func (b *Broker) handleSlackAgents(w http.ResponseWriter, r *http.Request) {
 		if raw == "" {
 			raw = name
 		}
+		// Behaviourally unchanged — an empty raw already normalised to "general"
+		// and was caught by the second clause. Made explicit so the rejection
+		// stops depending on a coincidence between the lobby fallback and the
+		// value this handler happens to blacklist.
 		slug := normalizeChannelSlug(raw)
-		if slug == "" || slug == "general" {
+		if strings.TrimSpace(raw) == "" || slug == GeneralChannelSlug {
 			http.Error(w, "could not derive a usable slug; pass slug explicitly", http.StatusBadRequest)
 			return
 		}

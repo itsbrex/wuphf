@@ -163,10 +163,13 @@ func (b *Broker) pruneIncidentsByChannelLocked(channelSlug string) {
 }
 
 func (b *Broker) pruneIncidentsByChannelAndAgentLocked(channelSlug, agentSlug string) {
-	channelSlug = normalizeChannelSlug(channelSlug)
-	if channelSlug == "" || len(b.incidents) == 0 {
+	// Raw emptiness before normalising: an empty channel became "general", so
+	// this refusal never fired and an incident sweep with no channel swept the
+	// shared room instead of declining.
+	if strings.TrimSpace(channelSlug) == "" || len(b.incidents) == 0 {
 		return
 	}
+	channelSlug = normalizeChannelSlug(channelSlug)
 	agentSlug = strings.TrimSpace(agentSlug)
 	removedRequestIDs := make(map[string]struct{})
 	filtered := b.incidents[:0]

@@ -57,6 +57,9 @@ func (b *Broker) markMemberPresenceOnlineLocked(slug, adapterName, sessionKey st
 	if strings.TrimSpace(slug) == "" {
 		return
 	}
+	// MEMBER slug: actor normaliser, matching findMemberLocked. The raw
+	// emptiness guard above was already correct — this only stops the value
+	// being written under a different normaliser than it is looked up with.
 	slug = normalizeChannelSlug(slug)
 	if b.memberPresence == nil {
 		b.memberPresence = make(map[string]memberPresenceRecord)

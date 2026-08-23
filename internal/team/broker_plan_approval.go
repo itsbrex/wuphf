@@ -181,12 +181,22 @@ func (b *Broker) startApprovedPlanTaskLocked(task *teamTask, actor string) {
 		return
 	}
 	task.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
-	channel := normalizeChannelSlug(task.Channel)
-	b.ensureTaskOwnerChannelMembershipLocked(channel, task.Owner)
+	// Raw emptiness first: a task with no home must not be laundered into
+	// "general" here, because BOTH the promotion below and the audit write at
+	// the end of this function would then land in the retired room.
+	channel := ""
+	if raw := strings.TrimSpace(task.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
+	if channel != "" {
+		b.ensureTaskOwnerChannelMembershipLocked(channel, task.Owner)
+	}
 	b.queueTaskBehindActiveOwnerLaneLocked(task)
 	b.scheduleTaskLifecycleLocked(task)
-	b.appendActionLocked("task_updated", "office", channel, actor,
-		truncateSummary(task.Title+" [plan approved]", 140), task.ID)
+	if channel != "" {
+		b.appendActionLocked("task_updated", "office", channel, actor,
+			truncateSummary(task.Title+" [plan approved]", 140), task.ID)
+	}
 }
 
 // applyPlanApprovalAnswerLocked is called from applyRequestAnswerLocked when a

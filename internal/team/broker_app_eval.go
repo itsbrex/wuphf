@@ -144,7 +144,9 @@ func (b *Broker) evaluateAppAcceptanceForTask(taskID string) {
 	b.mu.Unlock()
 
 	brief := strings.TrimSpace(t.Details)
-	if channel == "" || brief == "" {
+	// rawChannel, not the normalised value: normalizeChannelSlug("") is
+	// "general", so the channel half of this refusal could never fire.
+	if strings.TrimSpace(t.Channel) == "" || brief == "" {
 		return // nothing to grade against
 	}
 
@@ -258,10 +260,13 @@ func decideAppAcceptance(
 // thread is bound to the task's channel. Reads the app store (its own lock);
 // never call while holding b.mu.
 func (b *Broker) appForEditChannel(channel string) (CustomApp, bool) {
-	channel = normalizeChannelSlug(channel)
-	if channel == "" {
+	// Raw emptiness before normalising: normalizeChannelSlug("") is "general",
+	// so this refusal could never fire and an app lookup with no channel
+	// searched #general instead of declining.
+	if strings.TrimSpace(channel) == "" {
 		return CustomApp{}, false
 	}
+	channel = normalizeChannelSlug(channel)
 	apps, err := b.appStore().List()
 	if err != nil {
 		return CustomApp{}, false
@@ -333,10 +338,11 @@ func (b *Broker) countAppAcceptanceFailsLocked(channel string) int {
 // postAppAcceptanceResult records a non-reopening acceptance outcome (pass or
 // human-halt) in the task channel.
 func (b *Broker) postAppAcceptanceResult(channel, kind, content string) {
-	channel = normalizeChannelSlug(channel)
-	if channel == "" {
+	// Raw emptiness before normalising; see the sibling above.
+	if strings.TrimSpace(channel) == "" {
 		return
 	}
+	channel = normalizeChannelSlug(channel)
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.counter++

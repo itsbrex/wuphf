@@ -17,6 +17,17 @@ import (
 // canonicalDMTargetAgent trio makes the dual-format awareness explicit
 // in one place.
 
+// DO NOT switch this to normalizeActorSlug.
+//
+// These are DM CHANNEL slugs, and normalizeChannelSlug's "__" placeholder
+// dance exists precisely to preserve the DM separator: "human__ceo" must stay
+// "human__ceo". normalizeActorSlug folds a double underscore to "--", which
+// would turn every DM slug into a different string and break DM lookup,
+// DMTargetAgent, and the canonical-slug migration at once.
+//
+// The wider slug cleanup moved actor-shaped values off the channel normaliser.
+// This file is the deliberate exception, in BOTH directions: here the channel
+// normaliser is the correct one and the actor normaliser is the dangerous one.
 func (ch *teamChannel) isDM() bool {
 	return ch.Type == "dm" || IsDMSlug(ch.Slug)
 }

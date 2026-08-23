@@ -75,12 +75,18 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "only the CEO can bridge channel context", http.StatusForbidden)
 		return
 	}
-	source := normalizeChannelSlug(body.SourceChannel)
-	target := normalizeChannelSlug(body.TargetChannel)
-	if source == "" || target == "" {
+	// Raw emptiness before normalising: with the normalise first, a bridge
+	// request missing either endpoint arrived as "general" and this 400 never
+	// fired — silently bridging #general to itself or to the other endpoint.
+	if strings.TrimSpace(body.SourceChannel) == "" || strings.TrimSpace(body.TargetChannel) == "" {
 		http.Error(w, "source_channel and target_channel required", http.StatusBadRequest)
 		return
 	}
+	// The raw guard above is the real one; the post-normalise repeat that used
+	// to sit here could never fire and is removed rather than left looking load
+	// bearing.
+	source := normalizeChannelSlug(body.SourceChannel)
+	target := normalizeChannelSlug(body.TargetChannel)
 	summary := strings.TrimSpace(body.Summary)
 	if summary == "" {
 		http.Error(w, "summary required", http.StatusBadRequest)

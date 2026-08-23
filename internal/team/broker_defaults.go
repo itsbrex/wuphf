@@ -254,10 +254,23 @@ func (b *Broker) normalizeLoadedStateLocked() {
 	seenMembers := make(map[string]struct{}, len(b.members))
 	normalizedMembers := make([]officeMember, 0, len(b.members))
 	for _, member := range b.members {
-		member.Slug = normalizeChannelSlug(member.Slug)
-		if member.Slug == "" {
+		// A member slug is an ACTOR slug. This is the WRITE half of a pair
+		// whose READ half is findMemberLocked (broker_indexes.go) — the two
+		// must use the same normaliser or a member that exists is never found.
+		//
+		// Emptiness is tested on the raw value: normalizeChannelSlug returned
+		// "general" for a blank slug, so the `continue` below never fired and a
+		// slugless member was silently persisted under the name of a CHANNEL.
+		//
+		// This value is PERSISTED. Existing rosters were normalised with the
+		// channel normaliser, and the two normalisers agree on every ordinary
+		// agent slug (lowercase, hyphenated), so this load-path rewrite is a
+		// no-op for real data. It would only rewrite a slug containing "__" or
+		// a leading "#", which operationSlug cannot produce.
+		if strings.TrimSpace(member.Slug) == "" {
 			continue
 		}
+		member.Slug = normalizeChannelSlug(member.Slug)
 		if _, ok := seenMembers[member.Slug]; ok {
 			continue
 		}

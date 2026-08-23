@@ -291,6 +291,12 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		"team_poll",
 		"Read recent channel messages. Only when pushed context is insufficient.",
 	), handleTeamPoll)
+	// One direct message to one teammate. Sends and returns — it does not wait
+	// for a reply. See server_agent_dm.go; nothing instructs agents to use it yet.
+	mcp.AddTool(server, officeWriteTool(
+		"agent_message",
+		"Send one direct message to a teammate. Sends and returns; it does not wait for a reply.",
+	), handleAgentMessage)
 	mcp.AddTool(server, readOnlyTool(
 		"team_inbox",
 		"Read only the messages that currently belong in your agent inbox: human asks, CEO guidance, tags to you, and replies in your threads.",

@@ -337,10 +337,13 @@ func (l *Launcher) sendChannelUpdate(target notificationTarget, msg channelMessa
 // missing or corrupt onboarded.json never silences a real post-
 // onboarding CEO turn.
 func isDeterministicPhase2CEODM(channel string) bool {
-	ch := normalizeChannelSlug(channel)
-	if ch == "" {
+	// Raw emptiness before normalising: an empty channel became "general" and
+	// this refusal never fired, so a notification with no destination was
+	// delivered into the shared room.
+	if strings.TrimSpace(channel) == "" {
 		return false
 	}
+	ch := normalizeChannelSlug(channel)
 	target := DMTargetAgent(ch)
 	if target != "ceo" && ch != onboarding.CEOOnboardingDMSlug {
 		return false

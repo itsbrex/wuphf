@@ -215,10 +215,13 @@ func (b *Broker) CreateWatchdogAlert(kind, channel, targetType, targetID, owner,
 // with Kind="stuck" and republishes it. Caller must hold b.mu. No-op when the
 // owner is empty or has no live activity entry yet.
 func (b *Broker) markAgentStuckFromWatchdogLocked(alert watchdogAlert) {
-	slug := normalizeChannelSlug(alert.Owner)
-	if slug == "" {
+	// Emptiness is tested on the raw value: normalizeChannelSlug
+	// would have returned "general" for an ownerless alert, defeating the
+	// no-op the doc comment above promises and stamping a phantom agent.
+	if strings.TrimSpace(alert.Owner) == "" {
 		return
 	}
+	slug := normalizeChannelSlug(alert.Owner)
 	snap, ok := b.activity[slug]
 	if !ok {
 		// No prior activity for this agent — synthesize a minimal snapshot
@@ -245,10 +248,12 @@ func (b *Broker) markAgentStuckFromWatchdogLocked(alert watchdogAlert) {
 // pill drops the bordered chrome and waits for the next real activity event
 // to repopulate live state. Caller must hold b.mu.
 func (b *Broker) markAgentStuckClearedFromWatchdogLocked(alert watchdogAlert) {
-	slug := normalizeChannelSlug(alert.Owner)
-	if slug == "" {
+	// Same actor-slug + raw-emptiness pairing as markAgentStuckFromWatchdogLocked
+	// above; the two must agree because they key the same b.activity map.
+	if strings.TrimSpace(alert.Owner) == "" {
 		return
 	}
+	slug := normalizeChannelSlug(alert.Owner)
 	snap, ok := b.activity[slug]
 	if !ok {
 		return
@@ -265,6 +270,9 @@ func (b *Broker) markAgentStuckClearedFromWatchdogLocked(alert watchdogAlert) {
 		if strings.TrimSpace(w.Status) == "resolved" {
 			continue
 		}
+		// Actor normaliser, matching how `slug` was produced by the caller.
+		// Both ends of this comparison must use the same one or the match
+		// silently never fires for any slug the two normalisers disagree on.
 		if normalizeChannelSlug(w.Owner) == slug {
 			return
 		}
@@ -276,7 +284,15 @@ func (b *Broker) markAgentStuckClearedFromWatchdogLocked(alert watchdogAlert) {
 }
 
 func (b *Broker) resolveWatchdogAlertsLocked(targetType, targetID, channel string) {
-	channel = normalizeChannelSlug(channel)
+	// An empty channel means NO FILTER — resolve matching alerts in every
+	// channel, the same way empty targetType and targetID are treated below.
+	// Normalising first would make it "general" (normalizeChannelSlug's lobby
+	// fallback) and silently narrow the sweep to one room.
+	if raw := strings.TrimSpace(channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	} else {
+		channel = ""
+	}
 	for i := range b.watchdogs {
 		alert := &b.watchdogs[i]
 		if targetType != "" && alert.TargetType != strings.TrimSpace(targetType) {
