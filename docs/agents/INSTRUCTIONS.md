@@ -343,6 +343,26 @@ fix.** Run the failing test in isolation, check whether the file is modified by
 someone else, and check whether the failure set changes between runs. A failure
 that moves between runs is somebody landing work, not a bug in your change.
 
+### A verified fact about a shared tree has a shelf life
+
+"Verify, do not assume" is the right instinct and it quietly stops being
+sufficient when several agents are writing to one tree. A check that was
+accurate when you ran it can be stale by the time anyone reads your report, and
+a stale observation is indistinguishable from a wrong one.
+
+This cost real time. Four separate misreads in one session, and not one of them
+was wrong when it was made: a file mid-verification-revert, a commit that missed
+an edit by 59 seconds, a failure set that changed between runs, and a "this has
+not landed" that had landed a minute later.
+
+The mitigation is free: **state what you checked and when.** "grep at 16:04 on
+the working tree showed no match" is a fact with a timestamp attached. "The hunk
+is not applied" is a claim that decays silently.
+
+Say which artefact, too — the working tree, the index, and a given commit are
+three different things, and "it is not there" is true of one and false of
+another more often than you would expect.
+
 ### File ownership needs an escape hatch
 
 "One owner per file" is what lets several agents work a tree in parallel without
