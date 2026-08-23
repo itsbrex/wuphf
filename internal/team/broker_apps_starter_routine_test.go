@@ -242,17 +242,39 @@ func TestMintOperatorPlaybookForFirstBuild(t *testing.T) {
 
 func TestBuildDescriptionStripsBuilderMachinery(t *testing.T) {
 	b := newTestBroker(t)
+	// The build task is found by looking for the App Builder's task IN the app's
+	// edit channel. The fixture used to name the task only, because the thread
+	// was called `task-<taskid>` and slicing that prefix WAS the lookup; edit
+	// threads are named after the app now, so the task has to actually sit in
+	// the app's channel and be owned by the App Builder. What this test checks
+	// is unchanged: the operator's own words come back without the machinery
+	// appended for the builder.
+	const appID = "app_00000000000000bb"
+	channel := appEditChannelSlug(appID)
 	b.mu.Lock()
 	b.tasks = append(b.tasks, teamTask{
-		ID: "LAKES-2",
+		ID:      "LAKES-2",
+		Channel: channel,
+		Owner:   appBuilderSlug,
 		Details: "What it should do: Chase missing scorecards and apply our rule.\n\n" +
 			"When the build passes, register it with register_app so it appears under Apps.\n\n" +
 			"App workspace ready: source lives at /tmp/x/apps/app_1/src",
 	})
 	b.mu.Unlock()
-	got := b.buildDescriptionForApp(CustomApp{EditChannel: "task-LAKES-2"})
+	got := b.buildDescriptionForApp(CustomApp{ID: appID, EditChannel: channel})
 	if got != "Chase missing scorecards and apply our rule." {
 		t.Fatalf("machinery leaked into the operator description: %q", got)
+	}
+
+	// A task in the channel that is NOT the App Builder's is not the build task.
+	b.mu.Lock()
+	b.tasks = []teamTask{{
+		ID: "LAKES-3", Channel: channel, Owner: "eng",
+		Details: "What it should do: something else entirely.",
+	}}
+	b.mu.Unlock()
+	if got := b.buildDescriptionForApp(CustomApp{ID: appID, EditChannel: channel}); got != "" {
+		t.Fatalf("only the App Builder's task describes the build, got %q", got)
 	}
 }
 

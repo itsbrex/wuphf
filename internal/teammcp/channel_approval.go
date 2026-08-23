@@ -20,8 +20,8 @@ import (
 //
 // Scope: office channels created through the agent-facing team_channel tool
 // with action="create". NOT gated, because none of these are the CEO inventing
-// structure: DMs (team_dm_open -> /channels/dm), per-task channels the broker
-// mints (task-<id>), the roster/channels seeded from the onboarding blueprint
+// structure: DMs (team_dm_open -> /channels/dm), the roster/channels seeded
+// from the onboarding blueprint
 // the human picked in the wizard, and any channel a human creates in the UI
 // (which posts to /channels directly and never reaches this path).
 //

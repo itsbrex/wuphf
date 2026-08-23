@@ -743,6 +743,26 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 		b.mu.Lock()
 		channels := make([]teamChannel, 0, len(b.channels))
 		for _, ch := range b.channels {
+			// Group DMs are retired: withhold them from the listing so no
+			// multi-participant room can be reached from the UI. The row and
+			// its history stay on disk untouched and come back the moment the
+			// switch flips, which is the whole point of gating the list rather
+			// than deleting the channel.
+			if ch.isGroupDM() && !groupDMsEnabled() {
+				continue
+			}
+			// An app's edit thread is plumbing, not a room (see
+			// appEditChannelPrefix). It exists so an app can be correlated with
+			// its build conversation and so the Edit panel has something to wake
+			// on; nobody browses to it. Withheld HERE rather than only in the
+			// sidebar because "invisible" has to mean absent from the data every
+			// surface enumerates — a picker, a switcher, or a search box added
+			// later reads this endpoint and would otherwise list one dead room
+			// per app. The app's own Edit panel addresses the channel by slug and
+			// never reads this listing.
+			if strings.HasPrefix(ch.Slug, appEditChannelPrefix) {
+				continue
+			}
 			if typeFilter == "dm" {
 				if ch.isDM() {
 					channels = append(channels, ch)
@@ -1079,6 +1099,27 @@ func (b *Broker) handleCreateDM(w http.ResponseWriter, r *http.Request) {
 		_, exists := b.channelStore.GetBySlug(slug)
 		return exists
 	}
+	// Group DMs are retired (see groupDMsEnabled). Refuse BEFORE dispatching,
+	// so both routes into a group are covered by one check: an explicit
+	// type:"group", and the >2-members fallthrough below that silently
+	// upgrades a "direct" request into a group. Requesting a group while it is
+	// switched off is a conflict with the workspace's shape, not a malformed
+	// request, so this is a 409 and the message says why.
+	//
+	// An EXISTING group is exempt: reopening one that is already on disk must
+	// keep working, exactly as reading a pre-existing #general does.
+	// Keyed on the member count alone, NOT on dmType. A type:"group" request
+	// with only two members has always produced a plain 1:1 DM below, and it
+	// still must — refusing it would reject a conversation that has exactly
+	// the two participants the new model wants.
+	wantsGroup := len(body.Members) > 2
+	if wantsGroup && !groupDMsEnabled() && !groupAlreadyExists(body.Members) {
+		http.Error(w,
+			"group DMs are retired: a group DM is a channel by another name, and every conversation is now 1:1 with a single agent. Open a DM with one agent and tag the others in it.",
+			http.StatusConflict)
+		return
+	}
+
 	if dmType == "group" && len(body.Members) > 2 {
 		created = !groupAlreadyExists(body.Members)
 		ch, err = b.channelStore.GetOrCreateGroup(body.Members, "human")

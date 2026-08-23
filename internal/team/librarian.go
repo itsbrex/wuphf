@@ -6,8 +6,8 @@ import (
 )
 
 // librarian.go defines the Librarian — a first-class, always-present agent
-// (slug "librarian", display name "Pam") that owns the team wiki: writing,
-// formatting, organizing, and curating canonical knowledge. It is the
+// (slug "librarian", display name "Pam the librarian") that owns the team wiki:
+// writing, formatting, organizing, and curating canonical knowledge. It is the
 // promoted, roster form of the old headless "Pam the Archivist" wiki helper
 // (which still runs the one-shot enrich action behind the wiki UI under the
 // internal slug "pam" / git author "archivist"). Phase 4 of the structural
@@ -22,7 +22,12 @@ import (
 const LibrarianSlug = "librarian"
 
 const (
-	librarianName = "Pam"
+	// The display name carries the role because the roster is the only place
+	// most people ever see who this agent is. "Pam" alone reads as a person
+	// with no stated job; "Pam the librarian" says what she is for at a glance,
+	// which matters more now that conversation happens in per-agent DMs and you
+	// pick who to talk to by name.
+	librarianName = "Pam the librarian"
 	librarianRole = "Librarian"
 	// Honest + a little Office-dry, per the WUPHF voice. Pam keeps the team's
 	// shared brain tidy so nobody has to re-derive what was already learned.

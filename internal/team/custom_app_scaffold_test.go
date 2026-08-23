@@ -369,9 +369,15 @@ func TestParseAppBuilderTaskAppID(t *testing.T) {
 	}
 }
 
-// TestMutateTaskStampsEditChannelOnBuild: creating a "Build app: X" task mints a
-// per-task channel AND stamps it onto the pre-scaffolded app's manifest, so the
-// FE can bind the per-app edit chat to that channel.
+// TestMutateTaskStampsEditChannelOnBuild: creating a "Build app: X" task binds
+// the pre-scaffolded app to its own `app-<appid>` edit thread, so the FE can
+// mount the per-app edit chat on it.
+//
+// The binding used to run the other way — the task's `task-<id>` channel was
+// stamped onto the app. Per-task channels are gone, so the build task lands in
+// the channel it was created from and that channel is shared; stamping it would
+// give every app the same thread. The app's id is the one thing that is unique
+// per app, so the thread is derived from that and the task is routed into it.
 func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
@@ -390,23 +396,42 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
 	}
-	// The task minted a dedicated per-task channel (slug is lowercased).
-	wantChannel := created.Task.Channel
-	if !strings.HasPrefix(wantChannel, "task-") {
-		t.Fatalf("task channel = %q, want a task-<id> channel", wantChannel)
-	}
 	apps, _ := b.appStore().List()
 	if len(apps) != 1 {
 		t.Fatalf("want 1 scaffolded app, got %+v", apps)
 	}
+	// The app is bound to a thread named after the app, not after the task and
+	// never the shared office channel.
+	wantChannel := appEditChannelSlug(apps[0].ID)
 	if apps[0].EditChannel != wantChannel {
 		t.Fatalf("app EditChannel = %q, want %q", apps[0].EditChannel, wantChannel)
+	}
+	if apps[0].EditChannel == "general" {
+		t.Fatal("an app's edit thread must never be the office channel")
+	}
+	// The build task works IN that thread, so appForEditChannel (app acceptance)
+	// and appBuilderRunTaskID (the activity stream) still resolve, and a human
+	// post in the Edit panel reaches a task that can wake the owner.
+	if created.Task.Channel != wantChannel {
+		t.Fatalf("build task channel = %q, want the app's thread %q", created.Task.Channel, wantChannel)
+	}
+	b.mu.Lock()
+	minted := b.findChannelLocked(wantChannel)
+	b.mu.Unlock()
+	if minted == nil {
+		t.Fatalf("app edit thread %q was bound but never created", wantChannel)
 	}
 }
 
 // TestMutateTaskStampsEditChannelOnImprove: an "Improve app: X" task (created
-// with the canonical register_app(app_id=...) brief) re-binds the EXISTING app
-// to the improve task's channel, so a later edit chat targets the live thread.
+// with the canonical register_app(app_id=...) brief) binds the EXISTING app to
+// its `app-<appid>` thread and runs there, so build and improve conversations
+// for one app accumulate in one place.
+//
+// Previously each improve REBOUND the app to that improve task's own channel,
+// which is why the old name says "re-binds": the live thread moved every time.
+// Deriving the thread from the app id makes it stable — the second improve lands
+// in the same thread as the first, and as the build.
 func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
@@ -430,16 +455,33 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
 	}
-	wantChannel := created.Task.Channel
-	if !strings.HasPrefix(wantChannel, "task-") {
-		t.Fatalf("improve task channel = %q, want a task-<id> channel", wantChannel)
+	wantChannel := appEditChannelSlug(id)
+	if created.Task.Channel != wantChannel {
+		t.Fatalf("improve task channel = %q, want the app's thread %q", created.Task.Channel, wantChannel)
 	}
 	app, _, err := b.appStore().Get(id)
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
 	if app.EditChannel != wantChannel {
-		t.Fatalf("improve did not rebind edit channel: got %q want %q", app.EditChannel, wantChannel)
+		t.Fatalf("improve did not bind the app's edit thread: got %q want %q", app.EditChannel, wantChannel)
+	}
+
+	// A second improve lands in the SAME thread — the binding is stable, not
+	// re-pointed at whatever task ran most recently.
+	second, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Channel:   "general",
+		Title:     "Improve app: Lead Scorer",
+		Details:   "Improve the existing app `" + id + "`.\n\nAdd a date filter.\n\nWhen the build passes, register it with register_app (app_id=" + id + ") so it appears under Apps.",
+		Owner:     appBuilderSlug,
+		CreatedBy: "ceo",
+	})
+	if err != nil {
+		t.Fatalf("second MutateTask create: %v", err)
+	}
+	if second.Task.Channel != wantChannel {
+		t.Fatalf("second improve channel = %q, want the same thread %q", second.Task.Channel, wantChannel)
 	}
 }
 

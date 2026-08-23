@@ -127,33 +127,145 @@ func parseAppBuilderTaskAppID(details string) (string, bool) {
 	return m[1], true
 }
 
-// stampAppEditChannelForTaskLocked records the App Builder task's channel as the
-// owning app's persistent edit thread, so the FE can bind a per-app "chat to
-// edit" panel to it. Runs for every app-builder task create AFTER its
-// `task-<id>` channel is minted: it parses the target app id from the task
-// details and stamps the channel onto that app's manifest.
+// appEditChannelPrefix marks a channel as an app's dedicated edit thread.
 //
-// Best-effort and decoupled: the app store has its own lock, so this takes no
-// broker state; a parse miss or unknown app is a silent no-op (the app just has
-// no edit thread). Idempotent via the store (SetEditChannel no-ops when equal),
-// so a retried create never churns the manifest. Skipped for the lobby channel —
-// only a dedicated per-task channel is a usable edit thread (a human note in
-// #general would not wake the owner).
-func (b *Broker) stampAppEditChannelForTaskLocked(owner, channel, details string) {
-	if !strings.EqualFold(strings.TrimSpace(owner), appBuilderSlug) {
-		return
+// ── Read this before extending anything here ─────────────────────────────────
+//
+// An `app-<appid>` thread IS a channel by construction: it is a row in
+// b.channels created through createChannelLocked, with members, exactly like any
+// other. That is worth stating plainly, because the product is moving the other
+// way. #general is being retired and so are group DMs — the founder's reasoning
+// is that a group DM is just a channel — leaving one human-visible surface: a
+// 1:1 DM with a single agent. This thread is therefore the last multi-party room
+// in the product, and it survives only because it is not a room anyone can find:
+//
+//   - It is INVISIBLE. It must never appear in a sidebar, channel list, picker,
+//     switcher, search result, or the default /channels listing — absent from
+//     the data those surfaces enumerate, not merely hidden with CSS. Today that
+//     means the `app-` filter in web/src/components/sidebar/ChannelList.tsx
+//     (alongside `task-`) and handleChannels' listing guard. Anything new that
+//     enumerates channels has to skip it too.
+//   - It is PLUMBING. Its entire job is to correlate an app with its build
+//     conversation and give the Edit panel something to wake on. It is not
+//     somewhere a human browses to.
+//   - Its membership is MINIMAL by design: the App Builder, plus the CEO that
+//     createChannelLocked prepends. Do not add more. The moment three agents are
+//     talking in it, it is a channel in behaviour as well as in structure, and
+//     it will be retired with the rest.
+//
+// The intended end state is different from this: you work on an app by DMing the
+// App Builder and TAGGING the app for context, the same way tasks and wiki
+// articles get tagged. The per-app thread then lives on the app record rather
+// than in the channel system. This exists now because apps were BROKEN without
+// it — every completed build was resolving to no app and being silently
+// reopened (see ensureAppEditChannelLocked) — and fixing that was worth more
+// than waiting for the DM model to land.
+const appEditChannelPrefix = "app-"
+
+// appEditChannelSlug is an app's edit-thread channel slug, derived from the APP
+// id and nothing else.
+//
+// Deriving it from the app is the whole point. It used to be whatever channel
+// the app's build task happened to land in, which the one-room change broke:
+// every app-builder task now lands in #general, and #general cannot be an app's
+// edit thread (every app would claim it, so appForEditChannel, appBuilderRunTaskID
+// and appBuildChatSnippet could no longer tell one app's thread from another's,
+// and the FE would mount the whole office chat inside every app's edit panel).
+// One app, one slug, no ambiguity.
+// App ids are already "app_<16 hex>", and normalizeChannelSlug rewrites "_" to
+// "-", so prefixing naively would read "app-app-<hex>". The id's own prefix is
+// dropped so the slug is "app-<hex>".
+func appEditChannelSlug(appID string) string {
+	appID = strings.TrimSpace(appID)
+	if appID == "" {
+		return ""
 	}
-	channel = strings.TrimSpace(channel)
-	if channel == "" || channel == "general" {
-		return
+	bare := strings.TrimPrefix(strings.TrimPrefix(appID, "app_"), "app-")
+	if bare == "" {
+		return ""
 	}
-	id, ok := parseAppBuilderTaskAppID(details)
-	if !ok {
-		return
+	return normalizeChannelSlug(appEditChannelPrefix + bare)
+}
+
+// ensureAppEditChannelLocked mints the app's dedicated edit-thread channel and
+// binds it to the app's manifest, returning the slug. Idempotent: an existing
+// channel is reused and SetEditChannel no-ops when the value is unchanged, so a
+// retried create never churns either side.
+//
+// Members are the App Builder (the only agent that works an app) plus the CEO,
+// which createChannelLocked prepends. The Librarian is deliberately NOT seeded:
+// an app's build log is machinery, not team knowledge.
+//
+// Returns "" when the app id is empty or the channel cannot be created; callers
+// leave the app unbound in that case rather than falling back to a shared room.
+// Caller MUST hold b.mu.
+func (b *Broker) ensureAppEditChannelLocked(appID, appName string) string {
+	slug := appEditChannelSlug(appID)
+	if slug == "" {
+		return ""
+	}
+	if b.findChannelLocked(slug) == nil {
+		name := strings.TrimSpace(appName)
+		if name == "" {
+			name = slug
+		}
+		members := make([]string, 0, 1)
+		if b.findMemberLocked(appBuilderSlug) != nil {
+			members = append(members, appBuilderSlug)
+		}
+		if _, cerr := b.createChannelLocked(channelCreateInput{
+			Slug:      slug,
+			Name:      name,
+			Members:   members,
+			CreatedBy: appBuilderSlug,
+		}); cerr != nil {
+			// Never silent: without the channel the app has no edit thread and
+			// the FE hides Edit forever, which is precisely the failure this
+			// binding exists to prevent.
+			log.Printf("apps: create edit channel %q for app %s failed (app stays un-editable): %s", slug, appID, cerr.Msg)
+			return ""
+		}
 	}
 	// Tolerate "not found": an improve task can reference an app that was deleted
 	// between create and now; nothing to bind then.
-	_ = b.appStore().SetEditChannel(id, channel)
+	_ = b.appStore().SetEditChannel(appID, slug)
+	return slug
+}
+
+// stampAppEditChannelForTaskLocked binds an App Builder task's target app to its
+// dedicated `app-<appid>` edit thread and returns that slug, so the caller can
+// route the task into it.
+//
+// It used to do the reverse — take the task's channel and stamp THAT onto the
+// app — with a guard that skipped "general" because a note in the lobby would
+// not wake the owner. The one-room change lands every app-builder task in
+// #general, so that guard meant no app was ever bound: POST /apps/{id}/edit-session
+// 500'd with "edit session created but no channel was bound" and the FE, which
+// gates Edit on app.editChannel, hid Edit on every app. The direction is now
+// inverted: the app owns the channel, and the task follows it.
+//
+// Best-effort for non-app work: a non-app-builder owner or a task whose details
+// name no app id returns "" and the caller keeps the channel it already had.
+// Caller MUST hold b.mu.
+//
+// The second parameter is the task's channel, which this no longer reads — the
+// app owns the channel now, and the task follows it. It is kept only so the
+// existing call site in broker_tasks_mutation_service.go still compiles; that
+// call site should assign the returned slug to its `channel` variable and drop
+// the argument.
+func (b *Broker) stampAppEditChannelForTaskLocked(owner, details string) string {
+	if !strings.EqualFold(strings.TrimSpace(owner), appBuilderSlug) {
+		return ""
+	}
+	id, ok := parseAppBuilderTaskAppID(details)
+	if !ok {
+		return ""
+	}
+	name := ""
+	if app, _, err := b.appStore().Get(id); err == nil {
+		name = app.Name
+	}
+	return b.ensureAppEditChannelLocked(id, name)
 }
 
 // appWorkspaceBriefMarker is a stable sentinel so the brief is appended at most

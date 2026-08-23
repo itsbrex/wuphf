@@ -814,6 +814,7 @@ func (b *Broker) StartOnPort(port int) error {
 	// Onboarding: state/progress/complete + deterministic CEO phase machine.
 	// completeFn posts the first task as a human message and seeds the team;
 	// transitionFn emits deterministic CEO onboarding cards into the CEO DM.
+	mux.HandleFunc("/onboarding/reseed", b.requireAuth(b.handleOnboardingReseed))
 	onboarding.RegisterRoutesWithTransition(mux, b.onboardingCompleteFn, b.ceoOnboardingTransitionFn(), b.packSlug, b.requireAuth, filepath.Join(config.RuntimeHomeDir(), ".wuphf", "wiki"))
 	// Workspace wipes: POST /workspace/reset (narrow) and /workspace/shred (full).
 	// After a successful wipe, b.Reset clears live in-memory broker state so the
@@ -1197,6 +1198,17 @@ func (b *Broker) postInboundSurfaceMessage(from, channel, content, provider, thr
 				channel = dm.Slug
 			}
 		} else {
+			return channelMessage{}, fmt.Errorf("%w: %s", ErrChannelNotFound, channel)
+		}
+		// DM auto-create can fail (returns nil): ensureDMConversationLocked
+		// gives up whenever the slug has no resolvable participant — the bare
+		// "dm-" is enough to reach it. Re-check before proceeding so we never
+		// post into a non-existent channel. Same guard, same reason, as
+		// handlePostMessage in broker_messages.go; this path is the sibling
+		// that was missing it, so a surface inbound addressed to an
+		// unresolvable DM appended a message to a room nobody can read
+		// instead of failing.
+		if b.findChannelLocked(channel) == nil {
 			return channelMessage{}, fmt.Errorf("%w: %s", ErrChannelNotFound, channel)
 		}
 	}

@@ -61,6 +61,24 @@ func defaultTeamChannels() []teamChannel {
 	}
 	channels := make([]teamChannel, 0, len(manifest.Channels))
 	for _, channel := range manifest.Channels {
+		// #general kill switch, gate 2 of 7. This is the broker's only view of
+		// the manifest's CHANNEL list, so filtering here also covers
+		// company.DefaultManifest and company.normalizeManifest re-adding
+		// general upstream. Those are gated at the source too (gate 3), but a
+		// hand-written manifest.yaml on disk reaches us through here and past
+		// them, so the broker filters as well.
+		//
+		// "Only view" is narrower than it sounds, and the distinction is load
+		// bearing. company.DefaultManifest has five other callers —
+		// broker_pane.go, broker_misc_handlers.go, cmd/wuphf/channel_splash.go,
+		// and two in cmd/wuphf/channelui/manifest.go — plus LoadRuntimeManifest
+		// in launcher_membership.go. Every one of them reads manifest.Members
+		// and never manifest.Channels, which is the only reason this stays the
+		// sole channel path. If any of them starts reading Channels, it becomes
+		// another gate; do not assume this one still covers the package.
+		if !generalChannelEnabled() && channel.Slug == GeneralChannelSlug {
+			continue
+		}
 		tc := teamChannel{
 			Slug:        channel.Slug,
 			Name:        channel.Name,
@@ -150,18 +168,33 @@ func (b *Broker) ensureDefaultChannelsLocked() {
 	if len(b.channels) == 0 {
 		b.channels = defaultTeamChannels()
 	} else {
-		hasGeneral := false
-		for _, ch := range b.channels {
-			if ch.Slug == "general" {
-				hasGeneral = true
-				break
-			}
-		}
-		if !hasGeneral {
-			for _, def := range defaultTeamChannels() {
-				if def.Slug == "general" {
-					b.channels = append([]teamChannel{def}, b.channels...)
+		// #general kill switch, gate 1 of 7. This block re-prepends general to
+		// any roster that lacks it, and it runs on every Load — so leaving it
+		// ungated would resurrect the channel on the next boot no matter what
+		// the other six gates do. It is the single most likely way the whole
+		// switch self-heals.
+		//
+		// DO NOT "simplify" this gate or gate 2 away on the grounds that
+		// removing one changes nothing. It was measured: gates 1+2 here and
+		// gate 3 in company/manifest.go are each INDEPENDENTLY sufficient to
+		// keep general off a fresh boot, so neutering either alone leaves
+		// TestGeneralChannelKillSwitchHasNoResurrectionPath green. Only
+		// neutering both turns it red. That is deliberate defence in depth
+		// against exactly one resurrection, not redundancy to be cleaned up.
+		if generalChannelEnabled() {
+			hasGeneral := false
+			for _, ch := range b.channels {
+				if ch.Slug == GeneralChannelSlug {
+					hasGeneral = true
 					break
+				}
+			}
+			if !hasGeneral {
+				for _, def := range defaultTeamChannels() {
+					if def.Slug == GeneralChannelSlug {
+						b.channels = append([]teamChannel{def}, b.channels...)
+						break
+					}
 				}
 			}
 		}
@@ -238,6 +271,15 @@ func (b *Broker) normalizeLoadedStateLocked() {
 			member.Role = member.Name
 		}
 		member.BuiltIn = member.Slug == "ceo" || isLibrarianSlug(member.Slug) || isAppBuilderSlug(member.Slug)
+		// A built-in's display name is owned by the code, not by the saved
+		// roster. Renaming the Librarian to "Pam the librarian" changed the
+		// constant, but every office already on disk kept the old name — the
+		// rename only reached brand-new workspaces, which is the least useful
+		// place for it. A built-in is not a user-editable member, so its name
+		// is reconciled on load like its BuiltIn flag directly above.
+		if isLibrarianSlug(member.Slug) {
+			member.Name = librarianName
+		}
 		member.Expertise = normalizeStringList(member.Expertise)
 		member.AllowedTools = normalizeStringList(member.AllowedTools)
 		normalizedMembers = append(normalizedMembers, member)
@@ -319,9 +361,18 @@ func (b *Broker) normalizeLoadedStateLocked() {
 			b.incidents[i].Count = 1
 		}
 	}
-	for i := range b.tasks {
-		if strings.TrimSpace(b.tasks[i].Channel) == "" {
-			b.tasks[i].Channel = "general"
+	// #general kill switch, load-path gate. preferredTaskChannelLocked can now
+	// legitimately give a task NO channel (an unowned intake task has no
+	// conversation home yet), and this backfill would have rewritten every one
+	// of them to "general" on the next Load — quietly undoing the resolver and
+	// making "empty" a state that cannot survive a restart. Gated rather than
+	// removed so the backfill still heals genuinely channel-less legacy tasks
+	// while the shared room exists.
+	if generalChannelEnabled() {
+		for i := range b.tasks {
+			if strings.TrimSpace(b.tasks[i].Channel) == "" {
+				b.tasks[i].Channel = GeneralChannelSlug
+			}
 		}
 	}
 	// Heal task channels missing their own task's owner. A workspace seeded

@@ -89,10 +89,18 @@ func TestArtifactGate_BlocksDefinedTaskWithoutArtifact(t *testing.T) {
 	}
 }
 
-// Passing artifact_path on the completing mutation clears the gate, stores
-// the artifact on the wire shape, and fires the deterministic done-post +
-// Inbox notice.
-func TestArtifactGate_DonePostAndNoticeWithArtifact(t *testing.T) {
+// Passing artifact_path on the completing mutation clears the gate, stores the
+// artifact on the wire shape, and fires the deterministic done-post — and
+// nothing else.
+//
+// This test used to also require exactly one Inbox notice alongside the post
+// (and asserted it was non-blocking, unscheduled, and active). That card is
+// gone: it repeated the chat post's sentence verbatim and offered a single
+// "Acknowledge" button, so the only thing a human could do with it was dismiss
+// it — every finished task cost a click for news they had already read in the
+// channel. Cards are for requests that need a decision. The assertion is
+// inverted rather than dropped so a re-introduced card fails here.
+func TestArtifactGate_DonePostAndNoInboxCard(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	taskID := completionHookCreateDefinedTask(t, b)
 
@@ -107,34 +115,27 @@ func TestArtifactGate_DonePostAndNoticeWithArtifact(t *testing.T) {
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	// Exactly one chat post announces the delivery.
+	donePosts := 0
 	donePost := ""
 	for _, msg := range b.messages {
 		if msg.Kind == taskDeliveredMessageKind && msg.SourceTaskID == taskID {
+			donePosts++
 			donePost = msg.Content
 		}
+	}
+	if donePosts != 1 {
+		t.Fatalf("expected exactly one done-post, got %d", donePosts)
 	}
 	if !strings.Contains(donePost, "delivered: Renewal brief published to the wiki") ||
 		!strings.Contains(donePost, "artifact: "+artifact) {
 		t.Fatalf("done-post missing summary/artifact: %q", donePost)
 	}
-	noticeCount := 0
+	// And no Inbox card is raised for it.
 	for _, req := range b.requests {
-		if req.Kind != "notice" || strings.TrimSpace(req.IssueID) != taskID {
-			continue
+		if req.Kind == "notice" && strings.TrimSpace(req.IssueID) == taskID {
+			t.Fatalf("a delivery must raise no Inbox card, got %+v", req)
 		}
-		noticeCount++
-		if req.Blocking || req.Required {
-			t.Fatalf("delivery notice must be non-blocking/non-required: %+v", req)
-		}
-		if !requestIsActive(req) {
-			t.Fatalf("delivery notice must be active: %+v", req)
-		}
-		if req.ReminderAt != "" || req.FollowUpAt != "" {
-			t.Fatalf("delivery notice must not schedule reminders: %+v", req)
-		}
-	}
-	if noticeCount != 1 {
-		t.Fatalf("expected exactly one delivery notice, got %d", noticeCount)
 	}
 }
 
@@ -337,8 +338,12 @@ func TestTaskDeliveredContentLine(t *testing.T) {
 	if got := taskDeliveredContentLine(task); got != "Close the renewal delivered: Renew Acme" {
 		t.Fatalf("goal fallback wrong: %q", got)
 	}
+	// No definition at all → the summary falls back to the title, so there is
+	// nothing to add. Saying it twice ("Close the renewal delivered: Close the
+	// renewal") is what this line used to do and what shipped to a founder's
+	// screen; the title is stated once now.
 	task.Definition = nil
-	if got := taskDeliveredContentLine(task); got != "Close the renewal delivered: Close the renewal" {
+	if got := taskDeliveredContentLine(task); got != "Close the renewal delivered" {
 		t.Fatalf("title fallback wrong: %q", got)
 	}
 }

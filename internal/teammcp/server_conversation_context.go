@@ -94,17 +94,56 @@ func resolveConversationContext(ctx context.Context, slug, requestedChannel, req
 	return conversationContext{Channel: channel, ReplyToID: replyTo, Source: "fallback"}
 }
 
+// fetchAccessibleChannels lists the channels an agent can see, DMs included.
+//
+// Two calls, not one. GET /channels treats `type` as an EXCLUSIVE filter
+// (broker_office_channels.go handleChannels): the default listing returns only
+// non-DM channels and `?type=dm` returns only DMs. Without the second call an
+// agent woken in a DM could not see the DM it was standing in — it had no way
+// to name its own conversation. Asking for `?type=dm` alone would have swapped
+// one blind spot for a worse one, dropping every real channel from wiki-link
+// resolution and channel inference.
 func fetchAccessibleChannels(ctx context.Context, slug string) []brokerChannelSummary {
+	var channels []brokerChannelSummary
 	var result brokerChannelsResponse
-	if err := brokerGetJSON(ctx, "/channels", &result); err != nil {
+	regularErr := brokerGetJSON(ctx, "/channels", &result)
+	if regularErr == nil {
+		channels = append(channels, result.Channels...)
+	}
+
+	var dmResult brokerChannelsResponse
+	dmErr := brokerGetJSON(ctx, "/channels?type=dm", &dmResult)
+	if dmErr == nil {
+		channels = append(channels, dmResult.Channels...)
+	}
+
+	// Both legs failing is a broker problem, and returning nil keeps the old
+	// contract callers already handle. One leg failing still yields a usable
+	// (if partial) view, which beats blanking the agent's whole world.
+	if regularErr != nil && dmErr != nil {
 		return nil
 	}
+
+	// The two listings are disjoint today (the handler's filter is exclusive),
+	// but dedupe by slug so a future handler change cannot double-list a
+	// channel into the agent's context packet.
+	seen := make(map[string]bool, len(channels))
+	deduped := make([]brokerChannelSummary, 0, len(channels))
+	for _, ch := range channels {
+		key := strings.ToLower(strings.TrimSpace(ch.Slug))
+		if key == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		deduped = append(deduped, ch)
+	}
+
 	slug = strings.TrimSpace(slug)
 	if slug == "" || slug == "ceo" {
-		return result.Channels
+		return deduped
 	}
-	out := make([]brokerChannelSummary, 0, len(result.Channels))
-	for _, ch := range result.Channels {
+	out := make([]brokerChannelSummary, 0, len(deduped))
+	for _, ch := range deduped {
 		if !contains(ch.Members, slug) || contains(ch.Disabled, slug) {
 			continue
 		}

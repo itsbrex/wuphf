@@ -3,6 +3,7 @@ package team
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -110,12 +111,25 @@ func (b *Broker) raisePlanApprovalInterviewLocked(taskID, actor, plan string) st
 		from = "office"
 	}
 
+	title := strings.TrimSpace(task.Title)
+	if title == "" {
+		title = task.ID
+	}
 	var qb strings.Builder
-	fmt.Fprintf(&qb, "Plan ready for %q. Review it and approve to start execution (the team will create the sub-tasks and begin once you approve).\n\n", strings.TrimSpace(task.Title))
-	if p := strings.TrimSpace(plan); p != "" {
-		qb.WriteString(truncateSummary(p, 1200))
+	// Lead with the decision in the human's terms: what they get, and what
+	// happens either way. The old copy opened with the agent's framing
+	// ("Plan ready for X. Review it and approve to start execution (the team
+	// will create the sub-tasks…)") and then pasted 1200 characters of the
+	// agent's own working plan — tool names, internal reasoning, and absolute
+	// paths into the user's home directory. A human could not tell what it was
+	// for or why it was their problem.
+	fmt.Fprintf(&qb, "%s wants to start work on %s (%s).\n\n", ownerLabelForPlan(from), title, task.ID)
+	qb.WriteString("Approve and they begin. Decline and nothing happens until you say otherwise.\n\n")
+	if p := humanReadablePlanSummary(plan); p != "" {
+		qb.WriteString("Their plan, in short:\n")
+		qb.WriteString(p)
 	} else {
-		qb.WriteString("(See the owner's plan in the task channel / notebook.)")
+		qb.WriteString("They have not written a plan summary yet.")
 	}
 
 	options, recommended := requestOptionDefaults("approval")
@@ -127,7 +141,7 @@ func (b *Broker) raisePlanApprovalInterviewLocked(taskID, actor, plan string) st
 		Status:        "pending",
 		From:          from,
 		Channel:       channel,
-		Title:         "Approve plan for " + task.ID,
+		Title:         "Start work on " + title + "?",
 		Question:      qb.String(),
 		Options:       options,
 		RecommendedID: recommended,
@@ -193,3 +207,38 @@ func (b *Broker) applyPlanApprovalAnswerLocked(req humanInterview, answer *inter
 	}
 	b.startApprovedPlanTaskLocked(task, actor)
 }
+
+// ownerLabelForPlan renders the requesting agent for a human audience.
+func ownerLabelForPlan(slug string) string {
+	slug = strings.TrimSpace(slug)
+	if slug == "" || slug == "office" {
+		return "The team"
+	}
+	return "@" + slug
+}
+
+// humanReadablePlanSummary turns an agent's working plan into something worth
+// putting in front of a person.
+//
+// An agent writes its plan for itself: MCP tool names, step-by-step mechanics,
+// and the absolute path of the plan file on disk. Pasted raw into an approval
+// card that becomes noise the human has to decode before they can answer a
+// yes/no question — and it leaks local filesystem paths into a shared surface.
+//
+// This keeps the substance and drops what only the agent needs: absolute paths
+// are removed, and the whole thing is capped short enough to read at a glance.
+// The full plan stays available on the task itself for anyone who wants it.
+func humanReadablePlanSummary(plan string) string {
+	p := strings.TrimSpace(plan)
+	if p == "" {
+		return ""
+	}
+	p = absolutePathPattern.ReplaceAllString(p, "the plan file")
+	p = strings.Join(strings.Fields(p), " ")
+	return truncateSummary(p, 500)
+}
+
+// absolutePathPattern matches POSIX-style absolute paths (optionally wrapped in
+// backticks) so a plan summary never publishes where the file lives on the
+// operator's machine.
+var absolutePathPattern = regexp.MustCompile("`?/(?:Users|home|var|tmp|private|opt)/[^\\s`]*`?")

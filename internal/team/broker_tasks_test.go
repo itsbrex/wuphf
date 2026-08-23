@@ -816,6 +816,14 @@ func TestBrokerEnsurePlannedTaskKeepsScopedDuplicateTitlesDistinct(t *testing.T)
 	}
 }
 
+// TestBrokerTaskCreateKeepsDistinctTasksInSameThread pins the non-dedup
+// invariant: two creates anchored to the SAME thread are two tasks, not one
+// reused row.
+//
+// It used to prove that by checking the two tasks landed in two DIFFERENT
+// per-task channels. That proof is gone — tasks no longer mint channels, so both
+// land in the channel they were created from. Distinctness is now pinned where
+// it actually lives: two task ids, and that channel listing both of them.
 func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 	b := newTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
@@ -847,8 +855,14 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 		return result.Task
 	}
 
+	// The channel both creates are made from. Named rather than repeated as a
+	// literal because #general is scheduled for removal (conversation moves to
+	// per-agent DMs); what these assertions pin is "the channel it was created
+	// from", not that room's name.
+	createdFrom := "general"
 	first := post(map[string]any{
 		"action":     "create",
+		"channel":    createdFrom,
 		"title":      "Build the operating system",
 		"details":    "Engineering lane",
 		"created_by": "ceo",
@@ -857,6 +871,7 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 	})
 	second := post(map[string]any{
 		"action":     "create",
+		"channel":    createdFrom,
 		"title":      "Lock the channel thesis",
 		"details":    "GTM lane",
 		"created_by": "ceo",
@@ -867,33 +882,49 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 	if first.ID == second.ID {
 		t.Fatalf("expected distinct tasks in the same thread, got reused task id %q", first.ID)
 	}
-	// Every task now mints its own channel, so two distinct creates land
-	// in two distinct per-task channels rather than being grouped under
-	// #general. The non-dedup invariant is that both tasks exist, each in
-	// its own channel.
-	if first.Channel == second.Channel {
-		t.Fatalf("expected distinct per-task channels, both = %q", first.Channel)
+	// Both stay in the channel they were created from — sharing a room is the
+	// point, not a dedup failure.
+	if first.Channel != createdFrom || second.Channel != createdFrom {
+		t.Fatalf("both tasks must stay in %q, got %q and %q", createdFrom, first.Channel, second.Channel)
 	}
-	if got := len(b.ChannelTasks(first.Channel)); got != 1 {
-		t.Fatalf("expected one task in %q, got %d", first.Channel, got)
-	}
-	if got := len(b.ChannelTasks(second.Channel)); got != 1 {
-		t.Fatalf("expected one task in %q, got %d", second.Channel, got)
+	assertNoPerTaskChannels(t, b)
+	if got := len(b.ChannelTasks(createdFrom)); got != 2 {
+		t.Fatalf("expected both tasks listed in %q, got %d", createdFrom, got)
 	}
 }
 
-// TestBrokerSubtaskMintsOwnChannelSeparateFromParent pins the fix for the
-// "sub-tasks share the parent's chat" bug: a sub-issue created with
-// parent_issue_id set must land in its OWN dedicated task-<childID> channel,
-// not the parent's. Agents create sub-issues from inside the parent's channel
-// (team_task forwards the current conversation as the channel), so the sub-issue
-// arrives carrying the parent's channel; the broker must override it. Without
-// the fix the child stays in the parent's channel and the two tasks share one
-// timeline. Exercised through the live HTTP /tasks path, not the internal call.
-func TestBrokerSubtaskMintsOwnChannelSeparateFromParent(t *testing.T) {
+// assertNoPerTaskChannels fails the test when any `task-<id>` channel exists.
+// The one-room model mints none, so this is the shared guard every task-channel
+// regression test uses.
+func assertNoPerTaskChannels(t *testing.T, b *Broker) {
+	t.Helper()
+	b.mu.Lock()
+	var minted []string
+	for i := range b.channels {
+		if strings.HasPrefix(b.channels[i].Slug, "task-") {
+			minted = append(minted, b.channels[i].Slug)
+		}
+	}
+	b.mu.Unlock()
+	if len(minted) > 0 {
+		t.Fatalf("no per-task channels may be minted, got %v", minted)
+	}
+}
+
+// TestBrokerSubtaskStaysInTheOfficeChannel pins the one-room contract.
+//
+// This test used to assert the opposite: every Issue and sub-Issue minted its
+// own task-<id> channel so their chatter stayed separate. That model is gone.
+// It split the roster across rooms nobody was reading — a human @-mentioning a
+// teammate in one task channel could not be answered by a teammate who was not
+// a member of it, which is exactly how the @designer hand-off failed on
+// 2026-08-22. Work is now discussed in the office channel it was created from,
+// where the whole roster is present; Tasks remains the place to see status.
+//
+// So: a parent Issue created in #general stays in #general, a sub-Issue stays
+// with its parent, and no task-<id> channel is created for either.
+func TestBrokerSubtaskStaysInTheOfficeChannel(t *testing.T) {
 	b := newTestBroker(t)
-	// Register the owner so it joins the parent's minted channel (and thus has
-	// access to create the sub-issue from there).
 	ensureTestMemberAccess(b, "general", "eng", "Eng")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("failed to start broker: %v", err)
@@ -924,7 +955,6 @@ func TestBrokerSubtaskMintsOwnChannelSeparateFromParent(t *testing.T) {
 		return result.Task
 	}
 
-	// Parent task defaults to #general → mints its own task-<id> channel.
 	parent := post(map[string]any{
 		"action":     "create",
 		"title":      "Ship the Q3 launch",
@@ -932,15 +962,11 @@ func TestBrokerSubtaskMintsOwnChannelSeparateFromParent(t *testing.T) {
 		"created_by": "ceo",
 		"owner":      "eng",
 	})
-	if parent.Channel == "general" || parent.Channel == "" {
-		t.Fatalf("expected parent to mint its own channel, got %q", parent.Channel)
+	if parent.Channel != "general" {
+		t.Fatalf("parent must stay in the channel it was created from, got %q", parent.Channel)
 	}
-	// The parent lands in Planning; approve its plan (human) so the CEO may
-	// decompose it into sub-issues.
 	post(map[string]any{"action": "approve", "id": parent.ID, "created_by": "human"})
 
-	// Sub-issue created by the CEO from inside the parent's channel (the way
-	// the CEO decomposes an Issue) — it arrives carrying the parent's channel.
 	child := post(map[string]any{
 		"action":          "create",
 		"title":           "Draft the launch announcement copy",
@@ -950,51 +976,44 @@ func TestBrokerSubtaskMintsOwnChannelSeparateFromParent(t *testing.T) {
 		"channel":         parent.Channel,
 		"parent_issue_id": parent.ID,
 	})
-
 	if child.ParentIssueID != parent.ID {
 		t.Fatalf("expected child parent_issue_id %q, got %q", parent.ID, child.ParentIssueID)
 	}
-	// The bug: child shared the parent's channel. The fix: child gets its own.
-	if child.Channel == parent.Channel {
-		t.Fatalf("sub-issue must not share the parent's channel %q", parent.Channel)
+	if child.Channel != parent.Channel {
+		t.Fatalf("sub-issue must stay with its parent in %q, got %q", parent.Channel, child.Channel)
 	}
-	expectedSlug := normalizeChannelSlug("task-" + child.ID)
-	if child.Channel != expectedSlug {
-		t.Fatalf("expected sub-issue channel %q, got %q", expectedSlug, child.Channel)
-	}
-	// The minted child channel exists and links back to the child task.
+
+	// No task-<id> room was created for either task.
 	b.mu.Lock()
-	var childCh *teamChannel
+	var minted []string
 	for i := range b.channels {
-		if b.channels[i].Slug == expectedSlug {
-			childCh = &b.channels[i]
-			break
+		if strings.HasPrefix(b.channels[i].Slug, "task-") {
+			minted = append(minted, b.channels[i].Slug)
 		}
 	}
 	b.mu.Unlock()
-	if childCh == nil {
-		t.Fatalf("expected channel %q to exist in broker, not found", expectedSlug)
+	if len(minted) > 0 {
+		t.Fatalf("no per-task channels may be minted, got %v", minted)
 	}
-	if childCh.TaskID != child.ID {
-		t.Fatalf("expected child channel TaskID=%q, got %q", child.ID, childCh.TaskID)
-	}
-	// Each channel holds exactly its own task — no shared timeline.
-	if got := len(b.ChannelTasks(parent.Channel)); got != 1 {
-		t.Fatalf("expected one task in parent channel %q, got %d", parent.Channel, got)
-	}
-	if got := len(b.ChannelTasks(child.Channel)); got != 1 {
-		t.Fatalf("expected one task in child channel %q, got %d", child.Channel, got)
+
+	// Both tasks are visible from the one room.
+	if got := len(b.ChannelTasks("general")); got != 2 {
+		t.Fatalf("expected both tasks in #general, got %d", got)
 	}
 }
 
-// TestBrokerSecondTopLevelTaskFromTaskChannelMintsOwnChannel pins the fix for
-// the "every new Issue piles into the same chat" bug. A top-level Issue created
-// from inside ANOTHER Issue's per-task channel (the way the CEO creates a second
-// Issue while talking in the first Issue's chat) must mint its OWN channel, not
-// share the first Issue's. Reproduces the live OFFICE-22 / OFFICE-28 case where
-// a second issue (no parent_issue_id) landed in the first issue's task-<id>
-// channel. Exercised through the HTTP /tasks path, not the internal call.
-func TestBrokerSecondTopLevelTaskFromTaskChannelMintsOwnChannel(t *testing.T) {
+// TestBrokerSecondTopLevelTaskStaysInTheOfficeChannel pins the one-room
+// contract for a SECOND top-level Issue.
+//
+// This test used to assert the opposite. Under the per-task-channel model each
+// Issue owned a room, so a second Issue created while the CEO was talking in the
+// first Issue's chat arrived carrying that chat's slug and had to be pushed out
+// into a room of its own (the live OFFICE-22 / OFFICE-28 case). With one room
+// there is nothing to be pushed out of: both Issues are created from #general,
+// both stay there, and sharing that timeline is the intent — the whole roster is
+// present for both conversations. Exercised through the HTTP /tasks path, not
+// the internal call.
+func TestBrokerSecondTopLevelTaskStaysInTheOfficeChannel(t *testing.T) {
 	b := newTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("failed to start broker: %v", err)
@@ -1025,19 +1044,22 @@ func TestBrokerSecondTopLevelTaskFromTaskChannelMintsOwnChannel(t *testing.T) {
 		return result.Task
 	}
 
-	// First top-level Issue from #general → mints its own task-<id> channel.
+	// The office channel both Issues are created from. Named rather than
+	// hardcoded per assertion: #general is scheduled for removal, and what these
+	// checks pin is "stays where it was created", not that room's name.
+	createdFrom := "general"
 	first := post(map[string]any{
 		"action":     "create",
+		"channel":    createdFrom,
 		"title":      "Daily Digest from email",
 		"details":    "Top-level issue one",
 		"created_by": "ceo",
 	})
-	if first.Channel == "general" || first.Channel == "" {
-		t.Fatalf("expected first issue to mint its own channel, got %q", first.Channel)
+	if first.Channel != createdFrom {
+		t.Fatalf("first issue must stay in the channel it was created from, got %q", first.Channel)
 	}
 
-	// Second top-level Issue (NO parent_issue_id) created from inside the first
-	// Issue's chat — it arrives carrying the first Issue's channel.
+	// Second top-level Issue (NO parent_issue_id) created from the same chat.
 	second := post(map[string]any{
 		"action":     "create",
 		"title":      "Outbound email reply agent",
@@ -1048,20 +1070,17 @@ func TestBrokerSecondTopLevelTaskFromTaskChannelMintsOwnChannel(t *testing.T) {
 	if strings.TrimSpace(second.ParentIssueID) != "" {
 		t.Fatalf("expected a top-level issue (no parent), got parent %q", second.ParentIssueID)
 	}
-	// The bug: the second issue shared the first's channel.
-	if second.Channel == first.Channel {
-		t.Fatalf("second top-level Issue must not share the first Issue's channel %q", first.Channel)
+	if second.Channel != first.Channel {
+		t.Fatalf("second issue must stay with the first in %q, got %q", first.Channel, second.Channel)
 	}
-	expectedSlug := normalizeChannelSlug("task-" + second.ID)
-	if second.Channel != expectedSlug {
-		t.Fatalf("expected second issue channel %q, got %q", expectedSlug, second.Channel)
+	assertNoPerTaskChannels(t, b)
+	// One room, both Issues: the channel lists them together and each is still
+	// its own task row.
+	if first.ID == second.ID {
+		t.Fatalf("expected two distinct issues, got the same id %q", first.ID)
 	}
-	// Each channel holds exactly its own task — no shared timeline.
-	if got := len(b.ChannelTasks(first.Channel)); got != 1 {
-		t.Fatalf("expected one task in first channel %q, got %d", first.Channel, got)
-	}
-	if got := len(b.ChannelTasks(second.Channel)); got != 1 {
-		t.Fatalf("expected one task in second channel %q, got %d", second.Channel, got)
+	if got := len(b.ChannelTasks(createdFrom)); got != 2 {
+		t.Fatalf("expected both issues listed in %q, got %d", createdFrom, got)
 	}
 }
 
@@ -2023,12 +2042,22 @@ func ensureTestMemberAccess(b *Broker, channel, slug, name string) {
 		if !containsString(b.channels[i].Members, slug) {
 			b.channels[i].Members = append(b.channels[i].Members, slug)
 		}
+		if !containsString(b.channels[i].Members, "ceo") {
+			b.channels[i].Members = append(b.channels[i].Members, "ceo")
+		}
 		return
 	}
 	b.channels = append(b.channels, teamChannel{
-		Slug:    normalizeChannelSlug(channel),
-		Name:    normalizeChannelSlug(channel),
-		Members: []string{slug},
+		Slug: normalizeChannelSlug(channel),
+		Name: normalizeChannelSlug(channel),
+		// Mirror production: createChannel seeds every non-DM channel with
+		// the CEO (broker_office_channels.go, `final := append([]string{"ceo"},
+		// …)`). Fixtures used to omit it and still work because the CEO held a
+		// blanket channel-access bypass; membership is authoritative for every
+		// agent now, so a fixture without the CEO is a fixture that does not
+		// look like a real workspace. DMs are the deliberate exception and are
+		// built explicitly elsewhere — never through this helper.
+		Members: []string{slug, "ceo"},
 	})
 }
 
@@ -2445,18 +2474,27 @@ func TestBrokerEnsurePlannedTaskRunsNonDependentLiveExternalConcurrently(t *test
 	}
 }
 
-// TestBrokerTaskPlanMintsPerTaskChannelForBusinessObjective verifies that a
-// business-objective task submitted against "general" gets its own dedicated
-// task-<id> channel instead of being grouped into a recent execution channel
-// (the old behaviour, removed).  The task must NOT land in "general" and must
-// NOT land in any pre-existing shared channel (e.g. "client-loop").
-func TestBrokerTaskPlanMintsPerTaskChannelForBusinessObjective(t *testing.T) {
+// TestBrokerTaskPlanKeepsTaskInTheSubmittedChannel verifies that a task plan
+// leaves its tasks in the channel it was submitted against.
+//
+// It used to assert the reverse — that such a task was pushed out into a
+// dedicated task-<id> room. Per-task rooms are gone because they split the
+// roster: a human @-mentioning a teammate inside a task room was addressing
+// someone who was not in it. The half of the old contract that survives
+// unchanged is the negative one, and it is the reason this test pre-seeds
+// "client-loop": a task plan must never be absorbed into some unrelated
+// pre-existing execution channel just because it was recently active.
+func TestBrokerTaskPlanKeepsTaskInTheSubmittedChannel(t *testing.T) {
 	setPrepareTaskWorktreeForTest(t, func(taskID string) (string, string, error) {
 		return t.TempDir(), "wuphf-" + taskID, nil
 	})
 	setCleanupTaskWorktreeForTest(t, func(path, branch string) error { return nil })
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	// The channel the plan is submitted against. Named rather than repeated as a
+	// literal: #general is scheduled for removal, and the contract is "stays in
+	// the submitted channel", not the name of that channel.
+	submittedTo := "general"
+	ensureTestMemberAccess(b, submittedTo, "builder", "Builder")
 	// Pre-existing shared channel — must NOT absorb the new task.
 	b.channels = append(b.channels, teamChannel{
 		Slug:      "client-loop",
@@ -2472,7 +2510,7 @@ func TestBrokerTaskPlanMintsPerTaskChannelForBusinessObjective(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	body, _ := json.Marshal(map[string]any{
-		"channel":    "general",
+		"channel":    submittedTo,
 		"created_by": "ceo",
 		"tasks": []map[string]any{
 			{
@@ -2507,41 +2545,39 @@ func TestBrokerTaskPlanMintsPerTaskChannelForBusinessObjective(t *testing.T) {
 		t.Fatalf("expected one task, got %+v", result.Tasks)
 	}
 	task := result.Tasks[0]
-	// Must have its own dedicated channel, not "general" and not "client-loop".
-	if task.Channel == "general" {
-		t.Fatalf("expected dedicated per-task channel, got general: %+v", task)
+	// Stays where the plan was submitted, and is NOT absorbed by the
+	// pre-existing client-loop channel.
+	if task.Channel != submittedTo {
+		t.Fatalf("expected the task to stay in the submitted channel %q, got %q: %+v", submittedTo, task.Channel, task)
 	}
 	if task.Channel == "client-loop" {
-		t.Fatalf("expected dedicated per-task channel, not the pre-existing client-loop: %+v", task)
+		t.Fatalf("a pre-existing execution channel must not absorb a new task: %+v", task)
 	}
-	// Channel slug is normalised (lowercased) by createChannelLocked.
-	expectedSlug := normalizeChannelSlug("task-" + task.ID)
-	if task.Channel != expectedSlug {
-		t.Fatalf("expected channel %q, got %q", expectedSlug, task.Channel)
-	}
-	// The minted channel must be discoverable via the broker and must link
-	// back to the task via TaskID.
+	assertNoPerTaskChannels(t, b)
+	// The owner is a member of the room the task landed in, so an @mention
+	// there reaches them — the guarantee per-task channels used to provide by
+	// seeding owner + CEO into a private room.
 	b.mu.Lock()
-	var mintedCh *teamChannel
+	var office *teamChannel
 	for i := range b.channels {
-		if b.channels[i].Slug == expectedSlug {
-			mintedCh = &b.channels[i]
+		if b.channels[i].Slug == submittedTo {
+			office = &b.channels[i]
 			break
 		}
 	}
 	b.mu.Unlock()
-	if mintedCh == nil {
-		t.Fatalf("expected channel %q to exist in broker, not found", expectedSlug)
+	if office == nil {
+		t.Fatalf("expected the %q channel to exist", submittedTo)
 	}
-	if mintedCh.TaskID != task.ID {
-		t.Fatalf("expected channel TaskID=%q, got %q", task.ID, mintedCh.TaskID)
+	if !stringSliceContainsFold(office.Members, "builder") {
+		t.Fatalf("expected builder (task owner) to be a member of %q, got %v", submittedTo, office.Members)
 	}
-	// "builder" (task owner) and "ceo" must be members.
-	if !stringSliceContainsFold(mintedCh.Members, "ceo") {
-		t.Fatalf("expected ceo to be a channel member, got %v", mintedCh.Members)
+	// The task is discoverable from that room.
+	if got := len(b.ChannelTasks(submittedTo)); got != 1 {
+		t.Fatalf("expected the task listed in %q, got %d", submittedTo, got)
 	}
-	if !stringSliceContainsFold(mintedCh.Members, "builder") {
-		t.Fatalf("expected builder (task owner) to be a channel member, got %v", mintedCh.Members)
+	if got := len(b.ChannelTasks("client-loop")); got != 0 {
+		t.Fatalf("expected client-loop to hold no tasks, got %d", got)
 	}
 }
 
@@ -2627,34 +2663,44 @@ func TestBrokerTaskPlanReusesExistingActiveLane(t *testing.T) {
 	}
 }
 
-// TestPerTaskChannelMintedForBusinessObjective verifies that:
-//   - A new task submitted against "general" lands in its own dedicated
-//     "task-<id>" channel — including a plain task whose title has no
-//     "business objective" keywords (the keyword gate was dropped on
-//     2026-06-03 so every real task spins up a channel, per the vision).
-//   - The minted channel has TaskID set and includes ceo + owner as
-//     members.
-//   - An explicit non-general channel request is kept as-is.
+// TestTaskStaysInTheChannelItWasCreatedFrom verifies, end-to-end through
+// EnsurePlannedTask, that a task's channel is simply the channel it was created
+// from:
+//   - a task created from the office channel stays there — whether or not its
+//     title reads like a business objective;
+//   - an explicit project-channel request is kept as-is (unchanged);
+//   - no task-<id> channel is minted for any of them.
 //
-// The internal-plumbing guards (System / incident / sub-task stay in
-// #general or on the parent) are covered by
-// TestShouldMintPerTaskChannelGuards below.
-func TestPerTaskChannelMintedForBusinessObjective(t *testing.T) {
+// This test used to assert the first bullet's opposite: every task, keyword-less
+// ones included, was pushed out into its own "task-<id>" room seeded with the
+// owner and the CEO. That model is gone. A private room per task meant the human
+// was talking to a two-member audience: @-mentioning any other teammate in it
+// addressed someone who was not there (the @designer hand-off failure of
+// 2026-08-22). Tasks keep their title, owner, and status in the Tasks surface;
+// the conversation happens where the roster already is.
+//
+// The office channel is named in a variable rather than inlined because
+// #general is scheduled for removal; the contract is "stays where it was
+// created", not the name of that room.
+//
+// The unit-level guard for every task shape is TestNoPerTaskChannels below.
+func TestTaskStaysInTheChannelItWasCreatedFrom(t *testing.T) {
 	setPrepareTaskWorktreeForTest(t, func(taskID string) (string, string, error) {
 		return t.TempDir(), "wuphf-" + taskID, nil
 	})
 	setCleanupTaskWorktreeForTest(t, func(path, branch string) error { return nil })
 
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	createdFrom := "general"
+	ensureTestMemberAccess(b, createdFrom, "builder", "Builder")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
 	defer b.Stop()
 
-	// --- Case 1: business-objective task → gets task-<id> channel ---
+	// --- Case 1: business-objective task → stays where it was created ---
 	task1, _, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       createdFrom,
 		Title:         "Launch the client-facing sales campaign",
 		Details:       "Deliver the customer-ready marketing materials.",
 		Owner:         "builder",
@@ -2665,42 +2711,33 @@ func TestPerTaskChannelMintedForBusinessObjective(t *testing.T) {
 	if err != nil {
 		t.Fatalf("EnsurePlannedTask business objective: %v", err)
 	}
-	if task1.Channel == "general" {
-		t.Fatalf("expected business-objective task to leave general, got %+v", task1)
-	}
-	// Channel slug is normalised (lowercased) by createChannelLocked.
-	expectedSlug1 := normalizeChannelSlug("task-" + task1.ID)
-	if task1.Channel != expectedSlug1 {
-		t.Fatalf("expected channel %q, got %q", expectedSlug1, task1.Channel)
+	if task1.Channel != createdFrom {
+		t.Fatalf("expected business-objective task to stay in %q, got %+v", createdFrom, task1)
 	}
 
+	// The owner is in the room the task landed in, so an @mention there reaches
+	// them — what the private per-task room used to guarantee for two people.
 	b.mu.Lock()
-	var ch1 *teamChannel
+	var office *teamChannel
 	for i := range b.channels {
-		if b.channels[i].Slug == expectedSlug1 {
-			ch1 = &b.channels[i]
+		if b.channels[i].Slug == createdFrom {
+			office = &b.channels[i]
 			break
 		}
 	}
 	b.mu.Unlock()
-	if ch1 == nil {
-		t.Fatalf("per-task channel %q not found", expectedSlug1)
+	if office == nil {
+		t.Fatalf("expected the %q channel to exist", createdFrom)
 	}
-	if ch1.TaskID != task1.ID {
-		t.Fatalf("channel TaskID: want %q, got %q", task1.ID, ch1.TaskID)
-	}
-	if !stringSliceContainsFold(ch1.Members, "ceo") {
-		t.Fatalf("ceo not in per-task channel members: %v", ch1.Members)
-	}
-	if !stringSliceContainsFold(ch1.Members, "builder") {
-		t.Fatalf("builder (owner) not in per-task channel members: %v", ch1.Members)
+	if !stringSliceContainsFold(office.Members, "builder") {
+		t.Fatalf("builder (owner) not a member of %q: %v", createdFrom, office.Members)
 	}
 
-	// --- Case 2: a plain task with NO business-objective keywords also
-	// mints its own channel (the keyword gate was dropped so the vision
-	// "every task spins up its own channel" holds). ---
+	// --- Case 2: a plain task with NO business-objective keywords stays too.
+	// The keyword gate was dropped in 2026-06-03 so that every task got a
+	// channel; now no task does, keywords or not. ---
 	task2, _, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       createdFrom,
 		Title:         "Internal tooling housekeeping",
 		Owner:         "builder",
 		CreatedBy:     "ceo",
@@ -2710,15 +2747,16 @@ func TestPerTaskChannelMintedForBusinessObjective(t *testing.T) {
 	if err != nil {
 		t.Fatalf("EnsurePlannedTask plain task: %v", err)
 	}
-	if task2.Channel == "general" {
-		t.Fatalf("expected plain (keyword-less) task to mint its own channel, got general: %+v", task2)
-	}
-	if task2.Channel != normalizeChannelSlug("task-"+task2.ID) {
-		t.Fatalf("expected channel %q, got %q", normalizeChannelSlug("task-"+task2.ID), task2.Channel)
+	if task2.Channel != createdFrom {
+		t.Fatalf("expected plain (keyword-less) task to stay in %q, got %+v", createdFrom, task2)
 	}
 
-	// --- Case 3: explicit non-general channel is kept as-is ---
+	// --- Case 3: an explicit project channel is kept as-is ---
+	// The creating actor has to be a member too: membership is authoritative for
+	// every agent, the CEO included, so a create into a project channel it is not
+	// in is denied.
 	ensureTestMemberAccess(b, "youtube-factory", "builder", "Builder")
+	ensureTestMemberAccess(b, "youtube-factory", "ceo", "CEO")
 	task3, _, err := b.EnsurePlannedTask(plannedTaskInput{
 		Channel:       "youtube-factory",
 		Title:         "Publish the YouTube channel launch video",
@@ -2733,50 +2771,58 @@ func TestPerTaskChannelMintedForBusinessObjective(t *testing.T) {
 	if task3.Channel != "youtube-factory" {
 		t.Fatalf("expected explicit channel youtube-factory, got %q", task3.Channel)
 	}
+
+	// Not one room was minted across any of the three.
+	assertNoPerTaskChannels(t, b)
 }
 
-// TestShouldMintPerTaskChannelGuards pins the channel-minting gate. Every real
-// top-level task mints its own channel when it would otherwise default to
-// "general" OR when it was created from inside another task's per-task channel
-// (ownedByAnotherTask) — so a new Issue spun up from an existing Issue's chat
-// never piles into that chat. Only the two internal guards (system task /
-// incident self-heal) withhold a channel. Sub-issues always mint their OWN
-// channel, separate from the parent. A genuinely explicit, non-per-task shared
-// channel (e.g. a project/bridged channel) is left as-is.
-func TestShouldMintPerTaskChannelGuards(t *testing.T) {
+// TestNoPerTaskChannels pins the one-room contract: no task, of any shape,
+// gets its own chat channel. The office is one room (#general) so every
+// teammate is present for every conversation; a task carries its title,
+// description, owner, and status in the Tasks surface instead of a private
+// room. Regression guard for the fragmentation this replaced, where
+// @-mentioning a teammate inside a per-task channel addressed someone who was
+// not in it.
+func TestNoPerTaskChannels(t *testing.T) {
 	cases := []struct {
 		name             string
 		channel          string
 		ownedByOtherTask bool
 		task             teamTask
-		want             bool
 	}{
-		{"plain keyword-less task mints", "general", false, teamTask{Title: "Tidy up the backlog"}, true},
-		{"business-objective task mints", "general", false, teamTask{Title: "Launch the sales campaign"}, true},
-		{"system task stays in general", "general", false, teamTask{Title: "Backup & Migration", System: true}, false},
-		{"incident self-heal stays in general", "general", false, teamTask{Title: "Recover", PipelineID: "incident"}, false},
-		{"sub-task mints its own channel", "general", false, teamTask{Title: "child", ParentIssueID: "task-1"}, true},
-		{"sub-task mints even when handed the parent's channel", "task-1", true, teamTask{Title: "child", ParentIssueID: "task-1"}, true},
-		{"sub-task incident self-heal still stays in general", "general", false, teamTask{Title: "child", ParentIssueID: "task-1", PipelineID: "incident"}, false},
-		{"top-level task created in ANOTHER task's channel mints its own", "task-22", true, teamTask{Title: "Outbound email reply agent"}, true},
-		{"system task in another task's channel still does not mint", "task-22", true, teamTask{Title: "Backup", System: true}, false},
-		{"explicit non-per-task channel kept", "youtube-factory", false, teamTask{Title: "Publish the launch video"}, false},
-		{"empty task in general still mints", "general", false, teamTask{}, true},
+		{"plain task from general", "general", false, teamTask{Title: "Tidy up the backlog"}},
+		{"business objective from general", "general", false, teamTask{Title: "Launch the sales campaign"}},
+		{"system task", "general", false, teamTask{Title: "Backup & Migration", System: true}},
+		{"incident self-heal", "general", false, teamTask{Title: "Recover", PipelineID: "incident"}},
+		{"sub-task", "general", false, teamTask{Title: "child", ParentIssueID: "task-1"}},
+		{"sub-task handed the parent channel", "task-1", true, teamTask{Title: "child", ParentIssueID: "task-1"}},
+		{"task created inside another task's legacy channel", "task-22", true, teamTask{Title: "Outbound email reply agent"}},
+		{"explicit shared channel", "youtube-factory", false, teamTask{Title: "Publish the launch video"}},
+		{"empty task", "general", false, teamTask{}},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := shouldMintPerTaskChannel(tc.channel, tc.ownedByOtherTask, &tc.task)
-			if got != tc.want {
-				t.Fatalf("shouldMintPerTaskChannel(%q, %v, %+v) = %v, want %v", tc.channel, tc.ownedByOtherTask, tc.task, got, tc.want)
+			if shouldMintPerTaskChannel(tc.channel, tc.ownedByOtherTask, &tc.task) {
+				t.Fatalf("shouldMintPerTaskChannel(%q, %v, %+v) = true; tasks must stay in the channel they were created from", tc.channel, tc.ownedByOtherTask, tc.task)
 			}
 		})
+	}
+	if shouldMintPerTaskChannel("general", false, nil) {
+		t.Fatal("nil task must not mint a channel")
 	}
 }
 
 // TestReuseIsChannelAgnostic verifies that findReusableTaskLocked finds
 // an existing task even when the incoming create request names a different
-// channel.  This is the dedup invariant for the new per-task-channel world:
-// submitting the same title twice must never create a second task row.
+// channel.  Submitting the same title twice must never create a second task
+// row.
+//
+// The first task used to be seeded by creating it from "general" and letting it
+// be pushed out into its own task-<id> channel, which is what made the second
+// (general) submit cross a channel boundary. The one-room model mints no such
+// channel, so the divergence is now set up the way it still occurs in
+// production: the task lives in an explicit project channel and the same title
+// is re-submitted from the office channel.
 func TestReuseIsChannelAgnostic(t *testing.T) {
 	setPrepareTaskWorktreeForTest(t, func(taskID string) (string, string, error) {
 		return t.TempDir(), "wuphf-" + taskID, nil
@@ -2785,14 +2831,19 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 
 	b := newTestBroker(t)
 	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	ensureTestMemberAccess(b, "client-loop", "builder", "Builder")
+	// The creating actor has to be a member too: membership is authoritative for
+	// every agent, the CEO included, so a create into a project channel it is not
+	// in is denied.
+	ensureTestMemberAccess(b, "client-loop", "ceo", "CEO")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
 	defer b.Stop()
 
-	// Create the initial task in its per-task channel.
+	// Create the initial task in an explicit project channel.
 	first, _, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "client-loop",
 		Title:         "Launch the client revenue pipeline",
 		Owner:         "builder",
 		CreatedBy:     "ceo",
@@ -2802,8 +2853,8 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first EnsurePlannedTask: %v", err)
 	}
-	if first.Channel == "general" {
-		t.Fatalf("first task should have gotten a per-task channel: %+v", first)
+	if first.Channel != "client-loop" {
+		t.Fatalf("first task should stay in the channel it was created from: %+v", first)
 	}
 
 	// Submit the same title a second time against "general" — must reuse.
@@ -2823,6 +2874,10 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 	}
 	if second.ID != first.ID {
 		t.Fatalf("expected same task ID on reuse: first=%s second=%s", first.ID, second.ID)
+	}
+	// Reuse does not relocate the task into the requesting channel.
+	if second.Channel != "client-loop" {
+		t.Fatalf("reuse must leave the task where it lives, got %q", second.Channel)
 	}
 	// Exactly one task row must exist.
 	if got := len(b.AllTasks()); got != 1 {

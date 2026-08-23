@@ -1,6 +1,9 @@
 package team
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 // Channel access control: the security boundary that gates message
 // publishing. canAccessChannelLocked is the policy decision; the
@@ -11,19 +14,23 @@ import "time"
 // own work in.
 //
 // The reservedChannelSlugs invariant — that user-created channels
-// cannot shadow trusted sender slugs ("system", "nex", "you",
-// "human") — is co-located here on purpose: every entry in that
-// map is also handled as a trusted bypass in canAccessChannelLocked.
-// The two lists are coupled, and the channel-create handler in
-// broker_office_channels.go is the third call site that must reject
-// any new channel whose slug matches.
+// cannot shadow a trusted sender slug or a built-in agent slug — is
+// co-located here on purpose. The channel-create handler in
+// broker_office_channels.go is the call site that must reject any new
+// channel whose slug matches.
 
-// reservedChannelSlugs are slug values that canAccessChannelLocked treats as
-// universally trusted senders. Any user-created channel sharing one of these
-// slugs would inherit that trust — every actor in the trust list could read
-// every message in that channel without an explicit Members entry. The
-// channel-create handler guards against this by rejecting create requests
-// whose slug matches this set; keep the two lists in sync.
+// reservedChannelSlugs are slug values a user-created channel may not take.
+//
+// Two distinct reasons, no longer one:
+//   - "system", "nex", "you", "human" are universally trusted senders in
+//     canAccessChannelLocked. A channel sharing one of those slugs would
+//     inherit that trust, letting those senders read every message in it
+//     without an explicit Members entry. Keep these in sync with the trust
+//     check below.
+//   - "ceo", the Librarian, and the App Builder are built-in AGENT slugs.
+//     They are no longer access bypasses (membership is authoritative for
+//     every agent), but a channel that shadows an agent slug still breaks
+//     DM slug resolution and @-mention routing, so they stay reserved.
 var reservedChannelSlugs = map[string]bool{
 	"system":       true,
 	"nex":          true,
@@ -43,31 +50,43 @@ func (b *Broker) canAccessChannelLocked(slug, channel string) bool {
 		}
 		return slug == b.oneOnOneAgent
 	}
+	// The human sees everything in their own workspace. "nex" and "system"
+	// are synthetic senders rather than agents — broker-authored notices —
+	// and are being retired as senders separately; this bypass should go
+	// with them.
+	//
 	// NOTE: any new entry added here MUST also be added to
 	// reservedChannelSlugs above so the channel-create handler keeps the
 	// invariant "no user channel can shadow a trusted sender slug".
 	if isHumanMessageSender(slug) || slug == "nex" || slug == "system" {
 		return true
 	}
-	if slug == "ceo" {
-		return true
-	}
-	// The Librarian is an org-wide role (wiki curation/review): like the CEO it
-	// can read/post any channel for context. This does NOT widen its
-	// notifications — those still flow only to channels where it is an enabled
-	// member (or is explicitly @-tagged); see notificationTargetsForMessage.
-	if slug == LibrarianSlug {
-		return true
-	}
-	// The App Builder is a system agent, not a roster member: a fresh
-	// operator workspace deliberately seeds ZERO agents, so membership can
-	// never authorize it — yet it owns every build task and must stream
-	// build narration into the task channel. Without this bypass every
-	// build post bounced with "channel access denied" and the operator
-	// watched a silent build (2026-08-16 fresh-workspace QA).
-	if isAppBuilderSlug(slug) {
-		return true
-	}
+	// Every AGENT is gated by membership. There are no org-wide readers: a
+	// DM is readable and postable by exactly its two participants, which is
+	// the promise the DM packet preamble already makes to the model ("This
+	// is a private 1:1 conversation with the human", notification_context.go)
+	// and the promise the human is owed. Under DM-first that matters more,
+	// not less — when DMs are the main conversation surface, one
+	// cross-channel reader is a reader of everything.
+	//
+	// The CEO, the Librarian (Pam), and the App Builder each used to bypass
+	// this. All three are ordinary built-in roster members, seeded at every
+	// chokepoint (broker_defaults.go, broker_onboarding.go,
+	// broker_onboarding_reseed.go), so membership authorizes them wherever
+	// they legitimately belong:
+	//   - a channel they own work in, via
+	//     ensureTaskOwnerChannelMembershipLocked below
+	//   - an app build thread, which seeds the App Builder as a member
+	//   - anywhere a human or another agent adds them
+	// What they lose is exactly what they should never have had: reading a
+	// conversation they are not a party to. The CEO still routes work and
+	// consults specialists — by DMing them, not by reading their DMs.
+	//
+	// This does NOT hide the roster. Who exists and what each agent is good
+	// for comes from the AVAILABLE AGENTS block, which renders from the
+	// member list and never consults channel access
+	// (renderAvailableAgentsBlock, prompt_builder.go). The directory is
+	// public; the conversations are private.
 	return b.channelHasMemberLocked(channel, slug)
 }
 
@@ -121,11 +140,27 @@ func (b *Broker) enabledChannelMembersLocked(channel string, candidates []string
 // that channel" (canAccessChannelLocked enforces it from the publish
 // side; this helper restores it from the assignment side).
 func (b *Broker) ensureTaskOwnerChannelMembershipLocked(channel, owner string) {
-	channel = normalizeChannelSlug(channel)
-	owner = normalizeChannelSlug(owner)
-	if channel == "" || owner == "" {
+	// Emptiness is tested on the RAW arguments, BEFORE normalising, and that
+	// order is the whole point — do not "tidy" it back.
+	//
+	// normalizeChannelSlug("") returns "general". A guard placed AFTER the
+	// normalise therefore never fires: "no channel" arrives indistinguishable
+	// from "explicitly #general", and a caller that resolved no channel
+	// silently adds the task owner as a member of the general room. With
+	// #general being retired that is a write into a room nobody is meant to
+	// be in. The previous shape looked correct and was dead code.
+	if strings.TrimSpace(channel) == "" || strings.TrimSpace(owner) == "" {
 		return
 	}
+	channel = normalizeChannelSlug(channel)
+	// owner is an ACTOR slug, not a channel slug, so it takes the actor
+	// normaliser — the same one canAccessChannelLocked applies to this value.
+	// Two reasons, both load-bearing: membership is then stored under exactly
+	// the string the access check looks up (normalizeChannelSlug would diverge
+	// on "__" and a leading "#"), and normalizeActorSlug preserves "" instead
+	// of laundering it into "general". This is the same trap, and the same
+	// fix, as the CreatedBy guard in broker_office_channels.go.
+	owner = normalizeActorSlug(owner)
 	if b.findMemberLocked(owner) == nil {
 		return
 	}

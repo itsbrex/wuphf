@@ -191,7 +191,12 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 	// ─── Role-based tool registration ───
 	// Each role gets only the tools it needs. Cuts MCP schema overhead
 	// from ~125k tokens (27 tools) down to ~15k (4 tools in DM mode).
-	isDM := strings.HasPrefix(channel, "dm-")
+	// team.IsDMSlug, not a raw "dm-" prefix: the canonical slug format is the
+	// pair-sorted "<a>__<b>" (channel.DirectSlug), and the prefix test missed
+	// every one of them. An agent woken in a canonical DM was therefore not
+	// recognised as being in one, so it kept team_channel and team_bridge —
+	// precisely the tools that let it post its way out of the DM.
+	isDM := team.IsDMSlug(channel)
 	isLead := slug == "" || slug == "ceo"
 	// The Librarian curates the wiki: it gets the promotion-review tool (like the
 	// lead) WITHOUT the lead's structural powers (team_plan/channel/member).

@@ -245,21 +245,49 @@ func (b *Broker) queueTaskBehindActiveOwnerLaneLocked(task *teamTask) {
 }
 
 // preferredTaskChannelLocked resolves the channel slug for a task.
-// If the caller supplied an explicit non-empty channel it is returned
-// as-is (after normalisation).  An empty / whitespace-only request
-// falls back to "general".
+//
+// An explicit non-empty request wins and is returned normalised. Otherwise the
+// task's home is, in order:
+//
+//  1. the OWNER's home channel,
+//  2. the CREATOR's home channel,
+//  3. EMPTY.
+//
+// Empty is a legal outcome, not a failure. An unowned intake task genuinely
+// has no conversation home yet, and the Tasks surface renders a task without
+// one. Callers MUST therefore treat "" as "no channel" and skip their
+// findChannelLocked / canAccessChannelLocked checks — passing "" to
+// findChannelLocked would normalise it straight back to "general"
+// (normalizeChannelSlug's lobby fallback) and silently re-create exactly the
+// leak this change exists to close.
+//
+// Both steps go through homeChannelForLocked, which is the seam: while
+// #general is enabled it answers "general" for ANY actor, including an empty
+// one, so today's behaviour is unchanged. Once general is switched off the
+// same two calls resolve to real 1:1 DMs and the chain falls through to empty.
+//
+// Landing this BEFORE the flip is the whole point. Every task conversation
+// currently lives in #general — shouldMintPerTaskChannel returns false
+// unconditionally, so nothing mints a per-task room — and without this
+// resolver they would all orphan the moment the switch goes off.
 //
 // The old behaviour of scanning recent execution channels and routing
-// business-objective tasks there has been removed.  Each new
-// business-objective task now gets its own dedicated channel (minted
-// by createPerTaskChannelLocked in the individual create paths); this
-// function is now purely a slug normaliser.
-func (b *Broker) preferredTaskChannelLocked(requestedChannel, _, _, _, _ string) string {
-	channel := normalizeChannelSlug(requestedChannel)
-	if channel == "" {
-		return "general"
+// business-objective tasks there was removed earlier; this function is the
+// single place that decides a task's home.
+func (b *Broker) preferredTaskChannelLocked(requestedChannel, createdBy, owner, _, _ string) string {
+	// TrimSpace, not normalizeChannelSlug, for the emptiness test:
+	// normalizeChannelSlug("") returns "general", so normalising first would
+	// make the no-channel case indistinguishable from an explicit #general.
+	if raw := strings.TrimSpace(requestedChannel); raw != "" {
+		return normalizeChannelSlug(raw)
 	}
-	return channel
+	if slug, err := b.homeChannelForLocked(owner); err == nil && slug != "" {
+		return slug
+	}
+	if slug, err := b.homeChannelForLocked(createdBy); err == nil && slug != "" {
+		return slug
+	}
+	return ""
 }
 
 // shouldMintPerTaskChannel reports whether a newly created task
@@ -297,25 +325,26 @@ func (b *Broker) preferredTaskChannelLocked(requestedChannel, _, _, _, _ string)
 // title lacked execution keywords ("Draft Q3 outbound sequence") stayed in
 // #general — so the heuristic was dropped (2026-06-03). The function is still
 // used elsewhere (notifications / pipeline), just not as a channel gate.
-func shouldMintPerTaskChannel(channel string, incomingChannelOwnedByAnotherTask bool, task *teamTask) bool {
-	if task == nil {
-		return false
-	}
-	if task.System {
-		return false
-	}
-	if strings.TrimSpace(task.PipelineID) == "incident" {
-		return false
-	}
-	if strings.TrimSpace(task.ParentIssueID) != "" {
-		return true
-	}
-	if normalizeChannelSlug(channel) == "general" {
-		return true
-	}
-	if incomingChannelOwnedByAnotherTask {
-		return true
-	}
+// shouldMintPerTaskChannel reports whether a task gets its own chat channel.
+//
+// It always returns false: the office is one room. Tasks are created from
+// #general and every conversation about them stays in #general, where the whole
+// roster is present. Per-task channels fragmented that — a task channel is
+// seeded with the owner (plus Librarian), so @-mentioning any other teammate in
+// it addressed someone who was not in the room. Observed 2026-08-22: a human
+// asked "@designer do you like this?" inside task-dunde-2, whose only member was
+// app-builder; Designer answered 31s later somewhere else while App Builder
+// relayed the question in prose. The human saw a relay instead of an answer.
+//
+// Tasks themselves are unchanged: they still exist with title, description,
+// owner, and status, and the Tasks surface still lists and manages them. Only
+// the dedicated per-task room is gone.
+//
+// Kept as a function (rather than deleting the four call sites) so the decision
+// stays in one place and the callers keep their "no channel minted -> the task
+// stays in the channel it was created from" fallback, which is exactly the
+// wanted behaviour.
+func shouldMintPerTaskChannel(string, bool, *teamTask) bool {
 	return false
 }
 

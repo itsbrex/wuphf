@@ -51,20 +51,26 @@ func (b *Broker) handleTaskPlan(w http.ResponseWriter, r *http.Request) {
 
 	for _, item := range body.Tasks {
 		taskChannel := b.preferredTaskChannelLocked(channel, createdBy, item.Assignee, item.Title, item.Details)
-		if b.findChannelLocked(taskChannel) == nil {
-			rollbackPlan()
-			http.Error(w, "channel not found", http.StatusNotFound)
-			return
-		}
-		// Authorize on the resolved task channel, not body.Channel — the
-		// body channel is just a default and the planner may route the
-		// task to a different channel where the assignee actually lives.
-		// Without this gate any authenticated caller could plant tasks in
-		// channels they aren't a member of by spoofing the body channel.
-		if !b.canAccessChannelLocked(createdBy, taskChannel) {
-			rollbackPlan()
-			http.Error(w, "channel access denied", http.StatusForbidden)
-			return
+		// An empty home is legal (see preferredTaskChannelLocked): the task
+		// has no conversation yet. Skip both checks rather than running them
+		// on "" — findChannelLocked would normalise it back to "general", and
+		// there is nothing to authorize against when there is no channel.
+		if taskChannel != "" {
+			if b.findChannelLocked(taskChannel) == nil {
+				rollbackPlan()
+				http.Error(w, "channel not found", http.StatusNotFound)
+				return
+			}
+			// Authorize on the resolved task channel, not body.Channel — the
+			// body channel is just a default and the planner may route the
+			// task to a different channel where the assignee actually lives.
+			// Without this gate any authenticated caller could plant tasks in
+			// channels they aren't a member of by spoofing the body channel.
+			if !b.canAccessChannelLocked(createdBy, taskChannel) {
+				rollbackPlan()
+				http.Error(w, "channel access denied", http.StatusForbidden)
+				return
+			}
 		}
 
 		// Validate the per-task LLM runtime override at the boundary (covers
@@ -323,11 +329,15 @@ func (b *Broker) EnsurePlannedTask(input plannedTaskInput) (teamTask, bool, erro
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	channel := b.preferredTaskChannelLocked(input.Channel, input.CreatedBy, input.Owner, input.Title, input.Details)
-	if b.findChannelLocked(channel) == nil {
-		return teamTask{}, false, fmt.Errorf("channel not found")
-	}
-	if !b.canAccessChannelLocked(input.CreatedBy, channel) {
-		return teamTask{}, false, fmt.Errorf("channel access denied")
+	// "" means the task has no conversation home yet, which is legal. Running
+	// these checks on "" would normalise it back to "general".
+	if channel != "" {
+		if b.findChannelLocked(channel) == nil {
+			return teamTask{}, false, fmt.Errorf("channel not found")
+		}
+		if !b.canAccessChannelLocked(input.CreatedBy, channel) {
+			return teamTask{}, false, fmt.Errorf("channel access denied")
+		}
 	}
 	// Validate the per-task LLM runtime override at the boundary (covers both
 	// the reuse-merge and fresh-create branches below).

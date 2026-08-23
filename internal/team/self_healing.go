@@ -101,12 +101,22 @@ func (b *Broker) requestSelfHealingLocked(agentSlug, taskID string, reason agent
 	title := selfHealingTaskTitle(agentSlug, taskID, parentTitle, reason)
 	details := selfHealingTaskDetails(agentSlug, taskID, parentTitle, parentDetails, reason, detail)
 	createdBy := selfHealingCreatedByForMode(b.sessionMode)
-	channel := b.preferredTaskChannelLocked("general", createdBy, owner, title, details)
-	if b.findChannelLocked(channel) == nil {
-		return teamTask{}, false, fmt.Errorf("channel not found")
-	}
-	if !b.canAccessChannelLocked(createdBy, channel) {
-		return teamTask{}, false, fmt.Errorf("channel access denied")
+	// Pass "" rather than the literal "general": a self-heal has no channel of
+	// its own to request, so it should take whatever home the resolver decides
+	// for its owner or creator. Hard-coding "general" pinned every incident
+	// lane to the shared room and would have kept doing so after the room was
+	// switched off. While #general is enabled the resolver still answers
+	// "general" here, so this is behaviour-neutral today.
+	channel := b.preferredTaskChannelLocked("", createdBy, owner, title, details)
+	// "" means no conversation home yet, which is legal. Running these checks
+	// on "" would normalise it back to "general".
+	if channel != "" {
+		if b.findChannelLocked(channel) == nil {
+			return teamTask{}, false, fmt.Errorf("channel not found")
+		}
+		if !b.canAccessChannelLocked(createdBy, channel) {
+			return teamTask{}, false, fmt.Errorf("channel access denied")
+		}
 	}
 
 	existing := b.findReusableTaskLocked(taskReuseMatch{

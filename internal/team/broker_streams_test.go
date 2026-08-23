@@ -367,9 +367,13 @@ func TestBrokerEventsEndpointStreamsMessages(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
 		{
-			Slug:    "general",
-			Name:    "general",
-			Members: []string{"operator"},
+			Slug: "general",
+			Name: "general",
+			// The test posts as "ceo" below. Production always seeds the CEO
+			// into #general (broker_onboarding.go) and re-populates it with
+			// every member on load (broker_defaults.go); this fixture only
+			// passed without it while the CEO held a channel-access bypass.
+			Members: []string{"operator", "ceo"},
 		},
 		{
 			Slug:    "planning",

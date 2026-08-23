@@ -33,8 +33,11 @@ var codingAgentSlugs = map[string]bool{
 // agentMCPServers returns the MCP server keys that a given agent should receive.
 func agentMCPServers(slug string) []string {
 	channel := strings.TrimSpace(os.Getenv("WUPHF_CHANNEL"))
-	// DM mode: only wuphf-office (minimal tool set, no nex overhead)
-	if strings.HasPrefix(channel, "dm-") {
+	// DM mode: only wuphf-office (minimal tool set, no nex overhead).
+	// IsDMSlug, not a raw "dm-" prefix — the canonical slug is the pair-sorted
+	// "<a>__<b>", so the prefix test silently handed every canonical DM the
+	// full server set including nex.
+	if IsDMSlug(channel) {
 		return []string{"wuphf-office"}
 	}
 	if codingAgentSlugs[slug] {

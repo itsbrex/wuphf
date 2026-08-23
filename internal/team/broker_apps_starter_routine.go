@@ -59,15 +59,23 @@ func deriveStarterSchedule(description string) (expr, prefix string) {
 // buildDescriptionForApp recovers the operator's original workflow text from
 // the app's build task ("Build a new internal tool named …\n\nWhat it should
 // do:\n<text>"). Falls back to the raw details, then the app summary.
+//
+// The build task is found by looking for the App Builder's task IN the app's
+// edit channel. It used to be found by slicing the channel slug — the thread was
+// named `task-<taskid>`, so trimming that prefix WAS the task id. Edit threads
+// are named after the app now (`app-<appid>`), so that slice yields the slug
+// back unchanged and this returned "" for every app, silently emptying the
+// operator's own words out of the generated playbook.
 func (b *Broker) buildDescriptionForApp(app CustomApp) string {
-	taskID := strings.TrimPrefix(strings.TrimSpace(app.EditChannel), "task-")
-	if taskID == "" || taskID == app.EditChannel {
+	channel := normalizeChannelSlug(strings.TrimSpace(app.EditChannel))
+	if channel == "" {
 		return ""
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	for i := range b.tasks {
-		if !strings.EqualFold(b.tasks[i].ID, taskID) {
+		if normalizeChannelSlug(b.tasks[i].Channel) != channel ||
+			!strings.EqualFold(strings.TrimSpace(b.tasks[i].Owner), appBuilderSlug) {
 			continue
 		}
 		details := b.tasks[i].Details

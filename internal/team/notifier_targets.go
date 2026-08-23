@@ -325,13 +325,28 @@ func (l *Launcher) notificationTargetsForMessage(msg channelMessage) (immediate 
 	if len(targetMap) == 0 {
 		return nil, nil
 	}
-	// DMs are isolated: only the target agent gets notified, never CEO or others.
+	// DMs are isolated: only the other side gets notified, never CEO or others.
+	//
+	// Resolved relative to the SENDER, not to the human. The human-relative
+	// lookup could not name a recipient in an agent-to-agent DM at all
+	// ("ceo__designer" has no human side), so those messages reached nobody —
+	// which is what blocked the consult relay. Sender-relative also makes the
+	// old "don't echo an agent's own message back" guard structural: the
+	// participant across from the sender is never the sender.
 	if ch := normalizeChannelSlug(msg.Channel); IsDMSlug(ch) {
-		agentSlug := DMTargetAgent(ch)
-		if !isHumanMessageSender(msg.From) && agentSlug == msg.From {
-			return nil, nil // agent's own message, don't echo back
+		recipient := DMOtherParticipant(ch, msg.From)
+		if recipient == "" {
+			// The sender is not a participant — a system or broker post into
+			// the DM. Fall back to the human-relative agent so those still
+			// wake the agent in a human<->agent DM, as they always have. In an
+			// agent-to-agent DM this is "" and nobody is woken: with no viewer
+			// to resolve against there is no non-arbitrary side to pick.
+			recipient = DMTargetAgent(ch)
 		}
-		if target, ok := targetMap[agentSlug]; ok {
+		if recipient == "" || isHumanMessageSender(recipient) || recipient == msg.From {
+			return nil, nil
+		}
+		if target, ok := targetMap[recipient]; ok {
 			return []notificationTarget{target}, nil
 		}
 		return nil, nil

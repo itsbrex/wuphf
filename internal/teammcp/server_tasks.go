@@ -166,7 +166,14 @@ func handleTeamTask(ctx context.Context, _ *mcp.CallToolRequest, args TeamTaskAr
 	case "claim":
 		payload["owner"] = mySlug
 	case "assign":
+		// "assign" means hand this to someone else, so it maps to the broker's
+		// reassign — NOT its assign. The broker has both, and they are not
+		// equivalent: assign is a copy of claim (force status to in_progress,
+		// notify nobody), while reassign keeps a done/review task where it is
+		// and tells the previous owner they lost it. Routing here means one
+		// concept has one behaviour, and the correct one.
 		payload["owner"] = strings.TrimSpace(args.Owner)
+		payload["action"] = "reassign"
 	case "create":
 		owner := strings.TrimSpace(args.Owner)
 		if owner == "" {

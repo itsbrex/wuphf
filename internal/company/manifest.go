@@ -10,9 +10,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nex-crm/wuphf/internal/channel"
 	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/provider"
 )
+
+// generalChannelSlug aliases channel.GeneralSlug for use inside this file.
+// Several loops here bind a range variable named `channel`, which shadows the
+// package identifier; the alias keeps those bodies able to name the slug.
+const generalChannelSlug = channel.GeneralSlug
 
 // manifestUpdateMu serializes load → mutate → save sequences against the
 // manifest file. Two callers that both Load + append + Save can otherwise
@@ -276,16 +282,19 @@ func DefaultManifest() Manifest {
 		{Slug: "executor", Name: "Executor", Role: "Executor"},
 		{Slug: "reviewer", Name: "Reviewer", Role: "Reviewer"},
 	}
-	generalMembers := make([]string, 0, len(manifest.Members))
-	for _, member := range manifest.Members {
-		generalMembers = append(generalMembers, member.Slug)
+	// #general kill switch, gate 3b of 7. See internal/channel/general.go.
+	if channel.GeneralEnabled() {
+		generalMembers := make([]string, 0, len(manifest.Members))
+		for _, member := range manifest.Members {
+			generalMembers = append(generalMembers, member.Slug)
+		}
+		manifest.Channels = []ChannelSpec{{
+			Slug:        generalChannelSlug,
+			Name:        generalChannelSlug,
+			Description: "The default company-wide room for top-level coordination, announcements, and cross-functional discussion.",
+			Members:     generalMembers,
+		}}
 	}
-	manifest.Channels = []ChannelSpec{{
-		Slug:        "general",
-		Name:        "general",
-		Description: "The default company-wide room for top-level coordination, announcements, and cross-functional discussion.",
-		Members:     generalMembers,
-	}}
 	return normalizeManifest(manifest)
 }
 
@@ -310,18 +319,23 @@ func fromScratchDefaultManifest(now string) Manifest {
 	for _, member := range members {
 		channelMembers = append(channelMembers, member.Slug)
 	}
+	// #general kill switch, gate 3a of 7. See internal/channel/general.go.
+	var channels []ChannelSpec
+	if channel.GeneralEnabled() {
+		channels = []ChannelSpec{{
+			Slug:        generalChannelSlug,
+			Name:        generalChannelSlug,
+			Description: "Primary room for inventing and operating the business from scratch.",
+			Members:     channelMembers,
+		}}
+	}
 	return Manifest{
 		Name:        "WUPHF Office",
 		Description: "Autonomous office runtime that starts from a directive instead of a saved blueprint.",
 		Lead:        "founder",
 		Members:     members,
-		Channels: []ChannelSpec{{
-			Slug:        "general",
-			Name:        "general",
-			Description: "Primary room for inventing and operating the business from scratch.",
-			Members:     channelMembers,
-		}},
-		UpdatedAt: now,
+		Channels:    channels,
+		UpdatedAt:   now,
 	}
 }
 
@@ -372,9 +386,16 @@ func normalizeManifest(manifest Manifest) Manifest {
 
 	seenChannels := make(map[string]struct{}, len(manifest.Channels))
 	channels := make([]ChannelSpec, 0, len(manifest.Channels))
+	generalEnabled := channel.GeneralEnabled()
 	for _, channel := range manifest.Channels {
 		channel.Slug = normalizeSlug(channel.Slug)
 		if channel.Slug == "" {
+			continue
+		}
+		// #general kill switch, gate 3c of 7. A manifest.yaml on disk can
+		// declare general directly, reaching here without passing through
+		// DefaultManifest or fromScratchDefaultManifest.
+		if !generalEnabled && channel.Slug == generalChannelSlug {
 			continue
 		}
 		if _, ok := seenChannels[channel.Slug]; ok {
@@ -395,15 +416,18 @@ func normalizeManifest(manifest Manifest) Manifest {
 		channel.Disabled = removeSlug(channel.Disabled, manifest.Lead)
 		channels = append(channels, channel)
 	}
-	if !containsChannel(channels, "general") {
+	// #general kill switch, gate 3d of 7, and the load-bearing one in this
+	// file: normalizeManifest runs on EVERY manifest, so this re-prepend would
+	// undo gates 3a-3c on its own if it were left ungated.
+	if generalEnabled && !containsChannel(channels, generalChannelSlug) {
 		members := make([]string, 0, len(manifest.Members))
 		for _, member := range manifest.Members {
 			members = append(members, member.Slug)
 		}
 		channels = append([]ChannelSpec{{
-			Slug:        "general",
-			Name:        "general",
-			Description: defaultChannelDescription("general", "general"),
+			Slug:        generalChannelSlug,
+			Name:        generalChannelSlug,
+			Description: defaultChannelDescription(generalChannelSlug, generalChannelSlug),
 			Members:     ensureLeadMember(members, manifest.Lead),
 		}}, channels...)
 	}

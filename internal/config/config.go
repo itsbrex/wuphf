@@ -180,13 +180,24 @@ func ConfigPath() string {
 	if home == "" {
 		return filepath.Join(".wuphf", "config.json")
 	}
-	newPath := filepath.Join(home, ".wuphf", "config.json")
-	legacyPath := filepath.Join(home, ".nex", "config.json")
+	newDir := filepath.Join(home, ".wuphf")
+	legacyDir := filepath.Join(home, ".nex")
+	newPath := filepath.Join(newDir, "config.json")
 	if _, err := os.Stat(newPath); err == nil {
 		return newPath
 	}
-	if _, err := os.Stat(legacyPath); err == nil {
-		return legacyPath
+	// A bare read-fallback to the legacy path was a trap: Save() writes through
+	// this function, so returning the old path here kept pre-rename installs
+	// writing into the old directory forever, and callers that derive sibling
+	// directories from filepath.Dir(ConfigPath()) kept their data there too.
+	// Copy the tree forward once instead, then use the new location. If the
+	// copy cannot be done we fall back to the legacy path so the user is never
+	// locked out of their own config.
+	if migrateLegacyConfigDirOnce(newDir, legacyDir) {
+		return newPath
+	}
+	if _, err := os.Stat(filepath.Join(legacyDir, "config.json")); err == nil {
+		return filepath.Join(legacyDir, "config.json")
 	}
 	return newPath
 }

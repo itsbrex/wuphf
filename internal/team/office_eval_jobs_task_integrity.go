@@ -220,7 +220,14 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 			strings.Contains(healC.Title, titleTail), strings.Contains(healC.Details, titleTail),
 			strings.Contains(healC.Details, detailsTail), len(packet)), "")
 
-	// ── (d) exactly one done-post per terminal transition ──────────────────
+	// ── (d) exactly one done-post per terminal transition, and no card ─────
+	// This used to require one done-post AND one Inbox notice. The notice is
+	// gone: it repeated the chat post's sentence and offered only an
+	// "Acknowledge" button, so every finished task cost the human a click to
+	// dismiss news they had already read in the channel. The replay-absorption
+	// property this job actually guards is unchanged — a double terminal
+	// transition must not announce the same delivery twice — and the notice
+	// count is now pinned at zero so a re-introduced card fails the eval.
 	parentD, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Publish the pipeline baseline",
 		Details: "Publish the pipeline-truth baseline.", Owner: "eng", CreatedBy: "ceo",
@@ -266,8 +273,8 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		}
 	}
 	fx.broker.mu.Unlock()
-	r.add(job, "double terminal-transition attempt posts exactly one done-post + one notice",
-		deliveredPosts == 1 && deliveredNotices == 1,
+	r.add(job, "double terminal-transition attempt posts exactly one done-post and no Inbox card",
+		deliveredPosts == 1 && deliveredNotices == 0,
 		fmt.Sprintf("posts=%d notices=%d", deliveredPosts, deliveredNotices), "")
 
 	// Wiki fold: byte-identical consecutive writes to the same path produce

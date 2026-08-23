@@ -193,7 +193,16 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 			answerParsed.Answered != nil && answerParsed.Answered.CustomText == ivReply,
 		fmt.Sprintf("reply=%d body=%s answer=%s", replyStatus, truncate(replyBody, 80), truncate(answerBody, 160)), "")
 
-	// ── (c) plain chat in a decision-state task channel wakes the owner ─────
+	// ── (c) plain chat addressed to a decision-state task wakes the owner ───
+	//
+	// The probe used to post its redlines as a bare line, because the task owned
+	// the channel and the room WAS the address. With one room every task lives
+	// in #general, so a bare line addresses nothing in particular and
+	// markHumanNoteOnChannelTasksLocked (see messageAddressesTask in
+	// task_addressing.go) will not wake anyone — waking every waiting owner on
+	// every lobby post is the storm the addressing rule exists to avoid. The
+	// human names the task instead, which is what naming it in a shared room
+	// means. Still a plain composer post: no @-mention, no tags.
 	taskC, err := createTask("Build the QBR one-pager (utterance c)", "eng")
 	if err != nil {
 		return err
@@ -210,7 +219,7 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		return err
 	}
 	taskC = fx.broker.TaskByID(taskC.ID)
-	const redlines = "Redlines: Dana Whitfield + dana.whitfield@acme.example for Acme, Corti resolution date July 15 2026, sender is Maya. Finalize and resubmit."
+	redlines := "Redlines on " + taskC.ID + ": Dana Whitfield + dana.whitfield@acme.example for Acme, Corti resolution date July 15 2026, sender is Maya. Finalize and resubmit."
 	// Exact FE payload: web/src/api/client.ts postMessage from the channel
 	// composer — plain chat, no @-mention, no tags.
 	noteStatus, _, err := client.postJSON("/messages", map[string]any{
@@ -349,16 +358,28 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		fmt.Sprintf("answer=%d body=%s dispatched=%q", ansStatus, truncate(ansBody, 80), resumed), "")
 
 	// ── (e) the blocking-request chat gate is channel-scoped ────────────────
-	// A blocking approval in the task channel parks chat THERE, not
-	// everywhere: the human keeps talking in #general.
+	// A blocking approval parks chat in ITS channel, not everywhere: the human
+	// keeps talking in #general.
+	//
+	// The gated channel used to be taskC's own per-task channel. Tasks no longer
+	// have one — taskC lives in #general — so raising the approval there would
+	// gate the same room this probe uses as its control and prove nothing. The
+	// gated channel is now an explicit project channel, which is the shape that
+	// still differs from the office channel under the one-room model.
+	const gatedChannel = "renewals"
+	fx.broker.mu.Lock()
+	fx.broker.channels = append(fx.broker.channels, teamChannel{
+		Slug: gatedChannel, Name: gatedChannel, Members: []string{"human", "ceo", "eng"},
+	})
+	fx.broker.mu.Unlock()
 	if _, _, err := client.postJSON("/requests", map[string]any{
-		"kind": "approval", "channel": taskC.Channel, "from": "eng",
+		"kind": "approval", "channel": gatedChannel, "from": "eng",
 		"title": "Approve the send", "question": "Send the three renewal emails now?",
 	}); err != nil {
 		return err
 	}
 	blockedStatus, _, err := client.postJSON("/messages", map[string]any{
-		"from": "you", "channel": taskC.Channel, "content": "Trying to chat past the gate.",
+		"from": "you", "channel": gatedChannel, "content": "Trying to chat past the gate.",
 	})
 	if err != nil {
 		return err

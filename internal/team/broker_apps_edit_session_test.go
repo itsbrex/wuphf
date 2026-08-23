@@ -4,17 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 )
 
 // TestAppEditSessionLazilyMintsChannel locks in the modify-wedge fix: an app
-// with no edit thread (the state every app registered via POST /apps starts in,
-// and the state every app minted before edit-channel stamping is stuck in) must
-// become editable on demand. Opening an edit session mints a task-<id> channel,
-// binds it to the app, and is idempotent. This is the regression for "the Edit
-// option isn't there" — before the endpoint existed the FE had no channel to
-// bind and hid Edit forever.
+// with no edit thread (the state every app registered via POST /apps starts in)
+// must become editable on demand. Opening an edit session mints the app's
+// dedicated `app-<appid>` channel, binds it to the app, backs it with a real App
+// Builder task, and is idempotent. This is the regression for "the Edit option
+// isn't there" — the FE gates Edit on app.editChannel, so an unbound app hides
+// Edit forever.
+//
+// The minted slug used to be `task-<id>`, derived from whatever channel the
+// backing task landed in. The one-room change removed per-task channels, so that
+// task landed in #general, the stamp skipped "general" on purpose, and nothing
+// was ever bound: this endpoint 500'd with "edit session created but no channel
+// was bound" and every app in the workspace became un-editable.
+//
+// The slug now comes from the APP id instead, which is what makes it
+// unambiguous — one app, one thread — where "general" would have had every app
+// claiming the same channel and appForEditChannel, appBuilderRunTaskID and
+// appBuildChatSnippet unable to tell them apart. It is not a room the roster
+// navigates into: ChannelList hides the `app-` prefix exactly as it hides
+// `task-`, and the thread renders only inside that app's Edit panel.
 func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 	// Isolate the app store under a temp runtime home (appStore() reads
 	// CustomAppsRootDir lazily, so set it before the first /apps call).
@@ -40,14 +52,29 @@ func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 		t.Fatalf("a fresh register should carry no edit channel, got %q", ch)
 	}
 
-	// Open an edit session → mints a task-<id> channel and returns it.
+	// Open an edit session → mints the app's own channel and returns it.
 	session := postAppsAsAgent(t, base+"/apps/"+id+"/edit-session", b.Token(), appBuilderSlug, []byte("{}"))
 	ch1, _ := session["channel"].(string)
 	if ch1 == "" {
 		t.Fatalf("edit-session returned no channel: %v", session)
 	}
-	if !strings.HasPrefix(ch1, "task-") {
-		t.Fatalf("edit channel = %q, want a task-<id> slug", ch1)
+	if want := appEditChannelSlug(id); ch1 != want {
+		t.Fatalf("edit channel = %q, want the app's own slug %q", ch1, want)
+	}
+	// Never the office channel: that is the binding that broke, and it would
+	// mount the whole office chat inside the app's Edit panel.
+	if ch1 == "general" {
+		t.Fatalf("an app's edit thread must never be the office channel")
+	}
+	// It is a real channel, not a dangling slug.
+	b.mu.Lock()
+	minted := b.findChannelLocked(ch1)
+	b.mu.Unlock()
+	if minted == nil {
+		t.Fatalf("edit channel %q was returned but never created", ch1)
+	}
+	if !stringSliceContainsFold(minted.Members, appBuilderSlug) {
+		t.Fatalf("app builder must be a member of the edit thread, got %v", minted.Members)
 	}
 
 	// The app's manifest now carries that channel, so the FE can bind Edit.

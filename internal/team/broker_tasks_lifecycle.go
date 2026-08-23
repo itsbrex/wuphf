@@ -228,11 +228,15 @@ func (b *Broker) EnsureTask(channel, title, details, owner, createdBy, threadID 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	channel = b.preferredTaskChannelLocked(channel, createdBy, owner, title, details)
-	if b.findChannelLocked(channel) == nil {
-		return teamTask{}, false, fmt.Errorf("channel not found")
-	}
-	if !b.canAccessChannelLocked(createdBy, channel) {
-		return teamTask{}, false, fmt.Errorf("channel access denied")
+	// "" means the task has no conversation home yet, which is legal. Running
+	// these checks on "" would normalise it back to "general".
+	if channel != "" {
+		if b.findChannelLocked(channel) == nil {
+			return teamTask{}, false, fmt.Errorf("channel not found")
+		}
+		if !b.canAccessChannelLocked(createdBy, channel) {
+			return teamTask{}, false, fmt.Errorf("channel access denied")
+		}
 	}
 	title = strings.TrimSpace(title)
 	if existing := b.findReusableTaskLocked(taskReuseMatch{

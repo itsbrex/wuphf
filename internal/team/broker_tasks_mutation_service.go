@@ -187,10 +187,28 @@ func taskAwaitsHumanFollowUpWake(task *teamTask) bool {
 // the same way AND a task_followup action is appended so the notify loop
 // re-engages the OWNER (ICP-eval v3 [17:51→18:02]: redlines posted into a
 // decision-state task channel got 14 minutes of dead air; v2's 22-minute
-// post-done void was the same failure on done tasks). Restricted to
-// non-#general channels: #general is the office lobby holding every legacy
-// done task, and waking all their owners on any lobby post would be a
-// broadcast storm; per-task channels are where the live dead zone occurred.
+// post-done void was the same failure on done tasks).
+//
+// This used to be restricted to non-#general channels, on the reasoning that
+// #general was a lobby holding legacy done tasks and waking all their owners on
+// any lobby post would be a broadcast storm. The one-room change inverted that
+// premise: every task now lives in #general, so the guard silently disabled the
+// wake for the entire product — a human could post a redline on a task in
+// review and nothing would ever pick it up. That is the exact dead-air failure
+// this mechanism exists to prevent, reintroduced everywhere at once.
+//
+// The guard is replaced by an ADDRESSING test rather than deleted, because
+// deleting it really would produce the storm the original comment feared. In a
+// shared room a message wakes the task it actually addresses — a reply in the
+// task's thread, or an explicit task id in the text. A dedicated (non-general)
+// channel keeps the old channel-wide behaviour, since there the room itself is
+// the address.
+//
+// The same rule governs which running tasks receive the note, with one
+// deliberate exception: a message that leads with a halt reaches EVERY running
+// task in the room. In a one-room office, a human typing "stop" is addressing
+// the whole team, and honouring that is worth the breadth.
+//
 // Parked (drafting) tasks stay parked until the human starts them, and
 // archived tasks never wake on lobby traffic.
 //
@@ -208,6 +226,10 @@ func (b *Broker) markHumanNoteOnChannelTasksLocked(msg channelMessage) {
 	if now == "" {
 		now = time.Now().UTC().Format(time.RFC3339)
 	}
+	// In a room shared by every task, the room is no longer the address. A
+	// dedicated channel still is.
+	sharedRoom := channel == "general"
+	halting := humanNoteLeadsWithHalt(msg.Content)
 	for i := range b.tasks {
 		task := &b.tasks[i]
 		if task.System {
@@ -224,7 +246,27 @@ func (b *Broker) markHumanNoteOnChannelTasksLocked(msg channelMessage) {
 		// the typed state wins over the legacy status here.
 		running := task.LifecycleState == LifecycleStateRunning ||
 			(task.LifecycleState == "" && strings.EqualFold(strings.TrimSpace(task.status), "in_progress"))
-		followUp := !running && channel != "general" &&
+
+		// In a dedicated channel the room itself is the address. In a shared
+		// room the message has to name its target.
+		//
+		// The halt exception is deliberately NARROW: it reaches every RUNNING
+		// task, because a human typing "stop" in the team's one room means stop
+		// what you are doing. It does NOT reach waiting tasks. Widening it
+		// there would stamp a note on work that is already finished or already
+		// waiting on the human — there is nothing for them to stop, and the
+		// note would wake their owners for nothing. An earlier version of this
+		// check ran before the running/waiting split and did exactly that.
+		namedThisTask := !sharedRoom || messageAddressesTask(msg, task)
+		if running {
+			if !namedThisTask && !halting {
+				continue
+			}
+		} else if !namedThisTask {
+			continue
+		}
+
+		followUp := !running &&
 			taskAwaitsHumanFollowUpWake(task) && strings.TrimSpace(task.Owner) != ""
 		if !running && !followUp {
 			continue
@@ -484,7 +526,7 @@ func reconcileTaskReviewState(task *teamTask, action string) {
 	// directly via applyLifecycleStateLocked; the reconciler must not
 	// overwrite their authoritative value with a status-derived guess.
 	switch strings.ToLower(strings.TrimSpace(action)) {
-	case "request_changes", "submit_for_review", "comment", "reject", "archive", "define", "reopen":
+	case "request_changes", "submit_for_review", "comment", "reject", "archive", "define", "edit", "reopen":
 		// define is a metadata-only mutation (R4 intake contract); it must
 		// not nudge reviewState off whatever the lifecycle layer set.
 		// reopen writes the full Drafting/Running tuple via
@@ -740,10 +782,24 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 				channel = ch.Slug
 			}
 		}
-		// Bind the owning app to this task's channel so the FE can mount the
-		// per-app "chat to edit" panel on it. No-op for non-app-builder creates;
-		// best-effort (a parse miss or store error never blocks task creation).
-		b.stampAppEditChannelForTaskLocked(strings.TrimSpace(body.Owner), channel, body.Details)
+		// Bind the owning app to its own edit thread and MOVE this task there.
+		//
+		// The binding used to be derived from whatever channel the task already
+		// had. Once per-task channels stopped being minted, app builds landed in
+		// the shared room, which no app binds — so the App Builder's own task was
+		// homeless. That broke more than the edit panel: acceptance evaluation
+		// resolves the app FROM the task's channel, found nothing, and logged
+		// "no app bound to channel — treating as non-delivery", quietly REOPENING
+		// every completed app build. The edit thread also had no task living in
+		// it, so a human typing in the app panel woke nobody.
+		//
+		// So the app id now decides the thread rather than the other way round,
+		// and the task follows it. Still a no-op for non-app-builder creates, and
+		// still best-effort: a parse miss leaves the channel as it was and never
+		// blocks task creation.
+		if appCh := b.stampAppEditChannelForTaskLocked(strings.TrimSpace(body.Owner), body.Details); appCh != "" {
+			channel = appCh
+		}
 		verification, verr := normalizeTaskVerification(body.VerificationKind, body.VerificationSpec, body.VerificationRequired)
 		if verr != nil {
 			rollbackTask()
@@ -894,6 +950,11 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 			continue
 		}
 		task := &b.tasks[i]
+		// Shallow copy of the pre-edit task so a human's manual change can be
+		// described back to the channel (postHumanTaskChangeLocked). Taken
+		// before any mutation runs; slices are shared but the fields diffed
+		// (title/status/owner/details) are value types.
+		preEditTask := *task
 		mutationSnapshot := snapshotBrokerTaskMutationLocked(b)
 		rollbackTask := func() {
 			mutationSnapshot.restore(b)
@@ -1032,6 +1093,11 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 			}
 		}
 		switch action {
+		// "assign" here is a legacy alias of "claim" — same body, two names. The
+		// MCP no longer routes to it: tool-level assign means "hand this to
+		// someone else", which is reassign's job (it keeps a done/review task
+		// where it is and tells the previous owner). Kept only so a stored or
+		// in-flight call using the old spelling still lands somewhere sane.
 		case "claim", "assign":
 			if strings.TrimSpace(body.Owner) == "" {
 				return TaskResponse{}, taskMutationError(TaskMutationInvalid, "owner required", nil)
@@ -1274,6 +1340,33 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 				return TaskResponse{}, taskMutationError(TaskMutationInvalid, err.Error(), err)
 			}
 			appendDetails = true
+		case "edit":
+			// A human editing a task's name or description in the Tasks
+			// surface. Until this existed there was no way to do either over
+			// the wire: Title was read only on create, and the only verb open
+			// to every human (comment) APPENDS to Details, so saving an edited
+			// description duplicated the text on every save. Every other verb
+			// that replaces Details also moves status, so renaming a task
+			// silently restarted it.
+			//
+			// Form-save semantics, not patch: title and details are both
+			// authoritative and carry the complete value the form holds. That
+			// is what makes clearing a description expressible — send "" — and
+			// it is why Details is assigned here rather than left to the
+			// generic append/replace block below, which skips empty strings.
+			//
+			// No status change. Renaming a task must never move it.
+			//
+			// Auth: not owner-allowed and not `comment`, so
+			// checkTaskActionAuthLocked above already restricted this to the
+			// human and the CEO — a specialist calling it is rejected.
+			newTitle := strings.TrimSpace(body.Title)
+			if newTitle == "" {
+				return TaskResponse{}, taskMutationError(TaskMutationInvalid, "title required", nil)
+			}
+			task.Title = newTitle
+			task.Details = strings.TrimSpace(body.Details)
+			appendDetails = false
 		default:
 			return TaskResponse{}, taskMutationError(TaskMutationInvalid, "unknown action", nil)
 		}
@@ -1405,6 +1498,13 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 			return TaskResponse{}, taskMutationError(TaskMutationWorktreeFailed, "failed to manage task worktree", err)
 		}
 		b.appendActionLocked("task_updated", "office", taskChannel, actor, truncateSummary(task.Title+" ["+task.status+"]", 140), task.ID)
+		// A human editing a task in the Tasks surface is addressing the team:
+		// say so in the channel and wake the owner. Skipped for the actions
+		// that post their own richer notification just below, so an edit never
+		// double-announces.
+		if !reassignTriggered && !cancelTriggered && !requestChangesTriggered && !rejectTriggered {
+			b.postHumanTaskChangeLocked(actor, task, describeTaskChanges(&preEditTask, task))
+		}
 		if action == "block" {
 			b.requestCapabilitySelfHealingLocked(task, actor, body.Details)
 		}

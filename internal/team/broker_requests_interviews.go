@@ -225,6 +225,29 @@ func findRequestOption(req humanInterview, choiceID string) *interviewOption {
 	return nil
 }
 
+// answerIsSilentDismissal reports whether an answer is a human clearing a
+// non-blocking FYI rather than saying something to the team.
+//
+// A "notice" request is an informational card (task delivered, build finished)
+// whose only option is Acknowledge. Posting "Acknowledged @app-builder's
+// notice." into the channel for that click was wrong twice over: it put words
+// in the human's mouth for what was a dismiss button, and it woke the tagged
+// agent, which replied with its own acknowledgement — a two-message exchange
+// carrying no information, repeated for every notice. Dismissing an FYI is not
+// speech; the card just clears.
+//
+// Answers that carry intent still post: a note typed into the box, or any
+// choice other than a bare acknowledge.
+func answerIsSilentDismissal(req humanInterview, answer interviewAnswer) bool {
+	if strings.TrimSpace(strings.ToLower(req.Kind)) != "notice" {
+		return false
+	}
+	if strings.TrimSpace(answer.CustomText) != "" {
+		return false
+	}
+	return strings.TrimSpace(strings.ToLower(answer.ChoiceID)) == "acknowledge"
+}
+
 func formatRequestAnswerMessage(req humanInterview, answer interviewAnswer) string {
 	if req.Secret {
 		return fmt.Sprintf("Answered @%s's request privately.", req.From)
@@ -997,8 +1020,14 @@ func (b *Broker) answerRequestFromActor(answerActor, id, choiceIDRaw, choiceText
 			ReplyTo:   strings.TrimSpace(b.requests[i].ReplyTo),
 			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		}
-		msg.Content = formatRequestAnswerMessage(b.requests[i], *answer)
-		msg = b.appendMessageLocked(msg)
+		if !answerIsSilentDismissal(b.requests[i], *answer) {
+			msg.Content = formatRequestAnswerMessage(b.requests[i], *answer)
+			msg = b.appendMessageLocked(msg)
+		} else {
+			// Dismissing an FYI clears the card and nothing else: no channel
+			// message, so no agent wakes to acknowledge the acknowledgement.
+			b.counter--
+		}
 		if err := b.saveLocked(); err != nil {
 			b.mu.Unlock()
 			return http.StatusInternalServerError, "failed to persist broker state"

@@ -5,7 +5,8 @@ import (
 )
 
 // TestLibrarianIsBuiltInDefaultMember: the Librarian (slug "librarian", name
-// "Pam", role "Librarian") is a built-in member of the default roster.
+// "Pam the librarian", role "Librarian") is a built-in member of the default
+// roster.
 func TestLibrarianIsBuiltInDefaultMember(t *testing.T) {
 	members := defaultOfficeMembers()
 	var lib *officeMember
@@ -26,15 +27,28 @@ func TestLibrarianIsBuiltInDefaultMember(t *testing.T) {
 	}
 }
 
-// TestLibrarianSeededIntoTaskChannel: every task that mints its own channel
-// seeds the Librarian as a member (D5: owner + CEO + Librarian).
-func TestLibrarianSeededIntoTaskChannel(t *testing.T) {
+// TestLibrarianIsInTheRoomTheTaskLandsIn: the Librarian and the task owner are
+// both members of whatever channel a task lands in, so the Librarian sees the
+// work as it happens (D5: owner + CEO + Librarian).
+//
+// This test used to spell that contract as "every task mints its own channel,
+// and createPerTaskChannelLocked seeds the Librarian into it". Per-task channels
+// are gone — they split the roster across rooms, so an @mention reached someone
+// who was not in the room. A task now stays in the office channel it was created
+// from, and the Librarian's presence is a property of that channel rather than
+// of a minting step. The contract the test guards is unchanged: nobody has to be
+// invited for the Librarian to be watching.
+//
+// The office channel is a variable rather than a literal because #general is
+// scheduled for removal; what this pins is "the room the task lands in".
+func TestLibrarianIsInTheRoomTheTaskLandsIn(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", LibrarianSlug, librarianName)
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	createdFrom := "general"
+	ensureTestMemberAccess(b, createdFrom, LibrarianSlug, librarianName)
+	ensureTestMemberAccess(b, createdFrom, "eng", "Engineer")
 
 	task, _, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       createdFrom,
 		Title:         "Build the thing",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -44,8 +58,8 @@ func TestLibrarianSeededIntoTaskChannel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ensure task: %v", err)
 	}
-	if task.Channel == "general" {
-		t.Fatalf("expected task to mint its own channel, stayed in general")
+	if task.Channel != createdFrom {
+		t.Fatalf("expected the task to stay in %q, got %q", createdFrom, task.Channel)
 	}
 
 	b.mu.Lock()
@@ -53,16 +67,19 @@ func TestLibrarianSeededIntoTaskChannel(t *testing.T) {
 	hasOwner := b.channelHasMemberLocked(task.Channel, "eng")
 	b.mu.Unlock()
 	if !hasLibrarian {
-		t.Errorf("expected librarian seeded into task channel %q", task.Channel)
+		t.Errorf("expected librarian in the task's channel %q", task.Channel)
 	}
 	if !hasOwner {
-		t.Errorf("expected owner seeded into task channel %q", task.Channel)
+		t.Errorf("expected owner in the task's channel %q", task.Channel)
 	}
 }
 
 // TestLibrarianTaskChannelSeedNoopsWithoutMember: in a workspace that has no
 // Librarian member yet (e.g. a legacy workspace before the Phase 6 migration),
-// task-channel seeding must NOT add a phantom "librarian" member.
+// creating a task must NOT add a phantom "librarian" member to its channel.
+// (Pre-one-room this guarded createPerTaskChannelLocked's Librarian seeding;
+// with no minting it guards the same invariant one layer up — nothing in the
+// create path may invent a member the roster does not have.)
 func TestLibrarianTaskChannelSeedNoopsWithoutMember(t *testing.T) {
 	b := newTestBroker(t)
 	// Simulate a legacy workspace: a roster with one member and NO librarian
@@ -71,7 +88,11 @@ func TestLibrarianTaskChannelSeedNoopsWithoutMember(t *testing.T) {
 	b.mu.Lock()
 	b.members = []officeMember{{Slug: "eng", Name: "Engineer", Role: "Engineer"}}
 	b.memberIndex = nil
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"eng"}}}
+	// "ceo" is the CreatedBy below and is a member of #general in every real
+	// workspace; membership is authoritative for agents now, so the fixture
+	// has to say so. The librarian is still deliberately absent — that
+	// absence is what this test is about.
+	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"eng", "ceo"}}}
 	b.mu.Unlock()
 
 	task, _, err := b.EnsurePlannedTask(plannedTaskInput{
@@ -93,13 +114,17 @@ func TestLibrarianTaskChannelSeedNoopsWithoutMember(t *testing.T) {
 	}
 }
 
-// TestLibrarianHasCrossChannelAccess: the Librarian, like the CEO, can access
-// any channel (for wiki curation context).
-func TestLibrarianHasCrossChannelAccess(t *testing.T) {
+// TestLibrarianHasNoCrossChannelAccess: the Librarian has NO org-wide read.
+// This test previously asserted the opposite — Pam could reach any channel
+// "for wiki curation context" — which also let her read every human-to-agent
+// DM. Membership is now authoritative for every agent; she is added to the
+// conversations she curates. Inverted rather than deleted so a reinstated
+// bypass fails here. See broker_channel_access_dm_test.go for the DM case.
+func TestLibrarianHasNoCrossChannelAccess(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if !b.canAccessChannelLocked(LibrarianSlug, "some-channel-it-is-not-a-member-of") {
-		t.Fatalf("librarian should have cross-channel access like the CEO")
+	if b.canAccessChannelLocked(LibrarianSlug, "some-channel-it-is-not-a-member-of") {
+		t.Fatalf("librarian must not reach a channel she is not a member of")
 	}
 }

@@ -100,9 +100,15 @@ func evalJobCompletionHook(fx *officeEvalFixture, r *OfficeEvalReport) error {
 			donePost = msg.Content
 		}
 	}
+	// A delivery raises NO Inbox card. This used to require one: a non-blocking
+	// notice alongside the chat post. It carried the same sentence as the post
+	// and a lone "Acknowledge" button, so every finished task cost the human a
+	// click to dismiss news they had already read in the channel the whole
+	// roster is in. Cards are for requests that need a decision; a delivery is
+	// news. Pinned at zero so a re-introduced card fails the eval.
 	noticeFound := false
 	for _, req := range fx.broker.requests {
-		if req.Kind == "notice" && strings.TrimSpace(req.IssueID) == taskID && requestIsActive(req) && !req.Blocking {
+		if req.Kind == "notice" && strings.TrimSpace(req.IssueID) == taskID {
 			noticeFound = true
 		}
 	}
@@ -110,7 +116,8 @@ func evalJobCompletionHook(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	r.add(job, "done-post lands in the task channel with summary + artifact link",
 		strings.Contains(donePost, "delivered:") && strings.Contains(donePost, "Renewal brief published to the wiki") && strings.Contains(donePost, artifact),
 		fmt.Sprintf("post=%q", donePost), "")
-	r.add(job, "done raises a non-blocking Inbox notice", noticeFound, "", "")
+	r.add(job, "done raises no Inbox card — the chat post is the whole announcement",
+		!noticeFound, fmt.Sprintf("noticeFound=%v", noticeFound), "")
 
 	// (c) Entity facts: the task mentions two entities (@eng, "Acme Corp").
 	// The distillation goroutine records them via the existing fact-log
@@ -1125,10 +1132,21 @@ func evalJobDoneIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	}
 	delivered := fx.broker.TaskByID(doneTask.ID)
 	doneChannel := normalizeChannelSlug(delivered.Channel)
-	if doneChannel == "" || doneChannel == "general" {
-		return fmt.Errorf("done-integrity: expected a per-task channel for the delivered task, got %q", delivered.Channel)
+	// A delivered task stays in the channel it was created from — here, the one
+	// EnsureTask was called with above. This used to hard-error unless the task
+	// had been pushed out into a per-task channel, which is exactly the
+	// fragmentation that model was removed for. Compared against doneTask's own
+	// channel rather than a literal, so it survives #general being retired.
+	if doneChannel != normalizeChannelSlug(doneTask.Channel) {
+		return fmt.Errorf("done-integrity: a delivered task must stay in the channel it was created from (%q), got %q", doneTask.Channel, delivered.Channel)
 	}
-	const followUpMsg = "Make the tagline punchier — keep everything else."
+	// The follow-up used to be a bare line, because the delivered task owned the
+	// channel and posting there WAS addressing it. In one room the human names
+	// the task instead (see messageAddressesTask in task_addressing.go): a bare
+	// lobby line cannot wake anyone without waking every waiting task's owner at
+	// once. The dead-air failure this job guards is unchanged — a human steering
+	// a delivered task must reach its owner, not silence.
+	followUpMsg := "Make the tagline punchier on " + doneTask.ID + " — keep everything else."
 	if _, err := fx.broker.PostMessage("you", doneChannel, followUpMsg, nil, ""); err != nil {
 		return err
 	}

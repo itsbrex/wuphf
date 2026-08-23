@@ -84,7 +84,15 @@ func taskDeliveredContentLine(task *teamTask) string {
 	if title == "" {
 		title = task.ID
 	}
-	line := fmt.Sprintf("%s delivered: %s", title, taskDeliveredSummaryLine(task))
+	// The summary falls back to the title when a task has no Definition, which
+	// is the common case. Printing both then reads "Fix the header delivered:
+	// Fix the header" — the same sentence twice. Say it once unless the
+	// summary is genuinely different (a success criterion or a goal).
+	summary := taskDeliveredSummaryLine(task)
+	line := title + " delivered"
+	if summary != "" && !strings.EqualFold(summary, title) {
+		line += ": " + summary
+	}
 	if artifact := strings.TrimSpace(task.Artifact); artifact != "" {
 		line += " — artifact: " + artifact
 	}
@@ -142,35 +150,16 @@ func (b *Broker) postTaskDeliveredLocked(task *teamTask) {
 		SourceTaskID: task.ID,
 	})
 
-	// Inbox notice: the smallest existing non-blocking inbox primitive is a
-	// humanInterview row; kind="notice" keeps it non-blocking/non-required
-	// (requestNeedsHumanDecision falls through to Required=false) and gives
-	// it a single Acknowledge option (requestOptionDefaults). No reminder
-	// scheduling — a delivery notice must never nag.
-	noticeFrom := owner
-	if noticeFrom == "" {
-		noticeFrom = "system"
-	}
-	b.counter++
-	notice := humanInterview{
-		ID:        fmt.Sprintf("request-%d", b.counter),
-		Kind:      "notice",
-		Status:    "pending",
-		From:      noticeFrom,
-		Channel:   taskChannel,
-		Title:     fmt.Sprintf("%s delivered", task.ID),
-		Question:  content,
-		Blocking:  false,
-		Required:  false,
-		ReplyTo:   strings.TrimSpace(task.ThreadID),
-		IssueID:   task.ID,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-	notice.Options, notice.RecommendedID = normalizeRequestOptions(notice.Kind, "", nil)
-	b.requests = append(b.requests, notice)
-	b.pendingInterview = firstBlockingRequest(b.requests)
-	b.appendActionLocked("request_created", "office", taskChannel, noticeFrom, truncateSummary(notice.Title+" "+notice.Question, 140), notice.ID)
+	// No Inbox card. A delivery is news, not a decision: the chat post above
+	// already announced it in the channel the whole roster is in, and since
+	// the one-room change that channel is the one the human is reading. The
+	// card this used to raise carried the identical sentence and a single
+	// "Acknowledge" button, so the only thing a human could do with it was
+	// dismiss it — ceremony that made every finished task cost a click.
+	//
+	// Cards are reserved for requests that actually need a human decision
+	// (plan approval, a new teammate, a new channel). If a delivery ever
+	// needs a decision, that is a review request, not a notice.
 	task.DonePostedFor = doneKey
 }
 

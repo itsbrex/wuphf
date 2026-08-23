@@ -348,7 +348,8 @@ func TestPRLoop_CommentEndpointResolvesActorFromAuth(t *testing.T) {
 func TestPRLoop_RejectRequiresNonEmptyReason(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"reviewer", "executor"}}}
+	// CreatedBy below is "ceo", a member of #general in every real workspace.
+	b.channels = []teamChannel{{Slug: "general", Members: []string{"reviewer", "executor", "ceo"}}}
 	b.tasks = []teamTask{{
 		ID: "task-rej-empty-1", Channel: "general", Title: "Blank-reason reject",
 		Owner: "executor", status: "review",

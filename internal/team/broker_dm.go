@@ -22,9 +22,24 @@ func (ch *teamChannel) isDM() bool {
 }
 
 // IsDMSlug checks whether a channel slug represents a direct message.
+//
+// The canonical arm tests the SHAPE of the slug, not who is in it. It used to
+// route through canonicalDMTargetAgent, which returns "" unless one side is
+// the human — so an agent-to-agent pair like "ceo__designer" was not
+// recognised as a DM at all and fell through to channel routing. That blocks
+// the consult relay: tagging an agent inside your DM sends your agent to talk
+// to theirs, which needs agent-to-agent DMs to route like any other DM.
+//
+// Shape is a safe test because normalizeChannelSlug deliberately preserves
+// "__" while collapsing every single "_" to "-" (broker_defaults.go), so a
+// normalized slug can only contain "__" if channel.DirectSlug built it.
 func IsDMSlug(slug string) bool {
 	slug = normalizeChannelSlug(slug)
-	return strings.HasPrefix(slug, "dm-") || canonicalDMTargetAgent(slug) != ""
+	if strings.HasPrefix(slug, "dm-") {
+		return true
+	}
+	_, _, ok := canonicalDMPair(slug)
+	return ok
 }
 
 // DMSlugFor returns the DM channel slug for a given agent.
@@ -36,8 +51,14 @@ func DMSlugFor(agentSlug string) string {
 	return channel.DirectSlug("human", agentSlug)
 }
 
-// DMTargetAgent extracts the agent slug from a DM channel slug.
-// Returns "" if the slug is not a DM.
+// DMTargetAgent extracts the agent slug from a HUMAN's DM channel slug.
+// Returns "" if the slug is not a DM, or if it is an agent-to-agent DM where
+// there is no human side to be "the other" of.
+//
+// Deliberately still human-relative: a dozen call sites mean "the agent the
+// human is talking to" by it (notifier delivery, the onboarding CEO-DM check,
+// DM channel descriptions). Use DMOtherParticipant when you have a viewer and
+// want the participant across from THEM.
 func DMTargetAgent(slug string) string {
 	slug = normalizeChannelSlug(slug)
 	if strings.HasPrefix(slug, "dm-human-") {
@@ -49,10 +70,17 @@ func DMTargetAgent(slug string) string {
 	return canonicalDMTargetAgent(slug)
 }
 
-// DMPartner returns the non-human member slug of a 1:1 DM channel. Returns
-// "" if the channel is not a DM, does not exist, or is a group DM. Used by
-// surface bridges to resolve who the human is talking to when routing DM posts
-// to the right agent without requiring an @mention.
+// DMPartner returns the agent on the other side of the HUMAN's 1:1 DM
+// channel. Returns "" if the channel is not a DM, does not exist, is a group
+// DM, or has no human side. Used by surface bridges to resolve who the human
+// is talking to when routing DM posts without requiring an @mention.
+//
+// The no-human case returns "" rather than picking a side. In an
+// agent-to-agent DM both members are non-human, and the old "first non-human
+// member wins" loop would hand the bridge whichever happened to be stored
+// first — a coin flip between two real agents. There is no viewer here to
+// resolve against, so the honest answer is "cannot route"; the caller already
+// guards on "". Use DMOtherParticipant where a viewer IS known.
 func (b *Broker) DMPartner(channelSlug string) string {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -63,24 +91,103 @@ func (b *Broker) DMPartner(channelSlug string) string {
 	if len(ch.Members) != 2 {
 		return ""
 	}
+	partner := ""
+	humans := 0
 	for _, m := range ch.Members {
-		if !isHumanMessageSender(m) {
-			return m
+		if isHumanMessageSender(m) {
+			humans++
+			continue
 		}
+		partner = m
+	}
+	if humans != 1 {
+		return ""
+	}
+	return partner
+}
+
+// DMParticipants returns the two sides of a 1:1 DM slug in slug order, for
+// both the legacy "dm-…" and canonical "<a>__<b>" formats. ok is false for
+// anything that is not a 1:1 DM — a regular channel, or a group DM (which
+// hashes its members via channel.GroupSlug and carries no pair to read).
+func DMParticipants(slug string) (string, string, bool) {
+	slug = normalizeChannelSlug(slug)
+	if strings.HasPrefix(slug, "dm-") {
+		// Legacy slugs are human<->agent by construction.
+		agent := normalizeActorSlug(DMTargetAgent(slug))
+		if agent == "" {
+			return "", "", false
+		}
+		return "human", agent, true
+	}
+	return canonicalDMPair(slug)
+}
+
+// DMOtherParticipant returns the participant across the DM from viewer.
+//
+// This is the viewer-relative counterpart to DMTargetAgent, and the one to
+// reach for when routing: in "ceo__designer" the answer is "designer" to the
+// CEO and "ceo" to the designer, which no human-relative lookup can express.
+// Returns "" when the slug is not a 1:1 DM, or when viewer is not one of its
+// two participants — callers must treat that as "cannot route", not as a
+// licence to guess a side.
+func DMOtherParticipant(slug, viewer string) string {
+	a, b, ok := DMParticipants(slug)
+	if !ok {
+		return ""
+	}
+	v := normalizeActorSlug(viewer)
+	if v == "" {
+		return ""
+	}
+	// Match the human by identity rather than by string: the human posts under
+	// several aliases ("human", "you", "human:<name>"), and any of them sits
+	// across from the agent in a human<->agent DM.
+	if isHumanMessageSender(viewer) {
+		switch {
+		case isHumanMessageSender(a):
+			return b
+		case isHumanMessageSender(b):
+			return a
+		}
+		return ""
+	}
+	switch v {
+	case normalizeActorSlug(a):
+		return b
+	case normalizeActorSlug(b):
+		return a
 	}
 	return ""
 }
 
-func canonicalDMTargetAgent(slug string) string {
+// canonicalDMPair splits a canonical "<a>__<b>" slug into its participants.
+// Shape only — it says nothing about who the two sides are. ok is false unless
+// there are exactly two non-empty parts, so "a__b__c" (not a pair) and
+// "__b" (empty side) are both rejected.
+func canonicalDMPair(slug string) (string, string, bool) {
 	parts := strings.Split(normalizeChannelSlug(slug), "__")
 	if len(parts) != 2 {
+		return "", "", false
+	}
+	a := strings.TrimSpace(parts[0])
+	b := strings.TrimSpace(parts[1])
+	if a == "" || b == "" {
+		return "", "", false
+	}
+	return a, b, true
+}
+
+func canonicalDMTargetAgent(slug string) string {
+	a, b, ok := canonicalDMPair(slug)
+	if !ok {
 		return ""
 	}
 	switch {
-	case isHumanMessageSender(parts[0]):
-		return parts[1]
-	case isHumanMessageSender(parts[1]):
-		return parts[0]
+	case isHumanMessageSender(a):
+		return b
+	case isHumanMessageSender(b):
+		return a
 	default:
 		return ""
 	}

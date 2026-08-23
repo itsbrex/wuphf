@@ -190,6 +190,11 @@ func (s *Store) GetOrCreateDirect(a, b string) (*Channel, error) {
 }
 
 // GetOrCreateGroup returns the group DM channel for the given members, creating if absent.
+//
+// While group DMs are switched off (see GroupDMsEnabled) the GET half still
+// works and the CREATE half refuses with ErrGroupDMsDisabled. That split is
+// deliberate: a group row already on disk must stay reachable and readable, so
+// a revive finds it intact, while no new one may be minted.
 func (s *Store) GetOrCreateGroup(members []string, createdBy string) (*Channel, error) {
 	slug := GroupSlug(members)
 
@@ -205,6 +210,13 @@ func (s *Store) GetOrCreateGroup(members []string, createdBy string) (*Channel, 
 
 	if existing, ok = s.bySlug[slug]; ok {
 		return existing, nil
+	}
+
+	// Refuse to mint a new one. An error, never a nil channel: a silent nil
+	// reads as "nothing to do" and lets the caller carry on as though the
+	// conversation surface existed.
+	if !GroupDMsEnabled() {
+		return nil, ErrGroupDMsDisabled
 	}
 
 	ch := Channel{

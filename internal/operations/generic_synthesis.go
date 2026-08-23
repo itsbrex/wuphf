@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 func synthesizeGenericBlueprint(input SynthesisInput) Blueprint {
@@ -544,12 +546,23 @@ func genericWorkflowTemplates(kind, name, objective string, profile CompanyProfi
 }
 
 func genericDefaultChannels(integrations []RuntimeIntegration) []StarterChannel {
-	channels := []StarterChannel{
-		{Slug: "general", Name: "general", Description: "Primary coordination channel.", Members: []string{"operator", "planner", "executor", "reviewer"}},
-		{Slug: "planning", Name: "planning", Description: "Scope, decomposition, and approvals.", Members: []string{"operator", "planner", "reviewer"}},
-		{Slug: "execution", Name: "execution", Description: "Active work lane for the current operation.", Members: []string{"operator", "executor"}},
-		{Slug: "review", Name: "review", Description: "Evidence, decisions, and handoff.", Members: []string{"operator", "reviewer"}},
+	// #general kill switch, gate 7 of 7. Synthesized blueprints reach the
+	// broker through blankSlateOfficeChannelsFromBlueprint (gate 4), which
+	// skips a declared general either way, but gating at the source keeps the
+	// synthesized blueprint itself honest for any other consumer.
+	var channels []StarterChannel
+	if channel.GeneralEnabled() {
+		channels = append(channels, StarterChannel{
+			Slug: channel.GeneralSlug, Name: channel.GeneralSlug,
+			Description: "Primary coordination channel.",
+			Members:     []string{"operator", "planner", "executor", "reviewer"},
+		})
 	}
+	channels = append(channels,
+		StarterChannel{Slug: "planning", Name: "planning", Description: "Scope, decomposition, and approvals.", Members: []string{"operator", "planner", "reviewer"}},
+		StarterChannel{Slug: "execution", Name: "execution", Description: "Active work lane for the current operation.", Members: []string{"operator", "executor"}},
+		StarterChannel{Slug: "review", Name: "review", Description: "Evidence, decisions, and handoff.", Members: []string{"operator", "reviewer"}},
+	)
 	if len(integrations) > 0 {
 		members := []string{"operator", "executor"}
 		for _, integration := range integrations {

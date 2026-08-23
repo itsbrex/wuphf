@@ -212,6 +212,11 @@ func patchAppRename(t *testing.T, url, token, agentSlug, body string) (int, map[
 // live 2026-07-06 finding where the operator UI's own submitAppEdit path
 // 403'd — appWriterAllowed knew only the app-builder slug and cookie-session
 // humans, so the single-owner localhost human could never improve an app.
+//
+// The channel both endpoints return is the app's own `app-<appid>` edit thread
+// (see TestAppEditSessionLazilyMintsChannel). This test only cares that the
+// owner lane reaches them at all, so it asserts a non-empty channel rather than
+// its shape.
 func TestAppImproveOwnerToken(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 

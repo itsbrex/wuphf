@@ -152,6 +152,29 @@ func (b *Broker) handleTaskByID(w http.ResponseWriter, r *http.Request) {
 	// /tasks fetch is filtered by viewer_slug and may omit the row.
 	reviewers := append([]string(nil), task.Reviewers...)
 	taskSnapshot := *task
+	// Strip the pending human note before this leaves the process.
+	//
+	// HumanNotePending.Body is the VERBATIM text of a human's message, copied
+	// onto every task in the channel it was posted to. teamTask is both the
+	// persisted struct and the wire struct, so the field ships to anyone who
+	// can call this endpoint — and taskAccessAllowed returns true
+	// unconditionally for any broker-token holder, which is every agent. There
+	// is no per-agent check here at all: the handler carries no agent identity,
+	// as its own comment below explains.
+	//
+	// That combination is a hole straight through the DM privacy boundary. An
+	// agent barred from reading a conversation could still read that
+	// conversation's messages back, verbatim, off any task in it. The
+	// Librarian's wiki-link tool calls exactly this endpoint.
+	//
+	// Nothing consumes the field over the wire — zero references in web/src and
+	// zero in internal/teammcp. It is read in-process by the packet builder,
+	// which is unaffected. So it simply should not be serialised here.
+	//
+	// This is redaction at the boundary rather than a `json:"-"` tag because
+	// the same struct is what gets written to disk; dropping the tag would lose
+	// a pending note across a restart.
+	taskSnapshot.HumanNotePending = nil
 	packet, packetErr := b.findDecisionPacketLocked(id)
 	var packetCopy DecisionPacket
 	if packet != nil {

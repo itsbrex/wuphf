@@ -464,14 +464,13 @@ func (b *Broker) handleAppRollback(w http.ResponseWriter, r *http.Request, id st
 //
 //	POST /apps/{id}/edit-session -> { channel }
 //
-// Every app should be editable, but an app minted before edit-channel stamping
-// (or registered html-only, with no backing task) carries no channel, so the FE
-// could not surface Edit for it. This lazily mints one: it creates an App
-// Builder "Edit app: <name>" task, and the task-create hook
-// (stampAppEditChannelForTaskLocked) stamps the new task-<id> channel onto the
-// app SYNCHRONOUSLY, so the bound channel is readable the moment MutateTask
-// returns. The App Builder then greets the human in that channel and waits; a
-// human post there wakes it through the same task_followup path edits use.
+// Every app should be editable, but an app registered html-only (no backing
+// task) carries no channel, so the FE could not surface Edit for it. This lazily
+// mints one: it creates the app's `app-<appid>` channel, then creates an App
+// Builder "Edit app: <name>" task INSIDE it, so the bound channel is readable
+// the moment ensureAppEditChannel returns. The App Builder then greets the human
+// in that channel and waits; a human post there wakes it through the same
+// task_followup path edits use.
 //
 // Idempotent: an app already bound to an edit thread returns it untouched, so a
 // double-click never spawns a second task. Gated like register/delete — a human
@@ -498,10 +497,20 @@ func (b *Broker) handleAppEditSession(w http.ResponseWriter, r *http.Request, id
 	writeJSON(w, http.StatusOK, map[string]any{"channel": ch})
 }
 
-// ensureAppEditChannel returns the app's persistent edit channel (`task-<id>`),
-// creating the App Builder "Edit app" task that owns it if the app is not bound
-// yet. Idempotent: an already-bound app returns its channel without spawning a
-// task. Shared by the edit-session and improve handlers.
+// ensureAppEditChannel returns the app's persistent edit channel
+// (`app-<appid>`), minting it and creating the App Builder "Edit app" task that
+// works it if the app is not bound yet. Idempotent: an already-bound app returns
+// its channel without spawning a task. Shared by the edit-session and improve
+// handlers.
+//
+// The channel is minted from the APP id BEFORE the task is created, and the task
+// is then created INTO it. That order matters: it used to create the task in
+// "general" and read back whatever channel the create hook happened to stamp,
+// which stopped producing a channel at all once tasks lost their own rooms.
+// Creating the task in the app's channel also keeps the correlations that read a
+// task's channel working — appForEditChannel (app acceptance) and
+// appBuilderRunTaskID (the activity stream) — and keeps the human's posts in the
+// edit panel landing somewhere a task actually lives, so they wake the owner.
 func (b *Broker) ensureAppEditChannel(id string) (string, error) {
 	app, _, err := b.appStore().Get(id)
 	if err != nil {
@@ -509,6 +518,12 @@ func (b *Broker) ensureAppEditChannel(id string) (string, error) {
 	}
 	if ch := strings.TrimSpace(app.EditChannel); ch != "" {
 		return ch, nil
+	}
+	b.mu.Lock()
+	channel := b.ensureAppEditChannelLocked(id, app.Name)
+	b.mu.Unlock()
+	if channel == "" {
+		return "", fmt.Errorf("could not open an edit thread for app %s", id)
 	}
 	// Ground the edit thread in the app's REAL shape (data model, APIs, writes,
 	// UI), derived from its source, so the agent never invents capabilities.
@@ -521,7 +536,7 @@ func (b *Broker) ensureAppEditChannel(id string) (string, error) {
 	// maybeSpawnAppBuilderTaskFromProposal).
 	if _, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   channel,
 		Title:     title,
 		Details:   details,
 		Owner:     appBuilderSlug,
@@ -530,17 +545,7 @@ func (b *Broker) ensureAppEditChannel(id string) (string, error) {
 	}); err != nil {
 		return "", err
 	}
-	// The create hook stamped the new task-<id> channel onto the app
-	// synchronously; re-read the manifest to return the bound channel.
-	updated, _, err := b.appStore().Get(id)
-	if err != nil {
-		return "", err
-	}
-	ch := strings.TrimSpace(updated.EditChannel)
-	if ch == "" {
-		return "", fmt.Errorf("edit session created but no channel was bound")
-	}
-	return ch, nil
+	return channel, nil
 }
 
 // handleAppImprove applies a human-requested change to an existing app:
