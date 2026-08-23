@@ -5,14 +5,22 @@
  * ink, small mono figure labels, fine construction grids, hairline rules,
  * compact reference tables, and sparse physical controls.
  *
- * The palette is self-contained and scoped to .opr-root, so the shell owns its
+ * The palette is self-contained and scoped to .app-detail, so the shell owns its
  * look regardless of the surrounding app theme. Class prefix `opr-` (the
  * `op-*` console stylesheet, operator.css, is unrelated, keep them separate).
  *
  * MOCK-DATA PROTOTYPE: styles the frontend-first shell at /operator.
  */
 
-.opr-root {
+/* Scoped panel, not a shell. These are the operator surfaces folded into the
+   office app view: the tab strip, the six tab bodies, and the ask-the-app
+   chat. The original `.app-detail` was `position: fixed; inset: 0` with its own
+   sidebar grid — copying that inside the office Shell would hijack the whole
+   viewport. Everything below is the same design system, scoped to the panel.
+   Known gap: the token values are still the operator's pinned dark set, so the
+   panel reads dark in a light theme; mapping them onto the office theme tokens
+   is a follow-up. */
+.app-detail {
   /* Design system: shadcn `nex-dark` tokens, pinned dark for the operator
      shell regardless of the app theme. Contrast is deliberately terminal-muted
      (soft off-white on dark gray, never bright-white on pure-black) so long
@@ -77,23 +85,8 @@
   --t-text-2: var(--t-dim);
   --t-r-md: var(--t-r);
 
-  position: fixed;
-  inset: 0;
-  display: grid;
-  grid-template-columns: 240px 1fr;
   background-color: var(--t-paper);
-  background-image:
-    radial-gradient(
-      circle at 1px 1px,
-      var(--t-paper-speckle) 1px,
-      transparent 0
-    ),
-    linear-gradient(90deg, hsl(210 6% 13% / 0.34) 1px, transparent 1px),
-    linear-gradient(180deg, hsl(210 6% 13% / 0.34) 1px, transparent 1px);
-  background-size:
-    15px 15px,
-    56px 56px,
-    56px 56px;
+  border-radius: var(--radius-md, 8px);
   color: var(--t-ink);
   /* Interface is set in the UI sans; monospace is reserved for real data
      (numbers, IDs, code, timestamps) via .opr-mono and the data classes below.
@@ -101,14 +94,13 @@
   font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.55;
-  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizelegibility;
 }
 
-.opr-root *,
-.opr-root *::before,
-.opr-root *::after {
+.app-detail *,
+.app-detail *::before,
+.app-detail *::after {
   box-sizing: border-box;
 }
 
@@ -174,12 +166,12 @@
 
 /* Keyboard focus — visible accent ring on every interactive element. Mouse
    clicks stay clean (:focus-visible only fires for keyboard/AT navigation). */
-.opr-root :focus-visible {
+.app-detail :focus-visible {
   outline: 2px solid var(--t-accent);
   outline-offset: 2px;
   border-radius: var(--t-r-sm);
 }
-.opr-root button:focus:not(:focus-visible) {
+.app-detail button:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -1061,7 +1053,7 @@
 /* Inline, editable channel picker native to the delivery node — reads as an
    editable chip, not a form field bolted below the flow. */
 .opr-step-channel {
-  font-family: var(--t-mono, monospace);
+  font-family: var(--font-mono);
   font-size: 11px;
   color: var(--t-cyan);
   background: color-mix(in srgb, var(--t-accent-2) 10%, transparent);
@@ -2323,7 +2315,7 @@
 
 /* Narrow: sidebar becomes a horizontal top bar; chat stacks. */
 @media (max-width: 680px) {
-  .opr-root {
+  .app-detail {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
   }
@@ -2900,8 +2892,8 @@
   margin-top: 5px;
   font-size: 11px;
   line-height: 1.4;
-  color: var(--t-warn, #d9a04b);
-  border-left: 2px solid var(--t-warn, #d9a04b);
+  color: var(--t-yellow);
+  border-left: 2px solid var(--t-yellow);
   padding-left: 8px;
 }
 .opr-finish-actions {
@@ -3200,7 +3192,7 @@
  * root makes every token-driven figure grid render transparent; the root's own
  * hardcoded grid is cleared with background-image: none. End-of-file so it wins
  * the cascade regardless of upstream edits. */
-.opr-root {
+.app-detail {
   --t-figure-grid: transparent;
   --t-figure-grid-strong: transparent;
   --t-paper-speckle: transparent;
@@ -3211,7 +3203,7 @@
  * The cobalt-600 accent (oklch ~50% L) read too dark on the dark field. Lift the
  * accent/link/figure blue to makingsoftware.com's vivid cobalt, brightened so it
  * pops on dark (higher L, kept hue + chroma). End-of-file so it wins the cascade. */
-.opr-root {
+.app-detail {
   --t-accent-2: oklch(0.72 0.18 264);
   --t-blue: oklch(0.72 0.18 264);
   --t-cyan: oklch(0.75 0.15 248);
@@ -3490,9 +3482,9 @@
 }
 
 /* Port the shared ConnectIntegrationCard (eac-*, defined in global.css with
-   main-app tokens) to the operator look. Scoped under .opr-root so the main app
+   main-app tokens) to the operator look. Scoped under .app-detail so the main app
    keeps its own styling; here the card adopts operator tokens. */
-.opr-root .eac-connect {
+.app-detail .eac-connect {
   border: 1px solid var(--t-line-2);
   border-radius: var(--t-r);
   background: var(--t-surface);
@@ -3500,7 +3492,7 @@
   padding: var(--space-3) var(--space-3-5);
   font: inherit;
 }
-.opr-root .eac-logo {
+.app-detail .eac-logo {
   width: 38px;
   height: 38px;
   border-radius: var(--t-r-sm);
@@ -3508,39 +3500,39 @@
   background: color-mix(in srgb, #000 42%, var(--t-paper));
   box-shadow: none;
 }
-.opr-root .eac-logo :is(svg, img) {
+.app-detail .eac-logo :is(svg, img) {
   width: 22px;
   height: 22px;
   object-fit: contain;
 }
-.opr-root .eac-eyebrow {
+.app-detail .eac-eyebrow {
   color: var(--t-faint);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 10.5px;
 }
-.opr-root .eac-headline {
+.app-detail .eac-headline {
   color: var(--t-ink);
   font-size: 14px;
   font-weight: 700;
 }
-.opr-root :is(.eac-connect-sub, .eac-connect-question, .eac-connect-status) {
+.app-detail :is(.eac-connect-sub, .eac-connect-question, .eac-connect-status) {
   color: var(--t-faint);
   font-size: 12px;
 }
-.opr-root .eac-connect-failed {
+.app-detail .eac-connect-failed {
   color: var(--t-red, #d2544a);
 }
-.opr-root .eac-spinner {
+.app-detail .eac-spinner {
   border-color: var(--t-line-2);
   border-top-color: var(--t-accent);
 }
-.opr-root .eac-actions {
+.app-detail .eac-actions {
   gap: var(--space-2);
   margin-top: var(--space-3);
 }
 /* the card's buttons -> operator button look */
-.opr-root .eac .btn {
+.app-detail .eac .btn {
   font: inherit;
   font-size: 12px;
   font-weight: 600;
@@ -3551,12 +3543,12 @@
   color: var(--t-ink);
   cursor: pointer;
 }
-.opr-root .eac .btn-primary {
+.app-detail .eac .btn-primary {
   background: var(--t-accent);
   color: var(--t-inv-fg);
   border-color: var(--t-accent);
 }
-.opr-root .eac .btn-ghost {
+.app-detail .eac .btn-ghost {
   color: var(--t-faint);
 }
 

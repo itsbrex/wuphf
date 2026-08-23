@@ -1039,9 +1039,15 @@
   font-weight: 600;
   flex-shrink: 0;
 }
+/* The shortcut badge has to invert with its button. That .btn-primary is
+   deliberately an inverted chip (`background: var(--text)`), so it is DARK
+   in the light theme and LIGHT in the three dark ones. Hardcoded white ink
+   here therefore vanished completely on nex-dark, noir-gold and nex-shell
+   — white on a near-white pill, 1.15:1, the keyboard hint invisible in
+   three of four themes. Mirror the parent's own pair instead. */
 .interview-bar-actions .btn-primary .interview-bar-opt-num {
-  background: rgba(255, 255, 255, 0.18);
-  color: rgba(255, 255, 255, 0.9);
+  background: color-mix(in srgb, var(--bg-card) 18%, transparent);
+  color: var(--bg-card);
 }
 .interview-bar-opt-label {
   flex: 1;
@@ -1408,7 +1414,7 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
 }
 .stream-phase-manifest {
   color: var(--text-tertiary);
-  background: var(--bg-secondary, var(--bg));
+  background: var(--bg);
 }
 .stream-manifest-stats {
   display: flex;
@@ -1776,8 +1782,8 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
 .system-error-card {
   margin: 8px 0 8px 0;
   padding: 12px 14px;
-  background: color-mix(in srgb, var(--amber-600, #d97706) 8%, var(--bg-card));
-  border: 1px solid var(--amber-600, #d97706);
+  background: color-mix(in srgb, var(--yellow) 8%, var(--bg-card));
+  border: 1px solid var(--yellow);
   border-radius: var(--radius-md, 8px);
   display: flex;
   flex-direction: column;
@@ -1793,7 +1799,7 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--amber-600, #d97706);
+  color: var(--yellow);
 }
 .system-error-card-title {
   margin: 0;
@@ -1811,7 +1817,7 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
-  background: var(--bg-app);
+  background: var(--bg-warm);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm, 6px);
   font-family: var(--font-mono);
@@ -1928,26 +1934,22 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   color: var(--text-secondary);
 }
 .issue-created-card--awaiting-approval {
-  background: color-mix(in srgb, var(--amber-600, #d97706) 8%, var(--bg-card));
-  border-color: color-mix(
-    in srgb,
-    var(--amber-600, #d97706) 60%,
-    var(--border)
-  );
+  background: color-mix(in srgb, var(--yellow) 8%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--yellow) 60%, var(--border));
 }
 .issue-created-card--awaiting-approval:hover:not([disabled]) {
-  background: color-mix(in srgb, var(--amber-600, #d97706) 14%, var(--bg-card));
-  border-color: var(--amber-600, #d97706);
+  background: color-mix(in srgb, var(--yellow) 14%, var(--bg-card));
+  border-color: var(--yellow);
 }
 .issue-created-card--awaiting-approval .issue-created-card-eyebrow {
-  color: var(--amber-600, #d97706);
+  color: var(--yellow);
 }
 .issue-created-card--awaiting-approval .issue-created-card-cta {
-  color: var(--amber-600, #d97706);
+  color: var(--yellow);
   font-weight: 600;
 }
 .issue-created-card--awaiting-approval:focus-visible {
-  outline-color: var(--amber-600, #d97706);
+  outline-color: var(--yellow);
 }
 
 /* ─── Issue comment card ──────────────────────────────────────────────
@@ -2116,12 +2118,12 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
 
 /* Accent variants — go/review/done/stop/warn/neutral map to product colors. */
 .issue-lifecycle-card--go {
-  background: color-mix(in srgb, var(--success, #16a34a) 8%, var(--bg-card));
-  border-color: color-mix(in srgb, var(--success, #16a34a) 50%, var(--border));
+  background: color-mix(in srgb, var(--green) 8%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--green) 50%, var(--border));
 }
 .issue-lifecycle-card--go .issue-lifecycle-card-eyebrow,
 .issue-lifecycle-card--go .issue-lifecycle-card-cta {
-  color: var(--success, #16a34a);
+  color: var(--green);
 }
 .issue-lifecycle-card--review {
   background: color-mix(in srgb, var(--accent, #2563eb) 8%, var(--bg-card));
@@ -2132,12 +2134,12 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   color: var(--accent, #2563eb);
 }
 .issue-lifecycle-card--done {
-  background: color-mix(in srgb, var(--success, #16a34a) 6%, var(--bg-card));
-  border-color: color-mix(in srgb, var(--success, #16a34a) 40%, var(--border));
+  background: color-mix(in srgb, var(--green) 6%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--green) 40%, var(--border));
 }
 .issue-lifecycle-card--done .issue-lifecycle-card-eyebrow,
 .issue-lifecycle-card--done .issue-lifecycle-card-cta {
-  color: var(--success, #16a34a);
+  color: var(--green);
 }
 .issue-lifecycle-card--stop {
   background: color-mix(
@@ -2151,16 +2153,12 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   color: var(--text-secondary);
 }
 .issue-lifecycle-card--warn {
-  background: color-mix(in srgb, var(--amber-600, #d97706) 8%, var(--bg-card));
-  border-color: color-mix(
-    in srgb,
-    var(--amber-600, #d97706) 50%,
-    var(--border)
-  );
+  background: color-mix(in srgb, var(--yellow) 8%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--yellow) 50%, var(--border));
 }
 .issue-lifecycle-card--warn .issue-lifecycle-card-eyebrow,
 .issue-lifecycle-card--warn .issue-lifecycle-card-cta {
-  color: var(--amber-600, #d97706);
+  color: var(--yellow);
 }
 .issue-lifecycle-card--neutral {
   background: var(--bg-card);

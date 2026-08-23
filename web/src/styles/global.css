@@ -85,6 +85,10 @@
   --accent-warm: var(--tertiary-500);
   --accent-bg: var(--tertiary-100);
   --accent-bg-strong: rgba(159, 77, 191, 0.35);
+  /* Ink for text/icons sitting ON a solid --accent fill. Not a background:
+     the purple accent shared by nex and nex-dark carries white at 4.4:1,
+     but noir-gold's gold accent needs dark ink and overrides this. */
+  --accent-fg: #ffffff;
   /* Entity-graph node palette — Tailwind-ish pastels for the default
      light theme. Themes can override these in their token block. */
   --graph-people-fill: #ede9fe;
@@ -1121,7 +1125,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: var(--radius-full, 999px);
-  background: var(--warning-500, var(--amber-600));
+  background: var(--warning-500);
 }
 .eac-payload {
   display: flex;
@@ -1155,7 +1159,8 @@ body {
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: color var(--duration-base, 120ms) ease,
+  transition:
+    color var(--duration-base, 120ms) ease,
     border-color var(--duration-base, 120ms) ease;
 }
 .eac-raw-toggle:hover {
@@ -1242,7 +1247,7 @@ body {
   width: 7px;
   height: 7px;
   border-radius: var(--radius-full, 999px);
-  background: var(--success, var(--green));
+  background: var(--green);
   box-shadow: 0 0 0 2px var(--green-bg, transparent);
 }
 .eac-actions {
@@ -1521,7 +1526,7 @@ body {
   flex-direction: column;
   gap: 6px;
   padding: 14px 16px;
-  background: var(--bg-card-soft, var(--bg-card));
+  background: var(--bg-card);
   border: 1px solid var(--border-light, var(--border));
   border-radius: var(--radius-md);
 }

@@ -22,8 +22,10 @@ contracts, and other long-lived surfaces.
 - [ ] Per-finding disposition table in PR description: every reviewer finding has FIXED/SKIPPED+reason/DEFERRED+issue
 - [ ] Pre-push gates green: `bash scripts/test-protocol.sh`, demo, cross-language verifier
   - [ ] File-size budget: `scripts/check-file-size.sh`
+  - [ ] Phantom CSS tokens: `scripts/check-css-phantom-tokens.sh`
 - [ ] CI gates green: same as above plus typecheck + biome
   - [ ] File-size budget: `scripts/check-file-size.sh`
+  - [ ] Phantom CSS tokens: `scripts/check-css-phantom-tokens.sh`
 - [ ] No `any`, no biome ignores, no `// @ts-ignore`
 - [ ] No `--no-verify` on push
 

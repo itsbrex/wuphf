@@ -1645,7 +1645,7 @@
   align-self: flex-end;
 }
 .wk-audit-export:hover:not(:disabled) {
-  background: var(--wk-surface-alt);
+  background: var(--wk-paper-dark);
   border-color: var(--wk-text-muted);
 }
 .wk-audit-export:disabled {
@@ -1688,12 +1688,12 @@
   line-height: 1.4;
 }
 .wk-audit-row:hover td {
-  background: var(--wk-surface-alt);
+  background: var(--wk-paper-dark);
 }
 .wk-audit-row.is-bootstrap td,
 .wk-audit-row.is-recovery td,
 .wk-audit-row.is-system td {
-  background: color-mix(in oklab, var(--wk-surface-alt) 60%, transparent);
+  background: color-mix(in oklab, var(--wk-paper-dark) 60%, transparent);
 }
 .wk-audit-when {
   font-family: var(--wk-mono);
@@ -1718,14 +1718,14 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--wk-text-muted);
-  background: var(--wk-surface-alt);
+  background: var(--wk-paper-dark);
   border: 1px solid var(--wk-border);
   border-radius: 999px;
   padding: 1px 8px;
   margin-left: 4px;
 }
 .wk-audit-row.is-bootstrap .wk-audit-tag {
-  color: var(--wk-accent-ink);
+  color: var(--wk-accent);
   border-color: var(--wk-accent);
 }
 .wk-audit-msg {
@@ -2639,7 +2639,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: image-embed-fade var(--duration-normal, 300ms) ease;
+  animation: image-embed-fade var(--duration-slow) ease;
 }
 @media (prefers-reduced-motion: reduce) {
   .image-embed__lightbox {

@@ -94,12 +94,20 @@ html[data-theme="noir-gold"] {
   --accent-warm: var(--gold-500);
   --accent-bg: rgba(201, 162, 39, 0.1);
   --accent-bg-strong: rgba(201, 162, 39, 0.3);
+  /* White ink on polished gold is 2.6:1. Same dark ink the .btn-primary
+     override below already uses, promoted to a token. */
+  --accent-fg: var(--gold-950);
 
   --border: #1a1a1c;
   --border-light: #141416;
   --border-dark: #2a261d;
   --border-strong: #3c3528;
 
+  /* These look like restatements of global.css but are a real choice: the
+     semantic-to-ramp indirection is a per-theme axis, and nex-shell opts
+     out of it (its --green is a direct oklch, not var(--success-400)).
+     noir-gold opts IN, which is what lets the gold-warmed ramps above
+     flow through to every green/red/yellow in the app. Keep. */
   --green: var(--success-400);
   --green-dark: var(--success-500);
   --green-bg: var(--success-100);
@@ -112,12 +120,9 @@ html[data-theme="noir-gold"] {
   --blue: var(--gold-400);
   --blue-bg: var(--accent-bg);
 
-  --font-sans:
-    "Geist Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", sans-serif;
-  --font-serif: "Newsreader", "Georgia", "Times New Roman", serif;
-  --font-logo: "Newsreader", "Georgia", "Times New Roman", serif;
-  --font-mono:
-    "Geist Mono", "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
+  /* Font stacks are deliberately NOT restated here. No theme varies them,
+     so they live once in global.css `:root`. A copy here would mean an
+     edit to global.css silently left the old stack behind for noir-gold. */
 
   /* ── Sidebar tokens (no purple anywhere) ── */
   --nex-sidebar: #0a0a0b;
@@ -130,6 +135,9 @@ html[data-theme="noir-gold"] {
   --purple: var(--gold-400);
   --purple-bg: var(--accent-bg);
 
+  /* Also a choice rather than a copy: the radius scale is a per-theme axis
+     (nex runs a tighter 4/8/12/16), and noir-gold picks the default one.
+     Stated explicitly so the coincidence with global.css is legible. */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;

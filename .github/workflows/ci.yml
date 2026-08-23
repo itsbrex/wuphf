@@ -276,6 +276,17 @@ jobs:
         # entries and growth of current offenders fail against the PR base.
         # Skips generated files, tests, and documented fixture/vendor dirs.
         run: bash scripts/check-file-size.sh
+      - name: Phantom CSS design tokens
+        # Rejects `var(--x, <literal>)` (and bare `var(--x)`) where --x is
+        # declared in no stylesheet and set by no component. An undefined
+        # custom property means the literal fallback always wins, so the
+        # value is hardcoded in every theme while reading as a token; the
+        # bare form silently drops the declaration. Covers component inline
+        # styles as well as stylesheets, and checks nested fallbacks at
+        # every level. Tokens set at runtime from JS are detected, not
+        # allowlisted. Deferred sites live in
+        # scripts/css-phantom-token-allowlist.txt with a stated reason.
+        run: bash scripts/check-css-phantom-tokens.sh
       - name: Install ripgrep
         # A PCRE multiline grep check below uses `rg --pcre2`. ripgrep is bundled
         # in ubuntu-latest images today, but we install it explicitly so the

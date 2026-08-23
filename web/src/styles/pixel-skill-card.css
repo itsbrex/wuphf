@@ -753,13 +753,13 @@
 }
 
 .skill-detail-status--active {
-  background: color-mix(in srgb, var(--green-500, #16a34a) 14%, transparent);
-  color: var(--green-600, #15803d);
+  background: color-mix(in srgb, var(--green) 14%, transparent);
+  color: var(--green);
 }
 
 .skill-detail-status--proposed {
-  background: color-mix(in srgb, var(--orange-500, #f97316) 14%, transparent);
-  color: var(--orange-500, #f97316);
+  background: color-mix(in srgb, var(--yellow) 14%, transparent);
+  color: var(--yellow);
 }
 
 .skill-detail-status--disabled,
@@ -822,12 +822,14 @@
   border-radius: 6px;
   border: 1px solid var(--accent);
   background: var(--accent);
-  color: var(--accent-foreground, #fff);
+  color: var(--accent-fg);
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 120ms ease, background-color 120ms ease;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
 }
 
 .skill-detail-save:hover:not(:disabled) {
@@ -897,9 +899,16 @@
   color: var(--text);
 }
 
-.skill-detail-preview h1 { font-size: 1.6em; margin-top: 0; }
-.skill-detail-preview h2 { font-size: 1.25em; }
-.skill-detail-preview h3 { font-size: 1.05em; }
+.skill-detail-preview h1 {
+  font-size: 1.6em;
+  margin-top: 0;
+}
+.skill-detail-preview h2 {
+  font-size: 1.25em;
+}
+.skill-detail-preview h3 {
+  font-size: 1.05em;
+}
 
 .skill-detail-preview p {
   margin: 0.6em 0;
@@ -970,13 +979,18 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--orange-500, #f97316);
+  background: var(--yellow);
   animation: skill-detail-pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes skill-detail-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.35; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

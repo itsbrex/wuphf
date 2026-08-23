@@ -902,8 +902,8 @@
 }
 
 .agent-skills-empty--error {
-  color: var(--red-600, #dc2626);
-  border-color: var(--red-600, #dc2626);
+  color: var(--red);
+  border-color: var(--red);
   border-style: solid;
 }
 
@@ -1029,7 +1029,7 @@
 .agent-skills-row-add:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent-foreground, #fff);
+  color: var(--accent-fg);
 }
 
 .agent-skills-row-remove {
@@ -1039,9 +1039,9 @@
 }
 
 .agent-skills-row-remove:hover:not(:disabled) {
-  background: var(--red-50, rgba(220, 38, 38, 0.08));
-  border-color: var(--red-600, #dc2626);
-  color: var(--red-600, #dc2626);
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .agent-skills-row-add:disabled,
@@ -1174,13 +1174,13 @@
 .agent-skills-card-btn--add:hover:not(:disabled) {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--accent-foreground, #fff);
+  color: var(--accent-fg);
 }
 
 .agent-skills-card-btn--remove:hover:not(:disabled) {
-  background: var(--red-50, rgba(220, 38, 38, 0.06));
-  border-color: var(--red-600, #dc2626);
-  color: var(--red-600, #dc2626);
+  background: color-mix(in srgb, var(--red) 6%, transparent);
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .agent-skills-card-btn:disabled {
@@ -1197,7 +1197,7 @@
   gap: 4px;
   padding: 3px 8px;
   border-radius: 999px;
-  background: var(--green-500, #16a34a);
+  background: var(--green);
   color: #fff;
   font-size: 10px;
   font-weight: 600;
@@ -1246,7 +1246,7 @@
   text-align: left;
   cursor: pointer;
   color: inherit;
-  transition: background var(--motion-fast, 120ms) ease;
+  transition: background var(--duration-fast) ease;
 }
 
 .agent-file-card-header:hover {
@@ -1501,7 +1501,7 @@
   padding: 8px 10px;
   resize: vertical;
   outline: none;
-  transition: border-color var(--motion-fast, 120ms) ease;
+  transition: border-color var(--duration-fast) ease;
 }
 
 .agent-file-block-input:focus {
@@ -1536,8 +1536,8 @@
   color: var(--text-tertiary);
   cursor: pointer;
   transition:
-    background var(--motion-fast, 120ms) ease,
-    color var(--motion-fast, 120ms) ease;
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
 }
 
 .agent-file-mode-btn.is-active {
@@ -1726,8 +1726,8 @@
   cursor: pointer;
   white-space: nowrap;
   transition:
-    color var(--motion-fast, 120ms) ease,
-    opacity var(--motion-fast, 120ms) ease;
+    color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }

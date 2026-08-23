@@ -4031,10 +4031,10 @@ body.resizing-pane * {
   padding: 12px 14px;
   min-height: 96px;
   resize: vertical;
-  border: 1px solid var(--border-subtle, var(--border));
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--bg-input, var(--bg-primary, #fff));
-  color: var(--text, var(--text-primary));
+  background: var(--input-bg);
+  color: var(--text);
 }
 .task-composer-input:focus {
   outline: none;
@@ -4050,8 +4050,8 @@ body.resizing-pane * {
   align-items: center;
   gap: 6px;
   padding: 4px 6px 4px 12px;
-  background: var(--bg-input, var(--bg-primary, #fff));
-  border: 1px solid var(--border-subtle, var(--border));
+  background: var(--input-bg);
+  border: 1px solid var(--border);
   border-radius: var(--radius-full, 999px);
   font-size: 12px;
 }
@@ -4070,7 +4070,7 @@ body.resizing-pane * {
   font-size: 12px;
   border: none;
   background: transparent;
-  color: var(--text, var(--text-primary));
+  color: var(--text);
   cursor: pointer;
   padding: 2px 4px;
   border-radius: var(--radius-sm);
@@ -4110,7 +4110,7 @@ body.resizing-pane * {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg-card);
-  color: var(--text, var(--text-primary));
+  color: var(--text);
   cursor: pointer;
   transition:
     filter 120ms ease,
@@ -4125,7 +4125,7 @@ body.resizing-pane * {
 }
 .task-composer-btn-primary {
   background: var(--accent, #5b8def);
-  color: var(--bg-primary, #fff);
+  color: var(--accent-fg);
   border-color: transparent;
 }
 .task-composer-btn-primary:hover:not(:disabled) {
@@ -4184,7 +4184,7 @@ body.resizing-pane * {
   border-color: var(--accent);
 }
 .task-channel-chat-error {
-  color: var(--danger, #c0392b);
+  color: var(--red);
   font-size: 0.8125rem;
   margin: 0;
 }

@@ -1,0 +1,148 @@
+/* app-demo-tab.css — the Demo tab inside the app detail panel.
+ *
+ * Scoped to `.opr-app-demo`, which always renders inside `.app-detail`. That
+ * ancestor owns the `--t-*` terminal palette this file draws from (see the
+ * token block at the top of app-detail.css), so these rules resolve
+ * identically under Nex Light, Nex Dark, and Noir Gold — the panel is
+ * deliberately a pinned-dark surface in all three.
+ *
+ * Every custom property used here is defined: `--t-*` in app-detail.css,
+ * `--space-*` / `--font-mono` / `--duration-fast` in global.css. No
+ * `var(--x, #hex)` fallbacks — a fallback would silently hardcode a color if
+ * the token were ever dropped.
+ */
+
+.opr-app-demo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ── Goal field ─────────────────────────────────────────────────────────── */
+
+.opr-demo-goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.opr-demo-goal-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--t-faint);
+}
+
+/* ── Live capture ───────────────────────────────────────────────────────── */
+
+.opr-demo-live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--t-line-2);
+  border-radius: var(--t-r);
+  background: var(--t-surface);
+}
+
+.opr-demo-live-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--t-ink);
+}
+
+.opr-demo-rec {
+  display: inline-flex;
+  color: var(--t-red);
+  /* Opacity only — a compositor-friendly pulse that never triggers layout. */
+  animation: opr-demo-rec-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes opr-demo-rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opr-demo-rec {
+    animation: none;
+  }
+}
+
+/* ── Captured screens ───────────────────────────────────────────────────── */
+
+.opr-demo-screens {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opr-demo-screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.opr-demo-screen-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.opr-demo-screen-n {
+  flex: none;
+  min-width: 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--t-accent-2);
+}
+
+.opr-demo-screen-app {
+  flex: none;
+  font-size: 13px;
+  color: var(--t-ink);
+}
+
+.opr-demo-screen-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--t-dim);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opr-demo-screen-els {
+  /* The raw element labels the observer read. Long and unpredictable, so let
+     it wrap and break rather than push the panel into a horizontal scroll. */
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--t-faint);
+  overflow-wrap: anywhere;
+}
+
+/* ── Review ─────────────────────────────────────────────────────────────── */
+
+.opr-demo-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-top: var(--space-2-5);
+  border-top: 1px solid var(--t-line);
+}

@@ -228,7 +228,7 @@
    The field never gates advancing, so this nudges in the danger tone without
    reading as a hard error. */
 .onboarding-meet-email-hint--invalid {
-  color: var(--danger);
+  color: var(--red);
 }
 
 /* ── Team-step inputs (the one real input step) ──────────────────────────── */
@@ -1124,7 +1124,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px var(--space-1-5);
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-full);
   background: var(--accent-bg);
   color: var(--accent);
   font-size: var(--text-xs);
@@ -1230,7 +1230,7 @@
 
 .onboarding-embedding-alt-active {
   padding: 1px var(--space-1-5);
-  border-radius: var(--radius-pill, 999px);
+  border-radius: var(--radius-full);
   background: var(--accent);
   /* White on the accent fill, matching the app's .btn-primary convention. */
   color: #ffffff;

@@ -117,6 +117,21 @@ What good comments do **not** do:
 
 `scripts/check-file-size.sh` enforces the cap. Today it warns at 800 LOC and fails at 1500 LOC. Allowlist file `scripts/file-size-allowlist.txt` lists exemptions; entries are forward-only (can shrink, can't grow).
 
+## Phantom CSS design tokens
+
+`scripts/check-css-phantom-tokens.sh` rejects `var(--x, <literal>)` — and bare `var(--x)` — where `--x` is declared in no stylesheet and set by no component. An undefined custom property means the literal fallback always wins, so the value is hardcoded in every theme while reading as a token; the bare form drops the declaration entirely (`border: 1px solid var(--undefined)` renders no border). Nested fallbacks are checked at every level, so `var(--bg-card, var(--bg-primary, #fff))` is caught on `--bg-primary` even though `--bg-card` is real.
+
+The scan covers component inline styles (`web/src/**/*.{ts,tsx}`) as well as stylesheets — `style={{ background: "var(--x, #0a0a0a)" }}` is the same bug somewhere a CSS-only scan cannot see. A token counts as defined if any stylesheet declares it **at any scope**, so a scoped palette like the `--t-*` block on `.app-detail` is recognised without ceremony; tokens set at runtime from JS are detected the same way.
+
+Fix by pointing at a token that exists in all four themes (`nex`, `nex-dark`, `noir-gold`, `nex-shell` — see `web/src/lib/themes.ts`), not by defining one token per call site. The shared vocabulary is `web/src/styles/global.css :root`, which every theme inherits; theme files override only what differs. `scripts/css-phantom-token-allowlist.txt` holds sites that need a human design call plus the forward-only component baseline, each pinned to an exact occurrence count.
+
+## Known-unguarded areas
+
+Recorded so they are a decision rather than a surprise.
+
+- **`web/e2e/` and `web/.storybook/` are outside the Biome commands.** `bun run lint` / `check` / `format` cover `src/` and `public/themes/` only. Widening them to the whole `web/` root surfaces a pre-existing formatting backlog in `e2e/screenshots/*.mjs` and `.storybook/`, which would fail the documented command for everyone on the first run. The lefthook pre-commit hook *does* cover these files when they are staged (its glob is `**/*.{js,ts,jsx,tsx,json,css}` rooted at `web/`), so the gap is only the manual full-project command. Clearing the backlog and dropping the path arguments is a self-contained follow-up.
+- **Theme files were in this state until recently.** `public/themes/` was outside the same commands, which is how a formatting error sat in `nex-shell.css` unnoticed. That one is now in scope.
+
 When a file goes over budget:
 
 1. **Don't disable the check.**

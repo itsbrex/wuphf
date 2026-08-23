@@ -22,7 +22,7 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
-  color: var(--wk-muted, #687083);
+  color: var(--wk-text-muted);
   font-size: 12px;
   line-height: 1.4;
 }
@@ -117,7 +117,7 @@
 }
 
 .nb-visual-artifacts-head span {
-  color: var(--wk-muted, #687083);
+  color: var(--wk-text-muted);
   font-size: 12px;
 }
 
@@ -164,7 +164,7 @@
 
 .nb-visual-artifact-card p {
   margin: 0 0 8px;
-  color: var(--wk-muted, #687083);
+  color: var(--wk-text-muted);
   font-size: 13px;
   line-height: 1.45;
 }

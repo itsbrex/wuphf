@@ -41,11 +41,7 @@ html[data-theme="nex-shell"] {
      the office reuses --accent as both link ink and button fill, so it has
      to read against the paper AND carry light text on a fill. ── */
   --accent: oklch(63.79% 0.1899 269.89); /* --ms-cobalt-500 */
-  --accent-bg: color-mix(
-    in srgb,
-    oklch(50.58% 0.2886 264.84) 16%,
-    transparent
-  );
+  --accent-bg: color-mix(in srgb, oklch(50.58% 0.2886 264.84) 16%, transparent);
   --accent-bg-strong: color-mix(
     in srgb,
     oklch(50.58% 0.2886 264.84) 32%,
@@ -70,7 +66,11 @@ html[data-theme="nex-shell"] {
   --nex-sidebar-text-active: hsl(210 8% 88%);
 
   /* ── Inline accents (mentions, JSON syntax) track cobalt, not violet ── */
-  --mention-bg: color-mix(in srgb, oklch(50.58% 0.2886 264.84) 18%, transparent);
+  --mention-bg: color-mix(
+    in srgb,
+    oklch(50.58% 0.2886 264.84) 18%,
+    transparent
+  );
   --mention-fg: oklch(80% 0.1 272.4);
   --syntax-number: oklch(80% 0.1 272.4);
   --syntax-bool: oklch(0.79 0.1 85);
@@ -158,7 +158,11 @@ html[data-theme="nex-shell"] .task-detail-status-badge.status-done {
 html[data-theme="nex-shell"] .task-detail-status-badge.status-blocked {
   background: color-mix(in srgb, oklch(50.58% 0.2886 264.84) 18%, transparent);
   color: oklch(80% 0.1 272.4);
-  border-color: color-mix(in srgb, oklch(50.58% 0.2886 264.84) 40%, transparent);
+  border-color: color-mix(
+    in srgb,
+    oklch(50.58% 0.2886 264.84) 40%,
+    transparent
+  );
 }
 
 /* ── Insight badges — white text on bright accent washes out ── */
@@ -194,7 +198,10 @@ html[data-theme="nex-shell"] .notebook-surface {
 html[data-theme="nex-shell"] .notebook-surface .nb-shelf-item .nb-status-draft {
   color: var(--text-secondary);
 }
-html[data-theme="nex-shell"] .notebook-surface .nb-shelf-item .nb-status-review {
+html[data-theme="nex-shell"]
+  .notebook-surface
+  .nb-shelf-item
+  .nb-status-review {
   color: #ffb647;
 }
 html[data-theme="nex-shell"]
@@ -245,7 +252,11 @@ html[data-theme="nex-shell"] .notebook-surface::-webkit-scrollbar-thumb:hover {
 html[data-theme="nex-shell"] {
   --wk-wikilink: oklch(76.12% 0.1218 272.4);
   --wk-amber: oklch(76.12% 0.1218 272.4);
-  --wk-amber-bg: color-mix(in srgb, oklch(50.58% 0.2886 264.84) 22%, transparent);
+  --wk-amber-bg: color-mix(
+    in srgb,
+    oklch(50.58% 0.2886 264.84) 22%,
+    transparent
+  );
   --wk-amber-banner: color-mix(
     in srgb,
     oklch(50.58% 0.2886 264.84) 22%,

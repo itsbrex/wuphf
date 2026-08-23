@@ -29,7 +29,7 @@
   gap: 0;
   padding: 0 20px;
   height: 42px;
-  background: var(--surface, #ffffff);
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border, rgba(29, 28, 29, 0.08));
   font-family:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
@@ -50,7 +50,7 @@
   background: transparent;
   border: 0;
   border-bottom: 2px solid transparent;
-  color: var(--text-muted, #616061);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;

@@ -153,6 +153,17 @@ pre-push:
         cd web
         bun run typecheck
         bun run test
+    css-phantom-tokens:
+      # `var(--x, #fff)` where --x is defined nowhere is a hardcoded value
+      # wearing a token costume: the literal always wins, so the rule looks
+      # right in whichever theme the literal suits and wrong in the other
+      # two. Bare `var(--x)` is worse — the declaration is dropped entirely.
+      # Covers component inline styles too, not just stylesheets. Pure text
+      # scan (<1s), scoped to stylesheet and component changes because a
+      # component can both use and runtime-define a token.
+      files: bash scripts/changed-files-since-base.sh
+      glob: "web/{public/themes/**/*.css,src/**/*.{css,ts,tsx}}"
+      run: bash scripts/check-css-phantom-tokens.sh
     smoke:
       # internal/team's former test-isolation bugs (shared ~/.wuphf/wiki,
       # worktrees registered against the invoking repo, cross-test state

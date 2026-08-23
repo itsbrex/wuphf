@@ -424,7 +424,7 @@
 .custom-app-view__banner-btn--primary {
   border-color: var(--accent);
   background: var(--accent);
-  color: var(--accent-contrast, #fff);
+  color: var(--accent-fg);
 }
 
 .custom-app-view__banner-btn--primary:hover {
@@ -505,7 +505,7 @@
   padding: 1px 6px;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--accent-contrast, #fff);
+  color: var(--accent-fg);
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -1024,7 +1024,7 @@
    pressed state reads as an active toggle without a new control. */
 .custom-app-view__action[aria-pressed="true"] {
   border-color: var(--accent);
-  background: var(--accent-soft, var(--bg-subtle));
+  background: var(--accent-bg);
   color: var(--accent);
 }
 
@@ -1037,7 +1037,7 @@
   padding: 8px 10px;
   border: 1px solid var(--red, #d64545);
   border-radius: var(--radius-sm, 6px);
-  background: var(--red-soft, rgba(214, 69, 69, 0.08));
+  background: color-mix(in srgb, var(--red) 8%, transparent);
   color: var(--red, #d64545);
 }
 
@@ -1066,7 +1066,7 @@
 }
 
 .custom-app-view__app-error-dismiss:hover {
-  background: var(--red-soft, rgba(214, 69, 69, 0.16));
+  background: color-mix(in srgb, var(--red) 16%, transparent);
 }
 
 /* Narrow: stack chat over preview and retire the drag handle. */
