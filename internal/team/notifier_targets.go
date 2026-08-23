@@ -44,10 +44,22 @@ func (l *Launcher) officeChangeTaskNotifications(evt officeChangeEvent) []office
 	}
 
 	kind := strings.TrimSpace(evt.Kind)
-	slug := normalizeChannelSlug(evt.Slug)
+	// evt.Slug is POLYMORPHIC: a MEMBER slug for the member_* kinds and a
+	// CHANNEL slug for the channel_* kinds (office_reseeded carries none). It is
+	// therefore passed through RAW and normalised at the point of use, inside
+	// shouldBackfillTaskOwner, where the branch already knows which kind it
+	// holds. Normalising here would mean choosing a normaliser before anyone
+	// knows which kind of slug this is — which is the bug this replaced.
+	slug := strings.TrimSpace(evt.Slug)
 	switch kind {
 	case "member_created", "channel_created", "channel_updated":
 	default:
+		return nil
+	}
+	if slug == "" {
+		// No subject to match against. Bailing here matters: an empty slug
+		// used to normalise to "general" and would now match every task in
+		// that channel.
 		return nil
 	}
 
@@ -112,11 +124,24 @@ func shouldBackfillTaskOwner(kind, slug string, task teamTask) bool {
 	if task.blocked {
 		return false
 	}
+	// `slug` arrives RAW from officeChangeTaskNotifications, because which
+	// normaliser is correct depends on the kind. Each branch normalises BOTH
+	// sides of its own comparison, so the choice is stated rather than
+	// inherited from whatever the caller happened to apply.
 	switch kind {
 	case "member_created":
-		return strings.TrimSpace(task.Owner) == slug
+		// Both sides are ACTOR slugs. task.Owner is stored via a plain
+		// TrimSpace with no slug normalisation (see the task mutation paths),
+		// so a capitalised owner like "Designer" is genuinely storable. This
+		// comparison used to put a lowercased, channel-normalised slug against
+		// that raw owner, so such a task never matched and silently never got
+		// its owner backfilled. Normalising both sides is the fix.
+		return normalizeActorSlug(task.Owner) == normalizeActorSlug(slug)
 	case "channel_created", "channel_updated":
-		return normalizeChannelSlug(task.Channel) == slug
+		// Both sides are CHANNEL slugs. This half was already correct; it is
+		// spelled out symmetrically so the two branches read the same way and
+		// neither can drift back to normalising at the call site.
+		return normalizeChannelSlug(task.Channel) == normalizeChannelSlug(slug)
 	default:
 		return false
 	}
