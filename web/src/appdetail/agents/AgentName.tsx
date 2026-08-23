@@ -39,7 +39,7 @@ export function AgentName({ id, fallback }: AgentNameProps) {
         <input
           ref={inputRef}
           className="opr-agent-name-input"
-          aria-label="Agent name"
+          aria-label="App name"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={save}
@@ -53,7 +53,7 @@ export function AgentName({ id, fallback }: AgentNameProps) {
           className="opr-icon-btn"
           onMouseDown={(e) => e.preventDefault()}
           onClick={save}
-          aria-label="Save agent name"
+          aria-label="Save app name"
         >
           <Check size={13} strokeWidth={2} aria-hidden={true} />
         </button>
@@ -69,7 +69,7 @@ export function AgentName({ id, fallback }: AgentNameProps) {
         className="opr-icon-btn opr-agent-name-pencil"
         onClick={start}
         aria-label={`Rename ${name}`}
-        title="Rename this agent"
+        title="Rename this app"
       >
         <Pencil size={12} strokeWidth={1.9} aria-hidden={true} />
       </button>

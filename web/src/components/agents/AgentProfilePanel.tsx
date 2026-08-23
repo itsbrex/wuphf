@@ -34,6 +34,7 @@ import {
   modelOptionsForKind,
 } from "../../lib/modelCatalog";
 import { router } from "../../lib/router";
+import { useAppStore } from "../../stores/app";
 import { HarnessBadge } from "../ui/HarnessBadge";
 import { PixelAvatar } from "../ui/PixelAvatar";
 import { showNotice } from "../ui/Toast";
@@ -275,6 +276,7 @@ function RecentArtifactsSection({ agentSlug, tasks }: RecentTasksSectionProps) {
       );
     },
   });
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
   const agentTasks = tasks
     .filter((t) => t.owner === agentSlug)
     .sort((a, b) => {
@@ -296,12 +298,9 @@ function RecentArtifactsSection({ agentSlug, tasks }: RecentTasksSectionProps) {
               <button
                 type="button"
                 className="agent-profile-task-btn"
-                onClick={() =>
-                  void router.navigate({
-                    to: "/tasks/$taskId",
-                    params: { taskId: t.id },
-                  })
-                }
+                // Opens the shared task modal in place rather than
+                // navigating into the task's chat surface.
+                onClick={() => openTaskModal(t.id)}
               >
                 <span className="agent-profile-task-title">{t.title}</span>
                 <span

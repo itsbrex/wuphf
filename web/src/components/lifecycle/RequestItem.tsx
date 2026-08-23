@@ -48,7 +48,7 @@ export function RequestItem({
         {request.blocking ? (
           <span className="badge badge-yellow">BLOCKING</span>
         ) : null}
-              </div>
+      </div>
 
       {request.title && request.title !== "Request" && (
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>

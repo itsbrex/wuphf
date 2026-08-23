@@ -34,7 +34,7 @@ export function AgentPurpose({ summary }: AgentPurposeProps) {
   return (
     <div className="opr-agent-purpose">
       <p className="opr-agent-purpose-text">
-        {base ? `${base}.` : "This agent handles the workflows you teach it."}
+        {base ? `${base}.` : "This app handles the workflows you teach it."}
         {taught.length > 0 ? (
           <>
             {" "}
@@ -46,7 +46,7 @@ export function AgentPurpose({ summary }: AgentPurposeProps) {
       {taught.length > 0 ? (
         <span
           className="opr-agent-purpose-chip"
-          title="Summarized from the workflows you taught this agent in chat"
+          title="Summarized from the workflows you taught this app in chat"
         >
           <MessageCircle size={11} strokeWidth={2} aria-hidden={true} />
           from {taught.length} conversation{taught.length === 1 ? "" : "s"}

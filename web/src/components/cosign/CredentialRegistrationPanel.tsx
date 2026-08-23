@@ -223,7 +223,7 @@ function RegistrationOutcome({
       : {
           background: "rgba(220, 38, 38, 0.08)",
           border: "rgba(220, 38, 38, 0.35)",
-          color: "var(--danger-500, #dc2626)",
+          color: "var(--red)",
         };
   return (
     <div

@@ -1,11 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { OfficeStatsTasks } from "../../api/platform";
 import type { Task } from "../../api/tasks";
+import { router } from "../../lib/router";
 import type { InboxItem } from "../../lib/types/inbox";
+import { useAppStore } from "../../stores/app";
 import { TasksList } from "./TasksList";
 
 function makeTask(overrides: Partial<Task>): Task {
@@ -323,5 +325,51 @@ describe("<TasksList>", () => {
       ".issues-kanban-column-count",
     )?.textContent;
     expect(count).toBe("3");
+  });
+
+  describe("clicking a task", () => {
+    it("opens the shared task modal and does NOT navigate into chat", async () => {
+      const navigate = vi
+        .spyOn(router, "navigate")
+        .mockResolvedValue(undefined);
+      useAppStore.setState({ taskModalTaskId: null });
+
+      renderList([
+        makeTask({
+          id: "DUNDE-72",
+          title: "Ship the Q3 pricing page",
+          task_type: "issue",
+        }),
+      ]);
+
+      await userEvent.click(screen.getByTestId("issue-row"));
+
+      expect(useAppStore.getState().taskModalTaskId).toBe("DUNDE-72");
+      expect(navigate).not.toHaveBeenCalled();
+      navigate.mockRestore();
+    });
+
+    it("opens a sub-task row in the modal too", async () => {
+      const navigate = vi
+        .spyOn(router, "navigate")
+        .mockResolvedValue(undefined);
+      useAppStore.setState({ taskModalTaskId: null });
+
+      renderList([
+        makeTask({ id: "DUNDE-72", title: "Parent", task_type: "issue" }),
+        makeTask({
+          id: "DUNDE-73",
+          title: "Child",
+          task_type: "issue",
+          parent_issue_id: "DUNDE-72",
+        }),
+      ]);
+
+      await userEvent.click(screen.getByTestId("issue-subtask-row"));
+
+      expect(useAppStore.getState().taskModalTaskId).toBe("DUNDE-73");
+      expect(navigate).not.toHaveBeenCalled();
+      navigate.mockRestore();
+    });
   });
 });

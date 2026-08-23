@@ -9,15 +9,16 @@
  * to act on it rather than reply to the thread on the Task.
  *
  * This card surfaces the comment as a clear "this happened on Task X"
- * affordance with a Read & Reply CTA that routes to the Task detail
- * view (where the chat stream is the canonical reply thread; the
- * Activity rail is a state-change audit only — no comments).
+ * affordance whose CTA opens the shared task modal in place. It used to
+ * navigate to the Task detail view; with the office shell restored, tasks no
+ * longer own channels and the reply thread is the office channel the reader
+ * is already in, so leaving that conversation to open another one is wrong.
  *
  * Security: payload fields are plain text only. The broker-side
  * sanitizer is authoritative; this component is defense-in-depth.
  */
 
-import { router } from "../../../lib/router";
+import { useAppStore } from "../../../stores/app";
 
 export interface TaskCommentPayload {
   task_id?: string;
@@ -60,13 +61,11 @@ export function TaskCommentCard({ payload }: TaskCommentCardProps) {
   const excerpt = payload.excerpt ?? "";
   const state = payload.lifecycle_state;
   const isDrafting = state === "drafting";
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   function openTask() {
     if (!taskId) return;
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId },
-    });
+    openTaskModal(taskId);
   }
 
   const eyebrow = isDrafting

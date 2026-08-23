@@ -248,3 +248,53 @@ describe("messageMarkdown — @mentions render as chips", () => {
     expect(container.querySelector(".mention")).toBeNull();
   });
 });
+
+describe("messageMarkdown — task references", () => {
+  // These render with NO QueryClientProvider above them. That is the point:
+  // the task-ref renderer reads titles out of the query cache, and a missing
+  // provider must degrade to showing the raw id, never throw.
+  it("linkifies an uppercase-prefix task id", () => {
+    const { container } = renderChat("shipping DUNDE-72 today");
+    const link = container.querySelector(".msg-task-link");
+    expect(link).not.toBeNull();
+    expect(link?.textContent).toBe("DUNDE-72");
+    expect(link?.getAttribute("data-task-id")).toBe("DUNDE-72");
+  });
+
+  it("linkifies the legacy lowercase task-N form", () => {
+    const { container } = renderChat("see task-12 for context");
+    const link = container.querySelector(".msg-task-link");
+    expect(link).not.toBeNull();
+    expect(link?.textContent).toBe("task-12");
+  });
+
+  it("does NOT linkify an ordinary lowercase hyphenated word", () => {
+    // Regression: the pattern carried the /i flag, so the uppercase-prefix
+    // branch matched lowercase prose and "request-75" rendered as a task
+    // link that clicked through to nothing.
+    const { container } = renderChat("closing request-75 as duplicate");
+    expect(container.querySelector(".msg-task-link")).toBeNull();
+    expect(container.textContent).toContain("request-75");
+  });
+
+  it("does not linkify a lowercase word inside a longer sentence", () => {
+    const { container } = renderChat(
+      "the invoice-2024 and the ticket-9 both landed",
+    );
+    expect(container.querySelector(".msg-task-link")).toBeNull();
+  });
+
+  it("does not linkify a suffix match like subtask-12", () => {
+    const { container } = renderChat("subtask-12 is nested");
+    expect(container.querySelector(".msg-task-link")).toBeNull();
+  });
+
+  it("renders the button rather than a navigable anchor", () => {
+    // A task reference must never be an <a href> — clicking it opens the
+    // task modal in place, it does not navigate.
+    const { container } = renderChat("DUNDE-72 is ready");
+    const link = container.querySelector(".msg-task-link");
+    expect(link?.tagName.toLowerCase()).toBe("button");
+    expect(container.querySelector("a")).toBeNull();
+  });
+});

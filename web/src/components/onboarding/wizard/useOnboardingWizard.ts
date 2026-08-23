@@ -4,7 +4,12 @@
  * Owns:
  *   - The working `answers` object and an immutable patch setter.
  *   - The current step index plus next / back / goTo navigation.
- *   - `canAdvance` gating per step (first-issue needs text).
+ *   - `canAdvance` gating per step (team needs a blueprint or a named agent;
+ *     first-issue needs text).
+ *   - The blueprint roster fetched once from GET /onboarding/blueprints, and
+ *     only while ONBOARDING_TEAM_PACKS_ENABLED is on. With packs hidden the
+ *     step order drops "team" (see wizardSteps.ts), so the roster has no
+ *     reader and the fetch does not run.
  *
  * On FINISH it runs the seed contract (verified against
  * internal/onboarding/handlers.go + internal/team/broker_onboarding.go):
@@ -15,11 +20,10 @@
  *      MUST happen first. owner_name / owner_role are persisted the same way
  *      when collected.
  *   2. POST /onboarding/complete { task: firstIssue, skip_task: false,
- *      blueprint: "", agents: [] }. Blueprint "" plus an explicit empty agents
- *      list is the no-team seed: since the packs/CEO removal the office starts
- *      with zero agents, the first workflow lands untagged in #general, and
- *      the broker flips onboarded=true. An already_completed response is
- *      treated as success.
+ *      blueprint: blueprintId, agents: pickedAgents }. The broker seeds the
+ *      team from that blueprint (or synthesizes one when blueprint is empty),
+ *      honors the agents filter, posts the first CEO turn, and flips
+ *      onboarded=true. An already_completed response is treated as success.
  *   3. Seed the home composer with the first issue (pendingComposerDraft on the
  *      app store, keyed to HOME_COMPOSER_DRAFT_CHANNEL, which the home
  *      TaskComposer consumes on landing) so the office opens with the issue
@@ -30,10 +34,11 @@
  * them and re-enables Finish so the user can retry.
  */
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   completeOnboarding,
+  fetchBlueprints,
   postOnboardingAnswer,
   postOnboardingProgress,
 } from "../../../api/onboarding";
@@ -43,13 +48,15 @@ import {
   setAnalyticsConsent,
   track,
 } from "../../../lib/analytics";
-import { OPERATOR_FIRST_WORKFLOW_SEED_KEY } from "../../../operator/firstWorkflowSeed";
 import { HOME_COMPOSER_DRAFT_CHANNEL, useAppStore } from "../../../stores/app";
+import type { BlueprintOption } from "./types";
+import { toBlueprintOption } from "./types";
 import {
+  ONBOARDING_FIRST_ISSUE_EXAMPLE,
+  ONBOARDING_TEAM_PACKS_ENABLED,
   ONBOARDING_WIZARD_STEP_IDS,
   type OnboardingAnswers,
   type OnboardingWizardStepId,
-  pickFirstIssueExample,
 } from "./wizardSteps";
 
 /**
@@ -95,7 +102,14 @@ function maybeRecordOnboardingEmail(email: string, keepInTouch: boolean): void {
   }
 }
 
-/** Initial answers. The first issue is prefilled with the RevOps example. */
+/**
+ * Initial answers. The first issue is prefilled with the RevOps example.
+ *
+ * With starter packs hidden (ONBOARDING_TEAM_PACKS_ENABLED off) the scratch
+ * path is the only path, so it starts already chosen: no blueprint, no picked
+ * agents. That is the broker's lead-only seed — a CEO and #general — which is
+ * exactly where the wizard is meant to deposit the user.
+ */
 function initialAnswers(): OnboardingAnswers {
   return {
     companyName: "",
@@ -103,7 +117,12 @@ function initialAnswers(): OnboardingAnswers {
     ownerRole: "",
     email: "",
     keepInTouch: true,
-    firstIssue: pickFirstIssueExample(),
+    blueprintId: "",
+    pickedAgents: [],
+    startFromScratch: !ONBOARDING_TEAM_PACKS_ENABLED,
+    agentName: "",
+    agentInstructions: "",
+    firstIssue: ONBOARDING_FIRST_ISSUE_EXAMPLE,
     telemetryConsent: true,
     recordingConsent: true,
   };
@@ -122,6 +141,8 @@ export interface UseOnboardingWizardResult {
   answers: OnboardingAnswers;
   /** Merge-patch the answers immutably. */
   setAnswers: (patch: Partial<OnboardingAnswers>) => void;
+  /** The blueprint roster options (empty while loading or on error). */
+  blueprints: BlueprintOption[];
   /** Whether the user may advance from the current step. */
   canAdvance: boolean;
   /** Advance one step (no-op on the last step; use finish there). */
@@ -150,6 +171,7 @@ export function useOnboardingWizard(
   const [index, setIndex] = useState(0);
   const [answers, setAnswersState] =
     useState<OnboardingAnswers>(initialAnswers);
+  const [blueprints, setBlueprints] = useState<BlueprintOption[]>([]);
   const [seeding, setSeeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -162,16 +184,52 @@ export function useOnboardingWizard(
     setAnswersState((current) => ({ ...current, ...patch }));
   }, []);
 
-  // Per-step advance gate. The first-issue step needs non-empty text. Every
-  // other step is informational.
+  // Fetch the blueprint roster once. A failure is non-fatal: the team step
+  // falls back to the scratch path, so we keep blueprints empty and let the
+  // user proceed rather than blocking onboarding on a roster fetch.
+  //
+  // Skipped wholesale while starter packs are hidden — the team step is the
+  // only reader, so fetching would be a request whose response nothing renders.
+  useEffect(() => {
+    if (!ONBOARDING_TEAM_PACKS_ENABLED) return;
+    let cancelled = false;
+    fetchBlueprints()
+      .then((summaries) => {
+        if (cancelled) return;
+        setBlueprints(summaries.map(toBlueprintOption));
+      })
+      .catch(() => {
+        if (!cancelled) setBlueprints([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Per-step advance gate. The team step needs a chosen blueprint OR a named
+  // first agent (the "I will set this up later" escape sets neither and uses
+  // the scratch path, so that escape is wired in the host, not here). The
+  // first-issue step needs non-empty text. Every other step is informational.
   const canAdvance = useMemo(() => {
     switch (stepId) {
+      case "team":
+        return (
+          answers.blueprintId.trim() !== "" ||
+          answers.startFromScratch ||
+          answers.agentName.trim() !== ""
+        );
       case "first-issue":
         return answers.firstIssue.trim() !== "";
       default:
         return true;
     }
-  }, [stepId, answers.firstIssue]);
+  }, [
+    stepId,
+    answers.blueprintId,
+    answers.startFromScratch,
+    answers.agentName,
+    answers.firstIssue,
+  ]);
 
   const next = useCallback(() => {
     setIndex((current) => Math.min(current + 1, lastIndex));
@@ -202,6 +260,7 @@ export function useOnboardingWizard(
       const ownerRole = answers.ownerRole.trim();
       const email = answers.email.trim();
       const firstIssue = answers.firstIssue.trim();
+      const blueprintId = answers.blueprintId.trim();
       const telemetryConsent = answers.telemetryConsent;
       const recordingConsent = answers.recordingConsent;
 
@@ -215,22 +274,16 @@ export function useOnboardingWizard(
           email,
         );
 
-        // 2. Seed the empty office + flip onboarded=true. Blueprint "" plus an
-        //    explicit empty agents list is the no-team seed: no packs, no CEO,
-        //    zero agents. The first workflow is deliberately NOT sent as an
-        //    office task: the operator surface is the front door, and a task
-        //    in #general would run invisibly there (the legacy pipeline spins
-        //    up a phantom CEO turn the operator never sees). Instead the text
-        //    rides to the operator as a build seed (step 3 below) so the
-        //    first thing the user watches is their agent being built.
+        // 2. Seed the team + post the first CEO turn + flip onboarded=true.
+        //    blueprint empty => scratch path; agents filters the roster.
         //    owner_name / owner_role are also sent on the complete body so a
         //    fresh broker persists them to config even if the answer writes
         //    above raced; the broker merges, it does not require them.
         const result = await completeOnboarding({
-          task: "",
-          skip_task: true,
-          blueprint: "",
-          agents: [],
+          task: skipTask ? "" : firstIssue,
+          skip_task: skipTask,
+          blueprint: blueprintId,
+          agents: answers.pickedAgents,
           owner_name: ownerName || undefined,
           owner_role: ownerRole || undefined,
           analytics_telemetry_enabled: telemetryConsent,
@@ -253,6 +306,8 @@ export function useOnboardingWizard(
         // 2b. Funnel close-out + the explicit consent record (both no-ops when
         //     telemetry is off). No content, only counts + the chosen flags.
         track("onboarding_completed", {
+          blueprint_id: blueprintId,
+          agent_count: answers.pickedAgents.length,
           skipped_first_task: skipTask,
           telemetry_consent: telemetryConsent,
           recording_consent: recordingConsent,
@@ -273,21 +328,13 @@ export function useOnboardingWizard(
         //     landing in the office. See maybeRecordOnboardingEmail.
         maybeRecordOnboardingEmail(email, answers.keepInTouch);
 
-        // 3. Hand the first workflow to the operator surface. OperatorApp
-        //    consumes this key on mount and opens the build flow with the
-        //    text already sent, so the user lands on their agent being
-        //    assembled — the payoff the "Start your first workflow" CTA
-        //    promised. The legacy home composer is seeded too, so the text
-        //    is also waiting if they visit the office surfaces.
+        // 3. Seed the home composer so the office opens with the first issue
+        //    ready to send. Keyed to HOME_COMPOSER_DRAFT_CHANNEL, the sentinel
+        //    the home TaskComposer consumes on landing — the old code seeded the
+        //    CEO DM, which the post-restructure home composer never read, so the
+        //    issue was silently dropped. Skipped when the user chose to explore
+        //    first: no issue, so open clean.
         if (!skipTask) {
-          try {
-            window.localStorage.setItem(
-              OPERATOR_FIRST_WORKFLOW_SEED_KEY,
-              firstIssue,
-            );
-          } catch {
-            // Private mode etc. — the office composer seed below still works.
-          }
           useAppStore
             .getState()
             .setPendingComposerDraft(HOME_COMPOSER_DRAFT_CHANNEL, firstIssue);
@@ -312,6 +359,8 @@ export function useOnboardingWizard(
       answers.email,
       answers.keepInTouch,
       answers.firstIssue,
+      answers.blueprintId,
+      answers.pickedAgents,
       answers.telemetryConsent,
       answers.recordingConsent,
       onComplete,
@@ -331,6 +380,7 @@ export function useOnboardingWizard(
     isLast,
     answers,
     setAnswers,
+    blueprints,
     canAdvance,
     next,
     back,

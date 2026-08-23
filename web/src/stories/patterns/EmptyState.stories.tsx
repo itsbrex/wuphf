@@ -1,6 +1,5 @@
-import { MailIn } from "iconoir-react";
-
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { MailIn } from "iconoir-react";
 
 const meta: Meta = {
   title: "Design System/Molecules/Empty state",
@@ -11,10 +10,7 @@ export default meta;
 
 export const Minimal: StoryObj = {
   render: () => (
-    <div
-      className="empty-state empty-state--padded"
-      style={{ minHeight: 200 }}
-    >
+    <div className="empty-state empty-state--padded" style={{ minHeight: 200 }}>
       No tasks yet — the office is quiet.
     </div>
   ),

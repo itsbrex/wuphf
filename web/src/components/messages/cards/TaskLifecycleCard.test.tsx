@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useAppStore } from "../../../stores/app";
 import { TaskLifecycleCard } from "./TaskLifecycleCard";
 
 const navigate = vi.fn();
@@ -18,25 +19,29 @@ const BASE = {
 };
 
 describe("TaskLifecycleCard", () => {
+  beforeEach(() => {
+    useAppStore.setState({ taskModalTaskId: null });
+  });
+
   afterEach(() => {
     cleanup();
     navigate.mockReset();
   });
 
-  it("renders a clickable card with an Open CTA when pointing elsewhere", () => {
+  it("opens the shared task modal instead of navigating into chat", () => {
     render(<TaskLifecycleCard payload={BASE} />);
     const card = screen.getByTestId("issue-lifecycle-card");
-    // Interactive variant is a <button> with the navigation affordance.
+    // Interactive variant is a <button> with the open affordance.
     expect(card.tagName).toBe("BUTTON");
     expect(card).not.toHaveAttribute("data-static");
     expect(card.textContent).toMatch(/Open →/);
     expect(card.textContent).toMatch(/Parked → In progress/);
 
     fireEvent.click(card);
-    expect(navigate).toHaveBeenCalledWith({
-      to: "/tasks/$taskId",
-      params: { taskId: "OFFICE-7" },
-    });
+    // A task is not a doorway to a room: the card opens the modal in place
+    // and must never route the reader out of the conversation.
+    expect(useAppStore.getState().taskModalTaskId).toBe("OFFICE-7");
+    expect(navigate).not.toHaveBeenCalled();
   });
 
   it("renders an inert status row (no Open, not clickable) for the same task", () => {
@@ -51,6 +56,7 @@ describe("TaskLifecycleCard", () => {
     expect(card.textContent).toMatch(/Parked → In progress/);
 
     fireEvent.click(card);
+    expect(useAppStore.getState().taskModalTaskId).toBeNull();
     expect(navigate).not.toHaveBeenCalled();
   });
 

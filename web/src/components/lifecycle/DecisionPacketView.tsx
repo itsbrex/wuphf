@@ -435,27 +435,10 @@ function DiscussionSection({ feedback, channel }: DiscussionSectionProps) {
       {feedback.length === 0 ? (
         <p className="packet-discussion-empty">
           No review notes yet. Approvals, requested changes, and reviewer notes
-          appear here.{" "}
-          {channelSlug ? (
-            <>
-              Chat about this task in{" "}
-              <button
-                type="button"
-                className="packet-discussion-channel-link"
-                onClick={() =>
-                  void router.navigate({
-                    to: "/channels/$channelSlug",
-                    params: { channelSlug },
-                  })
-                }
-              >
-                #{channelSlug}
-              </button>
-              .
-            </>
-          ) : (
-            "Chat about this task in its channel."
-          )}
+          appear here.
+          {/* No channel doorway from a task: the office is one room, and the
+              discussion lives in the channel the task was created from, which
+              the sidebar lists directly. */}
         </p>
       ) : (
         <ol className="packet-discussion-thread">

@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -7,6 +9,22 @@ import { ChannelHeader } from "./ChannelHeader";
 vi.mock("../../hooks/useChannels", () => ({
   useChannels: () => ({ data: [] }),
 }));
+
+// The breadcrumb resolves an app's real name instead of title-casing its id,
+// so the header now reads the apps list. That makes a QueryClient a genuine
+// dependency of rendering it, not a test detail.
+vi.mock("../../api/apps", () => ({
+  listApps: vi.fn(async () => []),
+}));
+
+function renderHeader(ui: ReactElement = <ChannelHeader />) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  });
+  return render(
+    <QueryClientProvider client={client}>{ui}</QueryClientProvider>,
+  );
+}
 
 vi.mock("../../routes/useCurrentRoute", () => ({
   useCurrentRoute: () => ({ kind: "channel", channelSlug: "general" }),
@@ -21,7 +39,7 @@ describe("<ChannelHeader>", () => {
   it("opens the theme switcher and switches to Nex Dark", () => {
     useAppStore.setState({ theme: "nex" });
 
-    render(<ChannelHeader />);
+    renderHeader();
 
     const trigger = screen.getByRole("button", {
       name: /Theme: Nex Light\. Open theme switcher\./,
@@ -40,7 +58,7 @@ describe("<ChannelHeader>", () => {
   it("marks the active theme as checked", () => {
     useAppStore.setState({ theme: "noir-gold" });
 
-    render(<ChannelHeader />);
+    renderHeader();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -55,7 +73,7 @@ describe("<ChannelHeader>", () => {
   it("closes the menu on Escape", () => {
     useAppStore.setState({ theme: "nex" });
 
-    render(<ChannelHeader />);
+    renderHeader();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -71,7 +89,7 @@ describe("<ChannelHeader>", () => {
   it("closes the menu on outside pointerdown", () => {
     useAppStore.setState({ theme: "nex" });
 
-    render(<ChannelHeader />);
+    renderHeader();
 
     fireEvent.click(
       screen.getByRole("button", {
@@ -87,7 +105,7 @@ describe("<ChannelHeader>", () => {
   it("navigates menu items with arrow keys", () => {
     useAppStore.setState({ theme: "nex" });
 
-    render(<ChannelHeader />);
+    renderHeader();
 
     fireEvent.click(
       screen.getByRole("button", {

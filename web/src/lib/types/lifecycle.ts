@@ -542,12 +542,7 @@ export const FILTER_TO_STATES: Record<
   // drafting is surfaced in the issues route, not the inbox; include it in
   // running so inbox rows with this state still land somewhere readable.
   running: ["drafting", "planning", "intake", "ready", "running", "review"],
-  blocked: [
-    "blocked",
-    "queued_behind_owner",
-    "changes_requested",
-    "rejected",
-  ],
+  blocked: ["blocked", "queued_behind_owner", "changes_requested", "rejected"],
   approved: ["approved"],
   // Unread is post-filtered against the actor's cursor on the server,
   // not against a fixed state set. Leave the state list empty so any

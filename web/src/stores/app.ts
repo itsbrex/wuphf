@@ -247,6 +247,17 @@ export interface AppStore {
   openUpdateAppDialog: (appId: string, name?: string, seed?: string) => void;
   closeAppBuilderDialog: () => void;
 
+  // Task modal: the ONE surface every task affordance opens. A task card in
+  // the chat stream, a board row, a sub-task row, an inline `DUNDE-72`
+  // reference — all of them set this id instead of navigating, because a
+  // task is not a doorway to a chat room (the office channel owns the
+  // conversation now). Holds the task id, or null when closed. Global rather
+  // than prop-drilled because the call sites live in a dozen unrelated
+  // subtrees; TaskModalHost (mounted once in RootRoute) reads it.
+  taskModalTaskId: string | null;
+  openTaskModal: (taskId: string) => void;
+  closeTaskModal: () => void;
+
   // Optimistic "building…" rows for the Apps sidebar: a 20-60s App Builder
   // build would otherwise be dead air between submit and the app appearing.
   // Keyed by lowercased app name -> { display name, started-at epoch ms }.
@@ -436,6 +447,16 @@ export const useAppStore = create<AppStore>((set, get) => ({
   openUpdateAppDialog: (appId, name, seed) =>
     set({ appBuilderDialog: { mode: "update", appId, name, seed } }),
   closeAppBuilderDialog: () => set({ appBuilderDialog: null }),
+
+  taskModalTaskId: null,
+  // Empty / whitespace ids are ignored: a card whose payload lost its task_id
+  // should stay inert rather than pop an un-loadable modal.
+  openTaskModal: (taskId) => {
+    const id = taskId.trim();
+    if (!id) return;
+    set({ taskModalTaskId: id });
+  },
+  closeTaskModal: () => set({ taskModalTaskId: null }),
 
   appBuilds: {},
   noteAppBuilding: (name) =>

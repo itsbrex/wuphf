@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CSSProperties } from "react";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { SidebarSectionHeader } from "./SidebarSectionHeader";
 
@@ -51,7 +51,11 @@ export const States: Story = {
   parameters: { controls: { disable: true } },
   render: () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <SidebarSectionHeader label="Agents (open)" open onToggle={() => {}} />
+      <SidebarSectionHeader
+        label="Agents (open)"
+        open={true}
+        onToggle={() => {}}
+      />
       <SidebarSectionHeader
         label="Channels (collapsed)"
         open={false}
@@ -59,7 +63,7 @@ export const States: Story = {
       />
       <SidebarSectionHeader
         label="Issues + action"
-        open
+        open={true}
         onToggle={() => {}}
         actions={
           <button type="button" className="sidebar-section-action">
@@ -69,7 +73,7 @@ export const States: Story = {
       />
       <SidebarSectionHeader
         label="Issues + action active"
-        open
+        open={true}
         onToggle={() => {}}
         actions={
           <button type="button" className="sidebar-section-action active">

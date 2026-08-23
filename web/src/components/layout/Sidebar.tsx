@@ -9,6 +9,7 @@ import { TeamMemberBadge } from "../join/TeamMemberBadge";
 import { SidebarPreviewOverlay } from "../onboarding/SidebarPreviewOverlay";
 import { AgentList } from "../sidebar/AgentList";
 import { AppList } from "../sidebar/AppList";
+import { ChannelList } from "../sidebar/ChannelList";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { UsagePanel } from "../sidebar/UsagePanel";
 import { CollapsedSidebar } from "./CollapsedSidebar";
@@ -42,7 +43,9 @@ export function Sidebar() {
   const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);
   const toggleSidebarCollapsed = useAppStore((s) => s.toggleSidebarCollapsed);
   const sidebarAgentsOpen = useAppStore((s) => s.sidebarAgentsOpen);
+  const sidebarChannelsOpen = useAppStore((s) => s.sidebarChannelsOpen);
   const toggleSidebarAgents = useAppStore((s) => s.toggleSidebarAgents);
+  const toggleSidebarChannels = useAppStore((s) => s.toggleSidebarChannels);
   const currentApp = useCurrentApp();
   const mobileRail = useMobileRail();
   const [mobileExpanded, setMobileExpanded] = useState(false);
@@ -140,10 +143,24 @@ export function Sidebar() {
               <AgentList />
             </SidebarSection>
 
+            {/* Channels are first-class again: the office is one room, so
+                #general is a place you go, not something you reach through a
+                task. Task-scoped channels are gone (a task lives in the channel
+                it was created from), so this list is the real conversation
+                surface. */}
+            <SidebarSection
+              label="Channels"
+              open={sidebarChannelsOpen}
+              onToggle={toggleSidebarChannels}
+              data-testid="sidebar-section-channels"
+            >
+              <ChannelList />
+            </SidebarSection>
+
             {/* The sidebar nav is three labeled groups — Work / Knowledge /
                 Config — rendered by AppList. Inbox lives in Work; there is no
                 separate flat task list, and "Tasks" in Work opens the task
-                surface. Channels are per task (reached via the task detail). */}
+                surface. */}
             <AppList />
 
             {/* Phase 2 onboarding preview overlay — shows staged channels/agents

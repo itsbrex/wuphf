@@ -324,6 +324,51 @@ export function reassignTask(
   );
 }
 
+/**
+ * Save a human's edits to a task's name and description.
+ *
+ * FORM SAVE, NOT A PATCH. `title` and `details` are both authoritative and
+ * must carry the COMPLETE value the form holds, changed or not. That is what
+ * makes clearing a description expressible: send `details: ""`. Sending only
+ * the changed field would be wrong twice over — the broker's `edit` case
+ * assigns both unconditionally, and a per-field call would post two separate
+ * change announcements into the channel for one save.
+ *
+ * Carries no lifecycle verb: renaming a task must never move it between board
+ * columns. An empty/whitespace title is rejected by the broker with 400
+ * "title required" — a task must keep a name.
+ *
+ * Authorised for the human and the CEO only (checkTaskActionAuthLocked); a
+ * specialist agent calling this is rejected.
+ *
+ * The broker announces the change itself — it posts one `task_changed`
+ * message tagging the owner. Callers must NOT also post a chat message on
+ * success, or the edit is announced twice.
+ */
+export function editTaskFields(
+  taskId: string,
+  fields: { title: string; details: string },
+  channel: string,
+  actor = "human",
+) {
+  const body: Record<string, string> = {
+    action: "edit",
+    id: taskId,
+    title: fields.title,
+    details: fields.details,
+    created_by: actor,
+  };
+  // Send `channel` only when the task actually has one. This used to be
+  // `channel || "general"`, which is the same laundering the task surfaces
+  // just had removed: a task with no conversation home is not a task in
+  // #general, and asserting otherwise is how an edit lands in a retired room.
+  // The broker resolves an edit against the task's OWN channel and only
+  // consults this as a backstop, so omitting it loses nothing.
+  const trimmed = channel.trim();
+  if (trimmed) body.channel = trimmed;
+  return post<TaskResponse>("/tasks", body);
+}
+
 export type TaskStatusAction =
   | "release"
   | "review"

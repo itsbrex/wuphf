@@ -60,11 +60,7 @@ export const Variants: Story = {
       }}
     >
       {VARIANTS.map((variant) => (
-        <button
-          key={variant}
-          type="button"
-          className={classFor(variant, "md")}
-        >
+        <button key={variant} type="button" className={classFor(variant, "md")}>
           {variant}
         </button>
       ))}
@@ -92,7 +88,7 @@ export const States: Story = {
       <button type="button" className="btn btn-primary">
         Default
       </button>
-      <button type="button" className="btn btn-primary" disabled>
+      <button type="button" className="btn btn-primary" disabled={true}>
         Disabled
       </button>
       <button type="button" className="btn-text">

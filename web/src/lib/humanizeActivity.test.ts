@@ -14,9 +14,7 @@ import {
 
 describe("humanizeLifecycleState", () => {
   it("maps every known enum to a plain label", () => {
-    expect(humanizeLifecycleState("blocked")).toBe(
-      "Blocked",
-    );
+    expect(humanizeLifecycleState("blocked")).toBe("Blocked");
     expect(humanizeLifecycleState("queued_behind_owner")).toBe(
       "Queued behind owner",
     );
@@ -50,9 +48,9 @@ describe("humanizeLifecycleState", () => {
 
 describe("humanizeStateTokens", () => {
   it("replaces embedded enum tokens in prose", () => {
-    expect(
-      humanizeStateTokens("running → queued_behind_owner [deps]"),
-    ).toBe("running → Queued behind owner [deps]");
+    expect(humanizeStateTokens("running → queued_behind_owner [deps]")).toBe(
+      "running → Queued behind owner [deps]",
+    );
   });
 
   it("leaves plain-word state tokens like 'blocked' untouched in prose", () => {

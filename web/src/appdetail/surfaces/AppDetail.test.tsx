@@ -4,7 +4,7 @@ import { act, fireEvent, render as rtlRender } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { CustomAppDetail } from "../../api/apps";
-import { OperatorAppDetail } from "./OperatorAppDetail";
+import { AppDetail } from "./AppDetail";
 
 // Control the data hook so we can render the building vs ready states without a
 // network or React Query provider.
@@ -87,7 +87,7 @@ function detail(
   };
 }
 
-describe("OperatorAppDetail", () => {
+describe("AppDetail", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
@@ -98,7 +98,7 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByTestId, queryByTestId } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     // The building app's UI tab shows the live dev-server preview, not the
     // sealed published frame.
@@ -114,7 +114,7 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByTestId } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     const frame = getByTestId("app-frame");
     expect(frame.getAttribute("data-app-id")).toBe("app_abc");
@@ -127,7 +127,7 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByRole, getByText, getAllByText } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     fireEvent.click(getByRole("tab", { name: "Routines" }));
     // Routines start EMPTY (no fabricated seeds) — the tab shows the honest
@@ -142,13 +142,13 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByRole } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     // Header action button (exact name "Ask AI").
     expect(getByRole("button", { name: /^ask agent$/i })).toBeTruthy();
     // Floating bubble (aria-label "Ask AI about <app>").
     expect(
-      getByRole("button", { name: /ask agent about open tasks/i }),
+      getByRole("button", { name: /ask wuphf about open tasks/i }),
     ).toBeTruthy();
   });
 
@@ -158,7 +158,7 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { queryByRole } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     expect(queryByRole("button", { name: /ask agent/i })).toBeNull();
   });
@@ -191,7 +191,7 @@ describe("OperatorAppDetail", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const { container, findByText, getByTestId, getByText } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     // The persisted artifact renders in the strip under the app…
     expect(await findByText("weekly-recap.md")).toBeTruthy();
@@ -214,7 +214,7 @@ describe("OperatorAppDetail", () => {
       vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })),
     );
     const { getByTestId, queryByText } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     expect(getByTestId("app-frame")).toBeTruthy();
     expect(queryByText("Artifacts")).toBeNull();
@@ -226,12 +226,12 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByRole, getByTestId, queryByTestId } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     // Drawer closed: only the floating bubble exists, no chat yet.
     expect(queryByTestId("ask-ai-chat")).toBeNull();
     fireEvent.click(
-      getByRole("button", { name: /ask agent about open tasks/i }),
+      getByRole("button", { name: /ask wuphf about open tasks/i }),
     );
     // Drawer open: the tools chat is mounted inside the docked panel.
     expect(getByTestId("ask-ai-chat").textContent).toContain(
@@ -245,10 +245,10 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { container, getByRole, queryByTestId } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     fireEvent.click(
-      getByRole("button", { name: /ask agent about open tasks/i }),
+      getByRole("button", { name: /ask wuphf about open tasks/i }),
     );
     // The panel takes focus on open (overlay keyboard grammar, as CallModal).
     const panel = container.querySelector(".opr-ask-panel");
@@ -259,7 +259,7 @@ describe("OperatorAppDetail", () => {
     expect(queryByTestId("ask-ai-chat")).toBeNull();
     // The floating bubble is back.
     expect(
-      getByRole("button", { name: /ask agent about open tasks/i }),
+      getByRole("button", { name: /ask wuphf about open tasks/i }),
     ).toBeTruthy();
   });
 
@@ -269,10 +269,10 @@ describe("OperatorAppDetail", () => {
       isError: false,
     });
     const { getByRole, getByTestId, queryByTestId } = render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} />,
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     fireEvent.click(
-      getByRole("button", { name: /ask agent about open tasks/i }),
+      getByRole("button", { name: /ask wuphf about open tasks/i }),
     );
     // Escape from the composer input (e.g. cancelling IME composition or an
     // autocomplete) must NOT unmount the chat and discard the draft.
@@ -284,7 +284,7 @@ describe("OperatorAppDetail", () => {
   });
 });
 
-describe("OperatorAppDetail build walk narration", () => {
+describe("AppDetail build walk narration", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
@@ -300,7 +300,7 @@ describe("OperatorAppDetail build walk narration", () => {
       vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })),
     );
     return render(
-      <OperatorAppDetail appId="app_abc" onBack={() => {}} buildWalk={true} />,
+      <AppDetail appId="app_abc" onBack={() => {}} buildWalk={true} />,
     );
   }
 
@@ -360,7 +360,7 @@ describe("OperatorAppDetail build walk narration", () => {
   });
 });
 
-describe("OperatorAppDetail edit affordance", () => {
+describe("AppDetail edit affordance", () => {
   it("offers Edit app on a ready agent and hands back the app identity", () => {
     useOperatorAppMock.mockReturnValue({
       data: detail({ status: "ready" }, "<html>hi</html>"),
@@ -368,11 +368,7 @@ describe("OperatorAppDetail edit affordance", () => {
     });
     const onEditApp = vi.fn();
     const { getByRole } = render(
-      <OperatorAppDetail
-        appId="app_abc"
-        onBack={() => {}}
-        onEditApp={onEditApp}
-      />,
+      <AppDetail appId="app_abc" onBack={() => {}} onEditApp={onEditApp} />,
     );
     fireEvent.click(getByRole("button", { name: /edit app/i }));
     expect(onEditApp).toHaveBeenCalledWith({
@@ -387,11 +383,7 @@ describe("OperatorAppDetail edit affordance", () => {
       isError: false,
     });
     const { queryByRole, rerender } = render(
-      <OperatorAppDetail
-        appId="app_abc"
-        onBack={() => {}}
-        onEditApp={vi.fn()}
-      />,
+      <AppDetail appId="app_abc" onBack={() => {}} onEditApp={vi.fn()} />,
     );
     expect(queryByRole("button", { name: /edit app/i })).toBeNull();
 
@@ -400,7 +392,7 @@ describe("OperatorAppDetail edit affordance", () => {
       data: detail({ status: "ready" }, "<html>hi</html>"),
       isError: false,
     });
-    rerender(<OperatorAppDetail appId="app_abc" onBack={() => {}} />);
+    rerender(<AppDetail appId="app_abc" onBack={() => {}} />);
     expect(queryByRole("button", { name: /edit app/i })).toBeNull();
   });
 });

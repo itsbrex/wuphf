@@ -29,7 +29,7 @@ export function CommandRow({ command }: { command: string }) {
         gap: 8,
         alignItems: "center",
         padding: "6px 8px",
-        background: "var(--bg-card-soft, var(--bg-card))",
+        background: "var(--bg-card)",
         border: "1px solid var(--border-light)",
         borderRadius: 4,
         marginTop: 6,

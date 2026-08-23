@@ -36,7 +36,7 @@ export function ArtifactsTab({ agentName, artifacts }: ArtifactsTabProps) {
       <div
         className="opr-artifact-strip"
         role="group"
-        aria-label="Artifacts this agent produced"
+        aria-label="Artifacts this app produced"
       >
         {artifacts.map((a) => (
           <button

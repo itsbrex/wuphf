@@ -70,9 +70,9 @@ export const InContext: Story = {
         lineHeight: 1.6,
       }}
     >
-      Press <Kbd>?</Kbd> to open the help modal. Use <Kbd>Esc</Kbd> to close
-      the topmost panel, or <KbdSequence keys={[MOD_KEY, "K"]} /> for the
-      command palette.
+      Press <Kbd>?</Kbd> to open the help modal. Use <Kbd>Esc</Kbd> to close the
+      topmost panel, or <KbdSequence keys={[MOD_KEY, "K"]} /> for the command
+      palette.
     </p>
   ),
 };

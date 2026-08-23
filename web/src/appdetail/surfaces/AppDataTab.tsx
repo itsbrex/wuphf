@@ -99,8 +99,8 @@ export function AppDataTab({ appId }: AppDataTabProps) {
     return (
       <EmptyState
         glyph="▦"
-        title="Could not read this agent’s data"
-        hint="The workspace could not load this agent’s database right now. Try again in a moment."
+        title="Could not read this app’s data"
+        hint="The workspace could not load this app’s database right now. Try again in a moment."
       />
     );
   }
@@ -112,7 +112,7 @@ export function AppDataTab({ appId }: AppDataTabProps) {
         glyph="▦"
         portraitSlug={appId}
         title="No data yet"
-        hint="Nothing saved yet. After its first run, everything this agent records lands here as tables you own: browse every row, export any table as CSV or JSON. No BI ticket required."
+        hint="Nothing saved yet. After its first run, everything this app records lands here as tables you own: browse every row, export any table as CSV or JSON. No BI ticket required."
       />
     );
   }
@@ -120,7 +120,7 @@ export function AppDataTab({ appId }: AppDataTabProps) {
   return (
     <div className="opr-tool-scoped opr-app-data">
       <div className="opr-data-intro">
-        <Eyebrow>This agent’s database</Eyebrow>
+        <Eyebrow>This app’s database</Eyebrow>
         <p className="opr-scoped-note">
           The tables this agent derived and saved, read straight from its own
           database. Nothing reconstructed. Every table exports as CSV or JSON:
@@ -520,8 +520,8 @@ function ModelTableView({ table }: { table: ModelTable }) {
       </div>
       {total === 0 ? (
         <div className="opr-data-empty">
-          Defined, no rows yet — the agent has declared this table but not
-          written to it.
+          Defined, no rows yet — the app has declared this table but not written
+          to it.
         </div>
       ) : (
         <>

@@ -105,8 +105,24 @@ export function MessageBubble({
         : "Human"
       : null;
   const agent = members.find((m) => m.slug === message.from);
+  // A sender that is neither the human nor anyone on the roster is not an
+  // agent, and must not be dressed as one.
+  //
+  // The broker posts a handful of messages as "system" (a delivery landing, an
+  // onboarding welcome, a runtime error). Because the check above only asks
+  // "is this the human?", every one of them fell through to the agent branch
+  // and rendered as a colleague: a generated pixel face, an author line reading
+  // literally "system", and a button opening an agent profile panel for an
+  // agent that does not exist. The office appeared to contain a teammate
+  // nobody hired.
+  //
+  // Those senders are being removed at the source, but this is the safety net:
+  // whatever the broker sends, the UI must never invent a teammate out of an
+  // unknown slug.
+  const isSyntheticSender = !(isHuman || agent);
+  const isRosterAgent = !isHuman && Boolean(agent);
   const defaultHarness = useDefaultHarness();
-  const harness = !isHuman
+  const harness = isRosterAgent
     ? resolveHarness(agent?.provider, defaultHarness)
     : null;
 
@@ -239,11 +255,13 @@ export function MessageBubble({
       // Precise author selectors so e2e specs can filter without parsing
       // textContent. `data-author-kind` is "human" | "agent"; `data-author-slug`
       // carries the raw `from` (e.g. "you", "human", or an agent slug like "planner").
-      data-author-kind={isHuman ? "human" : "agent"}
+      data-author-kind={
+        isHuman ? "human" : isSyntheticSender ? "system" : "agent"
+      }
       data-author-slug={message.from}
     >
       {/* Avatar */}
-      {!isHuman ? (
+      {isRosterAgent ? (
         <button
           type="button"
           className="message-avatar avatar-with-harness message-avatar-btn"
@@ -270,11 +288,13 @@ export function MessageBubble({
             fontWeight: 600,
           }}
         >
-          {isLocalUser
-            ? "You"
-            : teamMemberDisplayName
-              ? teamMemberDisplayName.slice(0, 1).toUpperCase()
-              : null}
+          {isSyntheticSender
+            ? null
+            : isLocalUser
+              ? "You"
+              : teamMemberDisplayName
+                ? teamMemberDisplayName.slice(0, 1).toUpperCase()
+                : null}
         </div>
       )}
 
@@ -282,7 +302,7 @@ export function MessageBubble({
       <div className="message-content">
         {/* Header */}
         <div className="message-header">
-          {!isHuman ? (
+          {isRosterAgent ? (
             <button
               type="button"
               className="message-author message-author-btn"
@@ -294,9 +314,11 @@ export function MessageBubble({
             </button>
           ) : (
             <span className="message-author">
-              {isLocalUser
-                ? "You"
-                : teamMemberDisplayName || agent?.name || message.from}
+              {isSyntheticSender
+                ? "Office"
+                : isLocalUser
+                  ? "You"
+                  : teamMemberDisplayName || agent?.name || message.from}
             </span>
           )}
           {isHuman ? (

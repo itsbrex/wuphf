@@ -85,7 +85,7 @@ export function AppIntegrationBanner({ app }: { app: CustomApp }) {
     <div className="opr-app-int-banner">
       <div className="opr-app-int-banner-head">
         <span className="opr-app-int-banner-lead">
-          This agent wants {joined} — connect below and it runs on live data.
+          This app wants {joined} — connect below and it runs on live data.
           {familyOnly ? " Any one CRM is enough." : ""}
         </span>
         <button

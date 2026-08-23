@@ -115,3 +115,55 @@ describe("<MessageBubble> rich artifact references", () => {
     });
   });
 });
+
+// The founder's rule: "there is never a system agent talking anywhere."
+//
+// The broker posts a few messages as "system" — a delivery landing, an
+// onboarding welcome, a runtime error. The bubble only asked "is this the
+// human?", so every one of them took the AGENT branch and rendered as a
+// colleague: a generated pixel face, an author line reading literally
+// "system", and a button that opened an agent profile panel for an agent that
+// does not exist. The office looked like it contained a teammate nobody hired.
+//
+// The senders are being removed at the source. This is the safety net, and it
+// is the layer that has to hold: whatever the broker sends, the UI must never
+// invent a teammate out of a slug it does not recognise.
+describe("<MessageBubble> synthetic senders", () => {
+  const systemMessage: Message = {
+    id: "msg-sys",
+    from: "system",
+    channel: "general",
+    content: "Welcome to your office.",
+    timestamp: "2026-08-23T00:00:00Z",
+  };
+
+  it("never renders an unknown sender as a clickable agent", () => {
+    renderWithQueryClient(<MessageBubble message={systemMessage} />);
+
+    expect(
+      screen.queryByRole("button", { name: /Open agent panel for/i }),
+    ).toBeNull();
+    // The raw slug must not become a display name.
+    expect(screen.queryByText("system")).toBeNull();
+  });
+
+  it("marks the author kind as system, not agent", () => {
+    const { container } = renderWithQueryClient(
+      <MessageBubble message={systemMessage} />,
+    );
+    const bubble = container.querySelector("[data-author-kind]");
+    expect(bubble?.getAttribute("data-author-kind")).toBe("system");
+  });
+
+  it("still renders a real roster agent as a clickable agent", () => {
+    renderWithQueryClient(
+      <MessageBubble
+        message={{ ...systemMessage, id: "msg-pm", from: "pm" }}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: /Open agent panel for Mara/i })
+        .length,
+    ).toBeGreaterThan(0);
+  });
+});

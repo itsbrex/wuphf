@@ -3,9 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createSubTask, getSubTasks } from "../../api/tasks";
 import { useOfficeMembers } from "../../hooks/useMembers";
-import { router } from "../../lib/router";
 import { formatTaskTitleForDisplay } from "../../lib/taskTitle";
 import type { LifecycleState } from "../../lib/types/lifecycle";
+import { useAppStore } from "../../stores/app";
 import { TaskStatusDot } from "./TaskActivityStream";
 
 interface SubTasksListProps {
@@ -21,6 +21,7 @@ export function SubTasksList({ taskId, channel }: SubTasksListProps) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { data: members = [] } = useOfficeMembers();
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   const childQuery = useQuery({
     queryKey: ["issue-children", taskId],
@@ -72,11 +73,10 @@ export function SubTasksList({ taskId, channel }: SubTasksListProps) {
     addMutation.mutate({ title, owner: draftOwner.trim() });
   }
 
+  // A sub-task row opens the shared modal in place, same as every other task
+  // affordance — no jump into the child's chat surface.
   function openSub(childId: string) {
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId: childId },
-    });
+    openTaskModal(childId);
   }
 
   return (

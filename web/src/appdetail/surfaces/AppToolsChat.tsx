@@ -254,7 +254,7 @@ export function AppToolsChat({
   // A rejection must never wedge the chat (working stuck, composer disabled):
   // tell the operator, keep the composer usable.
   function reportAgentError() {
-    const body = "Something went wrong talking to the agent — try again.";
+    const body = "Something went wrong talking to Wuphf — try again.";
     setItems((prev) => [
       ...prev,
       { kind: "text", id: nextId(), from: "nex", body },
@@ -269,7 +269,12 @@ export function AppToolsChat({
       // Reference the tool by (agent, name): the agent id must match the one it
       // was persisted under via /tools/build (agentId ?? appName). Code is never
       // sent from the browser.
-      const outcome = await callToolViaAgent(agentId ?? appName, tool.name, args, false);
+      const outcome = await callToolViaAgent(
+        agentId ?? appName,
+        tool.name,
+        args,
+        false,
+      );
       if (outcome.status === "needs_approval" && outcome.gate) {
         // Paused at the send-gate: show the call, then the approval card. The
         // pending call lives in React state until Approve / Not now.
@@ -296,7 +301,12 @@ export function AppToolsChat({
     try {
       // Clear the pending approval only on a successful outcome: a failure
       // keeps the card actionable instead of losing the approval context.
-      const outcome = await callToolViaAgent(agentId ?? appName, p.tool.name, p.args, true);
+      const outcome = await callToolViaAgent(
+        agentId ?? appName,
+        p.tool.name,
+        p.args,
+        true,
+      );
       if (outcome.status !== "error") setPending(null);
       finishCall(p.tool, p.args, outcome);
     } catch {
@@ -316,7 +326,7 @@ export function AppToolsChat({
         kind: "text",
         id: nextId(),
         from: "nex",
-        body: "Okay — I did not send it. Nothing left this agent.",
+        body: "Okay — I did not send it. Nothing left this app.",
       },
     ]);
     scrollDown();
@@ -417,10 +427,7 @@ export function AppToolsChat({
       // `app` field carries the REAL agent id when the provider has one, so the
       // service persists the tool per-agent.
       const { tool, offline, authoredBy, narration, modelTriedAndFailed } =
-        await buildToolFromChat(
-        body,
-        agentId ?? appName,
-      );
+        await buildToolFromChat(body, agentId ?? appName);
       if (offline) {
         // The agent service was unreachable. Never mint the local mock into
         // the Tools list as if the teach succeeded — the fabricated
@@ -469,7 +476,7 @@ export function AppToolsChat({
       const isFirstTool = toolsRef.current.length === 0;
       addTool(tool);
       const reply = isFirstTool
-        ? `Done — I built “${tool.title}”, this agent's first tool. It is in Tools now, and I will reach for it whenever the job calls for it.`
+        ? `Done — I built “${tool.title}”, this app's first tool. It is in Tools now, and I will reach for it whenever the job calls for it.`
         : `Done — I built “${tool.title}”. It is in your Tools now, and I will call it when you need it.`;
       setItems((prev) => [
         ...prev,
@@ -595,7 +602,7 @@ export function AppToolsChat({
             <div
               className="opr-act-working"
               role="status"
-              aria-label="Nex is working"
+              aria-label="Wuphf is working"
             >
               <span className="opr-work-dots" aria-hidden={true}>
                 <span />
@@ -612,7 +619,7 @@ export function AppToolsChat({
         <div className="opr-composer">
           <input
             className="opr-composer-input"
-            aria-label="Describe a task for Nex to build a tool for"
+            aria-label="Describe a task for Wuphf to build a tool for"
             placeholder="Describe a task… or “run the weekly summary”"
             value={draft}
             disabled={working !== null || pending !== null}

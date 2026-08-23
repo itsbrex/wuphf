@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import type { HarnessKind } from "../../lib/harness";
-
 import { HarnessBadge } from "./HarnessBadge";
 
 const KINDS: HarnessKind[] = [

@@ -9,7 +9,7 @@ import {
 import { useAgentStream } from "../../hooks/useAgentStream";
 import { useOfficeTasks } from "../../hooks/useOfficeTasks";
 import { formatRelativeTime } from "../../lib/format";
-import { router } from "../../lib/router";
+import { useAppStore } from "../../stores/app";
 import { StreamLineView } from "../messages/StreamLineView";
 import { CollapsibleSection } from "../ui/CollapsibleSection";
 
@@ -39,8 +39,11 @@ function formatRunTime(ms?: number): string {
   }
 }
 
+// Opens the shared task modal in place rather than navigating to the
+// chat-primary task page. Read imperatively off the store because this is a
+// module-level helper, not a component.
 function openTaskDetail(taskId: string): void {
-  void router.navigate({ to: "/tasks/$taskId", params: { taskId } });
+  useAppStore.getState().openTaskModal(taskId);
 }
 
 export function AgentWorkbenchPane({ agentSlug }: AgentWorkbenchPaneProps) {

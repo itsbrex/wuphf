@@ -4,8 +4,9 @@
  * → Needs your input, etc).
  *
  * The card is the "what happened to this Task" surface for humans and
- * other agents scrolling the channel. Click → navigates to the Task
- * detail.
+ * other agents scrolling the channel. Click → opens the shared task modal in
+ * place, so the reader keeps their position in the conversation instead of
+ * being navigated into a second chat surface.
  *
  * The broker sends Kind="issue_lifecycle" with a structured payload
  * carrying the transition shape ({task_id, title, owner, from_state,
@@ -15,7 +16,7 @@
  */
 
 import { humanizeLifecycleState } from "../../../lib/humanizeActivity";
-import { router } from "../../../lib/router";
+import { useAppStore } from "../../../stores/app";
 
 export type TaskLifecycleTransition =
   | "started"
@@ -155,6 +156,9 @@ export function TaskLifecycleCard({
   const transition = payload.transition ?? "generic";
   const owner = payload.owner;
   const presentation = presentationFor(transition, owner);
+  // Read before the `sameTask` early return below — hooks cannot sit after a
+  // conditional return.
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   const body = (
     <>
@@ -205,10 +209,7 @@ export function TaskLifecycleCard({
 
   function openTask() {
     if (!taskId) return;
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId },
-    });
+    openTaskModal(taskId);
   }
 
   return (

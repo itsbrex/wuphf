@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { OfficeMember } from "../../api/client";
 
-const mutateAsync = vi.fn(
-  async (_input: Record<string, unknown>) => ({ task: { id: "task-1" } }),
-);
+const mutateAsync = vi.fn(async (_input: Record<string, unknown>) => ({
+  task: { id: "task-1" },
+}));
 
 vi.mock("../../hooks/useCreateTask", () => ({
   useCreateTask: () => ({ mutateAsync, isPending: false }),
@@ -53,9 +53,7 @@ describe("<TaskCreateDialog>", () => {
     // Regression: the modal used to expose a "#channel" picker chip. Channels
     // are no longer a creation-time choice — every task gets its own channel.
     expect(screen.queryByTestId("issue-create-channel")).toBeNull();
-    expect(
-      screen.queryByRole("combobox", { name: /channel/i }),
-    ).toBeNull();
+    expect(screen.queryByRole("combobox", { name: /channel/i })).toBeNull();
     // The assignee chip is still the one remaining property control.
     expect(screen.getByTestId("issue-create-assignee")).toBeInTheDocument();
   });

@@ -13,7 +13,8 @@
  * The Scheduled column is the one exception to the lifecycle grouping —
  * it is fed by routines (the scheduler), not by any lifecycle_state, so
  * each card there is a SchedulerJob that links to its routine detail.
- * Every other card opens the TaskDocument detail surface at /tasks/$taskId.
+ * Every other card opens the shared TaskModal in place; /tasks/$taskId
+ * stays reachable as a URL but is no longer where a click lands.
  */
 
 import { memo, useMemo, useState } from "react";
@@ -124,19 +125,15 @@ const TaskCard = memo(function TaskCard({
   );
   const isRunning = activityDotForLifecycleState(state) === "running";
   const activity = isRunning ? snapshot?.activity?.trim() : undefined;
-
-  function navigate() {
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId: task.id },
-    });
-  }
+  // Opens the shared task modal in place rather than navigating to the
+  // chat-primary /tasks/$taskId surface. The route still works as a URL.
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   return (
     <button
       type="button"
       className={`issues-kanban-card${isSubtask ? " issues-kanban-card--subtask" : ""}`}
-      onClick={navigate}
+      onClick={() => openTaskModal(task.id)}
       data-testid={isSubtask ? "issue-subtask-row" : "issue-row"}
       aria-label={`${isSubtask ? "Sub-task" : "Task"}: ${formatTaskTitleForDisplay(
         task.title,
@@ -172,8 +169,8 @@ const TaskCard = memo(function TaskCard({
  * item. Sub-tasks nest directly beneath the parent card and stay in the
  * SAME lane as the parent — regardless of each child's own lifecycle stage —
  * so the board reads as a hierarchy ("these belong to that"). Each sub-task
- * runs in its own chat channel and links to its own detail surface; the
- * nesting is purely the visual tie back to the parent.
+ * opens its own task modal; the nesting is purely the visual tie back to the
+ * parent.
  */
 const TaskCardGroup = memo(function TaskCardGroup({
   task,
@@ -195,7 +192,7 @@ const TaskCardGroup = memo(function TaskCardGroup({
         >
           {subtasks.map((child) => (
             <li key={child.id}>
-              <TaskCard task={child} isSubtask />
+              <TaskCard task={child} isSubtask={true} />
             </li>
           ))}
         </ul>
@@ -284,22 +281,18 @@ const AttentionItemCard = memo(function AttentionItemCard({
 }: {
   item: InboxItemRequest | InboxItemReview;
 }) {
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
+
   function navigate() {
     if (item.kind === "request") {
-      const channel = item.channel?.trim();
-      if (channel) {
-        void router.navigate({
-          to: "/channels/$channelSlug",
-          params: { channelSlug: channel },
-        });
-        return;
-      }
+      // Deliberately no channel jump: a task is not a doorway to a room. The
+      // conversation lives in the office channel where the task was created,
+      // reachable from Channels in the sidebar. A request that carries its
+      // task opens that task's modal in place; one that doesn't falls back to
+      // the board.
       const issueId = item.request.issueId?.trim();
       if (issueId) {
-        void router.navigate({
-          to: "/tasks/$taskId",
-          params: { taskId: issueId },
-        });
+        openTaskModal(issueId);
         return;
       }
       void router.navigate({ to: "/tasks" });

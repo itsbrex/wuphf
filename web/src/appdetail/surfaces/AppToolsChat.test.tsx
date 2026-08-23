@@ -64,7 +64,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     expect(queryByText("Draft a message")).toBeNull();
 
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: "Draft a message for a record" },
@@ -94,7 +94,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
       </ToolsProvider>,
     );
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
 
     fireEvent.change(input, {
@@ -102,7 +102,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(
-      await findByText(/“Draft a message”, this agent's first tool/),
+      await findByText(/“Draft a message”, this app's first tool/),
     ).toBeTruthy();
 
     await waitFor(() => expect(input.disabled).toBe(false));
@@ -123,7 +123,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("agent down")));
     const { getByLabelText, findByText, queryByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: "Draft a message for a record" },
@@ -156,7 +156,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     );
     const { getByLabelText, findByText, queryByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: "score each workspace task for hygiene risk" },
@@ -189,7 +189,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     );
     const { getByLabelText, findByText, queryByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: "summarize vendor response times" },
@@ -213,7 +213,7 @@ describe("AppToolsChat + Tools tab (slice 2)", () => {
     );
     const { getByLabelText, findAllByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
 
     for (let i = 0; i < 2; i++) {
@@ -258,7 +258,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     const { getByLabelText, findByText, findAllByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "run the weekly summary" } });
     fireEvent.keyDown(input, { key: "Enter" });
@@ -311,7 +311,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     const { getByLabelText, findByText, findAllByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: 'use Score & flag records on "Acme"' },
@@ -350,7 +350,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     const { getByLabelText, findByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "run the weekly summary" } });
     fireEvent.keyDown(input, { key: "Enter" });
@@ -387,7 +387,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     const { getByLabelText, findByText, findAllByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     // scoreAndFlag takes a `rubric` input; "run ..." gives no explicit value.
     fireEvent.change(input, {
@@ -421,7 +421,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     const { getByLabelText, findByText } = renderApp();
     const input = getByLabelText(
-      "Describe a task for Nex to build a tool for",
+      "Describe a task for Wuphf to build a tool for",
     ) as HTMLInputElement;
     fireEvent.change(input, {
       target: { value: "run the weekly summary" },
@@ -430,7 +430,7 @@ describe("AppToolsChat calls tools (slice 5)", () => {
 
     fireEvent.click(await findByText("Not now"));
     expect(
-      await findByText("Okay — I did not send it. Nothing left this agent."),
+      await findByText("Okay — I did not send it. Nothing left this app."),
     ).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });

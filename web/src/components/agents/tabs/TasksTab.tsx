@@ -8,7 +8,6 @@ import { memo } from "react";
 import type { Task } from "../../../api/tasks";
 import { taskToLifecycleState } from "../../../api/tasks";
 import { useOfficeTasks } from "../../../hooks/useOfficeTasks";
-import { router } from "../../../lib/router";
 import { formatTaskTitleForDisplay } from "../../../lib/taskTitle";
 import {
   type LifecycleStage,
@@ -16,6 +15,7 @@ import {
   STAGE_ORDER,
   stageForState,
 } from "../../../lib/types/lifecycle";
+import { useAppStore } from "../../../stores/app";
 import { LifecycleStatePill } from "../../lifecycle/LifecycleStatePill";
 
 interface TasksTabProps {
@@ -24,19 +24,15 @@ interface TasksTabProps {
 
 const AgentTaskCard = memo(function TaskCard({ task }: { task: Task }) {
   const state = taskToLifecycleState(task);
-
-  function navigate() {
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId: task.id },
-    });
-  }
+  // Opens the shared task modal in place — same as the board and the chat
+  // cards. No navigation into the task's chat surface.
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   return (
     <button
       type="button"
       className="issues-kanban-card"
-      onClick={navigate}
+      onClick={() => openTaskModal(task.id)}
       data-testid="agent-task-card"
       aria-label={`Task: ${formatTaskTitleForDisplay(task.title)}, state: ${state}`}
     >

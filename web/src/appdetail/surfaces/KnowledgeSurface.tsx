@@ -306,8 +306,8 @@ export function KnowledgeSurface({ appId }: KnowledgeSurfaceProps) {
         <div className="opr-data-intro">
           <Eyebrow>Knowledge</Eyebrow>
           <p className="opr-scoped-note">
-            What this agent knows, each fact cited to its source. Hover a
-            citation to see where it came from.
+            What this app knows, each fact cited to its source. Hover a citation
+            to see where it came from.
           </p>
         </div>
       ) : (

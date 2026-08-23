@@ -1,3 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
+
+import { listApps } from "../../api/apps";
 import { useChannels } from "../../hooks/useChannels";
 import { deriveBreadcrumbs } from "../../hooks/useObjectBreadcrumb";
 import { appTitle } from "../../lib/constants";
@@ -9,6 +12,7 @@ import { ThemeSwitcher } from "./ThemeSwitcher";
 function headerTitleAndDesc(
   route: ReturnType<typeof useCurrentRoute>,
   channels: { slug: string; description?: string }[],
+  customAppName?: string,
 ): { title: string; desc: string } {
   switch (route.kind) {
     case "channel": {
@@ -19,7 +23,7 @@ function headerTitleAndDesc(
       };
     }
     case "app":
-      return { title: appTitle(route.appId), desc: "" };
+      return { title: customAppName ?? appTitle(route.appId), desc: "" };
     case "task-board":
     case "task-detail":
       return { title: appTitle("tasks"), desc: "" };
@@ -61,8 +65,20 @@ export function ChannelHeader() {
   const route = useCurrentRoute();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
   const { data: channels = [] } = useChannels();
+  // A custom app's breadcrumb should read "Recruiting Agent", not the
+  // title-cased record id ("App_ad2f6211ad746d37"). The apps list is already
+  // polled for the sidebar, so this is a cache read, not a new request.
+  const { data: apps = [] } = useQuery({
+    queryKey: ["apps"],
+    queryFn: listApps,
+    staleTime: 15_000,
+  });
+  const customAppName =
+    route.kind === "app"
+      ? apps.find((a) => a.id === route.appId)?.name
+      : undefined;
 
-  const { title, desc } = headerTitleAndDesc(route, channels);
+  const { title, desc } = headerTitleAndDesc(route, channels, customAppName);
   const breadcrumbItems = deriveBreadcrumbs(route);
 
   return (

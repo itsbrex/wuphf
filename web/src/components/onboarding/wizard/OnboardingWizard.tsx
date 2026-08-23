@@ -10,16 +10,23 @@
  * Layout mirrors the reference product's persistent-mock-window pattern: each
  * step renders a copy column plus a visual stage (a rendered product-window
  * clip or a live mock), the stage carries any inputs the step collects, and a
- * footer carries Back / progress dots / Next-or-Finish. A "01 / 05" marker
+ * footer carries Back / progress dots / Next-or-Finish. A "01 / 0N" marker
  * sits top-left. There is NO skip-all affordance: this is required
  * onboarding, not a dismissible tour, so Esc does nothing here. The one
  * permitted escape is the team step's "I will set this up later", which maps
  * to the scratch path (no blueprint, default first agent) and advances.
  *
- * The host owns only the shell + step navigation + the finish wiring. The five
- * step screens (under ./steps/*) own their own content and visuals and conform
- * to OnboardingWizardStepProps. Step-to-step morphing reuses the office tour's
+ * The host owns only the shell + step navigation + the finish wiring. The step
+ * screens (under ./steps/*) own their own content and visuals and conform to
+ * OnboardingWizardStepProps. Step-to-step morphing reuses the office tour's
  * View-Transitions-or-synchronous pattern, gated behind prefers-reduced-motion.
+ *
+ * Which steps run is ONBOARDING_WIZARD_STEP_IDS, not the STEPS map below: the
+ * team (starter-pack) step is currently hidden behind
+ * ONBOARDING_TEAM_PACKS_ENABLED, so its screen stays mapped and importable but
+ * is never reached. Everything the host derives — the marker, the dot count,
+ * the last-step Finish gate, the team-step escape button — reads from that
+ * array, so a hidden step cannot leave a stale counter or a dead branch.
  *
  * Spec: docs/specs/office-onboarding-uplift.md.
  */
@@ -31,6 +38,8 @@ import { MOD_KEY } from "../../ui/Kbd";
 import { BtnLabel, EnterHint } from "./components";
 import { StepFirstIssue } from "./steps/StepFirstIssue";
 import { StepMeet } from "./steps/StepMeet";
+import { StepShip } from "./steps/StepShip";
+import { StepTeam } from "./steps/StepTeam";
 import { StepWiki } from "./steps/StepWiki";
 import { useOnboardingWizard } from "./useOnboardingWizard";
 import {
@@ -55,6 +64,8 @@ const STEPS: Record<
 > = {
   meet: StepMeet,
   wiki: StepWiki,
+  team: StepTeam,
+  ship: StepShip,
   "first-issue": StepFirstIssue,
 };
 
@@ -151,6 +162,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     isLast,
     answers,
     setAnswers,
+    blueprints,
     canAdvance,
     next,
     back,
@@ -178,6 +190,16 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const goBack = useCallback(() => {
     runWithTransition(back);
   }, [back]);
+
+  // The team-step escape: take the scratch path (clear any picked blueprint /
+  // agent) and advance. This is the only way past the team step without a
+  // blueprint or a named agent, and it deliberately does NOT skip the rest of
+  // onboarding — the user still writes a first issue.
+  const skipTeam = useCallback(() => {
+    track("onboarding_step_completed", { step_id: "team", step_index: index });
+    setAnswers({ blueprintId: "", pickedAgents: [], agentName: "" });
+    runWithTransition(next);
+  }, [setAnswers, next, index]);
 
   // The primary footer button advances on every step except the last, where it
   // becomes the Finish CTA that seeds the office and hands off into a composer.
@@ -252,6 +274,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           active={true}
           answers={answers}
           setAnswers={setAnswers}
+          blueprints={blueprints}
         />
       </div>
 
@@ -304,6 +327,17 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         </div>
 
         <div className="onboarding-wizard-footer-side onboarding-wizard-footer-side-end">
+          {stepId === "team" ? (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={skipTeam}
+              disabled={seeding}
+              data-testid="onboarding-wizard-team-skip"
+            >
+              {ONBOARDING_WIZARD_LABELS.teamSkip}
+            </button>
+          ) : null}
           {stepId === "first-issue" ? (
             <button
               type="button"

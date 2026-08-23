@@ -22,7 +22,7 @@ export interface BreadcrumbItem {
 /**
  * Derive up to two breadcrumb segments from the current route:
  *   [section, object]
- * e.g. ["Company Brain", "people/nazz"] or ["Agents", "Agent: gaia"].
+ * e.g. ["Wiki", "Wiki: people/nazz"] or ["Agents", "Agent: gaia"].
  *
  * Returns an empty array for conversation routes (channels) and unknown.
  * Pure function so tests can call it without a React context.
@@ -40,7 +40,7 @@ export function deriveBreadcrumbs(route: CurrentRoute): BreadcrumbItem[] {
       ];
     }
     case "wiki": {
-      return [{ label: "Company Brain", href: "#/wiki" }];
+      return [{ label: "Wiki", href: "#/wiki" }];
     }
     case "wiki-article": {
       const res = resolveObjectRoute({
@@ -48,12 +48,12 @@ export function deriveBreadcrumbs(route: CurrentRoute): BreadcrumbItem[] {
         path: route.articlePath,
       });
       return [
-        { label: "Company Brain", href: "#/wiki" },
+        { label: "Wiki", href: "#/wiki" },
         breadcrumbItem(res, route.articlePath),
       ];
     }
     case "wiki-lookup": {
-      return [{ label: "Company Brain", href: "#/wiki" }];
+      return [{ label: "Wiki", href: "#/wiki" }];
     }
     case "article": {
       return [{ label: "Article", href: `#/articles/${route.articleId}` }];

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Code, FloppyDisk, OpenBook } from "iconoir-react";
+import remarkGfm from "remark-gfm";
 
 import {
   editSkillContent,
@@ -11,8 +11,8 @@ import {
   type SkillStatus,
 } from "../api/client";
 import { fetchArticle } from "../api/wiki";
-import { router } from "../lib/router";
 import { showNotice } from "../components/ui/Toast";
+import { router } from "../lib/router";
 
 interface SkillDetailRouteProps {
   skillName: string;
@@ -67,8 +67,7 @@ export function SkillDetailRoute({ skillName }: SkillDetailRouteProps) {
     staleTime: 30_000,
   });
 
-  const initialContent =
-    articleQuery.data ?? skill?.content ?? "";
+  const initialContent = articleQuery.data ?? skill?.content ?? "";
 
   const [mode, setMode] = useState<Mode>("edit");
   const [draft, setDraft] = useState<string>("");
@@ -101,7 +100,9 @@ export function SkillDetailRoute({ skillName }: SkillDetailRouteProps) {
     mutationFn: (content: string) => editSkillContent(decodedName, content),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["skills"] });
-      void queryClient.invalidateQueries({ queryKey: ["skill-article", decodedName] });
+      void queryClient.invalidateQueries({
+        queryKey: ["skill-article", decodedName],
+      });
       showNotice("Skill saved", "success");
       // Force the seed key to flush so the next render rebases on the
       // new server-side content.
@@ -119,10 +120,7 @@ export function SkillDetailRoute({ skillName }: SkillDetailRouteProps) {
   }, [draft, isDirty, saveMutation]);
 
   const handleBack = useCallback(() => {
-    if (
-      isDirty &&
-      !window.confirm("Discard unsaved changes to this skill?")
-    ) {
+    if (isDirty && !window.confirm("Discard unsaved changes to this skill?")) {
       return;
     }
     if (window.history.length > 1) {
@@ -161,9 +159,7 @@ export function SkillDetailRoute({ skillName }: SkillDetailRouteProps) {
             <h1 className="skill-detail-title">
               {skill?.title || decodedName}
             </h1>
-            {skill?.status ? (
-              <StatusBadge status={skill.status} />
-            ) : null}
+            {skill?.status ? <StatusBadge status={skill.status} /> : null}
           </div>
           <div className="skill-detail-meta">
             <span className="skill-detail-slug">{decodedName}</span>
@@ -204,9 +200,7 @@ export function SkillDetailRoute({ skillName }: SkillDetailRouteProps) {
         ) : (
           <article className="skill-detail-preview">
             {draft.trim() ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {draft}
-              </ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{draft}</ReactMarkdown>
             ) : (
               <p className="skill-detail-empty">
                 Nothing to preview yet — switch to Edit and start writing.

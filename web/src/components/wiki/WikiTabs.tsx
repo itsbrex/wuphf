@@ -32,7 +32,7 @@ export default function WikiTabs({
   onPamActionDone,
 }: WikiTabsProps) {
   const tabs: Array<{ id: WikiTab; label: string; badge?: number }> = [
-    { id: "wiki", label: "Company Brain" },
+    { id: "wiki", label: "Wiki" },
   ];
 
   return (

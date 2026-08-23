@@ -56,7 +56,14 @@ export interface TaskDocument {
    * Linear-style: just the body — the whole brief is title + description. */
   description: string;
   lifecycleState: LifecycleState;
-  channel: string;
+  /**
+   * The task's conversation home. UNDEFINED when it has none — under the
+   * one-room removal a task's conversation lives in its OWNER's DM, so an
+   * unowned task genuinely has nowhere to talk. Optional rather than a ""
+   * sentinel so the compiler makes every consumer decide what to do about it
+   * instead of quietly passing an empty slug down to a message query.
+   */
+  channel?: string;
   ownerSlug?: string;
   parentTaskId?: string;
   createdAt?: string;
@@ -231,18 +238,26 @@ function resolveAliasedField(
   );
 }
 
+/**
+ * Resolve the task's conversation home, or undefined when it has none.
+ *
+ * This used to throw. Because the throw sat inside a React Query fetcher it
+ * did not crash the app — it rendered TaskDocumentError ("Could not load task
+ * / task channel is missing") with a Retry button that could never succeed,
+ * so the whole detail page was dead for a task whose only fault was having no
+ * owner. A task with no conversation home is not a load failure; it is a
+ * normal state of an unowned task, and the page says so instead.
+ */
 function resolveTaskChannel(
   packet: Record<string, unknown>,
   taskRecord: Record<string, unknown> | undefined,
   taskHint: Task | undefined,
-): string {
-  const channel =
+): string | undefined {
+  return (
     resolveAliasedField(packet, taskRecord, "channel", "channel")?.trim() ||
-    taskHint?.channel?.trim();
-  if (!channel) {
-    throw new Error("task channel is missing");
-  }
-  return channel;
+    taskHint?.channel?.trim() ||
+    undefined
+  );
 }
 
 /** Normalize the raw API response into a clean TaskDocument. */
@@ -380,6 +395,35 @@ function TaskDocumentError({
           Retry
         </button>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Shown in place of the chat pane when a task has no conversation home.
+ *
+ * Not an error state, and deliberately not styled as one: under the one-room
+ * removal a task's conversation lives in its OWNER's DM, so a task with no
+ * owner has nowhere to talk yet. That is an ordinary stage of a task's life,
+ * and the copy says what is true and what fixes it — assign an owner. We do
+ * not invent a channel, fall back to #general, or render a chat pane that
+ * would post into a room nobody reads.
+ */
+function TaskHasNoConversation({ ownerSlug }: { ownerSlug?: string }) {
+  const owner = ownerSlug?.trim();
+  return (
+    <div
+      className="issue-doc-no-conversation"
+      data-testid="issue-doc-no-conversation"
+    >
+      <strong className="issue-doc-no-conversation-title">
+        No conversation yet
+      </strong>
+      <p className="issue-doc-no-conversation-body">
+        {owner
+          ? `This task has no conversation home. Its owner @${owner} is set, so re-assigning the task will give it one.`
+          : "A task's conversation lives in its owner's DM, and this task has no owner yet. Assign one and the conversation starts there."}
+      </p>
     </div>
   );
 }
@@ -661,9 +705,16 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
               Staffing — CEO is picking the owner
             </span>
           ) : null}
+          {/* Owner and lifecycle actions stay LIVE for a task with no
+           *  conversation home — assigning an owner is exactly what the
+           *  empty state tells the human to do, so disabling them here would
+           *  strand the task. They receive "" rather than an invented
+           *  "general": the broker resolves these against the task's own
+           *  channel anyway, and claiming a room the task does not have is
+           *  how a write ends up in a dead one. */}
           <OwnerPicker
             taskId={taskId}
-            channel={doc.channel}
+            channel={doc.channel ?? ""}
             currentOwner={doc.ownerSlug}
             onChanged={() => {
               void queryClient.invalidateQueries({
@@ -680,7 +731,7 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
            *  owner so the header stays two tight rows instead of four. */}
           <TaskActionToolbar
             taskId={taskId}
-            channel={doc.channel}
+            channel={doc.channel ?? ""}
             lifecycleState={doc.lifecycleState}
             onAfterAction={() => {
               void queryClient.invalidateQueries({
@@ -711,7 +762,11 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
             left={
               <main className="issue-doc-chat" aria-label="Chat">
                 <div className="issue-doc-chat-header">Chat</div>
-                <TaskChannelChat channel={doc.channel} />
+                {doc.channel ? (
+                  <TaskChannelChat channel={doc.channel} />
+                ) : (
+                  <TaskHasNoConversation ownerSlug={doc.ownerSlug} />
+                )}
               </main>
             }
             right={<AppBuildPreview taskTitle={doc.title} taskId={taskId} />}
@@ -721,12 +776,16 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
         <div className="issue-doc-body issue-doc-body--split">
           <main className="issue-doc-chat" aria-label="Chat">
             <div className="issue-doc-chat-header">Chat</div>
-            <TaskChannelChat channel={doc.channel} />
+            {doc.channel ? (
+              <TaskChannelChat channel={doc.channel} />
+            ) : (
+              <TaskHasNoConversation ownerSlug={doc.ownerSlug} />
+            )}
           </main>
 
           <TaskContextRail
             taskId={taskId}
-            channel={doc.channel}
+            channel={doc.channel ?? ""}
             description={doc.description}
             isDrafting={isDrafting}
             showSubTasks={!doc.parentTaskId}

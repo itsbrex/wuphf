@@ -1,5 +1,4 @@
 import { useState } from "react";
-
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { SidePanel } from "./SidePanel";
@@ -42,9 +41,9 @@ export const Default: Story = {
                 profile.
               </p>
               <p style={{ marginBottom: 12, color: "var(--text-secondary)" }}>
-                Press <kbd className="kbd kbd-md">Esc</kbd>, click the
-                backdrop, or hit the × to close. Focus is trapped while open
-                and restored to the trigger on close.
+                Press <kbd className="kbd kbd-md">Esc</kbd>, click the backdrop,
+                or hit the × to close. Focus is trapped while open and restored
+                to the trigger on close.
               </p>
               <ul style={{ paddingLeft: 18, color: "var(--text-secondary)" }}>
                 <li>480px desktop</li>

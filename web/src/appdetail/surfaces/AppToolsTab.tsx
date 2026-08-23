@@ -26,7 +26,7 @@ export function AppToolsTab({ appName, onTeach }: AppToolsTabProps) {
   return (
     <div className="opr-tool-scoped opr-app-tools">
       <div className="opr-data-intro">
-        <Eyebrow>Tools this agent can use</Eyebrow>
+        <Eyebrow>Tools this app can use</Eyebrow>
         <p className="opr-scoped-note">
           Each tool does one job. {appName}'s chat picks the right tool and
           calls it when it needs to. Teach a new one in the chat.

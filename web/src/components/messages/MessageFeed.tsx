@@ -39,12 +39,52 @@ export function messagesAfterClearMarker(
   return messages.slice(markerIndex + 1);
 }
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Existing cognitive complexity is baselined for a focused follow-up refactor.
+/**
+ * MessageFeed — the channel's live message stream.
+ *
+ * The channel is resolved here and NOWHERE ELSE in this subtree, because the
+ * resolution used to be `channel ?? routeChannel ?? "general"` and that is two
+ * bugs in one expression:
+ *
+ *   - `??` is NULLISH, so an empty STRING passed straight through and was
+ *     queried as a channel slug.
+ *   - the `"general"` tail invented a conversation home for a task that has
+ *     none, pointing the feed at the room the one-room removal retires.
+ *
+ * Now: a real emptiness check, and no fallback. With no channel there is no
+ * conversation to show, so the feed says so rather than showing someone
+ * else's. Resolution happens in this outer component, which calls exactly one
+ * hook before branching, so the inner feed below is only ever mounted with a
+ * genuinely non-empty channel and never fires a query for one.
+ */
 export function MessageFeed({ channel }: { channel?: string } = {}) {
   // Prefer an explicit channel (the task-detail chat passes the task's channel,
   // where useChannelSlug() is null). Fall back to the channel route slug.
   const routeChannel = useChannelSlug();
-  const currentChannel = channel ?? routeChannel ?? "general";
+  const currentChannel = channel?.trim() || routeChannel?.trim() || "";
+
+  if (!currentChannel) {
+    return (
+      <div className="messages" data-testid="messages-no-channel">
+        <div className="channel-empty-state">
+          <span className="title">No conversation here yet</span>
+          <span className="body">
+            This task has no conversation home. Assign an owner and the
+            conversation starts in their DM.
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return <ChannelMessageFeed channel={currentChannel} />;
+}
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Existing cognitive complexity is baselined for a focused follow-up refactor.
+function ChannelMessageFeed({ channel }: { channel: string }) {
+  // Non-empty by construction — MessageFeed above is the only caller and
+  // guards it, so nothing here has to re-check.
+  const currentChannel = channel;
   const clearMarkerId = useAppStore(
     (s) => s.clearedMessageIdsByChannel[currentChannel] ?? null,
   );

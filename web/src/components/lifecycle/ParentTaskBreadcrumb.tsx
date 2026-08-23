@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { getOfficeTasks } from "../../api/tasks";
-import { router } from "../../lib/router";
+import { useAppStore } from "../../stores/app";
 
 // ── Parent task breadcrumb (shown on sub-tasks) ──────────────────────
 
@@ -24,12 +24,12 @@ export function ParentTaskBreadcrumb({
   });
   const parent = tasksQuery.data?.tasks.find((t) => t.id === parentTaskId);
   const label = parent?.title ?? parentTaskId;
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
+  // Opens the parent in the shared modal rather than navigating into its
+  // chat-primary detail surface.
   function openParent() {
-    void router.navigate({
-      to: "/tasks/$taskId",
-      params: { taskId: parentTaskId },
-    });
+    openTaskModal(parentTaskId);
   }
 
   return (

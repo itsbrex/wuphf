@@ -19,11 +19,14 @@ import {
   X,
 } from "lucide-react";
 
+import "../../styles/app-detail.css";
+
 import type { CustomApp, CustomAppDetail } from "../../api/apps";
 import { get } from "../../api/client";
 import { AppLivePreview } from "../../components/apps/AppLivePreview";
 import { CustomAppFrame } from "../../components/apps/CustomAppFrame";
 import { PixelAvatar } from "../../components/ui/PixelAvatar";
+import { navigateToSidebarApp } from "../../lib/sidebarNav";
 import { AgentName } from "../agents/AgentName";
 import { AgentPurpose } from "../agents/AgentPurpose";
 import { AgentSessions } from "../agents/AgentSessions";
@@ -41,6 +44,7 @@ import { Eyebrow, type TabDef, Tabs } from "../components/primitives";
 import { RoutinesTab } from "../routines/RoutinesTab";
 import { ToolsProvider } from "../tools/toolsContext";
 import { AppDataTab } from "./AppDataTab";
+import { AppDemoTab } from "./AppDemoTab";
 import { AppToolsTab } from "./AppToolsTab";
 import { KnowledgeSurface } from "./KnowledgeSurface";
 import { ToolIntegrations } from "./ToolIntegrations";
@@ -51,6 +55,7 @@ type AppTab =
   | "ui"
   | "workflow"
   | "tools"
+  | "demo"
   | "data"
   | "integrations"
   | "knowledge";
@@ -61,14 +66,21 @@ const TABS: readonly TabDef<AppTab>[] = [
   // Tools: the callable tools Nex builds from taught workflows; the app's chat
   // calls them. Additive — the Workflow tab is unchanged.
   { id: "tools", label: "Tools" },
+  // Demo: the other way to teach a tool — demonstrate the job and let the cua
+  // observer read the real screens, then hand that capture to the same chat
+  // that authors from a description. Sits next to Tools because both end in a
+  // tool; only the input differs.
+  { id: "demo", label: "Demo" },
   { id: "data", label: "Data" },
   { id: "knowledge", label: "Knowledge" },
   { id: "integrations", label: "Integrations" },
 ];
 
-interface OperatorAppDetailProps {
+interface AppDetailProps {
   appId: string;
-  onBack: () => void;
+  /** Optional: the operator shell passed a back handler; inside the office the
+   * sidebar owns navigation, so this is absent and the back button is hidden. */
+  onBack?: () => void;
   /**
    * Build mode: once the app publishes, walk the tabs UI → Workflow → Data →
    * Knowledge so the operator sees each part get hooked up, then settle back on
@@ -85,17 +97,25 @@ interface OperatorAppDetailProps {
   onEditApp?: (app: { id: string; name: string }) => void;
 }
 
-export function OperatorAppDetail({
+export function AppDetail({
   appId,
   onBack,
   buildWalk,
   onEditApp,
-}: OperatorAppDetailProps) {
+}: AppDetailProps) {
   const [tab, setTab] = useState<AppTab>("ui");
   const [chatOpen, setChatOpen] = useState(false);
   // A routine's "Open its chat" jumps the Ask Agent dock to that session.
   const [requestedSession, setRequestedSession] = useState<string | null>(null);
   const [panelSize, setPanelSize] = useState<PanelSize>("dock");
+  // The Demo tab's hand-off: a formatted capture that seeds the chat's first
+  // message, which is what actually authors the tool (POST /agent/tools/build).
+  // `nonce` remounts the session pane so a SECOND demo re-fires the seed —
+  // AppToolsChat fires a given seed exactly once per mount.
+  const [demoHandoff, setDemoHandoff] = useState<{
+    seed: string;
+    nonce: number;
+  } | null>(null);
   const query = useOperatorApp(appId);
   const remove = useDeleteApp();
 
@@ -196,7 +216,9 @@ export function OperatorAppDetail({
 
   function removeAndBack() {
     if (!app) return;
-    remove.mutate(app.id, { onSuccess: onBack });
+    remove.mutate(app.id, {
+      onSuccess: () => (onBack ? onBack() : navigateToSidebarApp("activity")),
+    });
   }
 
   return (
@@ -213,11 +235,13 @@ export function OperatorAppDetail({
           chatOpen && panelSize !== "modal" ? ` is-chat-${panelSize}` : ""
         }`}
       >
-        <div className="opr-surface-wide opr-app-detail">
-          <button type="button" className="opr-back" onClick={onBack}>
-            <ArrowLeft size={13} strokeWidth={1.9} aria-hidden={true} />
-            All agents
-          </button>
+        <div className="app-detail opr-surface-wide opr-app-detail">
+          {onBack ? (
+            <button type="button" className="opr-back" onClick={onBack}>
+              <ArrowLeft size={13} strokeWidth={1.9} aria-hidden={true} />
+              All agents
+            </button>
+          ) : null}
 
           <div className="opr-detail-head">
             <span
@@ -232,7 +256,7 @@ export function OperatorAppDetail({
                 {app ? (
                   <AgentName id={app.id} fallback={app.name} />
                 ) : (
-                  "Loading agent…"
+                  "Loading app…"
                 )}
               </div>
               <div className="opr-tool-meta">
@@ -343,6 +367,13 @@ export function OperatorAppDetail({
                   setChatOpen(true);
                 }}
                 onOpenChat={() => setChatOpen(true)}
+                onDemoHandoff={(seed) => {
+                  setDemoHandoff((prev) => ({
+                    seed,
+                    nonce: (prev?.nonce ?? 0) + 1,
+                  }));
+                  setChatOpen(true);
+                }}
               />
             ) : null}
           </div>
@@ -362,6 +393,7 @@ export function OperatorAppDetail({
             onOpenChange={setChatOpen}
             onSizeChange={setPanelSize}
             requestedSessionId={requestedSession}
+            demoHandoff={demoHandoff}
           />
         ) : null}
       </div>
@@ -378,6 +410,7 @@ function AskAiDock({
   onOpenChange,
   onSizeChange,
   requestedSessionId,
+  demoHandoff,
 }: {
   app: CustomApp;
   open: boolean;
@@ -385,6 +418,8 @@ function AskAiDock({
   onOpenChange: (open: boolean) => void;
   onSizeChange: (next: (s: PanelSize) => PanelSize) => void;
   requestedSessionId?: string | null;
+  /** A Demo-tab capture to open the chat with. `nonce` changes per hand-off. */
+  demoHandoff?: { seed: string; nonce: number } | null;
 }) {
   const panelRef = useRef<HTMLElement>(null);
 
@@ -423,7 +458,7 @@ function AskAiDock({
         type="button"
         className="opr-ask-fab"
         onClick={() => onOpenChange(true)}
-        aria-label={`Ask Agent about ${app.name}`}
+        aria-label={`Ask Wuphf about ${app.name}`}
       >
         <Sparkles size={16} strokeWidth={2} aria-hidden={true} />
         Ask Agent
@@ -444,7 +479,7 @@ function AskAiDock({
         ref={panelRef}
         tabIndex={-1}
         className={`opr-ask-panel is-${size}`}
-        aria-label={`Ask Agent about ${app.name}`}
+        aria-label={`Ask Wuphf about ${app.name}`}
       >
         <div className="opr-ask-bar">
           <span className="opr-ask-bar-title">
@@ -495,9 +530,14 @@ function AskAiDock({
         </div>
         <div className="opr-ask-body">
           <AgentSessions
+            // Remount on each Demo hand-off: AppToolsChat fires a seed once per
+            // mount, so a second demo would otherwise land silently. Sessions
+            // and transcripts are server-side, so a remount re-reads them.
+            key={demoHandoff?.nonce ?? 0}
             agentName={app.name}
             agentId={app.id}
             requestedSessionId={requestedSessionId}
+            seed={demoHandoff?.seed}
           />
         </div>
       </aside>
@@ -511,6 +551,7 @@ function TabBody({
   query,
   onOpenRoutineSession,
   onOpenChat,
+  onDemoHandoff,
 }: {
   tab: AppTab;
   appId: string;
@@ -518,6 +559,8 @@ function TabBody({
   onOpenRoutineSession?: (sessionId: string) => void;
   /** Open the Ask Agent dock — the Tools tab's teach affordance. */
   onOpenChat?: () => void;
+  /** Send a Demo-tab capture into the chat, which authors the tool from it. */
+  onDemoHandoff?: (seed: string) => void;
 }) {
   const app = query.data?.app;
   switch (tab) {
@@ -533,6 +576,14 @@ function TabBody({
       return (
         <AppToolsTab appName={app?.name ?? "This app"} onTeach={onOpenChat} />
       );
+    case "demo":
+      return (
+        <AppDemoTab
+          appName={app?.name ?? "This app"}
+          onHandoff={onDemoHandoff}
+          onTeach={onOpenChat}
+        />
+      );
     case "data":
       return app ? (
         <AppDataTab appId={app.id} />
@@ -541,7 +592,7 @@ function TabBody({
           glyph="▦"
           portraitSlug={appId}
           title="No data yet"
-          hint="The data this agent reads and writes appears here once it has finished building."
+          hint="The data this app reads and writes appears here once it has finished building."
         />
       );
     case "integrations":
@@ -556,7 +607,7 @@ function TabBody({
           glyph="📖"
           portraitSlug={appId}
           title="No knowledge yet"
-          hint="Your AI writes cited pages about this agent once it has finished building."
+          hint="Your AI writes cited pages about this app once it has finished building."
         />
       );
     default:
@@ -614,8 +665,8 @@ function UiTab({
         </span>
         <div className="opr-empty-title">Build failed</div>
         <div className="opr-empty-hint">
-          This agent stalled before it published a version — it is not building
-          anymore. Remove it and rebuild, or describe it again.
+          This app's build stalled before it published a version — it is not
+          building anymore. Remove it and rebuild, or describe it again.
         </div>
         <div className="opr-empty-actions">
           <button
@@ -625,7 +676,7 @@ function UiTab({
             disabled={removing}
           >
             <Trash2 size={13} strokeWidth={1.9} aria-hidden={true} />
-            Remove agent
+            Remove app
           </button>
         </div>
       </div>
@@ -639,7 +690,7 @@ function UiTab({
         <span />
       </span>
       <div className="opr-empty-title">
-        {query.isError ? "Could not load this agent" : "Building your agent…"}
+        {query.isError ? "Could not load this app" : "Building your app…"}
       </div>
       <div className="opr-empty-hint">
         {query.isError

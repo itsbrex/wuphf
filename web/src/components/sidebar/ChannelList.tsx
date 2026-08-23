@@ -64,6 +64,21 @@ function ChannelRow({
 
 export function ChannelList() {
   const { data: channels = [] } = useChannels();
+  // Rooms only. A DM belongs to the agent it is with, and `task-<id>` channels
+  // are legacy: tasks now live in the channel they were created from, so a task
+  // is never a place you navigate to. Showing either here would put a per-task
+  // room back in the sidebar the moment an old workspace loads.
+  //
+  // `app-<appid>` channels are hidden for a different reason: they are real and
+  // current, but they are an app's private build log, rendered inside that app's
+  // own Edit panel (CustomAppView). They are not a room the team meets in, so
+  // listing them would grow the sidebar by one dead entry per app.
+  const rooms = channels.filter(
+    (c) =>
+      c.type !== "dm" &&
+      !c.slug.startsWith("task-") &&
+      !c.slug.startsWith("app-"),
+  );
   const route = useCurrentRoute();
   const unreadByChannel = useAppStore((s) => s.unreadByChannel);
   const wizard = useChannelWizard();
@@ -74,7 +89,7 @@ export function ChannelList() {
     <>
       <div className="sidebar-scroll-wrap is-channels">
         <div className="sidebar-channels" ref={overflowRef}>
-          {channels.map((ch, idx) => {
+          {rooms.map((ch, idx) => {
             const isActive = activeChannelSlug === ch.slug;
             const unreadCount = unreadByChannel[ch.slug] ?? 0;
             return (

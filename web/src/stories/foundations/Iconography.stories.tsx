@@ -1,3 +1,4 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   ChatBubble,
   CheckCircle,
@@ -16,12 +17,9 @@ import {
   Xmark,
 } from "iconoir-react";
 
-import type { Meta, StoryObj } from "@storybook/react-vite";
-
 import { HarnessBadge } from "../../components/ui/HarnessBadge";
 import { LightningIcon } from "../../components/ui/LightningIcon";
 import { PixelAvatar } from "../../components/ui/PixelAvatar";
-
 import { Grid, Section } from "./_swatch";
 
 const meta: Meta = {

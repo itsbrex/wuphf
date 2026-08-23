@@ -18,32 +18,64 @@
  * a headline means editing this file, not hunting through JSX.
  */
 
-/** Ordered step ids. The wizard always runs meet → wiki → first-issue. */
-export type OnboardingWizardStepId = "meet" | "wiki" | "first-issue";
+import type { BlueprintOption } from "./types";
+
+/** Every step the wizard knows how to render, in order. */
+export type OnboardingWizardStepId =
+  | "meet"
+  | "wiki"
+  | "team"
+  | "ship"
+  | "first-issue";
 
 /**
- * Ordered step ids. Index in this array is the step's position and the source
- * of the progress-dot order and the "01 / 03" marker. Do not reorder without
- * updating the copy block below.
+ * Feature flag for the starter-pack surface: the "Pick a team pack" step, its
+ * preset agent rosters, and the GET /onboarding/blueprints fetch that feeds it.
  *
- * There is no team step: packs, blueprints, and the CEO agent are gone. A
- * fresh office seeds empty, and people spin up agents that execute their
- * workflows end to end. The "wiki" id survives as the internal name of the
- * company-brain step so step props and tests stay stable.
+ * OFF while onboarding is deliberately minimal. The founder's flow is: pick a
+ * runtime, name the office, land in #general, and let the CEO conversation
+ * decide the current goal, the first task, and which agents are needed. A
+ * preset roster picked before that conversation pre-empts it.
+ *
+ * Nothing is deleted. `StepTeam.tsx`, the blueprint wire types, and the host's
+ * team-step branches all stay in the tree, so flipping this back to `true` is
+ * the whole restore. The seed contract is unchanged either way: an empty
+ * `blueprintId` plus an empty `pickedAgents` is the broker's scratch path,
+ * which seeds a CEO and #general (internal/team/broker_onboarding.go).
+ *
+ * Typed `boolean` rather than left to literal inference so the flag reads as a
+ * switch and the disabled branches stay live code for the type checker.
  */
-export const ONBOARDING_WIZARD_STEP_IDS: OnboardingWizardStepId[] = [
+export const ONBOARDING_TEAM_PACKS_ENABLED: boolean = false;
+
+/** The full step order, independent of which steps are currently enabled. */
+const ALL_ONBOARDING_WIZARD_STEP_IDS: OnboardingWizardStepId[] = [
   "meet",
   "wiki",
+  "team",
+  "ship",
   "first-issue",
 ];
+
+/**
+ * The steps the wizard actually runs. Index in this array is the step's
+ * position and the single source of the progress-dot count, the "01 / 0N"
+ * marker, and the last-step Finish gate, so hiding a step here cannot leave a
+ * stale counter or a Next button that goes nowhere behind it.
+ *
+ * Do not reorder without updating the copy block below.
+ */
+export const ONBOARDING_WIZARD_STEP_IDS: OnboardingWizardStepId[] =
+  ALL_ONBOARDING_WIZARD_STEP_IDS.filter(
+    (id) => id !== "team" || ONBOARDING_TEAM_PACKS_ENABLED,
+  );
 
 /**
  * The answers the wizard collects across its steps. This is the wizard's
  * client-side working state; `useOnboardingWizard` persists the load-bearing
  * fields (company name, owner) into the broker's Partial / FormAnswers via
- * POST /onboarding/answer, then forwards the first workflow to
- * POST /onboarding/complete (blueprint "" plus agents [] — the no-team seed;
- * the office starts with zero agents).
+ * POST /onboarding/answer, then forwards blueprint + agents + the first issue
+ * to POST /onboarding/complete.
  *
  * - `companyName`   the office / company name. Persisted into Partial so the
  *                   broker can read it back at complete time (seed contract).
@@ -54,8 +86,15 @@ export const ONBOARDING_WIZARD_STEP_IDS: OnboardingWizardStepId[] = [
  *                   person at finish ONLY when `keepInTouch` is left checked.
  * - `keepInTouch`   consent for the remote email send. Defaults to true; the
  *                   email is still stored locally when it is unchecked.
- * - `firstIssue`    the text of the first workflow handoff, prefilled with
- *                   the RevOps CRM-audit example.
+ * - `blueprintId`   the picked starter roster id, or "" for the scratch path.
+ *                   Always "" while ONBOARDING_TEAM_PACKS_ENABLED is off.
+ * - `pickedAgents`  the agent slugs kept from the blueprint roster. Always
+ *                   empty while ONBOARDING_TEAM_PACKS_ENABLED is off, which is
+ *                   the broker's "lead only" filter: a CEO and nothing else.
+ * - `agentName`     the name briefed for the first agent (team step).
+ * - `agentInstructions` what that agent does (team step).
+ * - `firstIssue`    the text of the first issue, prefilled with the RevOps
+ *                   CRM-audit example.
  */
 export interface OnboardingAnswers {
   companyName: string;
@@ -63,6 +102,19 @@ export interface OnboardingAnswers {
   ownerRole: string;
   email: string;
   keepInTouch: boolean;
+  blueprintId: string;
+  pickedAgents: string[];
+  /**
+   * True when the user explicitly chose "Start from scratch" instead of a
+   * pack. The seed treats an empty blueprintId as the scratch path (it
+   * synthesizes a founding team), but we track the deliberate choice so the
+   * advance gate can let the user proceed with no pack selected. Defaults to
+   * true while ONBOARDING_TEAM_PACKS_ENABLED is off: with no pack step there
+   * is no other path, so the scratch path is the only one taken.
+   */
+  startFromScratch: boolean;
+  agentName: string;
+  agentInstructions: string;
   firstIssue: string;
   /**
    * Product-analytics consent, two independent channels, both default ON.
@@ -84,37 +136,25 @@ export interface OnboardingAnswers {
  *                remounts via a stable key, mirroring the tour pattern).
  * - `answers`    the current working answers.
  * - `setAnswers` merge-patch the answers (immutable update in the host).
+ * - `blueprints` the blueprint roster options fetched from
+ *                GET /onboarding/blueprints. Empty while loading, on error, and
+ *                whenever ONBOARDING_TEAM_PACKS_ENABLED is off (the fetch is
+ *                skipped entirely, since only the hidden team step reads it).
  */
 export interface OnboardingWizardStepProps {
   active: boolean;
   answers: OnboardingAnswers;
   setAnswers: (patch: Partial<OnboardingAnswers>) => void;
+  blueprints: BlueprintOption[];
 }
 
 /**
- * The prefilled first-issue examples. One is picked at mount — the pitch is
- * "a microapp for EVERY manual workflow", so the prefill must not read as
- * CRM-only (2026-08-15 fresh-workspace QA: a recruiter or finance operator
- * saw a RevOps product on every onboarding screen). WUPHF operates on the
- * user's systems; it is not a CRM.
+ * The prefilled first-issue example. RevOps framing: WUPHF operates on the
+ * user's CRM, it is not a CRM itself. This is the same example the office tour
+ * finish handoff used, kept verbatim so the two surfaces stay in lockstep.
  */
-export const ONBOARDING_FIRST_ISSUE_EXAMPLES: readonly string[] = [
-  "Audit our CRM for duplicate accounts, deals missing an owner, and opportunities with no activity in 30 days, then propose a cleanup plan",
-  "Chase our unpaid invoices: find anything past its due date, draft a polite reminder for each customer, and flag 30+ days overdue for my review",
-  "Screen inbound job applications against our role requirements, keep a shortlist of strong candidates, and draft a friendly note for the rest",
-  "Prep my Monday pipeline review: every deal closing this quarter that has gone quiet for two weeks, plus a one-line ask for each owner",
-];
-
-/** Back-compat: the canonical example (tests and the tour handoff pin it). */
 export const ONBOARDING_FIRST_ISSUE_EXAMPLE =
-  ONBOARDING_FIRST_ISSUE_EXAMPLES[0];
-
-/** Pick the prefill for this visit. */
-export function pickFirstIssueExample(): string {
-  return ONBOARDING_FIRST_ISSUE_EXAMPLES[
-    Math.floor(Math.random() * ONBOARDING_FIRST_ISSUE_EXAMPLES.length)
-  ];
-}
+  "Audit our CRM for duplicate accounts, deals missing an owner, and opportunities with no activity in 30 days, then propose a cleanup plan";
 
 /**
  * Per-step copy. `eyebrow` is the small-caps kicker above the headline,
@@ -130,19 +170,29 @@ export const ONBOARDING_WIZARD_COPY: Record<
   }
 > = {
   meet: {
-    eyebrow: "WELCOME TO WUPHF",
+    eyebrow: "WELCOME TO THE OFFICE",
     headline: "Meet WUPHF.",
-    body: "WUPHF is where you spin up AI agents that run your workflows end to end. Each agent owns one workflow, runs it start to finish, and reports back in its own chat.",
+    body: "WUPHF is an office of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your office assemble itself on the right.",
   },
   wiki: {
-    eyebrow: "YOUR COMPANY BRAIN",
+    eyebrow: "YOUR KNOWLEDGE BASE",
     headline: "Write the rules once.",
-    body: "Your company brain holds the rules your agents run on. Write down how you score a lead, when an invoice counts as overdue, or what makes a ticket urgent — once — and every agent reads it before touching your data.",
+    body: "Your wiki is the team's shared brain. Capture your RevOps rules a single time, account tiering, deal stages, and the dedupe policy, and every agent reads them as first-class context before it touches a record.",
+  },
+  team: {
+    eyebrow: "YOUR STARTING TEAM",
+    headline: "Pick a team pack.",
+    body: "Each pack is a ready-made RevOps team. Pick one and you are set. Trim who you do not need, or add a custom agent only if you want to.",
+  },
+  ship: {
+    eyebrow: "HOW WORK SHIPS",
+    headline: "File it. They ship it.",
+    body: "Mention an agent with @, hand off a problem, and the work fans out into tasks across the team while you watch. The ship lands back in a channel you can see.",
   },
   "first-issue": {
-    eyebrow: "YOUR FIRST WORKFLOW",
-    headline: "Hand off your first workflow.",
-    body: "Write the first thing you want run. We prefilled an example so there is real work the moment you walk in. Edit it, or write your own.",
+    eyebrow: "WRITE YOUR FIRST ISSUE",
+    headline: "Give your team something to do.",
+    body: "Write the first thing you want your office to handle. We prefilled a CRM cleanup so your team has real work the moment you walk in. Edit it, or write your own.",
   },
 };
 
@@ -180,12 +230,11 @@ export const ONBOARDING_EMAIL_COPY = {
  */
 export const ONBOARDING_ANALYTICS_CONSENT_COPY = {
   heading: "Help improve WUPHF",
-  // One consent, honestly described (2026-08-16: the three-checkbox stack
-  // bracketed the hero moment; founder approved slimming it). It drives both
-  // the analytics and the masked-replay flags together.
-  combinedLabel:
-    "Share anonymous product analytics and masked session replays. Counts, clicks, and layout only: never your content, and everything you type is masked.",
-  note: "Optional, on by default, easy to change any time in Settings.",
+  note: "Both are optional, on by default, and easy to change anytime in Settings. Analytics never collects your content, and recordings mask everything you type.",
+  telemetryLabel:
+    "Share anonymous product analytics. Counts and shapes of what you do, never the content.",
+  recordingLabel:
+    "Allow session recordings. We mask everything you type — passwords, keys, form fields — and capture layout, clicks, and navigation to fix rough edges.",
 } as const;
 
 /**
@@ -199,14 +248,14 @@ export const ONBOARDING_ANALYTICS_CONSENT_COPY = {
  * truth; the section component reads only from here.
  */
 export const ONBOARDING_EMBEDDING_COPY = {
-  heading: "Power the company brain",
-  note: "The company brain finds a rule by meaning, not just by an exact word match. Add an OpenAI key for the best recall, or start on keyword search and upgrade whenever you like.",
+  heading: "Power semantic memory",
+  note: "Semantic memory lets your agents find a rule by meaning, not just by an exact word match. Add an OpenAI key for the best recall, or start on keyword search and upgrade whenever you like.",
   // Primary: the recommended OpenAI key.
   openaiLabel: "OpenAI API key",
   openaiRecommended: "Recommended",
   openaiHint: "Best quality. One key powers chat and memory.",
   openaiPlaceholder: "sk-...",
-  openaiSet: "The company brain is on, powered by OpenAI embeddings.",
+  openaiSet: "Semantic memory is on, powered by OpenAI embeddings.",
   saveKey: "Save key",
   savingKey: "Saving…",
   saveError:
@@ -222,7 +271,7 @@ export const ONBOARDING_EMBEDDING_COPY = {
   keywordTitle: "Keyword search",
   keywordHint: "Works now, no setup at all. Upgrade anytime.",
   // The resulting-state pill. The label plus one of the three backend names.
-  statusLabel: "Company brain:",
+  statusLabel: "Semantic memory:",
   statusOpenAI: "OpenAI",
   statusOllama: "Local (Ollama)",
   statusKeyword: "Keyword",
@@ -234,8 +283,8 @@ export const ONBOARDING_EMBEDDING_COPY = {
   install: {
     // Consent line. Names exactly what will be installed, on this machine.
     consent:
-      "The company brain runs on gbrain. Set it up now? This installs gbrain (and Bun, its runtime) on this machine.",
-    cta: "Set up the company brain",
+      "Semantic memory runs on gbrain. Set it up now? This installs gbrain (and Bun, its runtime) on this machine.",
+    cta: "Set up semantic memory",
     // While the background installer runs.
     installing: "Setting up gbrain",
     installingHint:
@@ -243,7 +292,7 @@ export const ONBOARDING_EMBEDDING_COPY = {
     // Shown before the broker emits its first progress line.
     progressPending: "Starting up",
     // The ready state, if the install finishes before gbrain_installed flips.
-    installed: "The company brain is ready. gbrain is installed.",
+    installed: "Semantic memory is ready. gbrain is installed.",
     // The error state: the reason (or a generic line), then the keyword
     // fallback, then a retry.
     errorFallback: "We could not set up gbrain just now.",
@@ -261,19 +310,19 @@ export const ONBOARDING_WIZARD_LABELS = {
   /** Advance button (non-final steps). */
   next: "Next",
   /** Final-step primary CTA: deposits the user mid-action, not "Done". */
-  finish: "Start your first workflow",
+  finish: "Write your first issue",
+  /**
+   * Subtle escape on the team step that maps to the scratch / skip path. The
+   * wizard is still required onboarding (no Esc, no skip-all); this and the
+   * first-issue skip below are the only two affordances that advance without
+   * the step's normal input.
+   */
+  teamSkip: "I will set this up later",
   /**
    * First-issue escape: seed the office with no queued issue and land in it to
-   * look around first. Maps to the broker's skip_task path. The only escape in
-   * the wizard (no Esc, no skip-all).
+   * look around first. Maps to the broker's skip_task path.
    */
-  firstIssueSkip: "Skip and look around first",
-  /**
-   * Shown while the broker seeds the office after Finish. Renders as the
-   * primary button label, so it must stay SHORTER than the resting finish
-   * label to keep the button geometry stable. The mock-office metaphor from
-   * StepMeet carries the wink; the disabled state plus ellipsis keeps it
-   * unambiguously a progress message.
-   */
-  seeding: "Moving the desks in…",
+  firstIssueSkip: "Skip and explore the office first",
+  /** Shown while the broker seeds the office after Finish. */
+  seeding: "Setting up your office…",
 } as const;

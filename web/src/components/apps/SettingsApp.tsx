@@ -429,8 +429,8 @@ function LocalProviderCard({
                 marginLeft: 10,
                 fontSize: 11,
                 padding: "1px 6px",
-                background: "var(--accent-100, #eef)",
-                color: "var(--accent-500, #44a)",
+                background: "var(--accent-bg)",
+                color: "var(--accent)",
                 borderRadius: 3,
               }}
             >
@@ -643,7 +643,7 @@ function LocalLLMsSection({ cfg, save }: SectionProps) {
         <div className="app-panel-loading">Detecting installed runtimes…</div>
       ) : null}
       {error ? (
-        <div style={{ color: "var(--danger-500, #c33)", fontSize: 13 }}>
+        <div style={{ color: "var(--red)", fontSize: 13 }}>
           Failed to load status:{" "}
           {error instanceof Error ? error.message : String(error)}
         </div>

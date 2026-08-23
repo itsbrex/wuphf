@@ -63,11 +63,7 @@ export function deriveActionIdentity(
   const structured = request.action;
   if (structured && (structured.action_id || structured.platform)) {
     const actionId = (structured.action_id ?? "").trim();
-    const platformSlug = (
-      structured.platform ||
-      actionId.split("_")[0] ||
-      ""
-    )
+    const platformSlug = (structured.platform || actionId.split("_")[0] || "")
       .trim()
       .toLowerCase();
     return {
@@ -93,7 +89,8 @@ export function deriveActionIdentity(
   const platformFromFooter =
     viaIdx === -1 ? "" : footerAction.slice(viaIdx + 5).trim();
 
-  const headline = stripVia(request.title) || titleCaseTokens(actionId) || "Run an action";
+  const headline =
+    stripVia(request.title) || titleCaseTokens(actionId) || "Run an action";
 
   const platformName =
     platformFromFooter || titleCaseTokens(request.platform ?? "") || "";
@@ -134,7 +131,7 @@ function grantTarget(
   identity: ActionIdentity,
 ): ApprovalGrantTarget | null {
   const agentSlug = (request.from ?? "").trim();
-  if (!agentSlug || !identity.platformSlug || !identity.actionId) return null;
+  if (!(agentSlug && identity.platformSlug && identity.actionId)) return null;
   return {
     agentSlug,
     platform: identity.platformSlug,
@@ -185,14 +182,14 @@ export function ExternalActionApprovalCard({
             <span className="eac-action-id mono">{identity.actionId}</span>
           ) : null}
         </div>
-              </header>
+      </header>
 
       {request.connection_unverified ? (
         <p className="eac-unverified" role="status">
           <span className="eac-unverified-dot" aria-hidden="true" />
-          Connection unverified — we could not confirm {identity.platformName ||
-            "this integration"} is connected. Approve only if you trust it is
-          set up.
+          Connection unverified — we could not confirm{" "}
+          {identity.platformName || "this integration"} is connected. Approve
+          only if you trust it is set up.
         </p>
       ) : null}
 

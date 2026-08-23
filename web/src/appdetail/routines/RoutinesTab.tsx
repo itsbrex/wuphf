@@ -424,7 +424,7 @@ export function RoutinesTab({
         <Eyebrow>Routines</Eyebrow>
         <p className="opr-scoped-note">
           A routine is a prompt {agentName} runs in its own chat on a schedule —
-          it uses the agent's tools and its outcomes land in Artifacts. Pause or
+          it uses the app's tools and its outcomes land in Artifacts. Pause or
           publish each routine on its own.
         </p>
       </div>
@@ -436,7 +436,7 @@ export function RoutinesTab({
       ) : null}
       {unavailable ? (
         <p className="opr-scoped-note">
-          Routines are unavailable right now — the agent service could not be
+          Routines are unavailable right now — the Wuphf runtime could not be
           reached. They will appear once the workspace reconnects.
         </p>
       ) : routines.length === 0 ? (
@@ -602,7 +602,7 @@ function RoutineCard({
           type="button"
           className="opr-btn opr-btn-sm"
           disabled={runDisabled}
-          title="Run this routine's prompt through the agent now"
+          title="Run this routine's prompt through the app now"
           onClick={onRunNow}
         >
           <Play size={12} strokeWidth={2} aria-hidden={true} />

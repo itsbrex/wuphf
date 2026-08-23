@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { confirm, ConfirmHost } from "./ConfirmDialog";
+import { ConfirmHost, confirm } from "./ConfirmDialog";
 import { showNotice, ToastContainer } from "./Toast";
 
 const meta: Meta = {

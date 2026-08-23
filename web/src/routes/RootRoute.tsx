@@ -22,11 +22,13 @@ import {
   getInjectedAnalyticsConfig,
   initApi,
 } from "../api/client";
+import { AppDetail } from "../appdetail/surfaces/AppDetail";
 import { CreateAppDialog } from "../components/apps/CreateAppDialog";
 import { CustomAppView } from "../components/apps/CustomAppView";
 import { TelegramConnectHost } from "../components/integrations/TelegramConnectModal";
 import { Shell } from "../components/layout/Shell";
 import { UpgradeBanner } from "../components/layout/UpgradeBanner";
+import { TaskModalHost } from "../components/lifecycle/TaskModalHost";
 import { ChannelParticipants } from "../components/messages/ChannelParticipants";
 import { Composer } from "../components/messages/Composer";
 import { MessageFeed } from "../components/messages/MessageFeed";
@@ -184,27 +186,6 @@ const SkillDetailRoute = lazy(() =>
   import("./SkillDetailRoute").then((m) => ({
     default: m.SkillDetailRoute,
   })),
-);
-
-// Operator product shell. Mounted full-bleed at /#/operator, ahead of the office
-// Shell / onboarding / broker gates so the shape is always viewable regardless of
-// backend state. The clean-start product (web/src/operator) — talks to the pi-mono
-// agent service over HTTP/SSE, not the broker. See operator-harness-clean-start.md.
-// Retired office deep link → normalize to the operator hash once on mount.
-// Rendering OperatorApp immediately (alongside this) keeps the swap flicker-free.
-function LegacyOfficeRedirect() {
-  useEffect(() => {
-    if (!window.location.hash.startsWith("#/operator")) {
-      window.location.replace(
-        `${window.location.pathname}${window.location.search}#/operator`,
-      );
-    }
-  }, []);
-  return null;
-}
-
-const OperatorApp = lazy(() =>
-  import("../operator/OperatorApp").then((m) => ({ default: m.OperatorApp })),
 );
 
 function LazyPanelFallback() {
@@ -600,7 +581,19 @@ function MainContent() {
         // Agent-generated Apps live at /apps/app_<hash>. Anything else under
         // /apps that is neither a built-in panel nor a custom app id is unknown.
         if (route.appId.startsWith("app_")) {
-          return <CustomAppView appId={route.appId} />;
+          // The app surface is the operator-era detail view, folded into the
+          // office: UI / Routines / Tools / Data / Knowledge / Integrations
+          // plus the ask-the-app chat, on the same app_<id> record. "Edit app"
+          // hands off to the office App Builder dialog (update mode), which
+          // posts the improve task the App Builder picks up.
+          return (
+            <AppDetail
+              appId={route.appId}
+              onEditApp={(a) =>
+                useAppStore.getState().openUpdateAppDialog(a.id, a.name)
+              }
+            />
+          );
         }
         return <UnknownAppPanel appId={route.appId} />;
       }
@@ -821,26 +814,6 @@ export default function RootRoute() {
   const [bootError, setBootError] = useState(false);
   const [bootAttempt, setBootAttempt] = useState(0);
 
-  // Operator shell mount. The product shell lives at /#/operator and is fully
-  // self-contained, so it short-circuits the office boot/onboarding/Shell. Read
-  // the hash directly (not useRouterState) so it also works where RootRoute
-  // renders without a RouterProvider (bootstrap-fallback tests).
-  const [hashPath, setHashPath] = useState<string>(() =>
-    typeof window !== "undefined" ? window.location.hash.replace(/^#/, "") : "",
-  );
-  useEffect(() => {
-    const onHash = () => setHashPath(window.location.hash.replace(/^#/, ""));
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-  const isOperatorRoute = hashPath.startsWith("/operator");
-  // Operator is the product, full stop (founder decision, 2026-08-14): the
-  // legacy office shell's deep routes (#/c/:channel, #/tasks, #/wiki, …) no
-  // longer mount. Any onboarded navigation outside /operator normalizes to
-  // the operator surface below, so a stale bookmark or old deep link cannot
-  // strand the user in the parallel office IA.
-  const isHomeRoute = hashPath === "" || hashPath === "/";
-
   // Manual SPA pageviews (autocapture is off). We subscribe to the router
   // singleton rather than useRouterState so this works even where RootRoute is
   // rendered without a RouterProvider (the bootstrap-fallback tests). Fires the
@@ -963,10 +936,6 @@ export default function RootRoute() {
   }, [theme]);
 
   useEffect(() => {
-    // The operator shell at /#/operator is self-contained and never talks to
-    // the office broker. Skip the whole bootstrap so it does not fire initApi(),
-    // hit /onboarding/state, or arm the retry loop with failing broker traffic.
-    if (isOperatorRoute) return;
     let cancelled = false;
     let unreachable = false;
     initApi()
@@ -1020,31 +989,23 @@ export default function RootRoute() {
     return () => {
       cancelled = true;
     };
-  }, [bootAttempt, isOperatorRoute, setBrokerConnected, setOnboardingComplete]);
+  }, [bootAttempt, setBrokerConnected, setOnboardingComplete]);
 
   // Auto-retry while the broker is unreachable — the fallback copy promises
   // "retrying…", so keep that promise without requiring a click. Reads
   // bootAttempt (not a functional update) so a failed retry — which leaves
   // bootError true but bumps the attempt — re-arms the timer.
   useEffect(() => {
-    if (isOperatorRoute || !bootError) return;
+    if (!bootError) return;
     const next = bootAttempt + 1;
     const timer = setTimeout(() => {
       setBootAttempt(next);
     }, BOOT_RETRY_MS);
     return () => clearTimeout(timer);
-  }, [isOperatorRoute, bootError, bootAttempt]);
+  }, [bootError, bootAttempt]);
 
   let body: ReactNode;
-  if (isOperatorRoute) {
-    // Operator product shell — self-contained, full-bleed. Bypasses the office
-    // boot/onboarding/Shell so it renders regardless of backend state.
-    body = (
-      <Suspense fallback={<LazyPanelFallback />}>
-        <OperatorApp />
-      </Suspense>
-    );
-  } else if (bootError) {
+  if (bootError) {
     body = (
       <BrokerUnreachableScreen onRetry={() => setBootAttempt((a) => a + 1)} />
     );
@@ -1098,29 +1059,7 @@ export default function RootRoute() {
         />
       );
     }
-  } else if (isHomeRoute) {
-    // Onboarded, at the index: operator is the front door. Same self-contained
-    // OperatorApp as the explicit /#/operator deep link, but reached through the
-    // normal boot + onboarding gate so it has a live broker token and a seeded
-    // workspace.
-    body = (
-      <Suspense fallback={<LazyPanelFallback />}>
-        <OperatorApp />
-      </Suspense>
-    );
   } else {
-    // Legacy office deep route — retired. Normalize the hash so the address
-    // bar tells the truth, and mount the operator instead of the old Shell.
-    body = (
-      <Suspense fallback={<LazyPanelFallback />}>
-        <LegacyOfficeRedirect />
-        <OperatorApp />
-      </Suspense>
-    );
-  }
-  // The retired branch below is kept structurally (dead) so the office Shell
-  // code path can be deleted in one dedicated cleanup PR rather than here.
-  if (false as boolean) {
     body = (
       <Shell>
         <RoutedBody />
@@ -1152,6 +1091,7 @@ export default function RootRoute() {
       <ProviderSwitcherHost />
       <TelegramConnectHost />
       <CreateAppDialog />
+      <TaskModalHost />
     </ErrorBoundary>
   );
 }

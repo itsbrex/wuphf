@@ -79,7 +79,13 @@ interface SwatchProps {
   height?: number;
 }
 
-export function Swatch({ token, label, alias, fg = "auto", height = 56 }: SwatchProps) {
+export function Swatch({
+  token,
+  label,
+  alias,
+  fg = "auto",
+  height = 56,
+}: SwatchProps) {
   const display = label ?? token.replace(/^--/, "");
   return (
     <div
@@ -98,11 +104,7 @@ export function Swatch({ token, label, alias, fg = "auto", height = 56 }: Swatch
           border: "1px solid var(--border)",
           background: `var(${token})`,
           color:
-            fg === "light"
-              ? "#fff"
-              : fg === "dark"
-                ? "#000"
-                : "transparent",
+            fg === "light" ? "#fff" : fg === "dark" ? "#000" : "transparent",
         }}
         aria-label={display}
       />

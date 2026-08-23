@@ -104,7 +104,7 @@ export function modelOptionsForKind(
   const options: ModelOption[] = [
     { value: INHERIT_MODEL_VALUE, label: "Use runtime default" },
   ];
-  if (kind === "" ) {
+  if (kind === "") {
     return options;
   }
   if (kind === "mlx-lm" || kind === "ollama" || kind === "exo") {
@@ -119,9 +119,7 @@ export function modelOptionsForKind(
       }
     }
   } else if (kind in CLOUD_MODELS) {
-    for (const model of CLOUD_MODELS[
-      kind as keyof typeof CLOUD_MODELS
-    ]) {
+    for (const model of CLOUD_MODELS[kind as keyof typeof CLOUD_MODELS]) {
       options.push({ value: model, label: model });
     }
   }
@@ -141,7 +139,6 @@ export function isCatalogModel(
   if (modelValue === "") return true;
   const options = modelOptionsForKind(kind, localStatuses);
   return options.some(
-    (o) =>
-      o.value !== CUSTOM_MODEL_VALUE && o.value === modelValue,
+    (o) => o.value !== CUSTOM_MODEL_VALUE && o.value === modelValue,
   );
 }

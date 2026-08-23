@@ -74,7 +74,10 @@ describe("deriveActionIdentity", () => {
       title: undefined,
       context: ["Action: SLACK_SEND_MESSAGE", "Channel: #general"].join("\n"),
     });
-    const identity = deriveActionIdentity(req, parseApprovalContext(req.context));
+    const identity = deriveActionIdentity(
+      req,
+      parseApprovalContext(req.context),
+    );
     expect(identity.actionId).toBe("SLACK_SEND_MESSAGE");
     expect(identity.platformSlug).toBe("slack");
     // No "via X" and no title — the headline degrades to a title-cased id.
@@ -99,12 +102,16 @@ describe("<ExternalActionApprovalCard>", () => {
   it("toggles the raw payload view", () => {
     renderCard();
     // Friendly fields are shown by default; the raw block is not.
-    expect(screen.queryByText(/Subject: Welcome to Nex/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Subject: Welcome to Nex/),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /show raw/i }));
     // Raw view renders the masked payload as a single block.
     expect(screen.getByText(/Subject: Welcome to Nex/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: /hide raw/i }));
-    expect(screen.queryByText(/Subject: Welcome to Nex/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/Subject: Welcome to Nex/),
+    ).not.toBeInTheDocument();
   });
 
   it("approves and rejects with the right choice id", () => {
@@ -184,8 +191,6 @@ describe("<ExternalActionApprovalCard> structured payload (slice 4b)", () => {
 
   it("warns when the connection could not be verified (review LOW #5)", () => {
     renderCard({ connection_unverified: true });
-    expect(
-      screen.getByText(/connection unverified/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/connection unverified/i)).toBeInTheDocument();
   });
 });

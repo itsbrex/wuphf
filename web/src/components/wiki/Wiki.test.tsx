@@ -75,7 +75,7 @@ describe("<Wiki>", () => {
       expect(screen.getByTestId("wk-home")).toBeInTheDocument(),
     );
     expect(
-      screen.getByRole("heading", { name: "Company Brain" }),
+      screen.getByRole("heading", { name: "Team Wiki" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("wk-home-search")).toBeInTheDocument();
     // The page tree sidebar is THE navigation — visible next to the overview.

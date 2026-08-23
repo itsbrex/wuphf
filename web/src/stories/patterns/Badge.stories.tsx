@@ -50,7 +50,9 @@ export const Variants: StoryObj = {
 export const Guidance: StoryObj = {
   render: () => (
     <div style={{ maxWidth: 720, color: "var(--text)" }}>
-      <table style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}>
+      <table
+        style={{ width: "100%", fontSize: 12, borderCollapse: "collapse" }}
+      >
         <thead>
           <tr style={{ textAlign: "left", color: "var(--text-secondary)" }}>
             <th style={{ padding: "8px 12px" }}>Class</th>

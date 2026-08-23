@@ -384,7 +384,7 @@ function HostInviteControls({
         <div
           style={{
             marginTop: 8,
-            color: "var(--danger, #b42318)",
+            color: "var(--red)",
             fontSize: 12,
             lineHeight: 1.4,
             whiteSpace: "pre-wrap",
@@ -571,7 +571,7 @@ function HostTunnelControls({
         <div
           style={{
             marginTop: 8,
-            color: "var(--danger, #b42318)",
+            color: "var(--red)",
             fontSize: 12,
             lineHeight: 1.4,
             whiteSpace: "pre-wrap",
@@ -641,7 +641,7 @@ function TeamMemberSessions({
         <div
           style={{
             marginBottom: 8,
-            color: "var(--danger, #b42318)",
+            color: "var(--red)",
             fontSize: 12,
             lineHeight: 1.4,
           }}

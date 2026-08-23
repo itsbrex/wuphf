@@ -1143,7 +1143,7 @@ function SkillRunChip({
         padding: "2px 8px",
         fontSize: 12,
         background: "var(--bg-warm, var(--neutral-100))",
-        border: "1px solid var(--border-subtle, var(--neutral-200))",
+        border: "1px solid var(--border-dark)",
         borderRadius: 999,
         color: "var(--text-secondary)",
       }}

@@ -29,9 +29,7 @@ export const Default: StoryObj = {
         </div>
         <div className="approval-details-row">
           <dt className="approval-details-label">Files</dt>
-          <dd className="approval-details-value">
-            12 files · +312 / −84
-          </dd>
+          <dd className="approval-details-value">12 files · +312 / −84</dd>
         </div>
       </dl>
       <div className="approval-footer">
@@ -75,7 +73,9 @@ export const WithTruncation: StoryObj = {
 export const Empty: StoryObj = {
   render: () => (
     <div className="approval-context" style={{ maxWidth: 520 }}>
-      <p className="approval-empty">No structured context — see the message thread.</p>
+      <p className="approval-empty">
+        No structured context — see the message thread.
+      </p>
     </div>
   ),
 };

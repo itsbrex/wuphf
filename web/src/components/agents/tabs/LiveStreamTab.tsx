@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { listAgentLogTasks, type TaskLogSummary } from "../../../api/tasks";
 import { useAgentStream } from "../../../hooks/useAgentStream";
-import { router } from "../../../lib/router";
+import { useAppStore } from "../../../stores/app";
 import { StreamLineView } from "../../messages/StreamLineView";
 
 interface LiveStreamTabProps {
@@ -31,6 +31,7 @@ function RecentRunsSection({ agentSlug }: { agentSlug: string }) {
   });
 
   const runs: TaskLogSummary[] = data ?? [];
+  const openTaskModal = useAppStore((s) => s.openTaskModal);
 
   if (isLoading) {
     return (
@@ -64,12 +65,9 @@ function RecentRunsSection({ agentSlug }: { agentSlug: string }) {
               <button
                 type="button"
                 className="agent-stream-run-btn"
-                onClick={() =>
-                  void router.navigate({
-                    to: "/tasks/$taskId",
-                    params: { taskId: r.taskId },
-                  })
-                }
+                // Opens the shared task modal in place; a run row is a task
+                // affordance like any other.
+                onClick={() => openTaskModal(r.taskId)}
               >
                 <span className="agent-stream-run-id">{r.taskId}</span>
                 <span className="agent-stream-run-meta">

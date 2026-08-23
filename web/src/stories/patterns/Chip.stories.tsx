@@ -97,7 +97,15 @@ export const InContext: StoryObj = {
         maxWidth: 520,
       }}
     >
-      <div style={{ color: "var(--text-tertiary)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+      <div
+        style={{
+          color: "var(--text-tertiary)",
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+        }}
+      >
         Owners
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -105,13 +113,28 @@ export const InContext: StoryObj = {
         <span className="chip">lina</span>
         <span className="chip chip--accent">on-call · ops</span>
       </div>
-      <div style={{ color: "var(--text-tertiary)", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 8 }}>
+      <div
+        style={{
+          color: "var(--text-tertiary)",
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          marginTop: 8,
+        }}
+      >
         Channels
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        <button type="button" className="chip chip--interactive">#architecture</button>
-        <button type="button" className="chip chip--interactive">#deploys</button>
-        <button type="button" className="chip chip--interactive">#wiki</button>
+        <button type="button" className="chip chip--interactive">
+          #architecture
+        </button>
+        <button type="button" className="chip chip--interactive">
+          #deploys
+        </button>
+        <button type="button" className="chip chip--interactive">
+          #wiki
+        </button>
       </div>
     </div>
   ),

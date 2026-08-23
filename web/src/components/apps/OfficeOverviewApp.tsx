@@ -30,6 +30,7 @@ import {
   type RuntimeProviderOption,
 } from "../../lib/runtimeProviders";
 import { stageForState } from "../../lib/types/lifecycle";
+import { useAppStore } from "../../stores/app";
 import type { PrereqResult } from "../onboarding/runtimes";
 import { ActiveTasksPanel } from "./shared/ActiveTasksPanel";
 import { AgentPulsePanel } from "./shared/AgentPulsePanel";
@@ -78,8 +79,11 @@ function goToTasks(): void {
   void router.navigate({ to: "/tasks" });
 }
 
+// A task opens the shared modal in place — every task affordance in the
+// product now does, rather than navigating into the task's chat surface.
+// Read imperatively off the store: this is a module-level helper.
 function goToTask(taskId: string): void {
-  void router.navigate({ to: "/tasks/$taskId", params: { taskId } });
+  useAppStore.getState().openTaskModal(taskId);
 }
 
 function goToRequests(): void {
