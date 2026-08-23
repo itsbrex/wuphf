@@ -1854,7 +1854,10 @@
 }
 .wk-editor-save {
   background: var(--wk-wikilink);
-  color: #fff;
+  /* Ink on an accent fill — the editor's primary action. The #fff literal
+     measured 1.93:1 on noir-gold's gold and 2.17:1 on nex-shell: the Save
+     button of the wiki editor was effectively unlabelled in two themes. */
+  color: var(--accent-fg);
   border-color: var(--wk-wikilink);
 }
 .wk-editor-save[disabled],
@@ -3508,8 +3511,12 @@
   cursor: pointer;
   /* Resting state: dimmed but visible on every row so the actions menu (which
      owns Delete) is discoverable without first hovering. Full opacity on
-     hover / focus / menu-open below. */
-  opacity: 0.55;
+     hover / focus / menu-open below.
+     Was 0.55, which did not meet that stated intent: --wk-text-tertiary is
+     already the muted ink, so halving it again put this control at 1.8-2.7:1
+     — not discoverable, effectively invisible. 0.85 clears the 3:1 bar SC
+     1.4.11 sets for a non-text control while still reading as recessed. */
+  opacity: 0.85;
   transition:
     opacity 0.12s,
     background-color 0.12s,

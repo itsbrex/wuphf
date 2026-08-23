@@ -85,7 +85,11 @@
      painted with. Navigation should not be sub-AA. Mixed off the ramp
      rather than hardcoded so it still tracks a palette retune. Clears
      4.6:1 on --bg-card; ~4.1:1 on --bg-warm, see the note below. */
-  --text-tertiary: color-mix(in srgb, var(--neutral-500) 70%, var(--neutral-400));
+  --text-tertiary: color-mix(
+    in srgb,
+    var(--neutral-500) 70%,
+    var(--neutral-400)
+  );
   --text-disabled: var(--neutral-300);
   --accent: var(--tertiary-400);
   --accent-warm: var(--tertiary-500);

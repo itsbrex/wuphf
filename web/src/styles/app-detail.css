@@ -2363,6 +2363,23 @@
   }
 }
 
+/* The route wrapper had no base rule at all, so inside `.main` — a flex
+   COLUMN — it sized to its content. On a short tab (DEMO is the clearest
+   case) the panel stopped mid-viewport and the status bar floated up with a
+   band of bare page background beneath it, in every theme. Grow to fill the
+   column and let the panel fill the wrapper; min-height:0 is what keeps the
+   panel's inner scroll regions working instead of pushing the column open. */
+.opr-detail-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.opr-detail-wrap > .app-detail {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 /* ───────────────────────────── Edit-with-AI dock */
 
 .opr-detail-wrap.is-editing .opr-surface-wide {

@@ -8,7 +8,26 @@
 @import url("./nex.css");
 
 html[data-theme="nex-dark"] {
-  /* ── Ramp overrides (reuse same palette, just reference different stops) ── */
+  /* ── Ramp overrides ──
+     The -300/-400/-500 stops are INK and carry over from global.css
+     unchanged. The -100/-200 stops are TINTED BACKGROUNDS, and the light
+     theme's pastels (#e9fbef, #ffeeeb, #fbf5dc …) are 88-95% luminance —
+     near-white slabs on a 1% page. Every green/red/yellow/blue/accent
+     tinted surface in the product read that way here until these existed;
+     --accent-bg alone is 123 call sites, and it inherits --tertiary-100.
+
+     Derived by mixing each hue's ink stop into this theme's own card
+     surface rather than hand-picked, so the tints keep tracking --bg-card
+     if the twilight palette is retuned. noir-gold does the same job with
+     literals (--success-100: #1a2b21); same intent, different mechanics. */
+  --success-100: color-mix(in srgb, var(--success-400) 14%, var(--bg-card));
+  --success-200: color-mix(in srgb, var(--success-400) 26%, var(--bg-card));
+  --error-100: color-mix(in srgb, var(--error-400) 14%, var(--bg-card));
+  --error-200: color-mix(in srgb, var(--error-400) 26%, var(--bg-card));
+  --warning-100: color-mix(in srgb, var(--warning-400) 14%, var(--bg-card));
+  --warning-200: color-mix(in srgb, var(--warning-400) 26%, var(--bg-card));
+  --cyan-100: color-mix(in srgb, var(--cyan-500) 16%, var(--bg-card));
+  --tertiary-100: color-mix(in srgb, var(--tertiary-400) 16%, var(--bg-card));
 
   /* ── Overlays flipped for dark surface ── */
   --overlay-soft: rgba(255, 255, 255, 0.04);

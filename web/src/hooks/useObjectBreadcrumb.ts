@@ -27,7 +27,14 @@ export interface BreadcrumbItem {
  * Returns an empty array for conversation routes (channels) and unknown.
  * Pure function so tests can call it without a React context.
  */
-export function deriveBreadcrumbs(route: CurrentRoute): BreadcrumbItem[] {
+export function deriveBreadcrumbs(
+  route: CurrentRoute,
+  /** Resolved display name for a custom app, when the caller has the apps
+   *  list. Without it the generic-app branch falls back to title-casing the
+   *  record id, which surfaced as "App_ad2f6211ad746d37" in the header.
+   *  Optional so this stays callable from tests with no React context. */
+  customAppName?: string,
+): BreadcrumbItem[] {
   switch (route.kind) {
     case "task-board": {
       return [{ label: "Tasks", href: "#/tasks" }];
@@ -77,10 +84,11 @@ export function deriveBreadcrumbs(route: CurrentRoute): BreadcrumbItem[] {
           },
         ];
       }
-      // Generic app — one segment with the app title.
+      // Generic app — one segment with the app title. Prefer the real name
+      // when the caller resolved it; appLabel only title-cases the id.
       return [
         {
-          label: appLabel(route.appId),
+          label: customAppName?.trim() || appLabel(route.appId),
           href: `#/apps/${encodeURIComponent(route.appId)}`,
         },
       ];

@@ -87,7 +87,11 @@ html[data-theme="noir-gold"] {
   --bg-card: #111113;
   --text: #f5e9c8;
   --text-secondary: #b39e6b;
-  --text-tertiary: #7a6a45;
+  /* Was #7a6a45 — 3.57:1 on the cards and 1.76:1 once the sidebar's idle
+     agent-status dim landed on top of it, which made the most-read line in
+     the product effectively invisible in this theme. Lightened one step up
+     the gold-neutral ramp; still clearly the quietest of the three inks. */
+  --text-tertiary: #a8946a;
   --text-disabled: #4a4234;
 
   --accent: var(--gold-400);

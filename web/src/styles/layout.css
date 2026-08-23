@@ -735,7 +735,10 @@ html[data-theme="nex"]
   padding: 0 6px;
   border-radius: 9px;
   background: var(--accent);
-  color: #fff;
+  /* Ink on an accent fill — same case the buttons use --accent-fg for. The
+     literal #fff was 2.42:1 on noir-gold's gold and 3.53:1 on nex-shell's
+     cobalt; this is an unread count, so it has to be legible. */
+  color: var(--accent-fg);
   font-size: 10px;
   font-weight: 600;
   flex-shrink: 0;
@@ -2742,7 +2745,13 @@ html[data-theme="nex"]
 }
 
 .sidebar-agent-pill[data-state="idle"] {
-  opacity: 0.5;
+  /* Was 0.5, which double-dimmed: --text-tertiary is ALREADY the muted
+     signal (rgba(255,255,255,0.58) inside the sidebar), so halving it
+     again landed the agent's status line at 2.1-2.6:1 in every theme —
+     and idle is the state most agents are in most of the time, so this
+     was the common case, not an edge one. The italic below is what
+     actually carries "idle"; the opacity only has to soften it. */
+  opacity: 0.92;
   font-style: italic;
 }
 

@@ -514,14 +514,25 @@ export function getSubTasks(parentTaskId: string) {
 export function createSubTask(opts: {
   parentTaskId: string;
   title: string;
+  /** The parent's conversation home. "" when the parent has none. */
   channel: string;
   details?: string;
   owner?: string;
 }) {
+  // `opts.channel || "general"` filed a sub-task of a homeless parent into
+  // the retired room. Send the channel only when the parent actually has
+  // one. NOTE: this stops the CLIENT asserting a room it does not have; the
+  // broker still normalizes an absent channel to "general" server-side
+  // (normalizeChannelSlug), so the leak only fully closes when the Go guard
+  // lands. Callers should not offer sub-task creation without a channel.
+  const parentChannel = opts.channel.trim();
   return trackOn(
     post<TaskResponse>("/tasks", {
       action: "create",
-      channel: opts.channel || "general",
+      // Omitted entirely when the parent has no home, rather than sent empty:
+      // an absent key and an empty string are different requests, and only the
+      // absent one leaves the server free to decide.
+      ...(parentChannel ? { channel: parentChannel } : {}),
       title: opts.title,
       details: opts.details || "",
       owner: opts.owner || "",

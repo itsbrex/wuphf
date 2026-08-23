@@ -5816,3 +5816,34 @@ button.verification-badge {
 .task-modal-placeholder p {
   margin: 0;
 }
+
+/* ── Task with no conversation home ──────────────────────────────────
+ * Shown in place of the chat pane when a task has no owner and so has
+ * nowhere to talk. Deliberately NOT styled as an error: this is an
+ * ordinary stage of an unowned task's life, so it reads as quiet
+ * secondary text rather than a red banner.
+ */
+.issue-doc-no-conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 24px;
+  margin: 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--bg-card, var(--bg));
+}
+
+.issue-doc-no-conversation-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.issue-doc-no-conversation-body {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  max-width: 52ch;
+}

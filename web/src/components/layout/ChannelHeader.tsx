@@ -79,7 +79,11 @@ export function ChannelHeader() {
       : undefined;
 
   const { title, desc } = headerTitleAndDesc(route, channels, customAppName);
-  const breadcrumbItems = deriveBreadcrumbs(route);
+  // customAppName has to reach the breadcrumb too, not just `title`: on the
+  // app route breadcrumbItems is non-empty, so <Breadcrumb> renders and the
+  // `title` branch below never runs — the resolved name was being computed
+  // and then discarded, leaving the raw "App_ad2f6211ad746d37" on screen.
+  const breadcrumbItems = deriveBreadcrumbs(route, customAppName);
 
   return (
     <div className="channel-header">

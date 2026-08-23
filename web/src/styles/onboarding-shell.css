@@ -135,17 +135,24 @@
 }
 
 /* ── Buttons: the app's B&W bevel system (.opr-btn). Primary CTA is soft
-   off-white on dark, not brand purple — color stays reserved for meaning. ── */
-.pre-pick-screen .btn-primary,
-.onboarding-wizard .btn-primary {
+   off-white on dark, not brand purple — color stays reserved for meaning.
+   Qualified with html[data-theme] so this OUTRANKS a theme's own
+   `html[data-theme="x"] .btn-primary` override. Without it, noir-gold's
+   gold button leaked into this deliberately theme-independent shell and
+   the wizard shipped a gold Next beside cobalt eyebrow text, in a screen
+   that is otherwise byte-identical across all four themes. ── */
+html[data-theme] .pre-pick-screen .btn-primary,
+html[data-theme] .onboarding-wizard .btn-primary {
   background: var(--onb-ink);
   color: hsl(210 10% 10%);
+  border-color: var(--onb-ink);
   box-shadow: none;
 }
 
-.pre-pick-screen .btn-primary:not(:disabled):hover,
-.onboarding-wizard .btn-primary:not(:disabled):hover {
+html[data-theme] .pre-pick-screen .btn-primary:not(:disabled):hover,
+html[data-theme] .onboarding-wizard .btn-primary:not(:disabled):hover {
   background: var(--onb-ink);
+  color: hsl(210 10% 10%);
   filter: brightness(1.08);
 }
 
@@ -177,11 +184,6 @@
   border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 600;
-}
-
-.pre-pick-screen .btn-primary,
-.onboarding-wizard .btn-primary {
-  border-color: var(--onb-ink);
 }
 
 .pre-pick-screen .btn:has(.btn-label),

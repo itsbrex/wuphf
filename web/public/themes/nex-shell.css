@@ -53,6 +53,21 @@ html[data-theme="nex-shell"] {
   --red: hsl(6 58% 60%);
   --red-bg: hsl(6 58% 60% / 0.12);
 
+  /* The tinted-background stops. --red-bg and --accent-bg above already
+     did this job; --green-bg, --yellow-bg and --blue-bg did not, so they
+     still resolved to global.css's light-theme pastels (93%, 91%, 95%
+     luminance) and rendered as near-white chips on this 1% paper. Setting
+     the -100 stops rather than the -bg aliases fixes the handful of call
+     sites that reach for --success-100 and friends directly too. */
+  --success-100: color-mix(in srgb, var(--green) 12%, transparent);
+  --success-200: color-mix(in srgb, var(--green) 24%, transparent);
+  --error-100: hsl(6 58% 60% / 0.12);
+  --error-200: hsl(6 58% 60% / 0.24);
+  --warning-100: color-mix(in srgb, var(--warning-400) 12%, transparent);
+  --warning-200: color-mix(in srgb, var(--warning-400) 24%, transparent);
+  --cyan-100: color-mix(in srgb, var(--accent) 14%, transparent);
+  --tertiary-100: color-mix(in srgb, var(--accent) 14%, transparent);
+
   /* ── Sidebar: the purple rail becomes the operator rail — a darker
      panel one step below the paper, dim text, ink when active. ── */
   --nex-sidebar: hsl(210 6% 6%);

@@ -47,7 +47,15 @@ export default defineConfig({
       "/api": proxyEntry,
       "/api-token": proxyEntry,
       "/onboarding": proxyEntry,
-      "/agent": agentEntry,
+      // Anchored regex, NOT the bare "/agent" string. Vite proxy keys are
+      // prefix matches, so "/agent" also swallowed "/agents" — the app's
+      // own route — and hitting http://localhost:PORT/agents in dev
+      // returned the agent service's {"error":"not found"} instead of the
+      // SPA. Production was always fine (the Go server serves the SPA for
+      // unknown paths), so this only ever broke dev, quietly.
+      // The lookahead keeps /agent and /agent/... matching while leaving
+      // /agents, /agent-logs and friends to the SPA fallback.
+      "^/agent(?=/|$)": agentEntry,
     },
   },
   build: {

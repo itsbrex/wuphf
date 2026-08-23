@@ -1,0 +1,81 @@
+/* consult-relay.css — the centered marker shown in a human-to-agent DM when
+ * that agent messaged another agent, or heard back.
+ *
+ * Treatment is deliberately borrowed from .date-separator (messages.css): a
+ * centered, muted pill that reads as a divider rather than as speech. It must
+ * never look like a message bubble — no bubble background, no left/right
+ * alignment, no author. Nobody said it.
+ *
+ * Every custom property here is defined: the colour tokens are overridden in
+ * all four themes (nex, nex-dark, noir-gold, nex-shell) and the rest resolve
+ * from global.css :root, which is exactly what .date-separator already relies
+ * on for --text-xs. No `var(--x, #hex)` fallbacks — a fallback silently
+ * hardcodes a colour the day a token is dropped.
+ */
+
+.consult-relay-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 24px;
+}
+
+.consult-relay {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--bg-warm);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.6;
+  cursor: pointer;
+  /* Colour only — nothing here moves the row, so the divider never shifts the
+     conversation around it on hover. */
+  transition:
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+
+.consult-relay:hover:not(:disabled),
+.consult-relay:focus-visible {
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+/* No channel to open (a malformed payload). Still legible, just inert — it
+   states what happened without offering a click that goes nowhere. */
+.consult-relay:disabled {
+  cursor: default;
+}
+
+.consult-relay-verb {
+  white-space: nowrap;
+}
+
+.consult-relay-agent {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consult-relay {
+    transition: none;
+  }
+}
+
+/* Read-only conversation view: the consult opened from a marker. MessageFeed
+   brings no composer, so there is nothing to hide here — this only gives the
+   feed room inside the panel. Reactions are suppressed in the component via
+   the `readOnly` prop rather than with `display: none`, because a hidden
+   button is still keyboard-reachable and would let someone mark a
+   conversation they are only permitted to read. */
+.consult-relay-panel-feed {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+}
