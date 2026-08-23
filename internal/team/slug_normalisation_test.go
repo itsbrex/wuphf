@@ -216,3 +216,40 @@ func TestEmptyFilterMeansNoFilter(t *testing.T) {
 		}
 	})
 }
+
+// ── The exception: where the CHANNEL normaliser is the correct one ──────────
+
+// TestDMSlugsRequireTheChannelNormaliser guards the trap running in reverse.
+//
+// The obvious reading of broker_dm.go is "these take an agent slug, so switch
+// them to normalizeActorSlug like everything else". That is catastrophically
+// wrong: normalizeChannelSlug's "__" placeholder dance exists precisely to
+// preserve the DM separator, and the actor normaliser folds "__" to "--". A
+// sweep that "finished the job" here would break DM lookup, DMTargetAgent, and
+// the canonical-slug migration in one move, and every symptom would look like
+// a routing bug rather than a normalisation one.
+func TestDMSlugsRequireTheChannelNormaliser(t *testing.T) {
+	dm := DMSlugFor("ceo")
+	if dm == "" || !strings.Contains(dm, "__") {
+		t.Fatalf("DMSlugFor(\"ceo\") = %q, expected a %q-separated pair slug", dm, "__")
+	}
+
+	if got := normalizeChannelSlug(dm); got != dm {
+		t.Errorf("normalizeChannelSlug(%q) = %q — the channel normaliser MUST round-trip a DM slug", dm, got)
+	}
+	if got := normalizeActorSlug(dm); got == dm {
+		t.Fatalf("normalizeActorSlug(%q) round-tripped; this test can no longer prove the hazard", dm)
+	}
+
+	// The consequence, stated as behaviour rather than as string equality: run
+	// a DM slug through the actor normaliser and it stops resolving.
+	if !IsDMSlug(dm) {
+		t.Fatalf("IsDMSlug(%q) = false; fixture is wrong", dm)
+	}
+	if IsDMSlug(normalizeActorSlug(dm)) {
+		t.Error("an actor-normalised DM slug still parsed as a DM — the hazard has moved, re-check broker_dm.go")
+	}
+	if got := DMTargetAgent(normalizeActorSlug(dm)); got == "ceo" {
+		t.Error("DMTargetAgent survived actor normalisation; re-check the DO-NOT-CHANGE note in broker_dm.go")
+	}
+}
