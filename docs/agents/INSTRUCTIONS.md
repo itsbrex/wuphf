@@ -315,6 +315,34 @@ End your summary with this disposition table:
 | 3 | <short> | DEFERRED | <issue link> |
 ```
 
+### Diagnostic probes in a shared tree
+
+Toggling a flag to prove a test is genuinely red before your fix is good
+practice and this repo asks for it. In a tree where several agents are working
+at once, the technique needs a blast radius.
+
+The rule: **a probe must not be able to break anyone else's build, and must not
+be able to fail anyone else's test run.**
+
+- Put the probe in a `_test.go` file. A package-level `const` in a normal file
+  breaks `go build` for every other agent the moment you delete it mid-run, and
+  the error names a symbol nobody else has ever heard of.
+- Give a probe test `t.Skip` by default, or a build tag. An untracked
+  `zz_*_probe_test.go` that fails by design reads to everyone else as their own
+  regression.
+- Delete it when you are done, and verify with a grep rather than asserting it.
+- If you must flip something that changes behaviour tree-wide, say so first.
+
+This is written down because it cost real time twice in one session. Two
+separate probe files each produced a phantom failure that other agents then
+spent effort attributing — one of them by re-running the suite four times and
+diffing the failure sets. Both probes were legitimate; neither was scoped.
+
+Corollary for reading a red suite in a shared tree: **attribute before you
+fix.** Run the failing test in isolation, check whether the file is modified by
+someone else, and check whether the failure set changes between runs. A failure
+that moves between runs is somebody landing work, not a bug in your change.
+
 ### Worktree-based parallelism
 
 For multi-batch fixes:
@@ -350,6 +378,9 @@ iteration hook; reviewer practice is to run the demo, not eyeball the diff.
 ### Lint And Security
 
 - Go: `gofmt`, `go vet ./...`, and `golangci-lint run ./...`.
-- Web: `bunx biome check --write`.
+- Web: `bun run lint:fix` from `web/`. It covers `src/` **and**
+  `public/themes/` — the theme files are stylesheets like any other, and
+  scoping the command to `src/` alone let a formatting error sit in
+  `nex-shell.css` unnoticed.
 - Secrets: `bunx secretlint`.
 - Do not suppress lint warnings with ignore comments.
