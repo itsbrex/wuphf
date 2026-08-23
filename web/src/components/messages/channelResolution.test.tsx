@@ -172,3 +172,56 @@ describe("<MessageBubble> reaction channel", () => {
     expect(String(showNotice.mock.calls[0][0])).not.toMatch(/general/i);
   });
 });
+
+// ── MessageBubble card dispatch ────────────────────────────────────────
+//
+// teachflow's consult_relay marker is a sixth card early-return in
+// MessageBubble, and it only works if it sits ABOVE the author/avatar
+// rendering — otherwise a consult falls through to the normal bubble path and
+// renders as an empty authorless bubble. Their own tests cover the marker
+// component in isolation; nothing covered the dispatch, so a mis-placed hunk
+// would have been invisible. This pins the placement.
+describe("<MessageBubble> consult_relay dispatch", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    useChannelSlug.mockReturnValue(null);
+  });
+
+  // Payload shape per ConsultRelayMarker's own contract: {direction, agent,
+  // channel}. The marker renders null without `agent`, so getting this wrong
+  // looks identical to a mis-placed hunk — which is how this test earned its
+  // keep on the first run.
+  const CONSULT: Message = {
+    id: "msg-consult-1",
+    from: "ceo",
+    channel: "eng",
+    content: "",
+    kind: "consult_relay",
+    timestamp: "2026-08-23T12:00:00Z",
+    payload: { direction: "sent", agent: "designer", channel: "ceo__designer" },
+  } as unknown as Message;
+
+  it("renders the marker, not a bubble", () => {
+    render(
+      <Wrap>
+        <MessageBubble message={CONSULT} />
+      </Wrap>,
+    );
+
+    expect(screen.getByTestId("consult-relay-marker")).toBeInTheDocument();
+  });
+
+  it("returns before any author or avatar is rendered", () => {
+    // The placement requirement: above the isSyntheticSender path. "ceo" is
+    // not on the stubbed roster, so a fall-through would render the synthetic
+    // -sender bubble shell around it.
+    const { container } = render(
+      <Wrap>
+        <MessageBubble message={CONSULT} />
+      </Wrap>,
+    );
+
+    expect(container.querySelector(".message-row")).toBeNull();
+    expect(container.querySelector(".message-author")).toBeNull();
+  });
+});

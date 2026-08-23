@@ -63,6 +63,12 @@ vi.mock("./MessageBubble", () => ({
   ),
 }));
 
+const showNotice = vi.hoisted(() => vi.fn());
+vi.mock("../ui/Toast", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../ui/Toast")>();
+  return { ...actual, showNotice };
+});
+
 vi.mock("../../api/client", async () => {
   const actual =
     await vi.importActual<typeof import("../../api/client")>(
@@ -221,9 +227,16 @@ describe("ThreadPanel reply channel", () => {
       channelSlug: "",
     });
 
+    showNotice.mockClear();
     render(wrap(<ThreadPanel />));
     await typeAndSend("does this land?");
 
     expect(postMessage).not.toHaveBeenCalled();
+    // Assert the GUARD ran, not merely that nothing happened. Without this a
+    // send that silently failed for any other reason would look identical to
+    // a working refusal — the test would pass without reaching the branch it
+    // was written for.
+    expect(showNotice).toHaveBeenCalled();
+    expect(String(showNotice.mock.calls[0][0])).toMatch(/nowhere to go/i);
   });
 });

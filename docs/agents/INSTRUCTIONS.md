@@ -343,6 +343,36 @@ fix.** Run the failing test in isolation, check whether the file is modified by
 someone else, and check whether the failure set changes between runs. A failure
 that moves between runs is somebody landing work, not a bug in your change.
 
+### Never create a state you intend to undo, in a shared tree
+
+Proving a test goes red before your fix is required here. Doing it by reverting
+the real files, in place, is not.
+
+An agent verified four fixes by scripting a revert of all four files, running
+the suite, and restoring — three times, in windows minutes long, unannounced,
+while five other agents worked in the same tree. The reverts touched code lines
+and not the comments above them, so during those windows the tree contained
+exactly the artefact you would expect: a comment describing a fix with the
+broken line still underneath it, and an empty-state branch made unreachable.
+
+Two other agents bisected into that window. A third (me) read the tree, found
+the half-applied state, "fixed" a file that was already correct, and reported a
+pattern of unexecuted edits that had never happened. Hours went into diagnosing
+an artefact.
+
+So:
+
+- Verify red-pre-fix on a COPY outside the tree, or against a stashed patch you
+  apply to a scratch checkout. Never by mutating the shared working tree.
+- If you genuinely must change shared state temporarily, announce it first and
+  announce when it is restored.
+- Revert scripts that match on code lines will leave comments describing the
+  new behaviour above the old code. That combination is indistinguishable from
+  sloppiness, and it is what everyone else will conclude.
+
+The general form: **in a shared tree, do not create a state you intend to
+undo.** Someone else will read it while it exists, and they will believe it.
+
 ### After a bulk edit, check what was REMOVED
 
 A mechanical pass over many call sites can quietly undo correct code while

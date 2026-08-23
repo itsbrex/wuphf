@@ -27,6 +27,10 @@ import {
   useArtifactSkeletonTrigger,
 } from "./ArtifactSkeleton";
 import {
+  ConsultRelayMarker,
+  parseConsultRelayPayload,
+} from "./cards/ConsultRelayMarker";
+import {
   parseSystemAuthErrorPayload,
   SystemErrorCard,
 } from "./cards/SystemErrorCard";
@@ -198,6 +202,17 @@ export function MessageBubble({
   if (message.content?.startsWith("[STATUS]")) {
     const statusText = message.content.replace(/^\[STATUS\]\s*/, "");
     return <div className="message-status animate-fade">{statusText}</div>;
+  }
+
+  // Consult relay: your agent messaged another agent, or heard back. Rendered
+  // as a centered divider, never as a bubble — it has no author, because
+  // nobody said it. Derived server-side from the real agent-to-agent message
+  // (internal/team/broker_consult_relay.go), so it cannot be faked by an agent
+  // claiming a consult it never had.
+  if (message.kind === "consult_relay") {
+    return (
+      <ConsultRelayMarker payload={parseConsultRelayPayload(message.payload)} />
+    );
   }
 
   // Issue #933: system-authored auth-failure card. Renders OUTSIDE the
