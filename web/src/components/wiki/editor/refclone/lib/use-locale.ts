@@ -47,6 +47,27 @@ function readServerDir(): Direction {
  * `t(...)` call site in the ported files byte-for-byte verbatim while still
  * rendering sensible aria-labels, titles, and visible strings.
  */
+/** Words the naive Title Case gets wrong. Acronyms stay uppercase; joining
+ *  words stay lowercase unless they lead. Without this, `editWithAi` rendered
+ *  as "Edit With Ai" in the editor toolbar — visibly not a product string. */
+const ACRONYMS = new Set(["ai", "ui", "url", "html", "css", "pdf", "id"]);
+const LOWERCASE_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "as",
+  "at",
+  "by",
+  "for",
+  "in",
+  "of",
+  "on",
+  "or",
+  "the",
+  "to",
+  "with",
+]);
+
 function humanizeKey(key: string): string {
   const last = key.split(":").pop() ?? key;
   const leaf = last.split(".").pop() ?? last;
@@ -56,7 +77,15 @@ function humanizeKey(key: string): string {
     .replace(/[._-]+/g, " ")
     .trim();
   if (!spaced) return leaf;
-  return spaced.replace(/\b\w/g, (c) => c.toUpperCase());
+  return spaced
+    .split(/\s+/)
+    .map((word, i) => {
+      const lower = word.toLowerCase();
+      if (ACRONYMS.has(lower)) return lower.toUpperCase();
+      if (i > 0 && LOWERCASE_WORDS.has(lower)) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
 }
 
 export function useLocale(): { dir: Direction; t: (key: string) => string } {
