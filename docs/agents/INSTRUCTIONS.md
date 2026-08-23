@@ -343,6 +343,37 @@ fix.** Run the failing test in isolation, check whether the file is modified by
 someone else, and check whether the failure set changes between runs. A failure
 that moves between runs is somebody landing work, not a bug in your change.
 
+### File ownership needs an escape hatch
+
+"One owner per file" is what lets several agents work a tree in parallel without
+clobbering each other, and it should stay. But as usually written it has no exit:
+an agent that needs two lines in a file someone else holds asks, gets no reply
+because the holder is heads-down, and then correctly does nothing.
+
+That happened here. A finished feature sat complete and invisible for hours,
+waiting on an import and one early return. The agent asked twice and waited,
+which was the right call under the rule as written, and the rule was wrong.
+
+So the rule has a timeout:
+
+1. Ask the holder, and say exactly what you need — ideally the patch itself, not
+   a description of it. A two-line patch is cheaper for them to apply than a
+   paragraph to interpret.
+2. If there is no reply in a reasonable window, HAND OVER THE PATCH and tell the
+   coordinator you are blocked. Do not sit on it silently.
+3. The coordinator either routes it to the holder as a priority or reassigns the
+   file. Ownership is a coordination device, not a lock.
+4. Never edit a file you were told someone else holds without that reassignment.
+   The escape hatch is escalation, not unilateral action.
+
+Corollary for the holder: if someone hands you a patch for your file, apply it
+before your own next task. You are the only person who can, and something is
+stopped until you do.
+
+Corollary for whoever is coordinating: if you are told an agent is blocked on a
+file, that is the highest-priority item you have. A blocked agent costs more than
+a slow one.
+
 ### Never create a state you intend to undo, in a shared tree
 
 Proving a test goes red before your fix is required here. Doing it by reverting
