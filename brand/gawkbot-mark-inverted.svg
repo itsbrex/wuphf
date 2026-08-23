@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 15" shape-rendering="crispEdges" color="#F4F3EF" role="img" aria-label="gawkbot"><title>gawkbot</title>
+  <!-- Identical geometry. Only the standalone fallback color differs, for
+       stamping on an ink field via an img tag where color cannot be set. -->
+  <g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g>
+</svg>

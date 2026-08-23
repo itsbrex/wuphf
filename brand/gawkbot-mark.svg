@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 15" shape-rendering="crispEdges" color="#0E0E11" role="img" aria-label="gawkbot"><title>gawkbot</title>
+  <!-- Two hollow pixel eyes on an 11x15 grid, whole-pixel coordinates.
+       NEVER fill the eyes. The emptiness is the entire joke.
+       The eight rects are merged one per column and cap on purpose. One rect
+       per pixel row antialiases into visible seams under a scaleY animation.
+       Everything is currentColor, so setting the CSS color property re-skins
+       the mark. The color attribute above is only the standalone fallback for
+       img-tag use. crispEdges is correct in this file because it is a static
+       export; the animated copy in the site must omit it or the motion snaps
+       row by row and goes steppy. -->
+  <g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g>
+</svg>

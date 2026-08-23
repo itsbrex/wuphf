@@ -3,30 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Download WUPHF Desktop — macOS &amp; Windows</title>
-<meta name="description" content="Download the WUPHF desktop app for macOS and Windows. Your hired agents in a native window — no browser tab, no terminal.">
-<link rel="canonical" href="https://wuphf.team/download.html">
-<meta property="og:title" content="Download WUPHF Desktop">
-<meta property="og:description" content="WUPHF — hire agents, not automations — as a native desktop app for macOS and Windows.">
+<title>Download gawkbot Desktop for macOS and Windows</title>
+<meta name="description" content="Download the gawkbot desktop app for macOS and Windows. Your team of always-on onlookers in a native window, with no browser tab and no terminal.">
+<link rel="canonical" href="https://gawk.bot/download.html">
+<meta property="og:title" content="Download gawkbot Desktop">
+<meta property="og:description" content="Your team of always-on onlookers, as a native desktop app for macOS and Windows.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://wuphf.team/download.html">
-<meta property="og:image" content="https://wuphf.team/og-image.png">
-<meta name="theme-color" content="#1b0d2a">
+<meta property="og:url" content="https://gawk.bot/download.html">
+<meta property="og:image" content="https://gawk.bot/og-image.png">
+<meta name="theme-color" content="#F4F3EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Same six semantics as the landing page. Edit the sources only. */
   :root {
-    --bg: #1b0d2a; --surface: #24123a; --surface-high: #2e1647;
-    --border: #612a92; --yellow: #cf72d9; --yellow-dark: #9f4dbf;
-    --green: #D4DB18; --blue: #ffb3e6; --text: #ffebfc; --text-muted: #a580c0;
+    color-scheme: light dark;
+    --ink: #0E0E11; --paper: #F4F3EF; --raised: #FBFAF7;
+    --line: #D8D5CD; --mute: #6E6C66; --accent: #C8402F;
+
+    --bg: var(--paper); --surface: var(--raised); --surface-high: var(--raised);
+    --border: var(--line); --yellow: var(--ink); --yellow-dark: var(--ink);
+    --green: var(--ink); --blue: var(--mute);
+    --text: var(--ink); --text-muted: var(--mute);
     --font-display: 'Press Start 2P', monospace;
     --font-vt: 'VT323', monospace;
     --font-mono: 'DM Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #EDEBE4; --paper: #121214; --raised: #191919;
+      --line: #2E2D2A; --mute: #8B8880; --accent: #E0563F;
+    }
   }
   html { scroll-behavior: smooth; }
   body {
@@ -104,22 +116,23 @@
   .muted { color: var(--text-muted); font-size: 13.5px; }
   footer { border-top: 2px solid var(--border); padding: 28px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
   footer a { margin: 0 8px; text-decoration: none; }
+  .legal { margin: 18px auto 0; padding-top: 16px; border-top: 1px solid var(--line); max-width: 80ch; font-size: 11.5px; line-height: 1.75; text-align: left; }
 </style>
 </head>
 <body>
 <nav>
-  <a class="nav-logo" href="/">WUPHF <span class="by">by Nex.ai</span></a>
+  <a class="nav-logo" href="/">gawkbot <span class="by">Desktop</span></a>
   <div class="nav-right">
     <a href="/">← Home</a>
-    <a href="https://github.com/nex-crm/wuphf" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">GitHub</a>
   </div>
 </nav>
 
 <main>
   <section class="hero">
-    <h1>WUPHF <span class="accent">Desktop</span></h1>
-    <p class="lead">Your hired agents in a native window — no browser tab, no terminal. Same workspace as the CLI, just a real app.</p>
-    <a class="btn-primary" id="primaryDownload" href="https://github.com/nex-crm/wuphf/releases" target="_blank" rel="noopener">Download</a>
+    <h1>gawkbot <span class="accent">Desktop</span></h1>
+    <p class="lead">Your team of always-on onlookers in a native window, with no browser tab and no terminal. Same workspace as the CLI, and the same amount of finished work.</p>
+    <a class="btn-primary" id="primaryDownload" href="https://github.com/najmuzzaman-mohammad/gawkbot/releases" target="_blank" rel="noopener">Download</a>
     <span class="btn-sub" id="primarySub">Pick your platform below</span>
   </section>
 
@@ -127,16 +140,16 @@
     <!-- macOS -->
     <article class="card" id="card-mac">
       <h2>macOS <span class="badge-you" id="you-mac" hidden>YOU</span></h2>
-      <p class="meta">Universal — Apple Silicon &amp; Intel · macOS 11+ · signed &amp; notarized by Apple</p>
-      <a class="btn-dl" id="dlMac" href="https://github.com/nex-crm/wuphf/releases">Download .dmg</a>
+      <p class="meta">Universal (Apple Silicon and Intel) · macOS 11+ · signed and notarized by Apple</p>
+      <a class="btn-dl" id="dlMac" href="https://github.com/najmuzzaman-mohammad/gawkbot/releases">Download .dmg</a>
       <ol class="steps">
-        <li>Open the downloaded <code>WUPHF-mac.dmg</code>.</li>
-        <li>Drag <strong>WUPHF</strong> into your <strong>Applications</strong> folder.</li>
-        <li>Launch it from Applications or Spotlight — your workspace opens in the app.</li>
+        <li>Open the downloaded <code>gawkbot-mac.dmg</code>.</li>
+        <li>Drag <strong>gawkbot</strong> into your <strong>Applications</strong> folder.</li>
+        <li>Launch it from Applications or Spotlight. Your workspace opens in the app.</li>
       </ol>
       <div class="callout" style="border-left-color: var(--yellow)">
         <span class="ct" style="color: var(--yellow)">No scary warnings</span>
-        It's notarized by Apple, so it opens straight away — no "unidentified developer" prompt.
+        It is notarized by Apple, so it opens straight away, with no "unidentified developer" prompt.
       </div>
     </article>
 
@@ -144,14 +157,14 @@
     <article class="card" id="card-win">
       <h2>Windows <span class="badge-you" id="you-win" hidden>YOU</span></h2>
       <p class="meta">Windows 10/11 · 64-bit · WebView2 (built in to Windows)</p>
-      <a class="btn-dl" id="dlWin" href="https://github.com/nex-crm/wuphf/releases">Download installer</a>
+      <a class="btn-dl" id="dlWin" href="https://github.com/najmuzzaman-mohammad/gawkbot/releases">Download installer</a>
       <ol class="steps">
-        <li>Run the downloaded <code>WUPHF-windows-setup.exe</code>.</li>
-        <li>Follow the installer, then launch <strong>WUPHF</strong> from the Start menu.</li>
+        <li>Run the downloaded <code>gawkbot-windows-setup.exe</code>.</li>
+        <li>Follow the installer, then launch <strong>gawkbot</strong> from the Start menu.</li>
       </ol>
       <div class="callout">
-        <span class="ct">What you'll see — and why</span>
-        The Windows app isn't code-signed <em>yet</em> (signing is on the way), so Windows will warn you. It's expected and safe:
+        <span class="ct">What you will see, and why</span>
+        The Windows app is not code-signed <em>yet</em> (signing is on the way), so Windows will warn you. That is expected, and it is safe:
         <ol>
           <li>Your browser may flag the download as "not commonly downloaded" → choose <strong>Keep</strong>.</li>
           <li>Windows shows <strong>"Windows protected your PC"</strong> (SmartScreen) → click <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
@@ -161,15 +174,15 @@
   </section>
 
   <p style="text-align:center; margin-top:28px; font-size:13.5px;">
-    <a href="https://github.com/nex-crm/wuphf/releases" target="_blank" rel="noopener">View all releases &amp; previous versions on GitHub →</a>
+    <a href="https://github.com/najmuzzaman-mohammad/gawkbot/releases" target="_blank" rel="noopener">View all releases &amp; previous versions on GitHub →</a>
   </p>
 
   <section class="alt">
     <h3>Prefer the terminal? Or on Linux?</h3>
-    <p class="muted">The desktop app and the CLI are the same workspace — use whichever you like. The CLI runs everywhere, including Linux:</p>
+    <p class="muted">The desktop app and the CLI are the same workspace, so use whichever you like. The CLI runs everywhere, including Linux:</p>
     <div class="cmd">
-      <code>npx wuphf@latest</code>
-      <button type="button" data-copy="npx wuphf@latest" aria-label="Copy command">COPY</button>
+      <code>npx gawkbot@latest</code>
+      <button type="button" data-copy="npx gawkbot@latest" aria-label="Copy command">COPY</button>
     </div>
     <p class="muted">A native Linux desktop build is on the roadmap; for now Linux runs via the CLI above (your workspace opens at <code>localhost:7891</code>).</p>
   </section>
@@ -177,17 +190,17 @@
 
 <footer>
   <a href="/">Home</a>
-  <a href="https://github.com/nex-crm/wuphf" target="_blank" rel="noopener">GitHub</a>
-  <a href="https://github.com/nex-crm/wuphf/releases" target="_blank" rel="noopener">All releases</a>
-  <a href="https://github.com/nex-crm/wuphf/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
-  <div style="margin-top:12px">Source-available · © Nex.ai</div>
+  <a href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">GitHub</a>
+  <a href="https://github.com/najmuzzaman-mohammad/gawkbot/releases" target="_blank" rel="noopener">All releases</a>
+  <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Sustainable Use License</a>
+  <div class="legal">gawkbot is an independent, source-available project. It is a parody. It is not affiliated with, endorsed by, or sponsored by xAI, SpaceXAI, X Corp, or Cursor. Grok and Grok Bot are trademarks of their respective owners.</div>
 </footer>
 
 <script>
   (function () {
-    var REPO = "nex-crm/wuphf";
-    var MAC_ASSET = "WUPHF-mac.dmg";
-    var WIN_ASSET = "WUPHF-windows-setup.exe";
+    var REPO = "najmuzzaman-mohammad/gawkbot";
+    var MAC_ASSET = "gawkbot-mac.dmg";
+    var WIN_ASSET = "gawkbot-windows-setup.exe";
 
     // Detect OS to highlight the matching card + relabel the hero button.
     var ua = navigator.userAgent || "";
@@ -200,7 +213,7 @@
     var macBtn = document.getElementById("dlMac");
     var winBtn = document.getElementById("dlWin");
 
-    // Highlight the detected platform card immediately — this never depends on
+    // Highlight the detected platform card immediately. This never depends on
     // the asset URLs resolving, so it works even offline.
     if (isMac) {
       document.getElementById("card-mac").classList.add("detected");
@@ -215,11 +228,11 @@
     // We deliberately avoid `releases/latest/download/<asset>`: GitHub's
     // "latest" is the most recent release overall, which is a CLI/goreleaser
     // tag. The desktop installers are appended to that release by a separate
-    // build job that can fail on its own (runner disk space, a flaky CDN) —
+    // build job that can fail on its own (runner disk space, a flaky CDN),
     // when it does, the stable alias is missing from "latest" and the link
     // 404s even though a perfectly good installer sits on the prior release.
     // Scanning the releases list and picking the newest one that has the asset
-    // is self-healing: a single failed desktop build can't break this page.
+    // is self-healing: a single failed desktop build cannot break this page.
     function newestAssetUrl(releases, name) {
       var sorted = releases
         .filter(function (r) { return r && !r.draft; })

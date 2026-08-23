@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://wuphf.team/sitemap.xml
+Sitemap: https://gawk.bot/sitemap.xml

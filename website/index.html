@@ -3,27 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WUPHF — Build a microapp for every manual workflow</title>
-<meta name="description" content="WUPHF lets anyone turn their manual workflows into microapps across 1200+ integrations in minutes. Runs local, source-available, and nothing sends without your approval.">
-<link rel="canonical" href="https://wuphf.team">
-<meta property="og:title" content="WUPHF — Build a microapp for every manual workflow">
-<meta property="og:description" content="WUPHF lets anyone turn their manual workflows into microapps across 1200+ integrations in minutes. Runs local, source-available, and nothing sends without your approval.">
+<title>gawkbot: A new kind of bystander.</title>
+<meta name="description" content="gawkbot is your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions. It finishes nothing end to end, and it comes back constantly. Free, and it runs on your machine.">
+<link rel="canonical" href="https://gawk.bot">
+<meta property="og:title" content="gawkbot: A new kind of bystander.">
+<meta property="og:description" content="Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://wuphf.team">
-<meta property="og:site_name" content="WUPHF">
+<meta property="og:url" content="https://gawk.bot">
+<meta property="og:site_name" content="gawkbot">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://wuphf.team/og-image.png">
+<meta property="og:image" content="https://gawk.bot/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="WUPHF — build a microapp for every manual workflow. Source-available, runs on your machine, pixel office included.">
+<meta property="og:image:alt" content="gawkbot. Two eyes, staring. A team of always-on onlookers that watch your tools and finish nothing.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="WUPHF — Build a microapp for every manual workflow">
-<meta name="twitter:description" content="WUPHF lets anyone turn their manual workflows into microapps across 1200+ integrations in minutes. Runs local, source-available, and nothing sends without your approval.">
-<meta name="twitter:image" content="https://wuphf.team/og-image.png">
-<meta name="twitter:image:alt" content="WUPHF — build a microapp for every manual workflow. Source-available, runs on your machine, pixel office included.">
-<meta name="theme-color" content="#0b0b0c">
+<meta name="twitter:title" content="gawkbot: A new kind of bystander.">
+<meta name="twitter:description" content="Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.">
+<meta name="twitter:image" content="https://gawk.bot/og-image.png">
+<meta name="twitter:image:alt" content="gawkbot. Two eyes, staring. A team of always-on onlookers that watch your tools and finish nothing.">
+<!-- theme-color cannot reference a CSS custom property, so these two are the
+     only brand colors outside :root. They must track --paper in each mode. -->
+<meta name="theme-color" content="#F4F3EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,44 +36,37 @@
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://wuphf.team/#org",
-      "name": "WUPHF",
-      "url": "https://wuphf.team",
-      "logo": "https://wuphf.team/apple-touch-icon.png",
+      "@id": "https://gawk.bot/#org",
+      "name": "gawkbot",
+      "url": "https://gawk.bot",
+      "logo": "https://gawk.bot/apple-touch-icon.png",
       "sameAs": [
-        "https://github.com/nex-crm/wuphf",
-        "https://discord.gg/gjSySC3PzV",
-        "https://www.producthunt.com/products/wuphf-2"
-      ],
-      "parentOrganization": {
-        "@type": "Organization",
-        "name": "Nex.ai",
-        "url": "https://nex.ai"
-      }
+        "https://github.com/najmuzzaman-mohammad/gawkbot"
+      ]
     },
     {
       "@type": "WebSite",
-      "@id": "https://wuphf.team/#website",
-      "url": "https://wuphf.team",
-      "name": "WUPHF",
-      "publisher": { "@id": "https://wuphf.team/#org" },
+      "@id": "https://gawk.bot/#website",
+      "url": "https://gawk.bot",
+      "name": "gawkbot",
+      "publisher": { "@id": "https://gawk.bot/#org" },
       "inLanguage": "en"
     },
     {
       "@type": "SoftwareApplication",
-      "name": "WUPHF",
-      "url": "https://wuphf.team",
+      "name": "gawkbot",
+      "url": "https://gawk.bot",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "macOS, Linux, Windows",
-      "description": "WUPHF lets anyone turn their manual workflows into microapps across 1200+ integrations in minutes. Runs local, source-available, and nothing sends without your approval.",
-      "license": "https://github.com/nex-crm/wuphf/blob/main/LICENSE",
-      "downloadUrl": "https://github.com/nex-crm/wuphf",
+      "description": "gawkbot is your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions. Free, and it runs on your machine.",
+      "license": "https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE",
+      "downloadUrl": "https://gawk.bot/download.html",
       "offers": {
         "@type": "Offer",
         "price": 0,
         "priceCurrency": "USD"
       },
-      "publisher": { "@id": "https://wuphf.team/#org" }
+      "publisher": { "@id": "https://gawk.bot/#org" }
     }
   ]
 }
@@ -79,30 +74,98 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* ════════════════════════════════════════════════════════════════════
+     gawkbot BRAND PALETTE. Single source of truth.
+
+     Everything on this page, including the pixel-office <canvas>, reads
+     its colors from here. To re-skin, edit ONLY the channel triplets and
+     the named colors in this block. Nothing below hardcodes a brand
+     color. The canvas resolves these same custom properties at runtime
+     (see PALETTE in the script at the end of the document) and derives
+     its entire greyscale ramp by mixing ink into paper, so a token swap
+     repaints the illustration too, in both light and dark.
+
+     Six semantics, one accent:
+       ink     foreground, near-black on light, bone on dark
+       paper   page background
+       raised  cards and panels lifted off the page
+       line    hairline borders
+       mute    secondary text
+       accent  "bloodshot". The eye, errors, and destructive actions
+               ONLY. It is never decoration.
+
+     Never pure black or pure white, in either mode.
+     ═══════════════════════════════════════════════════════════════════ */
   :root {
-    /* Black and white. The token names are unchanged so every rule the old
-       skin already had keeps working; only the values went monochrome. */
-    --bg: #0b0b0c;
-    --surface: #141416;
-    --surface-high: #1c1c1f;
-    --border: #3a3a3e;
-    --yellow: #f2f2f3;          /* primary accent: paper white */
-    --yellow-dark: #6b6b70;     /* the hard pixel shadow under it */
-    --yellow-glow: rgba(242,242,243,0.10);
-    /* Black and white carry the page; these two only ever mean something —
-       lime for live/copied/cursor, steel for links and code identifiers. */
-    --green: #D4DB18;
-    --blue: #8FB3D1;
-    --text: #ececee;
-    --text-muted: #8d8d93;
+    color-scheme: light dark;
+
+    /* -- channel sources, LIGHT ------------------------------------ */
+    --ink-rgb: 14,14,17;
+    --paper-rgb: 244,243,239;
+    --accent-rgb: 200,64,47;
+
+    /* -- named semantics ------------------------------------------- */
+    --ink: rgb(var(--ink-rgb));
+    --paper: rgb(var(--paper-rgb));
+    --raised: #FBFAF7;
+    --line: #D8D5CD;
+    --mute: #6E6C66;
+    --accent: rgb(var(--accent-rgb));
+
+    /* -- derived translucent variants ------------------------------ */
+    --ink-glow: rgba(var(--ink-rgb), 0.10);
+    --ink-halo: rgba(var(--ink-rgb), 0.04);
+    --ink-soft: rgba(var(--ink-rgb), 0.28);
+    --ink-strong: rgba(var(--ink-rgb), 0.75);
+    --scanline: rgba(var(--ink-rgb), 0.045);
+
+    /* Letterbox stays near-black in both modes: a bone-white bar behind
+       a video would be a bug, not a theme. */
+    --video-letterbox: #0E0E11;
+
+    /* -- legacy aliases -------------------------------------------- */
+    /* The rules below this block were authored against these names.
+       They now resolve to the semantics above, which is why the whole
+       page re-skins from the triplets alone. --yellow* are historical
+       names for "the mark color", not yellow. */
+    --bg: var(--paper);
+    --surface: var(--raised);
+    --surface-high: var(--raised);
+    --border: var(--line);
+    --text: var(--ink);
+    --text-muted: var(--mute);
+    --text-rgb: var(--ink-rgb);
+    --yellow: var(--ink);
+    --yellow-dark: var(--ink);
+    --green: var(--ink);
+    --blue: var(--mute);
+    --yellow-glow: var(--ink-glow);
+    --accent-halo: var(--ink-halo);
+    --accent-soft: var(--ink-soft);
+    --accent-strong: var(--ink-strong);
+    --text-soft: rgba(var(--ink-rgb), 0.88);
     --bg2: var(--surface);
     --bg3: var(--surface-high);
     --yellow-dim: var(--yellow-glow);
-    --accent-lime: var(--green);
+    --accent-lime: var(--ink);
     --text-dim: var(--text-muted);
+
     --font-display: 'Press Start 2P', monospace;
     --font-vt: 'VT323', monospace;
     --font-mono: 'DM Mono', monospace;
+  }
+
+  /* Dark mode redefines ONLY the sources. Every derived value, alias, and
+     canvas ramp follows automatically. */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink-rgb: 237,235,228;
+      --paper-rgb: 18,18,20;
+      --accent-rgb: 224,86,63;
+      --raised: #191919;
+      --line: #2E2D2A;
+      --mute: #8B8880;
+    }
   }
 
   html { scroll-behavior: smooth; }
@@ -199,13 +262,13 @@
     content: '';
     position: absolute; inset: 0;
     background:
-      radial-gradient(ellipse 700px 400px at 50% 48%, rgba(242,242,243,0.05) 0%, transparent 70%),
+      radial-gradient(ellipse 700px 400px at 50% 48%, var(--accent-halo) 0%, transparent 70%),
       repeating-linear-gradient(
         0deg,
         transparent,
         transparent 3px,
-        rgba(0,0,0,0.09) 3px,
-        rgba(0,0,0,0.09) 4px
+        var(--scanline) 3px,
+        var(--scanline) 4px
       );
     pointer-events: none; z-index: 1;
   }
@@ -220,29 +283,41 @@
     width: 100%;
   }
 
-  .hero-sprites {
-    display: flex; gap: 32px; margin-bottom: 48px;
-    align-items: flex-end;
-    height: 80px;
+  /* ── THE MARK ─────────────────────────────────────── */
+  /* Two hollow pixel eyes on an 11x15 grid. Outlines only: the emptiness is
+     the joke. Never fill them. currentColor throughout, so the mark inverts
+     for free in dark mode and on ink-filled surfaces. */
+  .gawkbot-mark { width: auto; color: var(--ink); display: block; }
+  .nav-mark { height: 18px; flex-shrink: 0; }
+  .hero-mark { height: clamp(76px, 13vw, 124px); margin: 0 auto 30px; }
+  .footer-mark { height: 16px; flex-shrink: 0; }
+
+  .nav-wordmark {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-transform: lowercase;
   }
 
-  .sprite {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    animation: sprite-bob 0.5s steps(1, end) infinite;
+  /* The eyes narrow and widen, like someone actually looking at something.
+     Applied ONLY to the hero copy: below roughly 24px the whole travel is a
+     couple of pixels and reads as a wobble, so the nav and footer marks ship
+     the static open state. Those small copies also carry crispEdges, which
+     the animated copy must NOT have: a fractional scale would snap row by
+     row and the motion would go steppy. */
+  .hero-mark .gawkbot-eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: gawkbot-look 3.2s ease-in-out infinite alternate;
   }
-  .sprite:nth-child(2) { animation-delay: 0.125s; }
-  .sprite:nth-child(3) { animation-delay: 0.25s; }
-
-  @keyframes sprite-bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+  @keyframes gawkbot-look {
+    from { transform: scaleY(1); }
+    to   { transform: scaleY(0.42); }
   }
-
-  .sprite-name {
-    font-family: var(--font-vt);
-    font-size: 14px;
-    color: var(--text-dim);
-    letter-spacing: 0.04em;
+  .is-page-hidden .hero-mark .gawkbot-eyes { animation-play-state: paused; }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-mark .gawkbot-eyes { animation: none; }
   }
 
   .label-tag {
@@ -263,7 +338,7 @@
   }
   .blink {
     width: 8px; height: 12px;
-    background: var(--accent-lime);
+    background: var(--accent);
     display: inline-block;
     animation: blink-cursor 1s steps(1, end) infinite;
   }
@@ -274,13 +349,21 @@
 
   .hero-title {
     font-family: var(--font-display);
-    font-size: clamp(40px, 8vw, 72px);
-    color: var(--yellow);
+    /* Set slightly small for the space it occupies. It is not shouting. */
+    font-size: clamp(30px, 5.6vw, 54px);
+    color: var(--ink);
     line-height: 1.1;
-    letter-spacing: 0.04em;
-    margin-left: -8px;
-    margin-bottom: 16px;
-    text-shadow: 6px 6px 0 var(--yellow-dark);
+    letter-spacing: -0.035em;
+    text-transform: lowercase;
+    margin-bottom: 18px;
+  }
+  .hero-lede {
+    font-family: var(--font-display);
+    font-size: clamp(13px, 1.9vw, 18px);
+    line-height: 1.6;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    margin-bottom: 18px;
   }
   .visually-hidden {
     position: absolute !important;
@@ -291,31 +374,6 @@
     white-space: nowrap;
     border: 0;
   }
-  .hero-by {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: var(--text-dim);
-    font-family: var(--font-mono);
-    font-size: clamp(11px, 1.4vw, 14px);
-    letter-spacing: 0.08em;
-    font-weight: 400;
-    text-shadow: none;
-    margin-top: 8px;
-    margin-bottom: 16px;
-    text-decoration: none;
-    transition: color 0.15s;
-    min-height: 44px;
-  }
-  .hero-by:hover { color: var(--text); }
-  .hero-nex-logo {
-    height: 16px;
-    width: auto;
-    color: var(--text-dim);
-    vertical-align: middle;
-  }
-
   .hero-tagline {
     font-family: var(--font-mono);
     font-size: clamp(14px, 1.8vw, 17px);
@@ -329,55 +387,6 @@
     font-style: normal;
     color: var(--yellow);
     font-weight: 500;
-  }
-
-
-  /* Pitch headline: the pixel face needs a smaller size and looser leading
-     than the old one-word WUPHF wordmark to stay readable. */
-  .hero-wordmark {
-    font-family: var(--font-display);
-    font-size: clamp(18px, 2.6vw, 26px);
-    color: var(--text-muted);
-    letter-spacing: 0.16em;
-    line-height: 1;
-    text-shadow: none;
-    margin-bottom: 20px;
-  }
-
-  /* Original display face. A full sentence in Press Start 2P only reads at a
-     restrained size with generous leading — hence the smaller clamp and the
-     1.75 line-height, not the wordmark's tight 1.1. */
-  .hero-title--pitch {
-    font-family: var(--font-display);
-    font-size: clamp(15px, 2.5vw, 26px);
-    line-height: 1.75;
-    letter-spacing: 0.01em;
-    color: #c9c9ce;
-    max-width: 22ch;
-    margin-left: 0;
-    margin-bottom: 8px;
-    text-shadow: 4px 4px 0 #2b2b30;
-  }
-  .hero-title--pitch em {
-    font-style: normal;
-    color: #ffffff;
-    text-shadow: 4px 4px 0 #43434a;
-  }
-
-  .agent-metric {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--accent-lime);
-    letter-spacing: 0.04em;
-    margin-top: 12px;
-  }
-
-  .yc-badge { display: inline-flex; line-height: 0; }
-  .yc-badge img { height: 40px; width: auto; display: block; }
-
-  @media (max-width: 640px) {
-    .hero-wordmark { font-size: 15px; }
-    .hero-title--pitch { font-size: 14px; line-height: 1.8; }
   }
 
   .install-wrap {
@@ -480,20 +489,6 @@
   .hero-ctas {
     display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center;
   }
-  .hero-cloud-cta {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin: 16px 0 0;
-    text-align: center;
-  }
-  .cloud-cta-link {
-    color: var(--yellow);
-    text-decoration: none;
-  }
-  .cloud-cta-link:hover {
-    text-decoration: underline;
-  }
   .hero-badges {
     display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center;
     margin-top: 24px;
@@ -502,6 +497,8 @@
   .ph-badge img { height: 48px; width: auto; display: block; }
   .hn-badge { display: inline-flex; line-height: 0; }
   .hn-badge img { height: 48px; width: auto; display: block; }
+  .yc-badge { display: inline-flex; line-height: 0; }
+  .yc-badge img { height: 40px; width: auto; display: block; }
 
   .btn-primary {
     font-family: var(--font-display);
@@ -584,41 +581,6 @@
     color: var(--bg);
     letter-spacing: 0.06em;
     flex-shrink: 0;
-  }
-
-  /* ── VIDEO SECTION ───────────────────────────────── */
-  .video-section {
-    padding: 72px 24px 40px;
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: center;
-  }
-  .video-prompt {
-    font-family: var(--font-vt);
-    font-size: 32px;
-    color: var(--text);
-    letter-spacing: 0.06em;
-    margin: 0 0 28px;
-  }
-  .video-wrap {
-    position: relative;
-    border: 2px solid var(--yellow-dark);
-    line-height: 0;
-    margin: 24px auto 0;
-    max-width: 720px;
-  }
-  .video-wrap video {
-    width: 100%;
-    height: auto;
-    display: block;
-    background: #000;
-  }
-  .video-wrap::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    box-shadow: inset 0 0 0 2px var(--yellow-dark);
-    pointer-events: none;
   }
 
   /* ── SECTIONS ─────────────────────────────────────── */
@@ -772,34 +734,6 @@
   }
 
   /* ── CODE DEMO ────────────────────────────────────── */
-  .code-demo {
-    background: var(--bg3);
-    border: 2px solid var(--yellow);
-    box-shadow: 6px 6px 0 var(--yellow-dark);
-    overflow: hidden;
-    max-width: 700px;
-  }
-
-  .code-titlebar {
-    background: var(--yellow);
-    padding: 8px 16px;
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .code-dot {
-    width: 8px; height: 8px;
-    background: var(--bg);
-    display: inline-block;
-  }
-
-  .code-label {
-    font-family: var(--font-display);
-    font-size: 8px;
-    color: var(--bg);
-    margin-left: 8px;
-    letter-spacing: 0.06em;
-  }
-
   pre {
     padding: 20px 24px;
     font-family: var(--font-mono);
@@ -808,11 +742,6 @@
     line-height: 1.8;
     overflow-x: auto;
   }
-
-  .tok-kw { color: var(--yellow); }
-  .tok-str { color: var(--accent-lime); }
-  .tok-cmt { color: var(--text-dim); font-style: italic; }
-  .tok-fn { color: var(--blue); }
 
   /* ── THREAD DEMO ──────────────────────────────────── */
   .thread-demo {
@@ -903,43 +832,6 @@
   }
 
   /* ── CODE-LINE COPY BUTTONS ───────────────────────── */
-  .code-block {
-    padding: 20px 24px;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.8;
-    overflow-x: auto;
-  }
-
-  .code-line {
-    display: flex; align-items: center;
-    justify-content: space-between;
-    min-height: 1.8em; white-space: pre;
-    position: relative;
-  }
-  .code-line-empty { min-height: 0.9em; }
-  .line-content { flex: 1; }
-
-  .line-copy {
-    opacity: 0; background: var(--yellow-dark);
-    border: 1px solid var(--yellow-dark);
-    color: var(--yellow);
-    font-family: var(--font-mono); font-size: 11px;
-    cursor: pointer; padding: 6px 9px;
-    min-width: 44px;
-    min-height: 44px;
-    flex-shrink: 0; margin-left: 12px;
-    letter-spacing: 0.04em;
-  }
-  .code-line:hover .line-copy,
-  .code-line:active .line-copy,
-  .line-copy:focus-visible { opacity: 1; }
-  .line-copy:hover { background: var(--yellow); color: var(--bg); border-color: var(--yellow); }
-  @media (hover: none), (pointer: coarse) {
-    .line-copy { opacity: 1; }
-  }
-
   /* ── ISOMETRIC OFFICE SECTION ─────────────────────── */
   .office-section {
     background: var(--bg2);
@@ -983,7 +875,7 @@
     width: 100%;
   }
 
-  /* ── MIT SECTION ─────────────────────────────────── */
+  /* ── SOURCE-AVAILABLE SECTION ─────────────────────── */
   .mit-block {
     background: var(--bg3);
     border: 2px solid var(--yellow-dark);
@@ -1099,16 +991,15 @@
   .footer-links a:hover { color: var(--yellow); }
 
   /* ── CONVERSATIONS ────────────────────────────────── */
+  /* Single column since the terminal half was removed: the thread is the
+     joke, and it should not be sharing the row with anything. */
   .conversations-layout {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 48px;
     align-items: start;
+    max-width: 720px;
   }
-  .conversations-terminal {
-    min-width: 0;
-  }
-
   /* ── COMPARE GRID ─────────────────────────────────── */
   .compare-grid {
     display: grid;
@@ -1225,7 +1116,7 @@
 
   /* ── PRETEXT-MANAGED ──────────────────────────────── */
   [data-pretext] {
-    /* Heights set by Pretext at runtime — DO NOT set height in CSS */
+    /* Heights set by Pretext at runtime. DO NOT set height in CSS */
     overflow: visible;
   }
 
@@ -1240,7 +1131,7 @@
     }
 
     .ambient-scroll,
-    .sprite,
+    .hero-mark .gawkbot-eyes,
     .blink,
     .scroll-arrow {
       animation: none !important;
@@ -1257,14 +1148,12 @@
   @media (max-width: 640px) {
     .nav-links { display: none; }
     .nav-star-count { display: none; }
+    .nav-wordmark { display: none; }
     .nav-social-link { padding: 0 8px; }
     .nav-badge { padding: 0 10px; }
 
-    .video-section { padding: 40px 16px 24px; }
     .how-grid, .agents-grid { grid-template-columns: 1fr; }
 
-    .conversations-layout { grid-template-columns: 1fr; }
-    .conversations-terminal { display: none; }
 
     .compare-grid { grid-template-columns: 1fr; }
     .faq-q { font-size: 10px; }
@@ -1273,68 +1162,109 @@
   }
 
   @media (max-width: 900px) {
-    .conversations-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── PRICE. The punchline, and the loudest thing on the page. ─────── */
+  .price-block {
+    text-align: center;
+    padding: 12px 0 44px;
+  }
+  .price-headline {
+    font-family: var(--font-display);
+    font-size: clamp(56px, 15vw, 148px);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: var(--ink);
+    text-transform: lowercase;
+  }
+  .price-sub {
+    font-family: var(--font-vt);
+    font-size: clamp(22px, 3.4vw, 34px);
+    color: var(--mute);
+    letter-spacing: 0.02em;
+    margin-top: 14px;
+  }
+  .price-compare {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--mute);
+    margin-top: 28px;
+    max-width: 640px;
+  }
+  .price-compare a { color: var(--ink); }
+
+  /* ── FOOTER ───────────────────────────────────────── */
+  .footer-top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px 40px;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .footer-logo { display: flex; align-items: center; gap: 10px; }
+  .footer-legal {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    line-height: 1.75;
+    color: var(--mute);
+    margin-top: 30px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    max-width: 80ch;
+  }
+
+  @media (max-width: 640px) {
+    .price-block { padding-bottom: 32px; }
+    .footer-top { flex-direction: column; }
   }
 </style>
 </head>
 <body>
+
 <!-- NAV -->
 <nav>
-  <span class="nav-logo">WUPHF<span class="nav-by">by Nex.ai</span></span>
+  <a class="nav-logo" href="#top">
+    <svg class="gawkbot-mark nav-mark" viewBox="0 0 11 15" shape-rendering="crispEdges" role="img" aria-label="gawkbot"><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
+    <span class="nav-wordmark">gawkbot</span>
+  </a>
   <div class="nav-links">
-    <a href="#how">How it works</a>
-    <a href="#office">The office</a>
-    <a href="#agents">Your microapp</a>
-    <a href="#use-cases">Use cases</a>
-    <a href="#faq">FAQ</a>
+    <a href="#message">Message</a>
+    <a href="#computer">Computer</a>
+    <a href="#office">Watch</a>
+    <a href="#teach">Teach</a>
+    <a href="#trust">Trust</a>
     <a href="/download.html">Download</a>
+    <a href="#price">Price</a>
   </div>
   <div class="nav-social">
-    <a class="nav-social-link" href="https://github.com/nex-crm/wuphf" target="_blank" rel="noopener" aria-label="GitHub">
-      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+    <a class="nav-social-link" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener" aria-label="GitHub">
+      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
       <span class="nav-star-count" id="navStars">&#9733;</span>
-    </a>
-    <a class="nav-social-link" href="https://discord.gg/gjSySC3PzV" target="_blank" rel="noopener" aria-label="Discord">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.101 18.079.111 18.1.127 18.116a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
     </a>
     <a class="nav-badge" href="#install">INSTALL</a>
   </div>
 </nav>
 
-<!-- HERO -->
+<main>
+
+<!-- 1. HERO -->
 <section class="hero" id="top">
   <div class="hero-inner">
 
-    <div class="hero-sprites">
-      <div class="sprite" title="Lead routing microapp">
-        <canvas id="s0" width="24" height="36" aria-hidden="true"></canvas>
-        <span class="label-tag">LEADS</span>
-        <span class="sprite-name">Routes</span>
-      </div>
-      <div class="sprite" title="CRM hygiene microapp">
-        <canvas id="s1" width="24" height="36" aria-hidden="true"></canvas>
-        <span class="label-tag">CRM</span>
-        <span class="sprite-name">Cleans</span>
-      </div>
-      <div class="sprite" title="Weekly recap microapp">
-        <canvas id="s2" width="24" height="36" aria-hidden="true"></canvas>
-        <span class="label-tag">RECAP</span>
-        <span class="sprite-name">Reports</span>
-      </div>
-    </div>
-
-    <div class="hero-wordmark">WUPHF</div>
+    <svg class="gawkbot-mark hero-mark" viewBox="0 0 11 15" role="img" aria-label="The gawkbot mark: two hollow eyes, looking."><title>gawkbot</title><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
 
     <div class="hero-eyebrow">
       <span class="blink"></span>
-      Runs 24x7 on your machine
+      MAXIMALLY ATTENTION-SEEKING
     </div>
 
-    <h1 class="hero-title hero-title--pitch" data-pretext>Build a <em>microapp</em> for every manual workflow</h1>
-    <a class="hero-by" href="https://nex.ai" target="_blank" rel="noopener" aria-label="Nex.ai">by <svg class="hero-nex-logo" width="95" height="22" viewBox="0 0 95 22" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M11.4968 9.1124C10.2339 7.84948 9.98851 5.898 9.48601 4.18411C9.26753 3.43896 8.86469 2.73685 8.27738 2.14953C6.40286 0.275011 3.35898 0.279701 1.47868 2.16C-0.401626 4.0403 -0.406316 7.08419 1.4682 8.9587C2.05551 9.54601 2.75761 9.94885 3.50275 10.1673C5.21664 10.6698 7.16813 10.9152 8.43106 12.1782C9.69399 13.4411 9.93939 15.3926 10.4419 17.1065C10.6604 17.8516 11.0632 18.5537 11.6505 19.141C13.525 21.0155 16.5689 21.0109 18.4492 19.1306C20.3295 17.2503 20.3342 14.2064 18.4597 12.3319C17.8724 11.7445 17.1703 11.3417 16.4251 11.1232C14.7112 10.6207 12.7597 10.3753 11.4968 9.1124Z" fill="currentColor"/><path d="M7.25926 17.0471C7.25926 19.0517 5.63422 20.6768 3.62963 20.6768C1.62504 20.6768 0 19.0517 0 17.0471C0 15.0425 1.62504 13.4175 3.62963 13.4175C5.63422 13.4175 7.25926 15.0425 7.25926 17.0471Z" fill="currentColor"/><path d="M20 4.30639C20 6.31098 18.375 7.93602 16.3704 7.93602C14.3658 7.93602 12.7407 6.31098 12.7407 4.30639C12.7407 2.3018 14.3658 0.676758 16.3704 0.676758C18.375 0.676758 20 2.3018 20 4.30639Z" fill="currentColor"/><path d="M29.5211 7.15435V20.5967H26.25V1.92676H29.7915L37.4421 14.9957V1.92676H40.7132V20.5967H37.415L29.5211 7.15435Z" fill="currentColor"/><path d="M55.8786 14.5423H45.5787C45.9572 16.356 47.444 17.6896 49.2012 17.6896C50.5259 17.6896 51.6884 16.9428 52.3372 15.7959H55.6083C54.7432 18.6231 52.202 20.6768 49.2012 20.6768C45.4705 20.6768 42.4698 17.5029 42.4698 13.6088C42.4698 9.71481 45.4705 6.54091 49.2012 6.54091C52.202 6.54091 54.7432 8.59461 55.6083 11.4218C55.8246 12.1152 55.9327 12.8354 55.9327 13.6088C55.9327 13.9289 55.9327 14.2223 55.8786 14.5423ZM46.0653 11.4218H52.3372C51.6884 10.2749 50.5259 9.52811 49.2012 9.52811C47.8766 9.52811 46.7141 10.2749 46.0653 11.4218Z" fill="currentColor"/><path d="M68.75 6.32754L63.965 13.4755L68.75 20.5967H64.9652L62.0726 16.276L59.1529 20.5967H55.3952L60.1802 13.4755L55.3952 6.32754H59.1529L62.0726 10.6483L64.9652 6.32754H68.75Z" fill="currentColor"/><circle cx="72" cy="18.6768" r="2" fill="currentColor"/><path d="M94.3129 3.422C93.9263 3.80867 93.4623 4.002 92.9209 4.002C92.3796 4.002 91.9059 3.80867 91.4999 3.422C91.1133 3.016 90.9199 2.54233 90.9199 2.001C90.9199 1.45967 91.1133 0.995667 91.4999 0.609001C91.8866 0.203 92.3603 0 92.9209 0C93.4816 0 93.9553 0.203 94.3419 0.609001C94.7286 0.995667 94.9219 1.45967 94.9219 2.001C94.9219 2.54233 94.7189 3.016 94.3129 3.422ZM91.3549 20.677V6.177H94.4869V20.677H91.3549Z" fill="currentColor"/><path d="M85.5131 6.17681H88.7697V20.6768H85.5131V18.5888C84.4699 20.2321 82.9736 21.0538 81.024 21.0538C79.2626 21.0538 77.7577 20.3191 76.5093 18.8498C75.2609 17.3611 74.6367 15.5535 74.6367 13.4268C74.6367 11.2808 75.2609 9.47314 76.5093 8.0038C77.7577 6.53447 79.2626 5.7998 81.024 5.7998C82.9736 5.7998 84.4699 6.6118 85.5131 8.2358V6.17681ZM78.5614 16.7618C79.331 17.6318 80.2972 18.0668 81.4601 18.0668C82.623 18.0668 83.5892 17.6318 84.3587 16.7618C85.1283 15.8725 85.5131 14.7608 85.5131 13.4268C85.5131 12.0928 85.1283 10.9908 84.3587 10.1208C83.5892 9.23147 82.623 8.7868 81.4601 8.7868C80.2972 8.7868 79.331 9.23147 78.5614 10.1208C77.7919 10.9908 77.4071 12.0928 77.4071 13.4268C77.4071 14.7608 77.7919 15.8725 78.5614 16.7618Z" fill="currentColor"/></svg></a>
+    <h1 class="hero-title">gawkbot<span class="visually-hidden">, a new kind of bystander</span></h1>
 
-    <p class="hero-tagline" data-pretext>
-      WUPHF lets anyone turn their manual workflows into microapps across <em>1200+ integrations</em> in minutes.
+    <p class="hero-lede">A new kind of bystander.</p>
+
+    <p class="hero-tagline">
+      Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.
     </p>
 
     <div class="install-wrap" id="install">
@@ -1343,45 +1273,44 @@
         <button class="install-tab" id="installTabBuild" type="button" role="tab" aria-selected="false" aria-controls="installBlockBuild" tabindex="-1" onclick="switchInstallTab('build')">CLONE + BUILD</button>
       </div>
       <div class="install-block active" id="installBlock" data-tab="npx" role="tabpanel" aria-labelledby="installTabNpx">
-        <button class="install-line" type="button" data-copy="npx wuphf@latest" aria-label="Copy NPX install command">
+        <button class="install-line" type="button" data-copy="npx gawkbot@latest" aria-label="Copy NPX install command">
           <span class="install-prompt">$</span>
-          <span class="install-cmd">npx wuphf@latest</span>
+          <span class="install-cmd">npx gawkbot@latest</span>
           <span class="install-copy" id="copyLabel">COPY</span>
         </button>
       </div>
       <div class="install-block" id="installBlockBuild" data-tab="build" role="tabpanel" aria-labelledby="installTabBuild" hidden>
-        <button class="install-line" type="button" data-copy="git clone https://github.com/nex-crm/wuphf.git &amp;&amp; cd wuphf" aria-label="Copy clone command">
+        <button class="install-line" type="button" data-copy="git clone https://github.com/najmuzzaman-mohammad/gawkbot.git &amp;&amp; cd gawkbot" aria-label="Copy clone command">
           <span class="install-prompt">$</span>
-          <span class="install-cmd">git clone https://github.com/nex-crm/wuphf.git &amp;&amp; cd wuphf</span>
+          <span class="install-cmd">git clone https://github.com/najmuzzaman-mohammad/gawkbot.git &amp;&amp; cd gawkbot</span>
           <span class="install-copy" id="copyLabelBuild1">COPY</span>
         </button>
-        <button class="install-line" type="button" data-copy="go build -o wuphf ./cmd/wuphf &amp;&amp; ./wuphf" aria-label="Copy build and run command">
+        <button class="install-line" type="button" data-copy="go build -o gawkbot ./cmd/gawkbot &amp;&amp; ./gawkbot" aria-label="Copy build and run command">
           <span class="install-prompt">$</span>
-          <span class="install-cmd">go build -o wuphf ./cmd/wuphf &amp;&amp; ./wuphf</span>
+          <span class="install-cmd">go build -o gawkbot ./cmd/gawkbot &amp;&amp; ./gawkbot</span>
           <span class="install-copy" id="copyLabelBuild2">COPY</span>
         </button>
       </div>
       <div class="visually-hidden" id="copyStatus" aria-live="polite" aria-atomic="true"></div>
-      <p class="install-note">Runs local. No signup, no cloud, no per-seat pricing. Source-available, free to self-host.</p>
+      <p class="install-note">Runs on your machine, with your keys. No account, no cloud, no per-seat pricing. Source-available under the Sustainable Use License.</p>
     </div>
 
     <div class="hero-ctas">
-      <a href="https://github.com/nex-crm/wuphf" class="btn-primary" target="_blank" rel="noopener">
-        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-        GitHub &nbsp;<span id="heroStars">&#9733;</span>
-      </a>
+      <a href="#office" class="btn-primary">Watch it work</a>
       <a href="/download.html" class="btn-ghost">
-        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="M7 1h2v6h3l-4 5-4-5h3V1zM2 13h12v2H2z"/></svg>
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:6px" aria-hidden="true"><path d="M7 1h2v6h3l-4 5-4-5h3V1zM2 13h12v2H2z"/></svg>
         Download
+      </a>
+      <a href="https://github.com/najmuzzaman-mohammad/gawkbot" class="btn-ghost" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:6px" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub &nbsp;<span id="heroStars">&#9733;</span>
       </a>
     </div>
 
-    <p class="hero-cloud-cta">Hiring for a whole team? <a class="cloud-cta-link" href="https://nex.ai" target="_blank" rel="noopener">Get Nex Cloud &rarr;</a></p>
-
     <div class="hero-badges">
       <a class="yc-badge" href="https://www.ycombinator.com/" target="_blank" rel="noopener noreferrer" aria-label="Backed by Y Combinator"><img src="yc-badge.svg" alt="Backed by Y Combinator" width="543" height="102"></a>
-      <a href="https://news.ycombinator.com/item?id=47899844" target="_blank" rel="noopener noreferrer" class="hn-badge" aria-label="Hacker News Life of Product Week's #1"><img src="hn-badge.svg" alt="Hacker News Life of Product Week's #1" width="223" height="48"></a>
-      <a href="https://www.producthunt.com/products/wuphf-2?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-wuphf-by-nex-ai" target="_blank" rel="noopener noreferrer" class="ph-badge"><img alt="WUPHF by Nex.ai - Build a microapp for every manual workflow | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1132040&amp;theme=neutral&amp;t=1777385299660"></a>
+      <a href="https://news.ycombinator.com/item?id=47899844" target="_blank" rel="noopener noreferrer" class="hn-badge" aria-label="Hacker News Life of Product Week's number 1"><img src="hn-badge.svg" alt="Hacker News Life of Product Week's number 1" width="223" height="48"></a>
+      <a href="https://www.producthunt.com/products/wuphf-2?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gawkbot" target="_blank" rel="noopener noreferrer" class="ph-badge"><img alt="gawkbot on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1132040&amp;theme=neutral&amp;t=1777385299660"></a>
     </div>
 
   </div>
@@ -1397,116 +1326,15 @@
   <div class="ambient-scroll" id="ticker"></div>
 </div>
 
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section-eyebrow">HOW IT WORKS</div>
-  <h2 class="section-title" data-pretext>Show it once.<br>Never do it again.</h2>
-  <p class="section-body" data-pretext>
-    You are onboarding a hire, not configuring software. Describe the job in one sentence, or demo it once on a screen share while WUPHF watches.
-  </p>
-
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <span class="step-icon">&#128421;</span>
-      <div class="step-title">Show</div>
-      <div class="step-body">
-        Describe the job in one sentence &mdash; or hop on a call, share your screen, and do it one last time while WUPHF takes notes.
-      </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <span class="step-icon">&#9889;</span>
-      <div class="step-title">Build</div>
-      <div class="step-body">
-        The microapp assembles live in front of you: its own screen, its own schedule, its own tools, wired into the <code>1200+</code> integrations you already pay for.
-      </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <span class="step-icon">&#9989;</span>
-      <div class="step-title">Approve</div>
-      <div class="step-body">
-        Reads are free. Writes are held. No email, Slack post, or CRM write leaves without a human tap. Then it runs 24x7.
-      </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">04</div>
-      <span class="step-icon">&#127970;</span>
-      <div class="step-title">Hire the next one</div>
-      <div class="step-body">
-        One microapp per manual workflow. They share one office, one knowledge base, and one approval queue. You review; they work.
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ISOMETRIC OFFICE SCENE -->
-<div class="office-section" id="office">
-  <div class="office-section-header">
-    <div class="office-section-eyebrow">THE OFFICE</div>
-    <h2 class="office-section-title">Every manual job, running as its own microapp</h2>
-    <div class="office-section-sub">The work you used to do by hand, on a floor you can actually watch. Or do not watch. It runs either way.</div>
-  </div>
-  <canvas id="officeCanvas" height="420" role="img" aria-label="Animated pixel office scene showing microapps running the manual work alongside their human colleagues.">
-    Animated pixel office scene showing microapps running the manual work alongside their human colleagues.
-  </canvas>
-</div>
-
-<!-- ANATOMY OF A MICROAPP -->
-<section id="agents">
-  <div class="section-eyebrow">WHAT YOU BUILT</div>
-  <h2 class="section-title" data-pretext>Anatomy of a microapp.<br>Not a chatbot in a trench coat.</h2>
-  <p class="section-body" data-pretext>
-    Every microapp ships with all six. This is the difference between an automation you maintain forever and a job somebody else is doing now.
-  </p>
-
-  <div class="agents-grid">
-    <div class="agent-card">
-      <div class="agent-badge">THE APP</div>
-      <div class="agent-title">A Real<br>Screen</div>
-      <div class="agent-desc">Its own UI, built live in front of you. Reads and writes real workspace data. Not a settings page pretending to be a product.</div>
-      <div class="agent-quote">"It has a screen. It has a job. It has a Monday."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">ROUTINES</div>
-      <div class="agent-title">Scheduled<br>Work</div>
-      <div class="agent-desc">"Every Monday 9:00." Versioned prompts, run history, and a full transcript for every single run.</div>
-      <div class="agent-quote">"Nine o'clock Monday. Every Monday. No standup required."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">TOOLS</div>
-      <div class="agent-title">Self-<br>Authored</div>
-      <div class="agent-desc">"Score a lead." "Post to #ae-handoffs." It writes its own tools out of what you taught it on the call.</div>
-      <div class="agent-quote">"I wrote score_lead() so you would stop doing it in your head."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">KNOWLEDGE</div>
-      <div class="agent-title">Cited<br>Pages</div>
-      <div class="agent-desc">Every claim carries a citation. Your old wiki and notebooks come along verbatim, labeled and unedited.</div>
-      <div class="agent-quote">"I kept your homework. I did not pretend I wrote it."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">DATA + INTEGRATIONS</div>
-      <div class="agent-title">Your Whole<br>Stack</div>
-      <div class="agent-desc">Its own typed tables, plus 1200+ integrations. Connect once; every microapp you build after that inherits it.</div>
-      <div class="agent-quote">"Twelve hundred integrations. You will use nine. They will be the right nine."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">APPROVAL GATE</div>
-      <div class="agent-title">Sends With<br>Permission</div>
-      <div class="agent-desc">No email, Slack post, or CRM write leaves without a human tap. The run history shows what it wanted to send and when you approved it.</div>
-      <div class="agent-quote">"I would never send that without asking. That is a Ryan move."</div>
-    </div>
-  </div>
-</section>
-
-<!-- THE DEMO CALL -->
-<section id="demo">
-  <div class="section-eyebrow">THE DEMO CALL</div>
-  <h2 class="section-title" data-pretext>The last time you do this job,<br>someone is finally taking notes.</h2>
-  <p class="section-body" data-pretext>
-    A voice call with screen share. You do the job once. WUPHF asks the sharp questions, then builds the microapp in front of you.
+<!-- 2. MESSAGE IT LIKE A TEAMMATE.
+     Hoisted above "a computer of its own" deliberately: this is the one
+     joke on the page that needs no knowledge of what is being parodied,
+     so a cold reader should meet it first. -->
+<section id="message">
+  <div class="section-eyebrow">MESSAGING</div>
+  <h2 class="section-title">Message it like a teammate.<br>It will read it.</h2>
+  <p class="section-body">
+    Channels, threads, and direct messages. Mention a bot and it responds promptly, in full sentences, having understood you completely. Nothing moves.
   </p>
 
   <div class="conversations-layout">
@@ -1514,236 +1342,203 @@
       <div class="thread-root">
         <div class="thread-root-avatar">YOU</div>
         <div class="thread-root-body">
-          <div class="thread-root-channel">&#9656; screen share &middot; rec</div>
-          <div class="thread-root-text">opens the demo-request form, looks the company up in HubSpot, posts the good ones to Slack</div>
-          <div class="thread-root-replies">6 replies in thread</div>
+          <div class="thread-root-channel">&#9656; #general</div>
+          <div class="thread-root-text">Can someone fix the failing build?</div>
+          <div class="thread-root-replies">5 replies in thread</div>
         </div>
       </div>
       <div class="thread-replies-wrap">
         <div class="thread-reply">
-          <div class="thread-reply-avatar">NEX</div>
-          <div class="thread-reply-bubble">Got it &mdash; you looked the company up in HubSpot and checked headcount.</div>
+          <div class="thread-reply-avatar">B1</div>
+          <div class="thread-reply-bubble">I have located the failing build.</div>
         </div>
         <div class="thread-reply">
-          <div class="thread-reply-avatar">NEX</div>
-          <div class="thread-reply-bubble">Over what score does a lead go to an AE instead of the nurture list?</div>
+          <div class="thread-reply-avatar">B2</div>
+          <div class="thread-reply-bubble">Confirming. It is failing.</div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-reply-avatar">B3</div>
+          <div class="thread-reply-bubble">The error is on line 214. I read the whole stack trace. Twice.</div>
+        </div>
+        <div class="thread-reply">
+          <div class="thread-reply-avatar">B1</div>
+          <div class="thread-reply-bubble"><span class="thread-mention">@B3</span> Good catch. I saw it too.</div>
         </div>
         <div class="thread-reply you">
           <div class="thread-reply-avatar you">YOU</div>
-          <div class="thread-reply-bubble">70 and up goes to <span class="thread-mention">#ae-handoffs</span> with the reason. Rest gets nurtured.</div>
+          <div class="thread-reply-bubble">Is anyone going to fix it?</div>
         </div>
         <div class="thread-reply">
-          <div class="thread-reply-avatar">NEX</div>
-          <div class="thread-reply-bubble">I think I have the whole flow. Ready for me to build the microapp from this, or is there more?</div>
-        </div>
-        <div class="thread-reply you">
-          <div class="thread-reply-avatar you">YOU</div>
-          <div class="thread-reply-bubble">That's it. Build it.</div>
-        </div>
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">NEX</div>
-          <div class="thread-reply-bubble">Building Lead Routing &mdash; app, routines, and the two tools it needs. Watch it come together.</div>
+          <div class="thread-reply-avatar">B2</div>
+          <div class="thread-reply-bubble">We are watching it closely.</div>
         </div>
       </div>
     </div>
 
-    <div class="code-demo conversations-terminal">
-      <div class="code-titlebar">
-        <span class="code-dot"></span>
-        <span class="code-dot"></span>
-        <span class="code-dot"></span>
-        <span class="code-label">terminal</span>
-      </div>
-      <div class="code-block">
-        <div class="code-line"><span class="line-content"><span class="tok-cmt"># Option 1: run it</span></span></div>
-        <div class="code-line"><span class="line-content"><span class="tok-fn">npx</span> wuphf@latest</span><button class="line-copy" data-copy="npx wuphf@latest" aria-label="Copy">COPY</button></div>
-        <div class="code-line code-line-empty"></div>
-        <div class="code-line"><span class="line-content"><span class="tok-cmt"># Option 2: clone and build from source</span></span></div>
-        <div class="code-line"><span class="line-content"><span class="tok-fn">git</span> clone https://github.com/nex-crm/wuphf.git &amp;&amp; cd wuphf</span><button class="line-copy" data-copy="git clone https://github.com/nex-crm/wuphf.git &amp;&amp; cd wuphf" aria-label="Copy">COPY</button></div>
-        <div class="code-line"><span class="line-content"><span class="tok-fn">go</span> build -o wuphf ./cmd/wuphf</span><button class="line-copy" data-copy="go build -o wuphf ./cmd/wuphf" aria-label="Copy">COPY</button></div>
-        <div class="code-line code-line-empty"></div>
-        <div class="code-line"><span class="line-content"><span class="tok-cmt"># Browser opens at localhost:7891.</span></span></div>
-        <div class="code-line"><span class="line-content"><span class="tok-cmt"># Describe a job &mdash; or demo it on a call.</span></span></div>
-        <div class="code-line"><span class="line-content"><span class="tok-cmt"># Watch it build its own app.</span></span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- The aha: the Monday it runs without you -->
-  <div style="margin-top:56px;padding:24px;background:var(--bg3);border:2px solid var(--yellow-dark);max-width:700px;">
-    <div style="font-family:var(--font-display);font-size:8px;color:var(--yellow);letter-spacing:0.14em;margin-bottom:16px;">MONDAY 09:00 // ROUTINE: WEEKLY PIPELINE RECAP</div>
-    <div style="font-family:var(--font-vt);font-size:22px;color:var(--text);line-height:1.5;margin-bottom:12px;">
-      <span style="color:var(--yellow);">APP:</span> Ran the recap. 3 stage moves, 2 new leads, Umbrella stalled 21 days.
-    </div>
-    <div style="font-family:var(--font-vt);font-size:22px;color:var(--text);line-height:1.5;margin-bottom:12px;">
-      <span style="color:var(--yellow);">APP:</span> Drafted the Slack post for <span class="thread-mention">#revops</span>. Holding it for your approval.
-    </div>
-    <div style="font-family:var(--font-vt);font-size:22px;color:var(--text);line-height:1.5;">
-      <span style="color:var(--yellow);">YOU:</span> *one tap* Approved.
-    </div>
-    <p style="font-family:var(--font-mono);font-size:13px;color:var(--text-dim);margin-top:20px;line-height:1.7;">
-      You demoed this job exactly once. You just trained your replacement &mdash; it says thank you and works weekends.
-    </p>
   </div>
 </section>
 
-<!-- USE CASES -->
-<section id="use-cases">
-  <div class="section-eyebrow">WHAT PEOPLE BUILD FIRST</div>
-  <h2 class="section-title" data-pretext>Microapps your pipeline<br>is already asking for.</h2>
-  <p class="section-body" data-pretext>
-    Every one of these started as a person, a spreadsheet, and a recurring calendar block.
+<!-- 3. A COMPUTER OF ITS OWN -->
+<section id="computer">
+  <div class="section-eyebrow">A COMPUTER OF ITS OWN</div>
+  <h2 class="section-title">A computer of its own.<br>It mostly has tabs open.</h2>
+  <p class="section-body">
+    Every bot gets its own sandboxed machine, with a browser, a shell, and a filesystem. It uses all three. It opens your dashboards, reads your repositories, and scrolls your issue tracker. Then it stops, because it has arrived at the end of the page.
+  </p>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-title">It gets a machine</div>
+      <div class="step-body">
+        A real environment, not a prompt. Isolated per bot, so one bot reading your staging database cannot see another bot reading your inbox.
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-title">It opens things</div>
+      <div class="step-body">
+        Browser, terminal, editor. It signs in with credentials you grant, scoped to what you grant. It will use every one of them to look.
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-title">It keeps the tabs</div>
+      <div class="step-body">
+        Seventeen of them. It knows what is in each one. It has not closed any of them, and it does not intend to.
+      </div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">04</div>
+      <div class="step-title">It reports back</div>
+      <div class="step-body">
+        With observations. Detailed, accurate, and load-bearing on nothing. The work is still where you left it.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. WATCH MANY BOTS AT ONCE -->
+<div class="office-section" id="office">
+  <div class="office-section-header">
+    <div class="office-section-eyebrow">THE ROOM</div>
+    <h2 class="office-section-title">Watch many bots at once.</h2>
+    <div class="office-section-sub">They are also watching each other.</div>
+  </div>
+  <canvas id="officeCanvas" height="420" role="img" aria-label="Animated pixel office scene. Seven small bots stand at desks, watching their screens, watching the room, and watching each other. None of them are working.">
+    Animated pixel office scene. Seven small bots stand at desks, watching their screens, watching the room, and watching each other. None of them are working.
+  </canvas>
+</div>
+
+<!-- 5. SHOW A BOT HOW IT IS DONE -->
+<section id="teach">
+  <div class="section-eyebrow">TEACHING</div>
+  <h2 class="section-title">Show a bot how it is done.<br>Then show it again.</h2>
+  <p class="section-body">
+    Record yourself doing the task once and the bot saves it as a skill. Recall is perfect. It can describe every step you took, in order, on request. Retention of the part where it does the task is still an area of active work.
   </p>
 
   <div class="agents-grid">
     <div class="agent-card">
-      <div class="agent-badge">CLOSED-LOST RE-ENGAGEMENT</div>
-      <div class="agent-title">Watches What<br>Changed</div>
-      <div class="agent-desc">Monitors deals lost 90+ days ago and detects the trigger worth a second swing.</div>
-      <div class="agent-metric">Saves ~$300&ndash;400/mo</div>
-      <div class="agent-quote">"I DECLARE... A FOLLOW-UP."</div>
+      <div class="agent-badge">STEP ONE</div>
+      <div class="agent-title">You do it</div>
+      <div class="agent-desc">Walk through the workflow while the bot watches. It is extremely good at this part. Watching is the core competency.</div>
+      <div class="agent-quote">"I saw all of that."</div>
     </div>
     <div class="agent-card">
-      <div class="agent-badge">CRM HYGIENE</div>
-      <div class="agent-title">Finds the<br>Duplicates</div>
-      <div class="agent-desc">Duplicates, missing fields, stale records. The job nobody has done since Q2.</div>
-      <div class="agent-metric">Saves ~$200&ndash;500/mo</div>
-      <div class="agent-quote">"FACT: 312 duplicate records. FACT: I found them."</div>
+      <div class="agent-badge">STEP TWO</div>
+      <div class="agent-title">It writes it down</div>
+      <div class="agent-desc">The skill is a plain file on disk. You can read it, edit it, and delete it. It is an accurate account of what you did.</div>
+      <div class="agent-quote">"Step four is where you sighed."</div>
     </div>
     <div class="agent-card">
-      <div class="agent-badge">MEETING PREP</div>
-      <div class="agent-title">Briefs You<br>Before the Call</div>
-      <div class="agent-desc">A cross-system account brief before every meeting, on your calendar, not in six tabs.</div>
-      <div class="agent-metric">Saves ~$100&ndash;200/mo</div>
-      <div class="agent-quote">"Six tabs, one call, every time. Not anymore."</div>
+      <div class="agent-badge">STEP THREE</div>
+      <div class="agent-title">You do it again</div>
+      <div class="agent-desc">The bot follows along a second time, confirming the file is correct. It is correct. The file has always been correct.</div>
+      <div class="agent-quote">"Matches my notes exactly."</div>
     </div>
     <div class="agent-card">
-      <div class="agent-badge">DEALS GOING DARK</div>
-      <div class="agent-title">Notices the<br>Silence</div>
-      <div class="agent-desc">Detects silence across email, Slack, and calendar on deals that are still marked active.</div>
-      <div class="agent-metric">Saves ~$200&ndash;400/mo</div>
-      <div class="agent-quote">"Nobody goes dark on Creed Bratton."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">LEAD SCORING</div>
-      <div class="agent-title">Routes the<br>Hot Ones</div>
-      <div class="agent-desc">Scores inbound leads and hands the good ones to an AE with the reason attached.</div>
-      <div class="agent-metric">Saves ~$300&ndash;500/mo</div>
-      <div class="agent-quote">"No lead waits in reception."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">YOURS</div>
-      <div class="agent-title">One Sentence.<br>One Call.</div>
-      <div class="agent-desc">Any manual workflow. Describe it or demo it, and WUPHF builds the microapp for it.</div>
-      <div class="agent-metric">Yours saves the most.</div>
-      <div class="agent-quote">"Why waste time say lot cell when few cell do trick."</div>
+      <div class="agent-badge">STEP FOUR</div>
+      <div class="agent-title">It runs the skill</div>
+      <div class="agent-desc">Sometimes. On a schedule, if you set one. It will tell you clearly and immediately when it does not.</div>
+      <div class="agent-quote">"I did not run it. I want to be upfront about that."</div>
     </div>
   </div>
 </section>
 
-<!-- SOURCE AVAILABLE -->
-<section id="open-source">
-  <div class="section-eyebrow">SOURCE AVAILABLE</div>
+<!-- 6. TRUST YOUR BOTS WITH LESS OVER TIME. The honest section. -->
+<section id="trust">
+  <div class="section-eyebrow">PERMISSIONS</div>
+  <h2 class="section-title">Trust your bots with less over time.</h2>
+  <p class="section-body">
+    This is the part that is not a joke. An agent with your credentials and a browser is a real risk, and the honest posture is to grant it as little as possible for as long as possible. The defaults below are the actual defaults.
+  </p>
+
+  <div class="compare-grid">
+    <div class="compare-card compare-card-good">
+      <div class="compare-label">WHAT IT ACTUALLY DOES</div>
+      <ul class="compare-list compare-list-pos">
+        <li>Runs on your machine, with your keys. There is no gawkbot cloud in the path, and no account to create.</li>
+        <li>Nothing is sent outside your machine except the inference call to the model provider you configure. Point it at a local model and nothing leaves at all.</li>
+        <li>Every send, commit, purchase, and delete is gated behind an approval you have to click. Approval is per action, not a blanket grant, and it does not persist.</li>
+        <li>Each bot runs in its own sandbox with its own credentials, so scope is per bot rather than per workspace.</li>
+        <li>Every tool call is written to a local log you can read. If a bot did something, there is a line for it.</li>
+        <li>Permissions shrink by default. A grant you stop using expires rather than accumulating quietly.</li>
+        <li>It is source-available under the Sustainable Use License. You can read exactly what it does, because you can read the source.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 7. PRICE. The punchline. Loudest thing on the page. -->
+<section id="price">
+  <div class="section-eyebrow">PRICE</div>
+  <div class="price-block">
+    <p class="price-headline">Free.</p>
+    <p class="price-sub">It is already staring at you.</p>
+  </div>
   <div class="mit-block">
-    <div class="mit-badge">FAIR-CODE<br>LICENSE</div>
+    <div class="mit-badge">SUSTAINABLE<br>USE LICENSE</div>
     <div class="mit-text">
-      Free to self-host. Runs on your machine.<br>
-      The job description is one sentence or one call &mdash; not a config format.<br>
-      Read the source, fork it, wire in your internal tooling.<br>
-      No seats. No usage fees. No Michael Scott energy required (but encouraged).
+      Free to run and free to self-host, for your own internal business purposes and for non-commercial use.<br>
+      The source is published. You can read it, modify it, and distribute your changes.<br>
+      The licence does not let you sell gawkbot itself as a hosted product.<br>
+      There are no seats, no usage fees, and no plan to add them.
     </div>
     <div class="mit-cta">
-      <a class="mit-cta-btn" href="https://github.com/nex-crm/wuphf" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        &#9733; Star on GitHub
+      <a class="mit-cta-btn" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Read the source
       </a>
-      <a class="mit-cta-sub" href="https://discord.gg/gjSySC3PzV" target="_blank" rel="noopener">Join the Discord &rarr;</a>
+      <a class="mit-cta-sub" href="/download.html">Download the desktop app &rarr;</a>
     </div>
   </div>
+  <p class="price-compare">
+    For comparison, Grok Bot lists at 120 to 300 dollars per seat per month as of August 2026. Those figures move; check
+    <a href="https://x.ai/bot" target="_blank" rel="noopener noreferrer">x.ai/bot</a> for the current ones.
+  </p>
 </section>
 
-<!-- FAQ -->
-<section id="faq">
-  <div class="section-eyebrow">FAQ</div>
-  <h2 class="section-title" data-pretext>Questions the last five skeptics asked.<br>Answered honestly.</h2>
+</main>
 
-  <div class="faq-list">
-    <details class="faq-item">
-      <summary class="faq-q">Whatever happened to the "office of AI employees" pitch?</summary>
-      <div class="faq-a">
-        We pivoted. On the internet, in front of everyone. Watching five agents discuss your work turns out to be a form of work &mdash; specifically, yours. "AI employee" is a metaphor; a microapp that files the report every Monday at 9:00 is a fact. So WUPHF now builds the second thing. Everything your old office wrote &mdash; wiki articles, notebooks, HTML and PDF briefs &mdash; is preserved verbatim in each microapp's Knowledge tab. We kept your homework. We just fired the fictional middle managers. The office is still here; it is just full of things that work.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">What is a "microapp", exactly?</summary>
-      <div class="faq-a">
-        One manual workflow, running as one small app. It has its own screen, its own typed tables, its own scheduled routines with run history, its own self-authored tools, and its own connected integrations. Small enough that you can read what it does in a minute, real enough that it does the whole job. You build one per workflow instead of one giant assistant that does everything badly.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">Will it send an email or a Slack message without asking me?</summary>
-      <div class="faq-a">
-        No. That is the approval gate and it is not optional. Reads are free &mdash; it can look things up all day. Writes are held: any email, Slack post, or CRM write is drafted and parked until a human taps approve. The run history shows exactly what it wanted to send and when you approved it.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">What happens to my old WUPHF wiki and notebooks when I upgrade?</summary>
-      <div class="faq-a">
-        They come along. Team wiki articles, per-agent notebook notes, and the sanitized HTML/PDF briefs the old product generated are all served verbatim as Knowledge pages, labeled "Preserved from your previous workspace," with the visual briefs viewable inline in a sandboxed frame. Nothing is re-synthesized, nothing is lost, and nothing pretends it wrote your notes.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">How is this different from Zapier or n8n?</summary>
-      <div class="faq-a">
-        Those are tools for building automations: you draw the flowchart, you own every branch, and maintaining the diagram slowly becomes the job. WUPHF is closer to hiring: you say the job or demo it once, and the microapp keeps the branches. It also ships things a flowchart does not have &mdash; its own app UI, versioned scheduled routines with run history, self-authored tools, and cited knowledge.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">What actually runs 24x7? My laptop sleeps.</summary>
-      <div class="faq-a">
-        Honest answer: microapps run as long as the machine running WUPHF is on. On a laptop that means "while the laptop is awake." Put it on a Mac mini in a closet or any always-on box and 24x7 means 24x7. If you would rather not own a closet server, <a class="cloud-cta-link" href="https://nex.ai" target="_blank" rel="noopener">Nex Cloud</a> is the hosted version.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">What happens if I have not connected a model or any integrations yet?</summary>
-      <div class="faq-a">
-        The whole pipeline still runs &mdash; routines fire, transcripts and run history record &mdash; but outcomes are simulated, and they say so in plain text: "Simulated run: no model or integrations are connected on this host." No fake demo data pretending to be your pipeline. Connect a provider and the same routine does the real thing.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">Does my data leave the machine?</summary>
-      <div class="faq-a">
-        The runtime is local and your workspace state lives in local files you can <code>cat</code>. Three things do leave, all under your control: inference calls to whatever model provider you configure (point it at a local model and even that stays home), the integration calls you explicitly connect, and anonymous product analytics &mdash; which you can opt out of. We would rather tell you about the analytics here than have you find it in devtools.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">Do I have to keep the pixel office and The Office jokes?</summary>
-      <div class="faq-a">
-        No. The default leans into it because joy is a real feature. Strip the strings and make it as serious as you want &mdash; the humor is in the config, not the engine. But their loss.
-      </div>
-    </details>
-    <details class="faq-item">
-      <summary class="faq-q">Is this production-ready?</summary>
-      <div class="faq-a">
-        It is v0.x and we put that on the website. Some things will break; when they do, per-run transcripts show exactly where, and the issue tracker is public. The catch you were scrolling for is just that it is early. Early, local, and honest beats polished, hosted, and vague &mdash; but that is a preference, and it is yours to make.
-      </div>
-    </details>
-  </div>
-</section>
-
-<!-- FOOTER -->
+<!-- 8. FOOTER -->
 <footer>
-  <div>
-    <div class="footer-logo">WUPHF</div>
-    <div class="footer-sub">by <a href="https://nex.ai" style="color:var(--yellow);text-decoration:none;">Nex.ai</a> &middot; Show it once. Never do it again.</div>
+  <div class="footer-top">
+    <div>
+      <div class="footer-logo">
+        <svg class="gawkbot-mark footer-mark" viewBox="0 0 11 15" shape-rendering="crispEdges" aria-hidden="true"><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
+        <span>gawkbot</span>
+      </div>
+      <div class="footer-sub">It finishes nothing end to end, and it comes back constantly.</div>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/najmuzzaman-mohammad/gawkbot">GitHub</a>
+      <a href="https://github.com/najmuzzaman-mohammad/gawkbot#readme" target="_blank" rel="noopener">Docs</a>
+      <a href="/download.html">Download</a>
+      <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Sustainable Use License</a>
+    </div>
   </div>
-  <div class="footer-links">
-    <a href="https://github.com/nex-crm/wuphf">GitHub</a>
-    <a href="https://github.com/nex-crm/wuphf#readme" target="_blank" rel="noopener">Docs</a>
-    <a href="https://discord.gg/gjSySC3PzV" target="_blank" rel="noopener">Discord</a>
-    <a href="/download.html">Download</a>
-    <a href="https://github.com/nex-crm/wuphf/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
-  </div>
+  <p class="footer-legal">gawkbot is an independent, source-available project. It is a parody. It is not affiliated with, endorsed by, or sponsored by xAI, SpaceXAI, X Corp, or Cursor. Grok and Grok Bot are trademarks of their respective owners.</p>
 </footer>
 
 <script>
@@ -1769,8 +1564,86 @@
   updatePageMotionClass();
   document.addEventListener('visibilitychange', updatePageMotionClass);
 
+  // ── BRAND PALETTE BRIDGE ──────────────────────────────────────────────
+  // The <canvas> scenes cannot use var(--token), so they read the same CSS
+  // custom properties defined in :root and cache them here. Every color
+  // painted onto a canvas comes from this object, which means a re-skin is
+  // a :root edit and nothing in this script needs to change.
+  //
+  // ramp(t) mixes paper into ink: 0 is the page background, 1 is the
+  // foreground. The entire pixel office (floor, walls, desks, characters)
+  // is drawn from ramp steps rather than fixed hex, so it re-tones itself
+  // for light and dark and for any future palette.
+  //
+  // Fallbacks only matter if a token is ever deleted from :root.
+  var PALETTE = (function () {
+    var cs = getComputedStyle(document.documentElement);
+    function tok(name, fallback) {
+      var v = cs.getPropertyValue(name).trim();
+      return v || fallback;
+    }
+    function chan(name, fallback) {
+      return tok(name, fallback).split(',').map(function (n) {
+        return parseInt(n, 10) || 0;
+      });
+    }
+    var inkC    = chan('--ink-rgb',    '14,14,17');
+    var paperC  = chan('--paper-rgb',  '244,243,239');
+    var accentC = chan('--accent-rgb', '200,64,47');
+
+    function hex2(n) {
+      var s = Math.max(0, Math.min(255, Math.round(n))).toString(16);
+      return s.length === 1 ? '0' + s : s;
+    }
+    // Mix paper -> ink. t=0 is background, t=1 is foreground.
+    function ramp(t) {
+      var c = [0, 1, 2].map(function (i) {
+        return paperC[i] + (inkC[i] - paperC[i]) * t;
+      });
+      return '#' + hex2(c[0]) + hex2(c[1]) + hex2(c[2]);
+    }
+
+    // ink/paper/accent are rebuilt from the channels rather than read back
+    // from --ink / --paper, because getComputedStyle substitutes those to
+    // "rgb(14, 14, 17)" and shadeHex() below needs parseable hex.
+    var api = {
+      paper:  ramp(0),
+      ink:    ramp(1),
+      raised: tok('--raised', '#FBFAF7'),
+      line:   tok('--line',   '#D8D5CD'),
+      mute:   tok('--mute',   '#6E6C66'),
+      // "Bloodshot". The eye, errors, destructive. Never decoration.
+      accent: '#' + hex2(accentC[0]) + hex2(accentC[1]) + hex2(accentC[2]),
+      ramp:   ramp,
+      inkA:   function (a) { return 'rgba(' + inkC.join(',')    + ',' + a + ')'; },
+      accentA:function (a) { return 'rgba(' + accentC.join(',') + ',' + a + ')'; }
+    };
+
+    // Re-read the tokens after the colour scheme changes. The channel arrays
+    // are mutated in place, so ramp() and inkA() return new values from the
+    // next call onward and every per-frame canvas draw corrects itself. Only
+    // colours cached at setup need an explicit rebuild; see applyPalette in
+    // the office scene.
+    api.refresh = function () {
+      cs = getComputedStyle(document.documentElement);
+      var i = chan('--ink-rgb', '14,14,17');
+      var pa = chan('--paper-rgb', '244,243,239');
+      var ac = chan('--accent-rgb', '200,64,47');
+      inkC[0]=i[0];    inkC[1]=i[1];    inkC[2]=i[2];
+      paperC[0]=pa[0]; paperC[1]=pa[1]; paperC[2]=pa[2];
+      accentC[0]=ac[0];accentC[1]=ac[1];accentC[2]=ac[2];
+      api.paper  = ramp(0);
+      api.ink    = ramp(1);
+      api.raised = tok('--raised', '#FBFAF7');
+      api.line   = tok('--line',   '#D8D5CD');
+      api.mute   = tok('--mute',   '#6E6C66');
+      api.accent = '#' + hex2(accentC[0]) + hex2(accentC[1]) + hex2(accentC[2]);
+    };
+    return api;
+  })();
+
   // ── GITHUB STARS ──────────────────────────────────────────────────────
-  fetch('https://api.github.com/repos/nex-crm/wuphf')
+  fetch('https://api.github.com/repos/najmuzzaman-mohammad/gawkbot')
     .then(function(r){ return r.json(); })
     .then(function(d){
       var n = d.stargazers_count;
@@ -1833,7 +1706,7 @@
   function copyInstall() {
     var label = document.getElementById('copyLabel');
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText('npx wuphf@latest').then(function() {
+      navigator.clipboard.writeText('npx gawkbot@latest').then(function() {
         if (label) flashCopy(label);
       }).catch(function() {
         announceCopyStatus('Unable to copy install command.');
@@ -1860,35 +1733,22 @@
     });
   });
 
-  // ── PER-LINE COPY BUTTONS ────────────────────────────────────────────
-  document.querySelectorAll('.line-copy').forEach(function(btn) {
-    btn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var text = btn.dataset.copy || '';
-      navigator.clipboard.writeText(text).then(function() {
-        var orig = btn.textContent;
-        btn.textContent = 'COPIED';
-        setTimeout(function() { btn.textContent = orig; }, 1200);
-      }).catch(function() {});
-    });
-  });
-
   // ── TICKER (DOM-safe) ─────────────────────────────────────────────────
   var quotes = [
-    'Monday 09:00 // routine ran: weekly pipeline recap',
-    '3 stage moves, 2 new leads, Umbrella stalled 21 days',
-    'DRAFT HELD FOR APPROVAL: #revops post. Nothing sends without your tap.',
-    'Dwight built a CRM hygiene microapp. FACT: 312 duplicate records.',
-    'One demo call. One microapp. Zero recurring calendar blocks.',
-    'Tool written: score_lead(). Nobody asked it to. It just noticed.',
-    '1200+ integrations. You will use nine. They will be the right nine.',
-    'Kevin: why waste time say lot cell when few cell do trick.',
-    'I DECLARE... A FOLLOW-UP! , Michael Scott, WUPHF user of the month, every month',
-    'Creed: nobody goes dark on Creed Bratton.',
-    'Runs local. Your machine, your files, your `cat` command.',
-    'Unlike Ryan Howard\'s WUPHF, this one ships work on Mondays.',
-    'The microapps work weekends. They do not complain. They do not microwave fish.',
+    'It read the entire codebase. It has no notes. It would like to discuss it.',
+    'Seventeen tabs open. It knows what is in each one. It has closed none of them.',
+    'Your bots are in a meeting about the meeting. Neither meeting has an agenda.',
+    'It watched the deploy finish. It is still watching. The deploy is over.',
+    'It has been observing your team for six hours and has produced one paragraph.',
+    'It signed in to every tool you own. It looked around. It came back with opinions.',
+    'It found the bug. It described the bug at length. The bug is still there.',
+    'Approval required. It will wait. Waiting is what it does best.',
+    'It does not sleep. There is nothing to see while asleep.',
+    'It attended standup. It did not speak. It took notes on who did.',
+    'It is monitoring your mentions. There are none. It will keep monitoring.',
+    'It is up to date on everything. It has changed nothing.',
   ];
+
 
   var ticker = document.getElementById('ticker');
   var doubled = quotes.concat(quotes);
@@ -1898,82 +1758,6 @@
     span.textContent = '\u25B6 ' + q;
     ticker.appendChild(span);
   });
-
-  // ── SPRITE CANVASES ───────────────────────────────────────────────────
-  var bodyColors = ['#2D4A7A', '#4A7A2D', '#7A2D4A'];
-  var accentColors = ['#D4DB18', '#8FB3D1', '#E8A838'];
-
-  function drawSprite(canvasId, colorBody, colorAccent, frame) {
-    var canvas = document.getElementById(canvasId);
-    if (!canvas) return;
-    var ctx = canvas.getContext('2d');
-    var S = 2;
-    ctx.clearRect(0, 0, 24, 36);
-
-    function px(x, y, c) {
-      ctx.fillStyle = c;
-      ctx.fillRect(x * S, y * S, S, S);
-    }
-
-    var bob = frame < 2 ? 0 : 1;
-
-    for (var x = 3; x <= 8; x++)
-      for (var y = 0; y <= 4; y++)
-        px(x, y + bob, '#D4956A');
-
-    for (var hx = 3; hx <= 8; hx++) px(hx, bob, '#3A2810');
-    px(3, 1 + bob, '#3A2810'); px(8, 1 + bob, '#3A2810');
-
-    px(4, 2 + bob, '#1A1610'); px(7, 2 + bob, '#1A1610');
-
-    for (var bx = 2; bx <= 9; bx++)
-      for (var by = 6; by <= 11; by++)
-        px(bx, by, colorBody);
-
-    for (var ax = 4; ax <= 7; ax++) px(ax, 7, colorAccent);
-
-    for (var ay = 6; ay <= 10; ay++) { px(1, ay, colorBody); px(10, ay, colorBody); }
-
-    var lOff = frame === 1 ? -1 : 0;
-    var rOff = frame === 3 ? -1 : 0;
-    for (var ly = 12; ly <= 17; ly++) px(3, ly + lOff, colorBody);
-    for (var ry = 12; ry <= 17; ry++) px(8, ry + rOff, colorBody);
-    px(3, 17 + lOff, '#2A2418'); px(8, 17 + rOff, '#2A2418');
-  }
-
-  var spriteFrame = 0;
-  var spriteInterval = null;
-  function animSprites() {
-    spriteFrame = (spriteFrame + 1) % 4;
-    for (var i = 0; i < 3; i++) {
-      drawSprite('s' + i, bodyColors[i], accentColors[i], (spriteFrame + i) % 4);
-    }
-  }
-  function drawStaticSprites() {
-    for (var i = 0; i < 3; i++) {
-      drawSprite('s' + i, bodyColors[i], accentColors[i], i % 4);
-    }
-  }
-  function syncSpriteAnimation() {
-    if (pageCanAnimate()) {
-      if (!spriteInterval) spriteInterval = window.setInterval(animSprites, 250);
-      return;
-    }
-    if (spriteInterval) {
-      window.clearInterval(spriteInterval);
-      spriteInterval = null;
-    }
-    drawStaticSprites();
-  }
-  animSprites();
-  syncSpriteAnimation();
-
-  document.addEventListener('visibilitychange', syncSpriteAnimation);
-  if (motionQuery.addEventListener) {
-    motionQuery.addEventListener('change', syncSpriteAnimation);
-  } else if (motionQuery.addListener) {
-    motionQuery.addListener(syncSpriteAnimation);
-  }
 
   // ── ISOMETRIC OFFICE SCENE ────────────────────────────────────────────
   (function() {
@@ -2011,7 +1795,7 @@
     }
 
     // ── ROOM GRID 12 cols × 8 rows ──────────────────────
-    // 0=floor 1=conf 2=michael 3=reception 4=kitchen
+    // 0=floor 1=conf 2=viewing 3=reception 4=kitchen
     function roomAt(col, row) {
       if (row <= 2 && col <= 2) return 1;
       if (row <= 2 && col >= 9) return 2;
@@ -2020,13 +1804,17 @@
       return 0;
     }
 
-    var TILE_COLORS = {
-      0: { top: '#3A3228', left: '#2F281F', right: '#342B22' },
-      1: { top: '#3F362B', left: '#302820', right: '#372D24' },
-      2: { top: '#302A20', left: '#241F18', right: '#2A241B' },
-      3: { top: '#3A3028', left: '#2C241E', right: '#332A22' },
-      4: { top: '#332C22', left: '#282118', right: '#2D261D' }
+    // Ramp positions, not colours. applyPalette() resolves these into
+    // TILE_COLORS so the per-frame draw stays a lookup rather than a
+    // few hundred colour computations per second.
+    var TILE_TONES = {
+      0: { top: .14, left: .24, right: .19 },
+      1: { top: .17, left: .27, right: .22 },
+      2: { top: .11, left: .21, right: .16 },
+      3: { top: .15, left: .25, right: .20 },
+      4: { top: .13, left: .23, right: .18 }
     };
+    var TILE_COLORS = {};
 
     // ── RESIZE ──────────────────────────────────────────
     function resize() {
@@ -2096,47 +1884,47 @@
       ctx.fill();
     }
 
-    // ── JIM-PAM CONVERSATION SEQUENCES ──────────────────
-    var jimPamConvos = [
+    // ── PAIRED BOT EXCHANGES ────────────────────────────
+    var pairConvos = [
       [
-        { who: 'jim', text: "Did you hear? CEO merged 12 PRs. Didn't ask anyone." },
-        { who: 'pam', text: "Of course it didn't. Classic." },
-        { who: 'jim', text: "Honestly kind of amazing." },
+        { who: 'b2', text: "I read the whole file." },
+        { who: 'b1', text: "Did you change anything?" },
+        { who: 'b2', text: "No. I have opinions about it now." },
       ],
       [
-        { who: 'jim', text: "Dwight filed a formal complaint. Against the codebase." },
-        { who: 'pam', text: "...Against the codebase?" },
-        { who: 'jim', text: "He says the variable names are insubordinate." },
+        { who: 'b2', text: "BOT-3 has been watching the deploy for two hours." },
+        { who: 'b1', text: "Is it stuck?" },
+        { who: 'b2', text: "No. The deploy finished. It is still watching." },
       ],
       [
-        { who: 'jim', text: "Michael is giving the CEO agent a performance review." },
-        { who: 'pam', text: "The AI agent." },
-        { who: 'jim', text: "It scored 'Outstanding.' Michael cried." },
+        { who: 'b2', text: "I am observing you observing me." },
+        { who: 'b1', text: "I know. I noted it." },
+        { who: 'b2', text: "I noted that you noted it." },
       ],
     ];
 
-    // ── MICHAEL ANNOUNCEMENT PHRASES ────────────────────
-    var michaelAnnouncements = [
-      "I DECLARE... this the best sprint in company history!",
-      "Could I have everyone's attention? ...Just kidding. Carry on.",
-      "I am not superstitious. But I am a little stitious about this release.",
+    // ── UNPROMPTED ANNOUNCEMENTS ────────────────────────
+    var botAnnouncements = [
+      "Status update. There is no status. I am up to date on that.",
+      "I have reviewed everything. I did not act on any of it.",
+      "Standing by. I have been standing by since Tuesday.",
     ];
 
-    // ── DWIGHT PATROL WAYPOINTS ─────────────────────────
-    var dwightPatrol = [
+    // ── PATROL WAYPOINTS ────────────────────────────────
+    var patrolRoute = [
       { x: 5, y: 4, bubble: "I am watching you." },
-      { x: 8, y: 4, bubble: "Productivity: acceptable. Barely." },
+      { x: 8, y: 4, bubble: "I will keep watching you." },
     ];
 
     // ── CHARACTER BUBBLE MESSAGES ────────────────────────
     var BUBBLE_MSGS = {
-      pam:    ["Good morning. I'll hold your calls.", "The conference room is booked until Thursday. And Thursday.", "I started drawing a mural but then I had work to do."],
-      jim:    ["Question: if an AI has memory, does it remember everything I did?", "I once convinced Dwight the server was haunted. He believed it.", "Bears. Beets. WUPHF."],
-      dwight: ["FACT: I am the highest-performing human in this office.", "Security alert: Jim is being funny again. Monitoring.", "I have trained myself to require only 1500ms of sleep."],
-      michael:["I DECLARE this sprint OPEN!", "I've been told I'm a bit much. They meant it as a compliment.", "Ryan, you're not even here. You're an agent. I MISS YOU."],
-      ceo:    ["Roadmap updated. Shipping Thursday.", "I've already filed the postmortem. We haven't shipped yet.", "This is fine."],
-      eng:    ["PR #47 merged. Tests passing. No comments.", "The variable name was fine. I renamed it anyway.", "I found a bug. I introduced it in my last fix. Ship it."],
-      cmo:    ["README updated. Posted to HN. Waiting for the 'Show HN' karma.", "That's what she shipped.", "Our open graph image is 3px off center. It's handled."]
+      b1:    ["I have read your inbox. All of it. No action taken.", "Your calendar has a gap on Thursday. I looked at it.", "I am caught up. I was never behind."],
+      b2:    ["I opened the file. I did not close it.", "This function is 400 lines. I counted them.", "I have context. I am not going to use it."],
+      b3:    ["I am watching the logs. Nothing is wrong. I am still watching.", "I noticed that. I noticed it earlier too.", "I do not sleep. There is nothing to see while asleep."],
+      b4:    ["I have an opinion about the roadmap. Nobody asked.", "I attended the meeting. I did not speak.", "I am present. That is the whole update."],
+      ceo:    ["I reviewed the plan. It is a plan.", "I have escalated this to you.", "Awaiting your approval. Indefinitely."],
+      eng:    ["The tests are red. I saw them turn red.", "I found the bug. I left it where it was.", "I could fix this. I am not going to."],
+      cmo:    ["I read the launch post. I have thoughts.", "Someone should write this down. Not me.", "I am monitoring the mentions. There are none."]
     };
 
     function pickBubbleMsg(charId) {
@@ -2147,53 +1935,53 @@
 
     // ── CHARACTERS ──────────────────────────────────────
     var CHARS = [
-      { id:'pam',    name:'PAM',    x:5.5, y:5.5, homeX:5.5, homeY:5.5,
-        hair:'#C87A40', skin:'#D4956A', shirt:'#4A7A9B', pants:'#3A4A6A',
+      { id:'b1',     name:'BOT-1',    x:5.5, y:5.5, homeX:5.5, homeY:5.5,
+        hairT:.62, skinT:.36, shirtT:.52, pantsT:.70,
         faceRight:true, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:12000, arriveState:'IDLE_DESK', arriveWait:12000,
         destX:5.5, destY:5.5, isAgent:false, agentColor:'', label:'',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'jim',    name:'JIM',    x:5.0, y:3.0, homeX:5.0, homeY:3.0,
-        hair:'#4A3820', skin:'#D4956A', shirt:'#5A7A4A', pants:'#2A3A5A',
+      { id:'b2',    name:'BOT-2',    x:5.0, y:3.0, homeX:5.0, homeY:3.0,
+        hairT:.78, skinT:.36, shirtT:.58, pantsT:.72,
         faceRight:true, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:6000, arriveState:'IDLE_DESK', arriveWait:6000,
         destX:5.0, destY:3.0, isAgent:false, agentColor:'', label:'',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'dwight', name:'DWIGHT', x:3.0, y:3.0, homeX:3.0, homeY:3.0,
-        hair:'#3A2810', skin:'#D4956A', shirt:'#5C6030', pants:'#3A3A20',
+      { id:'b3', name:'BOT-3', x:3.0, y:3.0, homeX:3.0, homeY:3.0,
+        hairT:.84, skinT:.36, shirtT:.64, pantsT:.74,
         faceRight:false, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:4000, arriveState:'IDLE_DESK', arriveWait:4000,
         destX:3.0, destY:3.0, isAgent:false, agentColor:'', label:'',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'michael',name:'MICHAEL',x:10.5, y:1.0, homeX:10.5, homeY:1.0,
-        hair:'#3A2810', skin:'#D4956A', shirt:'#2D4A7A', pants:'#3A4E7A',
+      { id:'b4',name:'BOT-4',x:10.5, y:1.0, homeX:10.5, homeY:1.0,
+        hairT:.84, skinT:.36, shirtT:.55, pantsT:.68,
         faceRight:false, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:8000, arriveState:'IDLE_DESK', arriveWait:8000,
         destX:10.5, destY:1.0, isAgent:false, agentColor:'', label:'',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'ceo',    name:'CEO',    x:8.0, y:4.0, homeX:8.0, homeY:4.0,
-        hair:'#1A1610', skin:'#D4B896', shirt:'#2D4A7A', pants:'#1A2A4A',
+      { id:'ceo',    name:'OBSERVER',    x:8.0, y:4.0, homeX:8.0, homeY:4.0,
+        hairT:.90, skinT:.30, shirtT:.55, pantsT:.78,
         faceRight:true, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:5000, arriveState:'IDLE_DESK', arriveWait:5000,
-        destX:8.0, destY:4.0, isAgent:true, agentColor:'#F2F2F3', label:'CEO',
+        destX:8.0, destY:4.0, isAgent:true, agentColor:'', label:'OBS',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'eng',    name:'ENG',    x:10.0, y:3.0, homeX:10.0, homeY:3.0,
-        hair:'#2A1A40', skin:'#C4A882', shirt:'#4A2D7A', pants:'#2A1A4A',
+      { id:'eng',    name:'MONITOR',    x:10.0, y:3.0, homeX:10.0, homeY:3.0,
+        hairT:.80, skinT:.33, shirtT:.60, pantsT:.76,
         faceRight:false, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:7000, arriveState:'IDLE_DESK', arriveWait:7000,
-        destX:10.0, destY:3.0, isAgent:true, agentColor:'#F2F2F3', label:'ENG',
+        destX:10.0, destY:3.0, isAgent:true, agentColor:'', label:'MON',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'cmo',    name:'CMO',    x:3.0, y:5.0, homeX:3.0, homeY:5.0,
-        hair:'#4A2010', skin:'#D4A870', shirt:'#7A4A2D', pants:'#3A2010',
+      { id:'cmo',    name:'REVIEWER',    x:3.0, y:5.0, homeX:3.0, homeY:5.0,
+        hairT:.74, skinT:.34, shirtT:.50, pantsT:.82,
         faceRight:true, walkFrame:0, animTimer:0,
         state:'IDLE_DESK', stateTimer:5500, arriveState:'IDLE_DESK', arriveWait:5500,
-        destX:3.0, destY:5.0, isAgent:true, agentColor:'#F2F2F3', label:'CMO',
+        destX:3.0, destY:5.0, isAgent:true, agentColor:'', label:'REV',
         chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
         patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 }
     ];
@@ -2225,7 +2013,7 @@
     function pickNextActivity(ch) {
       var r = Math.random();
 
-      if (ch.id === 'pam') {
+      if (ch.id === 'b1') {
         // 95% at desk, 5% walk briefly somewhere
         if (r < 0.95) {
           ch.destX = ch.homeX; ch.destY = ch.homeY;
@@ -2236,22 +2024,22 @@
           ch.arriveState = 'STANDING'; ch.arriveWait = 2000 + Math.random()*2000;
         }
 
-      } else if (ch.id === 'jim') {
+      } else if (ch.id === 'b2') {
         if (r < 0.55) {
           ch.destX = ch.homeX; ch.destY = ch.homeY;
           ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*6000;
         } else if (r < 0.90) {
-          // Chat with Pam
+          // Start an exchange with the other bot
           ch.destX = 5.5; ch.destY = 6.2;
           ch.arriveState = 'CHATTING'; ch.arriveWait = 0;
-          ch.chatConvo = jimPamConvos[Math.floor(Math.random() * jimPamConvos.length)];
-          ch.chatStep = 0; ch.chatTimer = 0; ch.chatPartner = 'pam';
+          ch.chatConvo = pairConvos[Math.floor(Math.random() * pairConvos.length)];
+          ch.chatStep = 0; ch.chatTimer = 0; ch.chatPartner = 'b1';
         } else {
           ch.destX = 7.3; ch.destY = 6.5;
           ch.arriveState = 'STANDING'; ch.arriveWait = 2000 + Math.random()*3000;
         }
 
-      } else if (ch.id === 'dwight') {
+      } else if (ch.id === 'b3') {
         if (r < 0.80) {
           ch.destX = ch.homeX; ch.destY = ch.homeY;
           ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
@@ -2259,10 +2047,10 @@
           // Patrol route
           ch.arriveState = 'PATROLLING'; ch.arriveWait = 0;
           ch.patrolStep = 0; ch.patrolTimer = 0;
-          ch.destX = dwightPatrol[0].x; ch.destY = dwightPatrol[0].y;
+          ch.destX = patrolRoute[0].x; ch.destY = patrolRoute[0].y;
         }
 
-      } else if (ch.id === 'michael') {
+      } else if (ch.id === 'b4') {
         if (r < 0.55) {
           ch.destX = ch.homeX; ch.destY = ch.homeY;
           ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
@@ -2273,7 +2061,7 @@
           // Announce in bullpen
           ch.destX = 7.0; ch.destY = 3.5;
           ch.arriveState = 'ANNOUNCING'; ch.arriveWait = 5000;
-          ch.chatConvo = [{ who: 'michael', text: michaelAnnouncements[Math.floor(Math.random() * michaelAnnouncements.length)] }];
+          ch.chatConvo = [{ who: 'b4', text: botAnnouncements[Math.floor(Math.random() * botAnnouncements.length)] }];
           ch.chatStep = 0; ch.chatTimer = 0;
         }
 
@@ -2316,10 +2104,10 @@
       if (Math.abs(dx) > 0.05) ch.faceRight = dx > 0;
     }
 
-    // Solid obstacles characters should walk around (bullpen desks left walkable — agents sit at them)
+    // Solid obstacles characters should walk around (bullpen desks left walkable, agents sit at them)
     var OBSTACLES = [
       [0.6, 0.7, 1.8, 0.8],   // conference table
-      [9.8, 0.6, 1.2, 0.7],   // Michael's desk
+      [9.8, 0.6, 1.2, 0.7],   // BOT-4 desk
       [4.8, 5.2, 1.0, 0.6],   // reception desk
       [5.8, 5.0, 0.8, 0.6],   // reception desk
       [7.3, 6.3, 0.3, 0.3],   // water cooler
@@ -2393,10 +2181,10 @@
           ch.stateTimer = ch.arriveWait;
 
           if (ch.state === 'CHATTING') {
-            // Jim arrived near Pam: face each other
-            ch.faceRight = false; // Jim faces left toward Pam
-            var pam = getChar('pam');
-            if (pam) { pam.faceRight = true; } // Pam faces Jim
+            // Bots arrived: face each other
+            ch.faceRight = false;
+            var partner = getChar('b1');
+            if (partner) { partner.faceRight = true; }
             ch.chatStep = 0;
             ch.chatTimer = 0;
             // Show first line
@@ -2410,14 +2198,14 @@
             ch.chatTimer = ch.arriveWait;
           } else if (ch.state === 'PATROLLING') {
             ch.patrolTimer = 1500;
-            spawnBubble(ch.id, dwightPatrol[ch.patrolStep].bubble);
+            spawnBubble(ch.id, patrolRoute[ch.patrolStep].bubble);
           } else if (Math.random() < 0.4) {
             spawnBubble(ch.id, null);
           }
         }
 
       } else if (ch.state === 'CHATTING') {
-        // Jim+Pam conversation
+        // Paired exchange
         ch.chatTimer -= dt;
         ch.walkFrame = 0;
         if (ch.chatTimer <= 0) {
@@ -2427,9 +2215,9 @@
             spawnBubble(nextLine.who, nextLine.text);
             ch.chatTimer = 3000;
           } else {
-            // Conversation done, Jim returns home
-            var pam2 = getChar('pam');
-            if (pam2) { pam2.faceRight = true; } // Pam resets
+            // Exchange done, bot returns home
+            var partnerReset = getChar('b1');
+            if (partnerReset) { partnerReset.faceRight = true; }
             ch.destX = ch.homeX; ch.destY = ch.homeY;
             ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
             ch.state = 'WALKING';
@@ -2439,7 +2227,7 @@
         }
 
       } else if (ch.state === 'ANNOUNCING') {
-        // Michael stands in bullpen
+        // BOT-4 stands in bullpen
         ch.chatTimer -= dt;
         ch.walkFrame = 0;
         if (ch.chatTimer <= 0) {
@@ -2451,13 +2239,13 @@
         }
 
       } else if (ch.state === 'PATROLLING') {
-        // Dwight patrols
+        // Patrol loop
         ch.patrolTimer -= dt;
         ch.walkFrame = 0;
         if (ch.patrolTimer <= 0) {
           ch.patrolStep++;
-          if (ch.patrolStep < dwightPatrol.length) {
-            var wp = dwightPatrol[ch.patrolStep];
+          if (ch.patrolStep < patrolRoute.length) {
+            var wp = patrolRoute[ch.patrolStep];
             ch.destX = wp.x; ch.destY = wp.y;
             ch.state = 'WALKING';
             ch.arriveState = 'PATROLLING'; ch.arriveWait = 0;
@@ -2515,6 +2303,43 @@
       }
     }
 
+    // ── PALETTE APPLICATION ─────────────────────────────
+    // Everything else in this scene resolves its colour inside the draw
+    // loop, so it follows a token change on the next frame for free. These
+    // two tables are the exception: they are built once for speed, which
+    // means they are also the only things that would go stale when the
+    // colour scheme changes underneath a page that is already open.
+    function applyPalette() {
+      for (var k in TILE_TONES) {
+        if (!Object.prototype.hasOwnProperty.call(TILE_TONES, k)) continue;
+        var t = TILE_TONES[k];
+        TILE_COLORS[k] = {
+          top:   PALETTE.ramp(t.top),
+          left:  PALETTE.ramp(t.left),
+          right: PALETTE.ramp(t.right)
+        };
+      }
+      for (var i = 0; i < CHARS.length; i++) {
+        var c = CHARS[i];
+        c.hair  = PALETTE.ramp(c.hairT);
+        c.skin  = PALETTE.ramp(c.skinT);
+        c.shirt = PALETTE.ramp(c.shirtT);
+        c.pants = PALETTE.ramp(c.pantsT);
+        if (c.isAgent) c.agentColor = PALETTE.ink;
+      }
+    }
+    applyPalette();
+
+    // A live colour-scheme flip (the viewer changes their OS theme with the
+    // page open) repaints every CSS surface instantly but would leave the
+    // canvas in the old tone, i.e. a light-grey office on a black page.
+    if (window.matchMedia) {
+      var schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      var onSchemeChange = function () { PALETTE.refresh(); applyPalette(); };
+      if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
+      else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
+    }
+
     // ── COLOR HELPER ────────────────────────────────────
     function shadeHex(hex, amt) {
       var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -2541,10 +2366,10 @@
       // head bob only when walking
       var bob = (!sitting && (frame === 1 || frame === 3)) ? 1 : 0;
 
-      // (agent backplate removed — label above character carries identity)
+      // (agent backplate removed, label above character carries identity)
 
       var sk = ch.skin, hr = ch.hair, sh = ch.shirt, pt = ch.pants;
-      var shoe = '#2A2010', eye = '#1A0E08', mth = shadeHex(sk, -30);
+      var shoe = PALETTE.ramp(.84), eye = PALETTE.accent, mth = shadeHex(sk, -30);
       var hrHL = shadeHex(hr, 32), shHL = shadeHex(sh, 22), shDK = shadeHex(sh, -20);
 
       // px: absolute row (no bob)
@@ -2580,21 +2405,21 @@
       hpx(4, 7, sk); hpx(5, 7, sk); hpx(6, 7, sk); hpx(7, 7, sk);
 
       // ── CHARACTER-SPECIFIC FEATURES ──
-      if (ch.id === 'pam') {
+      if (ch.id === 'b1') {
         // long auburn hair: flows from side of head down past shoulders
         hpx(2, 3, hr); hpx(9, 3, hr);
         hpx(2, 4, hr); hpx(9, 4, hr);
         hpx(2, 5, hr); hpx(9, 5, hr);
         hpx(2, 6, hr); hpx(9, 6, hr);
         hpx(2, 7, hr); hpx(9, 7, hr);
-        // hair falls onto shoulders (rows 8-10, using px since torso doesn't bob)
+        // hair falls onto shoulders (rows 8-10, using px since the torso does not bob)
         px(1, 8, hr); px(2, 8, hr); px(9, 8, hr); px(10, 8, hr);
         px(1, 9, hr); px(2, 9, hr); px(9, 9, hr); px(10, 9, hr);
         px(1, 10, hrHL); px(10, 10, hrHL);
-      } else if (ch.id === 'dwight') {
+      } else if (ch.id === 'b3') {
         // glasses: dark horizontal bar at eye level
-        hpx(3, 4, '#6A6040'); hpx(8, 4, '#6A6040');
-      } else if (ch.id === 'michael') {
+        hpx(3, 4, PALETTE.ramp(.55)); hpx(8, 4, PALETTE.ramp(.55));
+      } else if (ch.id === 'b4') {
         // wider hair at crown
         hpx(2, 0, hr); hpx(9, 0, hr);
         // big grin: wider mouth
@@ -2660,11 +2485,11 @@
         var badgeY = nameY - badgeH + 4;
         ctx.fillStyle = ch.agentColor;
         ctx.fillRect(cx - badgeW / 2, badgeY, badgeW, badgeH);
-        ctx.fillStyle = '#0b0b0c';
+        ctx.fillStyle = PALETTE.paper;
         ctx.font = '6px "Press Start 2P", monospace';
         ctx.fillText(ch.label, cx, badgeY + badgeH - 2);
       } else {
-        ctx.fillStyle = 'rgba(255,235,252,0.88)';
+        ctx.fillStyle = PALETTE.inkA(0.88);
         ctx.font = '6px "Press Start 2P", monospace';
         ctx.fillText(ch.name, cx, nameY);
       }
@@ -2694,26 +2519,26 @@
       var bx3 = pos.x - bw / 2;
       var by3 = headTop - bh - 10;
 
-      ctx.fillStyle = '#ECECEE';
+      ctx.fillStyle = PALETTE.ink;
       ctx.fillRect(bx3, by3, bw, bh);
-      ctx.fillStyle = '#8A8A90';
-      ctx.strokeStyle = '#8A8A90';
+      ctx.fillStyle = PALETTE.line;
+      ctx.strokeStyle = PALETTE.line;
       ctx.lineWidth = 2;
       ctx.strokeRect(bx3, by3, bw, bh);
 
       // tail
-      ctx.fillStyle = '#ECECEE';
+      ctx.fillStyle = PALETTE.ink;
       ctx.beginPath();
       ctx.moveTo(pos.x - 4, by3 + bh);
       ctx.lineTo(pos.x + 4, by3 + bh);
       ctx.lineTo(pos.x, by3 + bh + 8);
       ctx.closePath();
       ctx.fill();
-      ctx.strokeStyle = '#8A8A90';
+      ctx.strokeStyle = PALETTE.line;
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      ctx.fillStyle = '#0b0b0c';
+      ctx.fillStyle = PALETTE.paper;
       ctx.textAlign = 'center';
       ctx.fillText(b.text, pos.x, by3 + bh - 7);
 
@@ -2727,7 +2552,7 @@
       var wallH = 48;
 
       // ── BACK WALLS ──────────────────────────────────
-      ctx.fillStyle = '#201C14';
+      ctx.fillStyle = PALETTE.ramp(.22);
       for (var gx2 = 0; gx2 < 12; gx2++) {
         var p0 = iso(gx2, 0);
         var p1 = iso(gx2 + 1, 0);
@@ -2739,7 +2564,7 @@
         ctx.closePath();
         ctx.fill();
       }
-      ctx.fillStyle = '#18140E';
+      ctx.fillStyle = PALETTE.ramp(.28);
       for (var gy2 = 0; gy2 < 8; gy2++) {
         var lp0 = iso(0, gy2);
         var lp1 = iso(0, gy2 + 1);
@@ -2794,12 +2619,12 @@
 
       ctx.restore();
 
-      // ── MICHAEL'S OFFICE WALL AWARDS ─────────────────
+      // ── WALL PLAQUES ─────────────────────────────────
       // Plaques on the interior face of the gx=9 glass wall
       var awards = [
-        { gy: 0.55, lines: ['DUNDIE', 'AWARD'], color: '#F2F2F3' },
-        { gy: 1.55, lines: ["WORLD'S", 'BEST BOSS'], color: '#F2F2F3' },
-        { gy: 2.45, lines: ['FAIR', 'CODE'], color: '#F2F2F3' }
+        { gy: 0.55, lines: ['SEEN', 'IT'], color: PALETTE.ink },
+        { gy: 1.55, lines: ['NO', 'NOTES'], color: PALETTE.ink },
+        { gy: 2.45, lines: ['FREE', 'TO RUN'], color: PALETTE.ink }
       ];
       ctx.save();
       ctx.font = '5px "Press Start 2P", monospace';
@@ -2809,7 +2634,7 @@
         var aw = 30, ah = 18;
         var ax = ap.x - aw / 2;
         var ay = ap.y - wallH + 8;
-        ctx.fillStyle = '#0b0b0c';
+        ctx.fillStyle = PALETTE.paper;
         ctx.fillRect(ax, ay, aw, ah);
         ctx.strokeStyle = a.color;
         ctx.lineWidth = 1.5;
@@ -2823,45 +2648,45 @@
       // ── FURNITURE ────────────────────────────────────
 
       // Conference table
-      drawBox(ctx, 0.6, 0.7, 1.8, 0.8, 12, '#7A5A18', '#5A3C08', '#3A2404');
+      drawBox(ctx, 0.6, 0.7, 1.8, 0.8, 12, PALETTE.ramp(.34), PALETTE.ramp(.46), PALETTE.ramp(.56));
       // Conf chairs
-      drawBox(ctx, 0.5, 0.5, 0.4, 0.4, 8, '#5A4632', '#403020', '#403020');
-      drawBox(ctx, 2.1, 0.5, 0.4, 0.4, 8, '#5A4632', '#403020', '#403020');
-      drawBox(ctx, 0.5, 1.4, 0.4, 0.4, 8, '#5A4632', '#403020', '#403020');
-      drawBox(ctx, 2.1, 1.4, 0.4, 0.4, 8, '#5A4632', '#403020', '#403020');
+      drawBox(ctx, 0.5, 0.5, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
+      drawBox(ctx, 2.1, 0.5, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
+      drawBox(ctx, 0.5, 1.4, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
+      drawBox(ctx, 2.1, 1.4, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
 
       // Bullpen desks
       var desks = [[3,2.8],[5,2.8],[3,4.3],[5,4.3],[8,2.8],[10,2.8]];
       desks.forEach(function(d) {
-        drawBox(ctx, d[0], d[1], 0.9, 0.6, 10, '#7A5A18', '#5A3C08', '#3A2404');
+        drawBox(ctx, d[0], d[1], 0.9, 0.6, 10, PALETTE.ramp(.34), PALETTE.ramp(.46), PALETTE.ramp(.56));
         // monitor
         var mp = iso(d[0] + 0.35, d[1] + 0.1);
-        ctx.fillStyle = '#0b0b0c';
+        ctx.fillStyle = PALETTE.paper;
         ctx.fillRect(mp.x - 9, mp.y - 26, 18, 16);
-        ctx.fillStyle = 'rgba(242,242,243,0.24)';
+        ctx.fillStyle = PALETTE.inkA(0.28);
         ctx.fillRect(mp.x - 7, mp.y - 24, 14, 12);
       });
 
-      // Michael's fancy desk
-      drawBox(ctx, 9.8, 0.6, 1.2, 0.7, 12, '#5A9AC8', '#3F6C8C', '#3F6C8C');
+      // BOT-4 corner desk
+      drawBox(ctx, 9.8, 0.6, 1.2, 0.7, 12, PALETTE.ramp(.38), PALETTE.ramp(.50), PALETTE.ramp(.50));
 
       // Reception desk
-      drawBox(ctx, 4.8, 5.2, 1.0, 0.6, 12, '#6A4A14', '#4A3208', '#4A3208');
-      drawBox(ctx, 5.8, 5.0, 0.8, 0.6, 12, '#6A4A14', '#4A3208', '#4A3208');
+      drawBox(ctx, 4.8, 5.2, 1.0, 0.6, 12, PALETTE.ramp(.32), PALETTE.ramp(.44), PALETTE.ramp(.44));
+      drawBox(ctx, 5.8, 5.0, 0.8, 0.6, 12, PALETTE.ramp(.32), PALETTE.ramp(.44), PALETTE.ramp(.44));
 
       // Whiteboard
-      drawBox(ctx, 0.05, 4.2, 0.08, 0.8, 20, '#ECECEE', '#F2F2F3', '#8A8A90');
+      drawBox(ctx, 0.05, 4.2, 0.08, 0.8, 20, PALETTE.ink, PALETTE.ink, PALETTE.line);
       var wb = iso(0.1, 4.5);
-      ctx.fillStyle = '#D4DB18';
+      ctx.fillStyle = PALETTE.accent;
       ctx.fillRect(wb.x, wb.y - 30, 3, 2);
       ctx.fillRect(wb.x + 1, wb.y - 26, 2, 2);
-      ctx.fillStyle = '#F2F2F3';
+      ctx.fillStyle = PALETTE.ink;
       ctx.fillRect(wb.x + 2, wb.y - 22, 4, 2);
 
       // Water cooler
-      drawBox(ctx, 7.3, 6.3, 0.3, 0.3, 16, '#5A9AC8', '#3F6C8C', '#3F6C8C');
+      drawBox(ctx, 7.3, 6.3, 0.3, 0.3, 16, PALETTE.ramp(.38), PALETTE.ramp(.50), PALETTE.ramp(.50));
       var wcTop = iso(7.45, 6.45);
-      ctx.fillStyle = '#F2F2F3';
+      ctx.fillStyle = PALETTE.ink;
       ctx.fillRect(wcTop.x - 3, wcTop.y - 20, 6, 6);
 
       // ── ROOM LABELS ──────────────────────────────────
@@ -2870,16 +2695,16 @@
       ctx.textAlign = 'center';
 
       var confLabel = iso(1.5, 2.6);
-      ctx.fillStyle = 'rgba(242,242,243,0.62)';
+      ctx.fillStyle = PALETTE.inkA(0.75);
       ctx.fillText('CONF ROOM', confLabel.x, confLabel.y);
 
       var mLabel = iso(10.5, 2.6);
-      ctx.fillStyle = 'rgba(242,242,243,0.62)';
-      ctx.fillText("MICHAEL'S", mLabel.x, mLabel.y);
-      ctx.fillText('OFFICE', mLabel.x, mLabel.y + 10);
+      ctx.fillStyle = PALETTE.inkA(0.75);
+      ctx.fillText('VIEWING', mLabel.x, mLabel.y);
+      ctx.fillText('ROOM', mLabel.x, mLabel.y + 10);
 
       var recLabel = iso(5.5, 6.4);
-      ctx.fillStyle = 'rgba(242,242,243,0.62)';
+      ctx.fillStyle = PALETTE.inkA(0.75);
       ctx.fillText('RECEPTION', recLabel.x, recLabel.y);
 
       ctx.restore();
