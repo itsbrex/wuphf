@@ -343,6 +343,24 @@ fix.** Run the failing test in isolation, check whether the file is modified by
 someone else, and check whether the failure set changes between runs. A failure
 that moves between runs is somebody landing work, not a bug in your change.
 
+### After a bulk edit, check what was REMOVED
+
+A mechanical pass over many call sites can quietly undo correct code while
+appearing to add correct code, and a line count will not show it.
+
+Real example: a revert script using first-occurrence replacement matched a
+PRE-EXISTING correct call earlier in the file instead of the one it was aiming
+at. It downgraded working code and left the intended site unchanged — exactly
+backwards, with a plausible-looking diffstat. It was caught by diffing for the
+lines that DISAPPEARED, not by reading the ones that arrived.
+
+So after any sweep touching more than a handful of sites:
+
+- Diff for REMOVALS specifically, and confirm every one was intended.
+- Prefer anchored, unique matches over first-occurrence replacement.
+- If a script did the edit, verify a sample by hand. The script's own output is
+  not evidence; it reports what it believes it did.
+
 ### Worktree-based parallelism
 
 For multi-batch fixes:
