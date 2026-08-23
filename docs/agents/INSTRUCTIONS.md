@@ -25,7 +25,8 @@ repo-local instruction files are the runtime source of truth for contributors.
 
 ### Git And PRs
 
-- Never push directly to `main`.
+- Never push directly to `main` (repos with other contributors; see each repo's
+  own profile below for exceptions).
 - Use a branch and open a draft PR for code changes.
 - Use Conventional Commits for commit messages.
 - Run the repo's documented checks before opening or marking a PR ready.
@@ -133,13 +134,29 @@ Web suite and `bash scripts/test-web.sh web/src/path/to/file.test.ts` for
 focused Web tests; do not use `bun test` inside `web/`, because that invokes
 Bun's native test runner instead of the repo's Vitest setup.
 
-### PR And Hooks
+### Landing Changes (overrides "Git And PRs" above for this repo)
 
-- Branch and PR for all code changes.
-- Open PRs as draft.
-- Run the full relevant test suite before marking ready.
+Wuphf is built by a single person. There is no reviewer to wait for, so the
+PR-and-approval ceremony is not the workflow here:
+
+- **Commit to `main` and push directly** (`git push origin HEAD:main`). GitHub
+  reports "Bypassed rule violations" for the branch-protection rule; that is
+  expected and authorized for this repo.
+- Open a PR only when a second opinion is actually wanted. Do not open one just
+  to satisfy process.
+- **The pre-push hooks and CI are the only change-management controls left, so
+  they are not optional.** Never push with `--no-verify`. Lefthook pre-push
+  runs the Go suite, web typecheck + tests, build, vet, and vhs for the file
+  types you touched.
+- Watch the `CI` run on `main` after pushing (`gh run list --branch main`) and
+  fix a red main immediately — nothing gates it before the push any more.
+- Use Conventional Commits; `commitlint` runs on every push.
 - Run `./scripts/bootstrap.sh` after cloning to install dependencies and hooks.
-- Never push with `--no-verify`.
+  In a fresh worktree also run `bun install` in `web/` and `agent/`, or the
+  pre-push web hook fails on missing `node_modules`.
+- Gotcha: `git checkout -B main` fails when another worktree already holds
+  `main`. Work on a detached HEAD and push with `git push origin HEAD:main`;
+  plain `git push origin main` pushes the other worktree's stale local ref.
 
 ### Screenshots
 
