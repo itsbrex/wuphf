@@ -2,17 +2,21 @@ import { expect, test } from "@playwright/test";
 
 import { collectReactErrors, waitForReactMount } from "./_helpers";
 
-// Boot smoke for the operator surface — the only front door since the office
-// shell's retirement (founder decision, 2026-08-14). Guards the class of
-// regression the old shell smoke guarded (a React render-time crash on first
-// paint reaching users), pointed at the surface users actually land on.
+// Boot smoke for the office shell — the front door again after the operator
+// pivot was reversed. Guards the regression class this has always guarded: a
+// React render-time crash on first paint reaching users, pointed at whichever
+// surface users actually land on.
 //
-// Assumes wuphf was started with ~/.wuphf/onboarded.json pre-seeded so the
-// app lands in the operator rather than the onboarding wizard. Wizard
-// coverage lives in local-llm-onboarding.spec.ts.
+// This file previously smoked the operator ("the only front door since the
+// office shell's retirement"). It asserted `operator-root`, which no longer
+// exists in web/src at all.
+//
+// Assumes wuphf was started with <runtime home>/.wuphf/onboarded.json
+// pre-seeded so the app lands in the office rather than the onboarding
+// wizard. Wizard coverage lives in local-llm-onboarding.spec.ts.
 
-test.describe("wuphf web UI smoke (operator)", () => {
-  test("first paint mounts the operator without tripping the error boundary", async ({
+test.describe("wuphf web UI smoke (office)", () => {
+  test("first paint mounts the office without tripping the error boundary", async ({
     page,
   }) => {
     const getErrors = collectReactErrors(page);
@@ -20,46 +24,43 @@ test.describe("wuphf web UI smoke (operator)", () => {
     await page.goto("/");
     await waitForReactMount(page);
 
-    // The operator root appearing is our "React committed" signal.
-    // networkidle does NOT work here — the shell opens long-lived streams.
-    await expect(page.getByTestId("operator-root")).toBeVisible({
+    // The task composer appearing is our "React committed" signal: the index
+    // front door is the new-task composer, not a conversation. (`.composer-
+    // input` is the CHANNEL composer and is absent here — asserting it fails
+    // on a page that rendered fine, which is how this was first written.)
+    // networkidle does NOT work here: the shell opens long-lived streams.
+    await expect(page.getByTestId("task-composer-input")).toBeVisible({
       timeout: 10_000,
     });
     await expect(page.getByTestId("error-boundary")).toHaveCount(0);
+    await expect(page.getByTestId("route-not-found")).toHaveCount(0);
 
     const errors = getErrors();
     expect(
       errors,
-      `React errors during operator boot:\n${errors.join("\n")}`,
+      `React errors during office boot:\n${errors.join("\n")}`,
     ).toEqual([]);
   });
 
-  test("the agents surface and settings both render", async ({ page }) => {
+  test("the sidebar renders its agent and app sections", async ({ page }) => {
     const getErrors = collectReactErrors(page);
-    await page.goto("/#/operator");
+    await page.goto("/");
     await waitForReactMount(page);
-    await expect(page.getByTestId("operator-root")).toBeVisible({
+
+    // The sidebar is the office's navigation spine. Asserting the sections
+    // rather than a specific agent or app keeps this smoke independent of
+    // roster contents, which vary with seed state.
+    await expect(page.getByTestId("sidebar-section-agents")).toBeVisible({
       timeout: 10_000,
     });
-
-    // Settings via the sidebar nav — the surface with the real Voice and
-    // Usage groups (the dead read-only Runtime group was removed in the
-    // 2026-08-15 every-pixel pass).
-    await page.getByRole("button", { name: "Settings" }).first().click();
-    await expect(page.getByText("What your agents have spent")).toBeVisible({
-      timeout: 10_000,
-    });
-
-    // Back to Agents.
-    await page.getByRole("button", { name: /^Agents/ }).first().click();
-    await expect(page.getByText(/Your agents/i).first()).toBeVisible({
+    await expect(page.getByTestId("sidebar-section-apps")).toBeVisible({
       timeout: 10_000,
     });
 
     const errors = getErrors();
     expect(
       errors,
-      `React errors while switching surfaces:\n${errors.join("\n")}`,
+      `React errors while rendering the sidebar:\n${errors.join("\n")}`,
     ).toEqual([]);
   });
 });
