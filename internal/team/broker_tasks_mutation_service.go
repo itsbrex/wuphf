@@ -226,9 +226,48 @@ func (b *Broker) markHumanNoteOnChannelTasksLocked(msg channelMessage) {
 	if now == "" {
 		now = time.Now().UTC().Format(time.RFC3339)
 	}
-	// In a room shared by every task, the room is no longer the address. A
-	// dedicated channel still is.
-	sharedRoom := channel == "general"
+	// Is the room the address, or must the message name its target?
+	//
+	// SCOPED TO DMs ON PURPOSE. The obvious version of this counts tasks in
+	// EVERY room, and it is wrong — two existing tests prove it, and they fail
+	// in opposite directions, so no task-count rule alone can satisfy both:
+	//
+	//   TestHumanNoteWakesOwnerOnWaitingTaskStates puts SIX tasks in the named
+	//   room "task-acme" and expects an unaddressed human post to reach four of
+	//   them. A universal count makes that room shared and reaches none.
+	//
+	//   TestTaskFollowUp_GeneralAndArchivedAndAgentPostsExcluded puts ONE done
+	//   task in #general and expects it NOT to be marked, because the lobby is
+	//   never an address. A universal count makes a one-task room addressable
+	//   and marks it.
+	//
+	// So named rooms and #general keep exactly today's behaviour, and only DMs
+	// get the count. That is also the only case that actually needed fixing: a
+	// DM with one agent can easily accumulate a dozen tasks, and without this
+	// every casual human line would stamp all of them.
+	//
+	// DO NOT "simplify" this into the universal version. That is the change
+	// that was tried and reverted; the two tests named above are the evidence.
+	//
+	// It also survives the #general retirement, which the old
+	// `channel == "general"` proxy did not: that would have gone permanently
+	// false, making namedThisTask below permanently TRUE and restoring the
+	// broadcast storm this function exists to prevent. After the flip, DMs are
+	// the only rooms left and the count is the whole rule.
+	sharedRoom := channel == GeneralChannelSlug
+	if IsDMSlug(channel) {
+		tasksInRoom := 0
+		for i := range b.tasks {
+			if b.tasks[i].System {
+				continue
+			}
+			if normalizeChannelSlug(b.tasks[i].Channel) != channel {
+				continue
+			}
+			tasksInRoom++
+		}
+		sharedRoom = tasksInRoom > 1
+	}
 	halting := humanNoteLeadsWithHalt(msg.Content)
 	for i := range b.tasks {
 		task := &b.tasks[i]
@@ -247,8 +286,8 @@ func (b *Broker) markHumanNoteOnChannelTasksLocked(msg channelMessage) {
 		running := task.LifecycleState == LifecycleStateRunning ||
 			(task.LifecycleState == "" && strings.EqualFold(strings.TrimSpace(task.status), "in_progress"))
 
-		// In a dedicated channel the room itself is the address. In a shared
-		// room the message has to name its target.
+		// When the room holds exactly one task the room itself is the address.
+		// When it holds several, the message has to name its target.
 		//
 		// The halt exception is deliberately NARROW: it reaches every RUNNING
 		// task, because a human typing "stop" in the team's one room means stop
