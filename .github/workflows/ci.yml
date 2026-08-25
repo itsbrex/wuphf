@@ -794,18 +794,32 @@ jobs:
         env:
           WUPHF_E2E_BASE_URL: http://localhost:7891
         run: |
-          bunx playwright test \
-            tests/smoke.spec.ts \
-            tests/app-routes.spec.ts \
-            tests/route-matrix.spec.ts \
-            tests/route-regressions.spec.ts \
-            tests/sidebar-scroll.spec.ts \
-            tests/reviews-scroll.spec.ts \
-            tests/nex-connect.spec.ts \
-            tests/chat.spec.ts \
-            tests/slash-commands.spec.ts \
-            tests/mentions.spec.ts \
-            tests/interview.spec.ts
+          # This list used to name 11 specs. SEVEN did not exist: six were
+          # deleted in the operator-only pivot (5027ec625) and one earlier.
+          # Playwright treats a positional arg as a FILTER, and a filter that
+          # matches no file contributes no tests, no warning, exit 0 -- so the
+          # job ran 4 specs while appearing to run 11.
+          #
+          # A list naming files that do not exist is worse than no list: it
+          # reads as coverage. The guard below makes that state impossible to
+          # re-enter, because a phantom entry now fails the job by name
+          # instead of quietly shrinking the suite.
+          SPECS="
+            tests/smoke.spec.ts
+            tests/app-routes.spec.ts
+            tests/route-matrix.spec.ts
+            tests/route-regressions.spec.ts
+          "
+          missing=0
+          for spec in $SPECS; do
+            if [ ! -f "$spec" ]; then
+              echo "::error::listed spec does not exist: $spec" >&2
+              missing=1
+            fi
+          done
+          [ "$missing" -eq 0 ] || exit 1
+          # shellcheck disable=SC2086
+          bunx playwright test $SPECS
       - name: Stop wuphf (shell phase)
         if: always()
         run: |
