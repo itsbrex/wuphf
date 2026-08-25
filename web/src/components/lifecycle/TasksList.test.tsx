@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import type { OfficeStatsTasks } from "../../api/platform";
+import type { OfficeStats, OfficeStatsTasks } from "../../api/platform";
 import type { Task } from "../../api/tasks";
 import { router } from "../../lib/router";
 import type { InboxItem } from "../../lib/types/inbox";
@@ -19,10 +19,28 @@ function makeTask(overrides: Partial<Task>): Task {
   };
 }
 
+/** Wrap the task buckets into a full stats payload. The Needs-human header is
+ *  the shared needsYouCount, so a tasks-only seam would not exercise the real
+ *  formula — `over` lets a test add requests/inbox_attention when that matters. */
+function seedStats(
+  tasks: OfficeStatsTasks,
+  over: Partial<OfficeStats> = {},
+): OfficeStats {
+  return {
+    tasks,
+    requests: { blocking: 0, notices: 0 },
+    inbox_attention: 0,
+    wiki_articles: 0,
+    agents_active: 0,
+    ...over,
+  } as OfficeStats;
+}
+
 function renderList(
   tasks: Task[],
   stats?: OfficeStatsTasks,
   inboxItems?: InboxItem[],
+  statsOver?: Partial<OfficeStats>,
 ) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -31,7 +49,7 @@ function renderList(
     <QueryClientProvider client={client}>
       <TasksList
         initialTasks={tasks}
-        initialStats={stats}
+        initialStats={stats ? seedStats(stats, statsOver) : undefined}
         initialInboxItems={inboxItems}
       />
     </QueryClientProvider>,
@@ -311,6 +329,9 @@ describe("<TasksList>", () => {
         archive: 0,
       },
       inboxItems,
+      // A blocking request appears in BOTH the inbox feed and the stats
+      // payload, so a production-shaped seed sets it in both places.
+      { requests: { blocking: 1, notices: 0 } },
     );
 
     const needsHuman = screen.getByTestId("issues-kanban-column-needs_human");
@@ -320,11 +341,21 @@ describe("<TasksList>", () => {
     expect(screen.getByTestId("attention-request-row")).toBeInTheDocument();
     expect(screen.getByTestId("attention-review-row")).toBeInTheDocument();
 
-    // 1 decision task (from stats) + 2 folded attention items.
+    // The header is the SHARED needs-you count: 1 decision task + 1 blocking
+    // request = 2. It is no longer "however many cards happen to be folded
+    // in", which is what let this lane print a number the runtime strip
+    // contradicted.
+    //
+    // KNOWN GAP: the pending REVIEW renders as a card but is not counted.
+    // /office/stats carries no human-review field to count it from
+    // (tasks.review is agent-side review, a different thing), so the shared
+    // formula cannot see it. Counting it here instead would re-create the
+    // per-surface arithmetic this change removed. Better: give stats a
+    // reviews-pending field, then add it to needsYouCount once.
     const count = needsHuman.querySelector(
       ".issues-kanban-column-count",
     )?.textContent;
-    expect(count).toBe("3");
+    expect(count).toBe("2");
   });
 
   describe("clicking a task", () => {

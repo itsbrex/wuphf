@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { ClipboardCheck } from "iconoir-react";
 
 import { useOfficeStats } from "../../hooks/useOfficeStats";
+import { needsYouCount } from "../../lib/needsYou";
 import { playInboxDing } from "../../lib/notificationSound";
 import { navigateToSidebarApp } from "../../lib/sidebarNav";
 import { useCurrentApp } from "../../routes/useCurrentRoute";
@@ -12,18 +13,17 @@ import { useCurrentApp } from "../../routes/useCurrentRoute";
  * set as every other sidebar app (AppList) and carries the attention
  * badge + chime that used to live on the standalone Inbox button.
  *
- * The badge count is the broker-computed `inbox_attention` from the
- * shared /office/stats payload — requests + reviews + tasks in a
- * human-attention lifecycle state, the same fan-out /inbox/items serves.
- * Reading the shared stats hook (instead of a private poll) keeps this
- * badge consistent with the board's Needs-human lane and the header strip
- * by construction. Clicking opens the board at /tasks, where those
- * attention items live in the "Needs human input" lane.
+ * The badge count comes from lib/needsYou — the single definition the
+ * header strip and the board's Needs-human lane also use. It is NOT
+ * `inbox_attention`: that counts every request kind including notices, so
+ * reading it here made the badge show a number the strip called "all quiet".
+ * Clicking opens the board at /tasks, where the same items live in the
+ * "Needs human input" lane.
  */
 export function TasksNavButton() {
   const currentApp = useCurrentApp();
   const { data: stats } = useOfficeStats();
-  const count = stats?.inbox_attention ?? 0;
+  const count = needsYouCount(stats);
 
   const lastCountRef = useRef<number | null>(null);
   useEffect(() => {

@@ -58,17 +58,24 @@ describe("<TasksNavButton>", () => {
     expect(screen.getByText("Tasks")).toBeInTheDocument();
   });
 
-  it("renders the broker-computed inbox_attention as the badge (C1)", async () => {
+  it("renders the shared needs-you count, not inbox_attention", async () => {
     useAppStore.setState({ brokerConnected: true });
     vi.spyOn(platformApi, "getOfficeStats").mockResolvedValue(STATS);
 
     render(wrap(<TasksNavButton />));
 
-    // The badge is the broker's number — the same attention roll-up that
-    // used to live on the standalone Inbox button, now hosted on Tasks.
+    // The badge is the SHARED definition every surface uses: decisions
+    // waiting (needs_human 1) + blocking asks (blocking 1) = 2. The fixture
+    // sets inbox_attention to 11 precisely so this test fails loudly if the
+    // badge ever goes back to echoing it — that field counts every request
+    // kind including notices, which is what made the badge show a number the
+    // runtime strip called "all quiet".
     await waitFor(() => {
-      expect(screen.getByTestId("inbox-unread-badge")).toHaveTextContent("11");
+      expect(screen.getByTestId("inbox-unread-badge")).toHaveTextContent("2");
     });
+    expect(screen.getByTestId("inbox-unread-badge")).not.toHaveTextContent(
+      "11",
+    );
   });
 
   it("renders no badge while the count is unknown or zero", () => {

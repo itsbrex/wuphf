@@ -47,21 +47,25 @@ describe("<RuntimeStrip>", () => {
     render(wrap(<RuntimeStrip />));
 
     // active = agents_active, blocked = tasks.blocked, need you =
-    // requests.blocking — all from the one stats payload, never a
-    // private re-derivation.
+    // needsYouCount (decisions + blocking asks) — the SHARED definition, so
+    // this strip cannot print a different number from the board lane or the
+    // sidebar badge. Fixture: needs_human 1 + blocking 3 = 4.
     await waitFor(() => {
       expect(screen.getByText("5 active")).toBeInTheDocument();
     });
     expect(screen.getByText("2 blocked")).toBeInTheDocument();
-    expect(screen.getByText("3 need you")).toBeInTheDocument();
+    expect(screen.getByText("4 need you")).toBeInTheDocument();
   });
 
-  it("renders 'all quiet' only when the stats payload says all zero", async () => {
+  it("renders 'all quiet' only when nothing is running, blocked, or waiting", async () => {
     useAppStore.setState({ brokerConnected: true });
     vi.spyOn(platformApi, "getOfficeStats").mockResolvedValue({
       ...STATS,
-      tasks: { ...STATS.tasks, blocked: 0 },
-      requests: { blocking: 0, notices: 0 },
+      tasks: { ...STATS.tasks, blocked: 0, needs_human: 0 },
+      // Notices stay non-zero on purpose: news is not something that needs
+      // you, so it must not disturb "all quiet".
+      requests: { blocking: 0, notices: 2 },
+      inbox_attention: 2,
       agents_active: 0,
     });
 
@@ -70,6 +74,27 @@ describe("<RuntimeStrip>", () => {
     await waitFor(() => {
       expect(screen.getByText("all quiet")).toBeInTheDocument();
     });
+  });
+
+  // The contradiction observed live on 2026-08-25: the strip printed "all
+  // quiet" while the board's Needs-human lane showed a waiting decision,
+  // because the strip counted only requests.blocking. A decision waiting on
+  // the human is not quiet.
+  it("is not quiet when a decision is waiting", async () => {
+    useAppStore.setState({ brokerConnected: true });
+    vi.spyOn(platformApi, "getOfficeStats").mockResolvedValue({
+      ...STATS,
+      tasks: { ...STATS.tasks, blocked: 0, needs_human: 1 },
+      requests: { blocking: 0, notices: 0 },
+      agents_active: 0,
+    });
+
+    render(wrap(<RuntimeStrip />));
+
+    await waitFor(() => {
+      expect(screen.getByText("1 need you")).toBeInTheDocument();
+    });
+    expect(screen.queryByText("all quiet")).toBeNull();
   });
 
   it("claims nothing while stats are unknown (honest loading)", () => {

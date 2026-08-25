@@ -1,14 +1,14 @@
 import { useOfficeStats } from "../../hooks/useOfficeStats";
+import { needsYouCount, officeIsQuiet } from "../../lib/needsYou";
 
 /**
  * Thin strip under the channel header with pills for "N active",
  * "M blocked", "K need you". Mirrors the legacy runtime-strip.
  *
- * Counts come from the shared /office/stats hook — the same payload the
- * board lane headers, dashboard tiles, and inbox badge consume — so the
- * strip can never disagree with the board (the v1 "1 blocked vs Blocked
- * lane 0" drift came from this strip deriving `blocked` from a raw
- * status string while the board projected lifecycle stages).
+ * "K need you" and the "all quiet" state both come from lib/needsYou, which
+ * is the single definition every surface shares. Do not compute either from
+ * the stats payload here — that is what let this strip print "all quiet"
+ * while the board's Needs-human lane showed 1.
  */
 export function RuntimeStrip() {
   const { data: stats } = useOfficeStats();
@@ -19,16 +19,11 @@ export function RuntimeStrip() {
     return <div className="runtime-strip" />;
   }
 
-  // "N active" counts working agents (as before); "M blocked" counts
-  // board-blocked tasks; "K need you" counts pending blocking requests
-  // (decision-lane tasks surface via the board's Needs-human lane and
-  // the inbox badge — counting them here too would double-bill tasks
-  // that also raised a request).
   const active = stats.agents_active;
   const blocked = stats.tasks.blocked;
-  const needYou = stats.requests.blocking;
+  const needYou = needsYouCount(stats);
 
-  if (active === 0 && blocked === 0 && needYou === 0) {
+  if (officeIsQuiet(stats)) {
     return (
       <div className="runtime-strip">
         <span className="runtime-pill runtime-pill-idle">all quiet</span>

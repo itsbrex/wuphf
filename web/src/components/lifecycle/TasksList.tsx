@@ -21,7 +21,7 @@ import { memo, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getInboxItems } from "../../api/lifecycle";
-import type { OfficeStatsTasks } from "../../api/platform";
+import type { OfficeStats, OfficeStatsTasks } from "../../api/platform";
 import { getScheduler, type SchedulerJob } from "../../api/scheduler";
 import {
   getOfficeTasks,
@@ -29,6 +29,7 @@ import {
   taskToLifecycleState,
 } from "../../api/tasks";
 import { useOfficeStats } from "../../hooks/useOfficeStats";
+import { isNoticeRequest, needsYouCount } from "../../lib/needsYou";
 import { router } from "../../lib/router";
 import { formatTaskTitleForDisplay } from "../../lib/taskTitle";
 import {
@@ -403,8 +404,15 @@ function TasksEmptyState({ onOpenCreate }: { onOpenCreate: () => void }) {
 interface TasksListProps {
   /** Used in tests to skip the fetch. */
   initialTasks?: Task[];
-  /** Used in tests to seed the shared stats counts without a broker. */
-  initialStats?: OfficeStatsTasks;
+  /**
+   * Used in tests to seed the shared stats counts without a broker.
+   *
+   * Carries the FULL payload rather than just the task buckets, because the
+   * Needs-human header is needsYouCount(stats) — a tasks-only seam would make
+   * the seeded path compute that header differently from production, which is
+   * the class of split this whole change exists to remove.
+   */
+  initialStats?: OfficeStats;
   /**
    * Used in tests to seed the folded attention items (blocking requests +
    * pending reviews) shown in the Needs-human lane without a broker poll.
@@ -537,7 +545,7 @@ export function TasksList({
   // the shell. Bucketing parity (stats ↔ the cards rendered below) is
   // pinned server-side by TestOfficeStats_MatchesListEndpoints.
   const statsResult = useOfficeStats();
-  const statsTasks = initialStats ?? statsResult.data?.tasks;
+  const stats = initialStats ?? statsResult.data;
 
   const allTasks = result.data?.tasks ?? [];
   const tasks = useMemo(() => allTasks.filter(isIssueTask), [allTasks]);
@@ -588,16 +596,21 @@ export function TasksList({
     );
   }, [scheduledJobs, query]);
 
-  // Non-task attention items folded into the Needs-human lane: every
-  // request + review the unified inbox feed returns (the same set the
-  // inbox_attention badge counts among those two kinds).
+  // Non-task attention items folded into the Needs-human lane: requests and
+  // reviews from the unified inbox feed, EXCLUDING notices.
+  //
+  // A notice is news, not a decision — the delivery post already announced it
+  // in the channel the human is reading. Folding notices in here is what put a
+  // card in this lane while the header strip said "all quiet", because the
+  // strip never counted them. The lane shows what needs a human; nothing else.
   const attentionItems = useMemo<
     Array<InboxItemRequest | InboxItemReview>
   >(() => {
     const items = initialInboxItems ?? inboxResult.data?.items ?? [];
     return items.filter(
       (item): item is InboxItemRequest | InboxItemReview =>
-        item.kind === "request" || item.kind === "review",
+        (item.kind === "request" && !isNoticeRequest(item)) ||
+        item.kind === "review",
     );
   }, [initialInboxItems, inboxResult.data]);
 
@@ -661,13 +674,15 @@ export function TasksList({
     // Folded request + review cards live only in the Needs-human lane, so
     // its header count is the decision-task count plus those extras.
     const extras = stage === "needs_human" ? filteredAttention.length : 0;
-    // Unfiltered board: lane header counts come from the shared stats
-    // payload (one source for every surface). While a search filter is
-    // active — or before the stats query resolves — the count reflects
-    // exactly the cards rendered below it.
-    if (!query.trim() && statsTasks) {
-      const fromStats = statsCountForStage(statsTasks, stage);
-      if (fromStats !== null) return fromStats + extras;
+    // Unfiltered board: the Needs-human header is the SHARED "needs you"
+    // count, so this lane, the runtime strip, and the sidebar badge can only
+    // ever print the same number. Every other lane reads its own bucket from
+    // the same stats payload. While a search filter is active — or before the
+    // stats query resolves — counts reflect exactly the cards rendered below.
+    if (!query.trim() && stats) {
+      if (stage === "needs_human") return needsYouCount(stats);
+      const fromStats = statsCountForStage(stats.tasks, stage);
+      if (fromStats !== null) return fromStats;
     }
     return columns[stage].length + extras;
   }
