@@ -657,9 +657,12 @@ html[data-theme="noir-gold"] .wiki-root,
 html[data-theme="noir-gold"] {
   --wk-wikilink: var(--gold-300);
   --wk-wikilink-broken: var(--red);
-  --wk-amber: var(--gold-400);
-  --wk-amber-bg: rgba(201, 162, 39, 0.12);
-  --wk-amber-banner: rgba(201, 162, 39, 0.16);
+  /* --wk-amber / -bg / -banner are no longer overridden here. This theme was
+     the ONE that had them right (gold-400, a real amber), which is the
+     evidence they were deliberate here and copy-paste elsewhere. Dropped
+     anyway so all four themes read one source: wiki.css seeds them from
+     --warning-*, which resolves to #f0b14a here — hue 37 against the old
+     46, so it stays gold and separates slightly from --wk-wikilink. */
   --wk-code-bg: var(--bg-warm);
 
   /* Version-history diff washes. The noir ramp seeds these as dark-on-dark:

@@ -247,9 +247,11 @@ html[data-theme="nex-dark"] .notebook-surface::-webkit-scrollbar-thumb:hover {
    .wiki-root, so a .wiki-root override would never reach them. ── */
 html[data-theme="nex-dark"] {
   --wk-wikilink: var(--tertiary-300);
-  --wk-amber: var(--tertiary-300);
-  --wk-amber-bg: rgba(159, 77, 191, 0.22);
-  --wk-amber-banner: rgba(159, 77, 191, 0.22);
+  /* --wk-amber / -bg / -banner deliberately NOT overridden here any more.
+     They used to be, and --wk-amber held the same var(--tertiary-300) as the
+     --wk-wikilink above — so every warning, pending and aging surface in the
+     wiki rendered in this theme's LINK colour. wiki.css now seeds all three
+     from the --warning-* ramp, which is amber in every theme. */
 
   /* Version-history diff washes. wiki.css seeds these from the light ramp:
        --wk-diff-add-bg    = --green-bg  (#e9fbef, near-white green)

@@ -49,7 +49,18 @@
      same relationship in every theme. */
   --wk-row-hover: color-mix(in srgb, var(--text) 6%, transparent);
   --wk-row-active: color-mix(in srgb, var(--text) 10%, transparent);
-  --wk-amber: var(--olive-500);
+  /* Amber, and it now actually is amber. It used to be var(--olive-500) here
+     and the themes overrode it to their own accents, so it resolved to
+     olive-green (hue 66) in nex, MAGENTA (294) in nex-dark and BLUE (228) in
+     nex-shell. Only noir-gold was right. In nex-dark and nex-shell the value
+     was byte-identical to the --wk-wikilink declared beside it, which is what
+     a copy-paste looks like, and it meant "needs attention" and "this is a
+     link" were the same colour in both. Twenty-three rules read this.
+     --warning-300 is the only ramp in this palette that is amber in every
+     theme: #ffb647 in nex / nex-dark / nex-shell, #f0b14a in noir-gold, hue
+     36-37 throughout. Derived rather than picked, so no new token, and the
+     theme overrides of --wk-amber were deleted alongside this. */
+  --wk-amber: var(--warning-300);
   /* The one informational hue, shared by the state badges that are worth
      noticing but are not problems (agents-only, synthesis-queued). A SEED,
      not a finished colour: the badge rules mix it into --wk-paper for the
@@ -59,8 +70,11 @@
   --wk-info: #1264a3;
   --wk-amber-text: #b8860b; /* dark amber for readable text on light amber bg */
   --wk-stale-text: #b94040; /* dark red for readable text on light red bg */
-  --wk-amber-bg: var(--olive-200);
-  --wk-amber-banner: var(--olive-100);
+  /* Same swap, same reason: the olive ramp is yellow-green, the warning ramp
+     is amber in every theme. These two are theme-aware in LIGHTNESS already
+     (the dark themes define them with alpha), so only the hue was wrong. */
+  --wk-amber-bg: var(--warning-200);
+  --wk-amber-banner: var(--warning-100);
   --wk-code-bg: var(--bg-warm);
   /* Version-history diff line washes. Seeded from the light green/red ramp.
      Kept as wiki-scoped tokens (not the global --green-bg/--red-bg) so dark
@@ -2738,15 +2752,22 @@
  * everywhere (lowest 6.99) and the COLOUR died: amber rendered #303228 grey
  * in nex and #e2c0e8 lilac in nex-dark, because the theme's text colour
  * dominated the mix. An amber badge that is grey has passed the contrast
- * check and failed its actual job. Sweeping 34/45/55/65/75 against three
+ * check and failed its actual job. So the ratio is swept against three
  * criteria at once — contrast >= 4.5, hue within 35deg of the seed, and
- * saturation >= 12% — only 45 and 55 clear all twelve hue/theme pairs; 65
- * and above start failing contrast. 55 is the saturated end of that window.
- * Raising it further trades legibility for colour, which is the wrong way
- * round for a badge. */
+ * saturation >= 12%.
+ *
+ * The window MOVED when --wk-amber was corrected to the --warning-* ramp,
+ * which is why this reads 40 and not the 55 it was first set to. The old
+ * seed was a DARK olive, so mixing more of it into --wk-text kept the ink
+ * dark and contrast high. The corrected seed is a LIGHT amber, so that same
+ * 55% lifted the ink toward the tint and aging collapsed to 3.77:1 in nex.
+ * Re-swept against the new seeds: below 35 the info hue washes out in
+ * noir-gold, above 45 aging fails in nex. The window is 35-45 and 40 sits in
+ * the middle of it, floor 5.33. A mix ratio is only valid for the seeds it
+ * was measured against — if a seed changes, re-measure. */
 .wk-staleness-aging {
   background: color-mix(in srgb, var(--wk-amber) 14%, var(--wk-paper));
-  color: color-mix(in srgb, var(--wk-amber) 55%, var(--wk-text));
+  color: color-mix(in srgb, var(--wk-amber) 40%, var(--wk-text));
   border: 1px solid color-mix(in srgb, var(--wk-amber) 40%, var(--wk-paper));
 }
 .wk-staleness-stale {
@@ -2755,14 +2776,14 @@
     var(--wk-wikilink-broken) 14%,
     var(--wk-paper)
   );
-  color: color-mix(in srgb, var(--wk-wikilink-broken) 55%, var(--wk-text));
+  color: color-mix(in srgb, var(--wk-wikilink-broken) 40%, var(--wk-text));
   border: 1px solid
     color-mix(in srgb, var(--wk-wikilink-broken) 40%, var(--wk-paper));
 }
 .wk-staleness-agents-only,
 .wk-synthesis-queued {
   background: color-mix(in srgb, var(--wk-info) 14%, var(--wk-paper));
-  color: color-mix(in srgb, var(--wk-info) 55%, var(--wk-text));
+  color: color-mix(in srgb, var(--wk-info) 40%, var(--wk-text));
   border: 1px solid color-mix(in srgb, var(--wk-info) 40%, var(--wk-paper));
 }
 

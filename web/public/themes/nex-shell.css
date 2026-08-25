@@ -281,17 +281,11 @@ html[data-theme="nex-shell"] .notebook-surface::-webkit-scrollbar-thumb:hover {
    html[data-theme] because the slash/mention menus portal to body. ── */
 html[data-theme="nex-shell"] {
   --wk-wikilink: oklch(76.12% 0.1218 272.4);
-  --wk-amber: oklch(76.12% 0.1218 272.4);
-  --wk-amber-bg: color-mix(
-    in srgb,
-    oklch(50.58% 0.2886 264.84) 22%,
-    transparent
-  );
-  --wk-amber-banner: color-mix(
-    in srgb,
-    oklch(50.58% 0.2886 264.84) 22%,
-    transparent
-  );
+  /* --wk-amber / -bg / -banner deliberately NOT overridden here any more.
+     They used to be, and --wk-amber held the same oklch literal as the
+     --wk-wikilink above, byte for byte — so warnings and links were the same
+     colour. wiki.css now seeds all three from the --warning-* ramp, whose
+     -100/-200 stops are alpha mixes here and so stay dark on this ground. */
 
   --wk-diff-add-bg: rgba(64, 180, 116, 0.16);
   --wk-diff-add-ink: #5ad08a;
