@@ -451,9 +451,12 @@ contradicts it.
 Observed, all in one session:
 
 - `grep -n 'command' editor.tsx` returned NOTHING on a file whose own import
-  line reads `from "./slash-commands"`. The same shell also mangled
-  `--include` globs and misreported through `rg`. Re-running the identical
-  search in Python found it immediately.
+  line reads `from "./slash-commands"`. Root cause, found later: TWO source
+  files contained a literal NUL byte, so `file` classified them as data and
+  every binary-aware tool — grep, ripgrep, ugrep — skipped them in silence,
+  with zero matches and exit 0. See "A NUL byte makes a source file invisible"
+  below. Both files are fixed and the set is empty, so grep is trustworthy
+  again; the entry stays because the SILENCE is the lesson.
 - `new_tab` and `switch_tab` both reported success while the created tab had
   been closed underneath the caller, so evaluation silently kept landing on a
   DIFFERENT tab than the one named in the return value.
@@ -465,16 +468,45 @@ Observed, all in one session:
 
 The rule that follows:
 
-- **A negative `grep` result is not evidence of absence in this shell.** Never
-  report "not found", "no other call sites", "nothing else reads this", or
-  "not in `src/`" on the strength of a bare grep. Confirm through a second
-  route — Python, Playwright, the DOM — before a negative search becomes a
-  conclusion anyone acts on.
-- Any audit whose finding rests on a negative search is unproven until
-  re-confirmed. Flag your own earlier conclusions that rest on one.
+- A negative result that MATTERS deserves a second route. "Not found", "no
+  other call sites", "nothing else reads this" are load-bearing claims when
+  they justify deleting code or removing a gate; confirm those through Python
+  or the DOM. This is about the weight of the conclusion, not distrust of the
+  tool — do not slow every search down.
 - When an instrument and your intuition share an assumption, agreement between
   them is not corroboration. Check against reality by a route that does not
   share the assumption.
+
+An earlier version of this section told everyone to treat EVERY negative grep
+as unproven. That was an overcorrection written before the cause was known: it
+would have taxed every search forever to work around a two-character bug in two
+files. Diagnose before you legislate.
+
+### A NUL byte makes a source file invisible to every text tool
+
+A literal NUL in a source file makes `file` classify it as data, and every
+binary-aware search tool then skips it SILENTLY — no matches, no warning,
+exit 0. The file is still valid TypeScript and still compiles, so nothing else
+complains.
+
+Found in two files, both writing a control character as a raw byte instead of
+its escape: a cache-key separator in the wiki editor, and a NUL-injection
+security fixture in an apps test. Replacing the raw byte with `\0` gives an
+identical string value and restores the file to UTF-8 text.
+
+The damage is not the failed search, it is what depends on searching:
+
+- `scripts/check-css-phantom-tokens.sh` is built on grep, so it had been
+  skipping those files while reporting OK. Its coverage was silently shrinking
+  — 832 components before the fix, 838 after. A guard written to catch this
+  exact class of failure was failing that way itself.
+- The guard now REFUSES TO RUN if any file it is about to scan contains a NUL,
+  naming the file. A guard whose coverage can shrink without saying so is worse
+  than no guard, because it produces confidence.
+
+If a search returns nothing on a file you have reason to believe contains the
+string, check `file <path>` before concluding anything. Write control
+characters as escapes, never as raw bytes.
 
 ### A caveat that names the wrong item is worse than a vague one
 
