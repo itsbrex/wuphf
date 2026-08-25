@@ -150,14 +150,20 @@ func copyFile(src, dst string, d fs.DirEntry) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	// Explicitly discarded: this is the READ side, and a failed close on a
+	// file we only read from tells us nothing the copy did not already.
+	defer func() { _ = in.Close() }()
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, info.Mode().Perm())
 	if err != nil {
 		return err
 	}
 	if _, err := io.Copy(out, in); err != nil {
-		out.Close()
+		// Close-on-error: the copy error is the one worth returning, so the
+		// close failure is discarded deliberately rather than by omission.
+		_ = out.Close()
 		return err
 	}
+	// The WRITE side's close IS checked -- a failed close here can mean the
+	// bytes never reached disk, which for a config migration is data loss.
 	return out.Close()
 }

@@ -1,7 +1,9 @@
 package team
 
-import "strings"
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // TestHumanReadablePlanSummary pins the approval card's contract with the
 // person reading it: keep the substance, drop what only the agent needs, and
