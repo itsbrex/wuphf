@@ -19,9 +19,22 @@ on:
 permissions:
   contents: read
 
+# On a PR, only the tip matters: a superseded run is wasted money, so cancel it.
+# On main, EVERY COMMIT NEEDS ITS OWN VERDICT. `github.ref` is the same string
+# for every push to main, so a shared group with cancel-in-progress meant each
+# push killed the previous run — and when pushes land faster than CI completes,
+# main accumulates commits that were never checked by anything.
+#
+# That is not a red main, it is an UNKNOWN main, which is worse: nothing gates
+# the push, and the thing meant to catch it afterwards never finishes. Observed
+# directly — 8 of 10 consecutive runs on main cancelled, 1 still running, and
+# the single run that did complete had been failing for hours without anyone
+# seeing it.
+#
+# Keying the group by SHA on main lets those runs finish alongside each other.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # Classifies the PR diff so the heavy jobs below can skip a
