@@ -50,6 +50,13 @@
   --wk-row-hover: color-mix(in srgb, var(--text) 6%, transparent);
   --wk-row-active: color-mix(in srgb, var(--text) 10%, transparent);
   --wk-amber: var(--olive-500);
+  /* The one informational hue, shared by the state badges that are worth
+     noticing but are not problems (agents-only, synthesis-queued). A SEED,
+     not a finished colour: the badge rules mix it into --wk-paper for the
+     tint and --wk-text for the ink, so the theme supplies the lightness and
+     this only supplies the hue. Amber and red already exist for the two
+     problem states; a fourth decorative hue would be colour without meaning. */
+  --wk-info: #1264a3;
   --wk-amber-text: #b8860b; /* dark amber for readable text on light amber bg */
   --wk-stale-text: #b94040; /* dark red for readable text on light red bg */
   --wk-amber-bg: var(--olive-200);
@@ -2702,26 +2709,61 @@
   border-radius: 3px;
   margin-bottom: 8px;
 }
+/* Staleness / state badges.
+ *
+ * Every one of these was a fixed rgba() tint with a fixed ink, and every one
+ * failed. Measured at the real 11px/600 (the base .wk-staleness-badge sets
+ * the size; these are never used alone) against a 4.5 bar, 14 of 20 readings
+ * failed — including .wk-staleness-aging at 2.97:1 in the LIGHT theme, the
+ * exact case its --wk-amber-text token was commented as being chosen for.
+ * Before, per theme, nex / nex-dark / noir-gold / nex-shell:
+ *     aging   2.97  4.44  4.78  4.26
+ *     stale   4.61  3.16  3.36  3.08
+ *     agents  5.35  2.85  3.03  2.79
+ *     queued  5.09  3.00  3.19  2.93
+ *
+ * A fixed ink cannot work over a fixed tint when the page underneath ranges
+ * from near-white to near-black. So both the tint AND the ink are now mixed
+ * onto the theme's own paper and text — the same mechanism --wk-row-hover
+ * uses a few lines up — and they move together with the theme by
+ * construction. The hue is only a seed; the theme supplies the lightness.
+ *
+ * THREE hues, not four, because colour means something here: amber for
+ * aging, red for a real problem, and one informational hue shared by the
+ * states that are merely worth noticing. "agents only" and "queued" are both
+ * informational and read as different words; giving them different colours
+ * was decoration, not meaning.
+ *
+ * The 55% ink mix is measured, not picked. At 34% the contrast was fine
+ * everywhere (lowest 6.99) and the COLOUR died: amber rendered #303228 grey
+ * in nex and #e2c0e8 lilac in nex-dark, because the theme's text colour
+ * dominated the mix. An amber badge that is grey has passed the contrast
+ * check and failed its actual job. Sweeping 34/45/55/65/75 against three
+ * criteria at once — contrast >= 4.5, hue within 35deg of the seed, and
+ * saturation >= 12% — only 45 and 55 clear all twelve hue/theme pairs; 65
+ * and above start failing contrast. 55 is the saturated end of that window.
+ * Raising it further trades legibility for colour, which is the wrong way
+ * round for a badge. */
 .wk-staleness-aging {
-  background: rgba(236, 178, 46, 0.15);
-  color: var(--wk-amber-text);
-  border: 1px solid rgba(236, 178, 46, 0.4);
+  background: color-mix(in srgb, var(--wk-amber) 14%, var(--wk-paper));
+  color: color-mix(in srgb, var(--wk-amber) 55%, var(--wk-text));
+  border: 1px solid color-mix(in srgb, var(--wk-amber) 40%, var(--wk-paper));
 }
 .wk-staleness-stale {
-  background: rgba(201, 74, 74, 0.12);
-  color: var(--wk-stale-text);
-  border: 1px solid rgba(201, 74, 74, 0.35);
+  background: color-mix(
+    in srgb,
+    var(--wk-wikilink-broken) 14%,
+    var(--wk-paper)
+  );
+  color: color-mix(in srgb, var(--wk-wikilink-broken) 55%, var(--wk-text));
+  border: 1px solid
+    color-mix(in srgb, var(--wk-wikilink-broken) 40%, var(--wk-paper));
 }
-.wk-staleness-agents-only {
-  background: rgba(18, 100, 163, 0.1);
-  color: #1264a3;
-  border: 1px solid rgba(18, 100, 163, 0.3);
-}
-.wk-synthesis-queued,
-.wk-prune-verbose {
-  background: rgba(108, 79, 198, 0.1);
-  color: #6c4fc6;
-  border: 1px solid rgba(108, 79, 198, 0.3);
+.wk-staleness-agents-only,
+.wk-synthesis-queued {
+  background: color-mix(in srgb, var(--wk-info) 14%, var(--wk-paper));
+  color: color-mix(in srgb, var(--wk-info) 55%, var(--wk-text));
+  border: 1px solid color-mix(in srgb, var(--wk-info) 40%, var(--wk-paper));
 }
 
 /* ─── Rich-editor inserts (Phase 3 PR 6) ─────────────────────────────────── */
