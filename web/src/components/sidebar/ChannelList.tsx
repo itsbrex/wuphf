@@ -1,5 +1,6 @@
 import { type Channel, useChannels } from "../../hooks/useChannels";
 import { useOverflow } from "../../hooks/useOverflow";
+import { NAMED_CHANNELS_ENABLED } from "../../lib/constants";
 import { router } from "../../lib/router";
 import { useCurrentRoute } from "../../routes/useCurrentRoute";
 import { useAppStore } from "../../stores/app";
@@ -103,15 +104,20 @@ export function ChannelList() {
               />
             );
           })}
-          <SidebarItem
-            variant="add"
-            icon="+"
-            label="New Channel"
-            onClick={wizard.show}
-            title="Create a new channel"
-          />
+          {NAMED_CHANNELS_ENABLED ? (
+            <SidebarItem
+              variant="add"
+              icon="+"
+              label="New Channel"
+              onClick={wizard.show}
+              title="Create a new channel"
+            />
+          ) : null}
         </div>
       </div>
+      {/* Kept mounted so re-enabling is one constant, not a re-wire. With
+          NAMED_CHANNELS_ENABLED off nothing can call wizard.show, so `open`
+          stays false and this renders nothing. */}
       <ChannelWizard open={wizard.open} onClose={wizard.hide} />
     </>
   );

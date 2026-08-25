@@ -103,6 +103,30 @@ func (ch *teamChannel) isGroupDM() bool {
 	return DMTargetAgent(ch.Slug) == "" || len(ch.Members) > 2
 }
 
+// namedChannelsEnabled reports whether an ordinary named channel may be
+// created, routed to, or listed. A THIRD independent switch, alongside
+// generalChannelEnabled and groupDMsEnabled.
+//
+// Read internal/channel/general.go for the caveat that matters here: unlike the
+// other two, this retirement was INFERRED from the founder's stated model
+// rather than asked for by name. It is the one most likely to be flipped back,
+// so it stays independently revivable.
+//
+// Scope: blueprint-seeded rooms (#product, #gtm), synthesis rooms (#planning,
+// #execution, #review, #integrations), and open channel creation. NOT the Slack
+// or Telegram bridges (those are how external messages arrive, not rooms agents
+// chat in) and NOT app-<id> edit threads (hidden plumbing, load-bearing).
+//
+// Returns true today.
+func namedChannelsEnabled() bool {
+	return channel.NamedChannelsEnabled()
+}
+
+// ErrNamedChannelsRetired is returned when a caller tries to mint an ordinary
+// named channel while they are switched off. An error, never a silent skip:
+// a caller that asked for a room and got nothing back must find out.
+var ErrNamedChannelsRetired = errors.New("team: named channels are retired; conversations happen in agent DMs")
+
 // homeChannelForLocked resolves the channel an actor's work belongs in when no
 // explicit channel was given. It is the no-leak replacement for the
 // `if channel == "" { channel = "general" }` fallback that is currently spread

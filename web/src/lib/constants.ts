@@ -62,3 +62,22 @@ export const DISCONNECT_THRESHOLD = 3;
 export const MESSAGE_POLL_INTERVAL = 2000;
 export const MEMBER_POLL_INTERVAL = 5000;
 export const REQUEST_POLL_INTERVAL = 3000;
+
+/**
+ * Named-channel retirement, web half.
+ *
+ * Conversations are moving to per-agent DMs, so ordinary named rooms (#product,
+ * #planning, anything a human creates) are switched off. This constant hides
+ * the affordance; the broker independently 409s the create call, so the two are
+ * belt and braces rather than one guard split across a wire.
+ *
+ * MIRRORS internal/channel/general.go's namedChannelsEnabled. There is no wire
+ * field carrying it, so THESE TWO CAN DRIFT — if you flip one, flip the other.
+ * A stale `true` here shows a button that fails with a 409, which is ugly but
+ * honest; a stale `false` hides a working feature, which is worse. Prefer
+ * flipping the web one last when enabling, first when disabling.
+ *
+ * Typed `boolean` rather than left to literal inference so the disabled branch
+ * stays live code for the type checker.
+ */
+export const NAMED_CHANNELS_ENABLED: boolean = true;

@@ -558,6 +558,13 @@ func genericDefaultChannels(integrations []RuntimeIntegration) []StarterChannel 
 			Members:     []string{"operator", "planner", "executor", "reviewer"},
 		})
 	}
+	// Named-channel retirement: #planning / #execution / #review are ordinary
+	// named rooms. With named channels off a synthesized blueprint declares no
+	// channels at all, which is the honest shape — the office it describes has
+	// none. The integrations block below is skipped for the same reason.
+	if !channel.NamedChannelsEnabled() {
+		return channels
+	}
 	channels = append(channels,
 		StarterChannel{Slug: "planning", Name: "planning", Description: "Scope, decomposition, and approvals.", Members: []string{"operator", "planner", "reviewer"}},
 		StarterChannel{Slug: "execution", Name: "execution", Description: "Active work lane for the current operation.", Members: []string{"operator", "executor"}},

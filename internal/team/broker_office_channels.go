@@ -763,6 +763,15 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 			if strings.HasPrefix(ch.Slug, appEditChannelPrefix) {
 				continue
 			}
+			// Named-channel retirement: withhold ordinary named rooms from the
+			// listing. Bridged channels are EXEMPT — a Slack or Telegram room is
+			// how external messages arrive, and hiding it would strand every
+			// message that came in through it. ch.Surface is what marks one, so
+			// the carve-out reads off the data rather than off a slug list.
+			// DMs are unaffected; they are the surface that survives.
+			if !namedChannelsEnabled() && !ch.isDM() && ch.Surface == nil {
+				continue
+			}
 			if typeFilter == "dm" {
 				if ch.isDM() {
 					channels = append(channels, ch)
@@ -814,6 +823,26 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 		}
 		switch action {
 		case "create":
+			// Named-channel retirement. The gate sits HERE, at the HTTP
+			// boundary, and NOT inside createChannelLocked — deliberately.
+			//
+			// createChannelLocked has five callers. Three of them must keep
+			// working while named channels are off: the Slack bridge, the
+			// Telegram bridge (both are how EXTERNAL messages arrive, not rooms
+			// agents chat in), and the app-<id> edit thread (hidden plumbing,
+			// load-bearing for apps being editable at all). Gating the shared
+			// helper would mean maintaining an exemption list inside it, and an
+			// exemption list is a thing that goes stale. Gating the one
+			// human-facing entry point needs no list: the other callers are
+			// exempt by construction.
+			//
+			// Do NOT "finish the job" by moving this into createChannelLocked.
+			if !namedChannelsEnabled() {
+				http.Error(w,
+					"named channels are retired: conversations happen in a DM with one agent. Open a DM and tag the others in it.",
+					http.StatusConflict)
+				return
+			}
 			ch, cerr := b.createChannelLocked(channelCreateInput{
 				Slug:        body.Slug,
 				Name:        body.Name,

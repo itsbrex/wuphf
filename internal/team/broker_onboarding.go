@@ -683,6 +683,14 @@ func blankSlateOfficeChannelsFromBlueprint(blueprint operations.Blueprint, membe
 			UpdatedAt:   now,
 		})
 	}
+	// Named-channel retirement. A blueprint's own rooms (#product, #gtm, and
+	// whatever a curated blueprint declares) are ordinary named channels, so
+	// they go with the rest of them. Gated as a whole rather than per-slug: the
+	// decision is "does this office get named rooms at all", not "which ones".
+	// The general branch above has its own switch and is unaffected.
+	if !namedChannelsEnabled() {
+		return channels
+	}
 	for _, starter := range blueprint.Starter.Channels {
 		rawSlug := operationRenderTemplateString(starter.Slug, replacements)
 		slug := normalizeChannelSlug(rawSlug)

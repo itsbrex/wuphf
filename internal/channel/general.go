@@ -139,3 +139,49 @@ func SetGroupDMsEnabledForTest(enabled bool) (restore func()) {
 	groupDMsEnabled = enabled
 	return func() { groupDMsEnabled = previous }
 }
+
+// ─── Named channels ──────────────────────────────────────────────────────────
+//
+// The third and last of the conversation-surface retirements, on its own
+// constant like the other two.
+
+// NamedChannelsEnabled reports whether an ordinary named channel — #product,
+// #planning, anything a blueprint seeds or a human creates — may be created,
+// routed to, or listed.
+//
+// This one carries a caveat the other two do not, and it belongs in the code
+// rather than in a review thread. The founder retired #general and group DMs by
+// NAME. He did not say this sentence about named channels. The retirement is
+// inferred from the stated model — "all chats will be in agent DMs", and "even
+// group DMs should be retired because they are essentially channels" — on the
+// reasoning that a #product room is the same object as a group DM wearing a
+// different label. That inference is the team lead's call, made explicitly and
+// on the record, precisely because it is a step beyond what was asked for.
+//
+// So this switch matters more than the other two: it is the one most likely to
+// be flipped back. Keep it independently revivable, and do not fold it into
+// GeneralEnabled on the grounds that they always move together.
+//
+// NOT covered by this switch, deliberately:
+//   - Slack and Telegram bridge channels. Those are not rooms agents chat in,
+//     they are how EXTERNAL messages arrive. Retiring them breaks integrations
+//     and has nothing to do with agents piling into a conversation.
+//   - app-<id> edit threads. Hidden plumbing, never listed, and load-bearing
+//     for apps being editable at all.
+//
+// Returns true today. This stage threads the seam; it does not flip it.
+func NamedChannelsEnabled() bool {
+	return namedChannelsEnabled
+}
+
+// namedChannelsEnabled is the switch itself. See generalEnabled for why this is
+// a var rather than a bare return.
+var namedChannelsEnabled = true
+
+// SetNamedChannelsEnabledForTest flips the switch and returns a restore
+// function. Test-only; production code reads NamedChannelsEnabled.
+func SetNamedChannelsEnabledForTest(enabled bool) (restore func()) {
+	previous := namedChannelsEnabled
+	namedChannelsEnabled = enabled
+	return func() { namedChannelsEnabled = previous }
+}

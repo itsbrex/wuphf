@@ -445,3 +445,152 @@ func withGroupSwitch(t *testing.T, enabled bool, fn func()) {
 	defer restore()
 	fn()
 }
+
+// TestNamedChannelRetirementKeepsBridgesAndAppThreads is mostly a test of the
+// CARVE-OUTS. That named rooms disappear is the easy half; the half that breaks
+// the product if it is wrong is what must survive:
+//
+//   - Slack and Telegram bridge channels are how EXTERNAL messages arrive, not
+//     rooms agents chat in. Hide one and every message that came in through it
+//     is stranded.
+//   - app-<id> edit threads are hidden plumbing that apps need to be editable.
+//   - DMs are the surface the whole change exists to move everything onto.
+func TestNamedChannelRetirementKeepsBridgesAndAppThreads(t *testing.T) {
+	isolateRuntimeHome(t)
+
+	b := newTestBroker(t)
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("start broker: %v", err)
+	}
+	defer b.Stop()
+
+	b.mu.Lock()
+	b.channels = append(b.channels,
+		teamChannel{Slug: "product", Name: "product", Members: []string{"ceo"}},
+		teamChannel{Slug: "slack-sales", Name: "slack-sales", Members: []string{"ceo"},
+			Surface: &channelSurface{Provider: "slack", RemoteID: "C123"}},
+		teamChannel{Slug: appEditChannelPrefix + "abc", Name: "app build", Members: []string{"ceo"}},
+		teamChannel{Slug: DMSlugFor("ceo"), Name: "CEO", Type: "dm", Members: []string{"human", "ceo"}},
+	)
+	b.mu.Unlock()
+
+	listRooms := func(t *testing.T) map[string]bool {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodGet,
+			fmt.Sprintf("http://%s/channels", b.Addr()), nil)
+		req.Header.Set("Authorization", "Bearer "+b.Token())
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("GET /channels: %v", err)
+		}
+		defer resp.Body.Close()
+		var payload struct {
+			Channels []teamChannel `json:"channels"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		out := map[string]bool{}
+		for _, ch := range payload.Channels {
+			out[ch.Slug] = true
+		}
+		return out
+	}
+
+	t.Run("switch on: the named room is listed", func(t *testing.T) {
+		defer channel.SetNamedChannelsEnabledForTest(true)()
+		if !listRooms(t)["product"] {
+			t.Fatal("switch on: #product was not listed, so this test cannot prove the gate")
+		}
+	})
+
+	t.Run("switch off: the named room goes, the bridge stays", func(t *testing.T) {
+		defer channel.SetNamedChannelsEnabledForTest(false)()
+		got := listRooms(t)
+		if got["product"] {
+			t.Error("#product is still listed")
+		}
+		if !got["slack-sales"] {
+			t.Error("the Slack bridge channel was hidden — external messages arriving through it " +
+				"would be stranded. Bridges are explicitly out of scope for this retirement")
+		}
+	})
+
+	t.Run("switch off: creating a named channel 409s", func(t *testing.T) {
+		defer channel.SetNamedChannelsEnabledForTest(false)()
+		body, _ := json.Marshal(map[string]any{
+			"action": "create", "slug": "gtm", "name": "gtm", "created_by": "human",
+		})
+		req, _ := http.NewRequest(http.MethodPost,
+			fmt.Sprintf("http://%s/channels", b.Addr()), bytes.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+b.Token())
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("POST /channels: %v", err)
+		}
+		raw, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusConflict {
+			t.Errorf("got %d, want 409; body %s", resp.StatusCode, raw)
+		}
+		if !strings.Contains(string(raw), "named channels are retired") {
+			t.Errorf("the 409 does not say why: %s", raw)
+		}
+	})
+
+	t.Run("nothing was deleted", func(t *testing.T) {
+		defer channel.SetNamedChannelsEnabledForTest(false)()
+		b.mu.Lock()
+		defer b.mu.Unlock()
+		if !hasChannelLocked(b, "product") {
+			t.Error("the #product row was removed; the switch must withhold from the listing, never delete")
+		}
+	})
+}
+
+// TestBlueprintAndSynthesisChannelsRespectTheSwitch covers the two SEED paths.
+// They matter separately from the listing gate: a seed that still mints
+// #product would put the row back on every fresh workspace, so the listing gate
+// would be hiding a channel the office keeps re-creating.
+func TestBlueprintAndSynthesisChannelsRespectTheSwitch(t *testing.T) {
+	isolateRuntimeHome(t)
+	ensureOperationsFallbackFS(t)
+
+	seed := func(t *testing.T) map[string]bool {
+		t.Helper()
+		b := newTestBroker(t)
+		if err := b.onboardingCompleteFn("Audit the CRM", false, "", []string{}, "Co"); err != nil {
+			t.Fatalf("seed: %v", err)
+		}
+		b.mu.Lock()
+		defer b.mu.Unlock()
+		out := map[string]bool{}
+		for i := range b.channels {
+			out[b.channels[i].Slug] = true
+		}
+		return out
+	}
+
+	withSwitch(t, true, func() {
+		defer channel.SetNamedChannelsEnabledForTest(true)()
+		if got := seed(t); !got["product"] && !got["gtm"] {
+			t.Fatal("switch on: the scratch blueprint seeded no named rooms, so this test cannot prove the gate")
+		}
+	})
+
+	withSwitch(t, true, func() {
+		defer channel.SetNamedChannelsEnabledForTest(false)()
+		got := seed(t)
+		for _, slug := range []string{"product", "gtm"} {
+			if got[slug] {
+				t.Errorf("the seed still minted #%s", slug)
+			}
+		}
+		// #general has its own switch and is still on here, so it must survive:
+		// the two retirements are independent and must not fold into each other.
+		if !got[GeneralChannelSlug] {
+			t.Error("retiring named channels also took #general, whose own switch is still on")
+		}
+	})
+}
