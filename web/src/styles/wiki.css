@@ -1854,10 +1854,21 @@
 }
 .wk-editor-save {
   background: var(--wk-wikilink);
-  /* Ink on an accent fill — the editor's primary action. The #fff literal
-     measured 1.93:1 on noir-gold's gold and 2.17:1 on nex-shell: the Save
-     button of the wiki editor was effectively unlabelled in two themes. */
-  color: var(--accent-fg);
+  /* Ink for the editor's primary action, derived from the WIKI's palette
+     rather than borrowed from another component's.
+     History, because this took two passes: it was a #fff literal measuring
+     1.93:1 on noir-gold's gold and 2.17:1 on nex-shell — effectively an
+     unlabelled Save button in two themes. Pointing it at --accent-fg fixed
+     those two and left nex-dark at 2.97:1, because --accent-fg means "ink on
+     an ACCENT fill" and this fill is --wk-wikilink, which only equals
+     --accent in the light theme (nex-dark maps it to --tertiary-300,
+     noir-gold to --gold-300, nex-shell to its own cobalt).
+     --wk-paper is the wiki's own surface colour, so this is the surface
+     inverted onto the link colour — the same idiom .wk-cite-panel
+     .wk-copy-btn already uses. Measured at 14px/400 against a 4.5 bar:
+     4.90 / 6.35 / 10.28 / 8.48, passing in all four. Pure black was tried
+     and does NOT work: 4.29:1 in nex. */
+  color: var(--wk-paper);
   border-color: var(--wk-wikilink);
 }
 .wk-editor-save[disabled],
