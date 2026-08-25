@@ -3975,16 +3975,24 @@ button.verification-badge {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  /* SKIPPED in the phantom-token sweep: --bg-primary is defined nowhere, so
-     this is a white literal in disguise. No existing token replaces it. Ink
-     on a solid --yellow fill has no theme-safe answer in the current
-     vocabulary: white is 4.15:1 on nex/nex-dark's #ce6b09 and 2.9:1 on
-     noir-gold's #c98e1e, --text is 3.5:1, and --yellow-dark is unreadable in
-     the dark themes because the -500 ramp is not flipped there. Needs a
-     design call (a --warning-fg token, or an outline badge), not a guess.
-     Allowlisted in scripts/css-phantom-token-allowlist.txt. */
-  color: var(--bg-primary, white);
-  background: var(--yellow);
+  /* Outline chip, deliberately NOT a solid fill. The bar here is 4.5:1, not
+     3:1 — at 10px/700 this is body text, since WCAG large text starts at
+     18.66px bold. Measured against that bar:
+       - the old white ink on a solid --yellow fill was 3.66:1 on
+         nex / nex-dark / nex-shell (#ce6b09) and 2.85:1 on noir-gold
+         (#c98e1e). Both fail. (It read `var(--bg-primary, white)`, and
+         --bg-primary is defined nowhere, so it was a white literal.)
+       - a warning-COLOURED outline fails too, and less obviously: on the
+         tinted suggestion surface --warning-500 passes only in the light
+         theme while --yellow passes only in the dark ones. They are near
+         complements, so that version needs a per-theme ink flip — the same
+         unflipped -500 ramp that stalled this decision in the first place.
+     Keeping the colour in the BORDER and the ink as plain --text sidesteps
+     the ramp entirely and clears 4.5:1 in all four themes. Do not "restore"
+     the fill, and do not reach for a semantic ink here without re-measuring. */
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--yellow);
   border-radius: var(--radius-full);
 }
 

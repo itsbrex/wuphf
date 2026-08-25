@@ -15,13 +15,6 @@
 # fails the gate, and an entry whose site was fixed fails as stale. Comments
 # start with #; blank lines ignored.
 
-# Ink on a solid --yellow fill (.issue-comment-suggestion-badge). No theme-safe
-# answer exists in the current vocabulary: white is 4.15:1 on nex/nex-dark's
-# #ce6b09 and 2.9:1 on noir-gold's #c98e1e, --text is 3.5:1, and --yellow-dark
-# is unreadable in the dark themes because the -500 ramp is not flipped there.
-# Resolve with a --warning-fg token or by making the badge an outline chip.
-web/src/styles/lifecycle.css --bg-primary 1
-
 # Animation index for staggered reveals, inline-set by convention. Its only
 # consumer, .reveal-item, currently has no caller anywhere in the repo — the
 # rule and its keyframes are dead. Delete them, or wire the component that was
