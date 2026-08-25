@@ -127,6 +127,20 @@ func namedChannelsEnabled() bool {
 // a caller that asked for a room and got nothing back must find out.
 var ErrNamedChannelsRetired = errors.New("team: named channels are retired; conversations happen in agent DMs")
 
+// homeChannelFor is the lock-taking wrapper around homeChannelForLocked, for
+// callers that do not already hold b.mu — HTTP handlers, mostly. Mirrors the
+// hasMember / findMemberLocked pairing in broker_indexes.go.
+//
+// The bare name belongs to this one and the Locked suffix to the other, which
+// is the convention doing its job: the boundary sites that need this are
+// exactly the ones that would deadlock or race on the Locked variant, and the
+// name is what tells them apart at the call site.
+func (b *Broker) homeChannelFor(actorSlug string) (string, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.homeChannelForLocked(actorSlug)
+}
+
 // homeChannelForLocked resolves the channel an actor's work belongs in when no
 // explicit channel was given. It is the no-leak replacement for the
 // `if channel == "" { channel = "general" }` fallback that is currently spread
