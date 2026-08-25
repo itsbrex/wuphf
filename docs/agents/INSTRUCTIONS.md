@@ -442,6 +442,56 @@ So after any sweep touching more than a handful of sites:
 - If a script did the edit, verify a sample by hand. The script's own output is
   not evidence; it reports what it believes it did.
 
+### A tool reporting success is not evidence that it did the thing
+
+The recurring failure in this repo is not a tool that errors. It is a tool that
+returns confidently and is wrong, in a way that is self-consistent so nothing
+contradicts it.
+
+Observed, all in one session:
+
+- `grep -n 'command' editor.tsx` returned NOTHING on a file whose own import
+  line reads `from "./slash-commands"`. The same shell also mangled
+  `--include` globs and misreported through `rg`. Re-running the identical
+  search in Python found it immediately.
+- `new_tab` and `switch_tab` both reported success while the created tab had
+  been closed underneath the caller, so evaluation silently kept landing on a
+  DIFFERENT tab than the one named in the return value.
+- A colour probe reported a token as pale lilac. The probe composited over
+  white; the dark themes define that token with alpha, so lightness was
+  theme-dependent and only the hue was actually wrong.
+- A contrast check passed while the colour it validated was not the colour on
+  screen.
+
+The rule that follows:
+
+- **A negative `grep` result is not evidence of absence in this shell.** Never
+  report "not found", "no other call sites", "nothing else reads this", or
+  "not in `src/`" on the strength of a bare grep. Confirm through a second
+  route — Python, Playwright, the DOM — before a negative search becomes a
+  conclusion anyone acts on.
+- Any audit whose finding rests on a negative search is unproven until
+  re-confirmed. Flag your own earlier conclusions that rest on one.
+- When an instrument and your intuition share an assumption, agreement between
+  them is not corroboration. Check against reality by a route that does not
+  share the assumption.
+
+### Never drive the shared browser
+
+Agents must not automate the founder's running Chrome. Use Playwright with its
+own isolated browser; it is already in `web/` devDependencies.
+
+This is not hypothetical. The shared harness pinned an agent's session to a tab
+on the founder's live stack, and several evaluations plus one synthetic click
+ran against the founder's window before the agent noticed. Nothing was
+destroyed, but nothing about the tool's return values revealed it either — see
+the section above.
+
+A shared browser is shared mutable state with someone sitting in front of it.
+Treat it exactly like the shared worktree rules: do not act in a space someone
+else is occupying, and if you discover you did, say so immediately and say what
+ran.
+
 ### Worktree-based parallelism
 
 For multi-batch fixes:
