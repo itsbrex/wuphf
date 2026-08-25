@@ -37,17 +37,34 @@ import (
 //     own config.
 //   - It leaves a marker so the next person can tell a migrated directory from
 //     a native one without guessing.
-var legacyMigrationOnce sync.Once
+//
+// WHY THE GUARD IS PER-DESTINATION AND NOT A PACKAGE-LEVEL sync.Once.
+// It used to be one `var legacyMigrationOnce sync.Once` for the whole package,
+// which is correct for exactly one rename and silently wrong for the second.
+// Renames chain: .nex became .wuphf, and .wuphf becomes the next name. With a
+// single Once, the first migration consumes it and every later one in the same
+// process is skipped without a word, leaving that user's data at the old path
+// forever. That was reproduced before this was changed. Keying the guard by
+// destination keeps the "run at most once per path" property while letting a
+// chain of renames all run.
+var legacyMigrationOnce sync.Map // newDir -> *sync.Once
 
 const legacyMigrationMarker = ".migrated-from-legacy-home"
 
-// migrateLegacyConfigDirOnce copies legacyDir to newDir when newDir is absent.
-// Returns true when the new directory is usable afterwards (either it already
-// existed, or the copy succeeded).
-func migrateLegacyConfigDirOnce(newDir, legacyDir string) bool {
+// migrateLegacyConfigDirOnce copies the first existing legacyDir forward to
+// newDir when newDir is absent. Candidates are tried NEWEST FIRST, so a user
+// two renames behind lands on their most recent directory rather than their
+// oldest. Returns true when the new directory is usable afterwards (either it
+// already existed, or a copy succeeded).
+func migrateLegacyConfigDirOnce(newDir string, legacyDirs ...string) bool {
+	guard, _ := legacyMigrationOnce.LoadOrStore(newDir, &sync.Once{})
+	once, ok := guard.(*sync.Once)
+	if !ok {
+		once = &sync.Once{}
+	}
 	migrated := false
-	legacyMigrationOnce.Do(func() {
-		migrated = migrateLegacyConfigDir(newDir, legacyDir)
+	once.Do(func() {
+		migrated = migrateLegacyConfigDir(newDir, legacyDirs...)
 	})
 	if migrated {
 		return true
@@ -59,14 +76,24 @@ func migrateLegacyConfigDirOnce(newDir, legacyDir string) bool {
 	return false
 }
 
-func migrateLegacyConfigDir(newDir, legacyDir string) bool {
+func migrateLegacyConfigDir(newDir string, legacyDirs ...string) bool {
 	if st, err := os.Stat(newDir); err == nil && st.IsDir() {
 		return true // already on the new location; nothing to do
 	}
-	st, err := os.Stat(legacyDir)
-	if err != nil || !st.IsDir() {
-		return false // nothing to migrate from
+	for _, legacyDir := range legacyDirs {
+		if legacyDir == "" || legacyDir == newDir {
+			continue
+		}
+		st, err := os.Stat(legacyDir)
+		if err != nil || !st.IsDir() {
+			continue // this generation was never used; try the one before it
+		}
+		return copyLegacyTreeForward(newDir, legacyDir)
 	}
+	return false // nothing to migrate from
+}
+
+func copyLegacyTreeForward(newDir, legacyDir string) bool {
 	if err := copyTree(legacyDir, newDir); err != nil {
 		log.Printf("config: could not migrate %s to %s (%v); continuing to use the old location", legacyDir, newDir, err)
 		// Do not leave a half-copied tree pretending to be a real config dir.

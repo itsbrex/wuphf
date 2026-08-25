@@ -25,7 +25,7 @@ import (
 // user-global; intentionally NOT under WUPHF_RUNTIME_HOME — this is the
 // definition of RuntimeHomeDir itself; os.UserHomeDir() is the fallback only.
 func RuntimeHomeDir() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_RUNTIME_HOME")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_RUNTIME_HOME")); v != "" {
 		return v
 	}
 	home, err := os.UserHomeDir()
@@ -173,15 +173,15 @@ func ConfigPath() string {
 	// Env override for test harnesses that need to isolate config state from
 	// the user's real ~/.wuphf/config.json without remapping HOME (which
 	// breaks macOS keychain-backed CLI auth).
-	if p := strings.TrimSpace(os.Getenv("WUPHF_CONFIG_PATH")); p != "" {
+	if p := strings.TrimSpace(Getenv("WUPHF_CONFIG_PATH")); p != "" {
 		return p
 	}
 	home := RuntimeHomeDir()
 	if home == "" {
-		return filepath.Join(".wuphf", "config.json")
+		return filepath.Join(RuntimeDirName, "config.json")
 	}
-	newDir := filepath.Join(home, ".wuphf")
-	legacyDir := filepath.Join(home, ".nex")
+	newDir := RuntimeDir(home)
+	legacyDirs := legacyRuntimeDirs(home)
 	newPath := filepath.Join(newDir, "config.json")
 	if _, err := os.Stat(newPath); err == nil {
 		return newPath
@@ -193,11 +193,16 @@ func ConfigPath() string {
 	// Copy the tree forward once instead, then use the new location. If the
 	// copy cannot be done we fall back to the legacy path so the user is never
 	// locked out of their own config.
-	if migrateLegacyConfigDirOnce(newDir, legacyDir) {
+	//
+	// legacyDirs is the whole rename history, newest first, so adding the next
+	// name to LegacyRuntimeDirNames is all a future rename has to do here.
+	if migrateLegacyConfigDirOnce(newDir, legacyDirs...) {
 		return newPath
 	}
-	if _, err := os.Stat(filepath.Join(legacyDir, "config.json")); err == nil {
-		return filepath.Join(legacyDir, "config.json")
+	for _, legacyDir := range legacyDirs {
+		if _, err := os.Stat(filepath.Join(legacyDir, "config.json")); err == nil {
+			return filepath.Join(legacyDir, "config.json")
+		}
 	}
 	return newPath
 }
@@ -210,10 +215,11 @@ func ConfigPath() string {
 // engine's /v1/insights and /v1/context/ask calls. New Nex integrations
 // should shell out via the internal/nex package instead.
 func BaseURL() string {
-	if v := os.Getenv("WUPHF_DEV_URL"); v != "" {
-		return v
-	}
-	if v := os.Getenv("NEX_DEV_URL"); v != "" {
+	// The NEX_DEV_URL fallback is no longer spelled out here: Getenv walks the
+	// prefix generations itself, so this one call covers both spellings and
+	// additionally warns when the older one is what supplied the value. A
+	// second explicit check would now be unreachable.
+	if v := Getenv("WUPHF_DEV_URL"); v != "" {
 		return v
 	}
 	if cfg, err := load(ConfigPath()); err == nil && cfg.DevURL != "" {
@@ -263,7 +269,7 @@ func Save(cfg Config) error {
 
 // ResolveNoNex reports whether Nex-backed tools are disabled for this run.
 func ResolveNoNex() bool {
-	v := strings.TrimSpace(os.Getenv("WUPHF_NO_NEX"))
+	v := strings.TrimSpace(Getenv("WUPHF_NO_NEX"))
 	if v == "" {
 		return false
 	}
@@ -305,7 +311,7 @@ func NormalizeMemoryBackend(value string) string {
 func ResolveMemoryBackend(flagValue string) string {
 	backend := NormalizeMemoryBackend(flagValue)
 	if backend == "" {
-		backend = NormalizeMemoryBackend(os.Getenv("WUPHF_MEMORY_BACKEND"))
+		backend = NormalizeMemoryBackend(Getenv("WUPHF_MEMORY_BACKEND"))
 	}
 	if backend == "" {
 		cfg, _ := Load()
@@ -344,7 +350,7 @@ func gbrainBinaryInstalled() bool {
 	// no PATH fallback. The explicit command usually re-homes the brain, and
 	// substituting the user-global binary would point the implicit default at
 	// the wrong (possibly locked) brain.
-	if cmd := strings.TrimSpace(os.Getenv("WUPHF_GBRAIN_COMMAND")); cmd != "" {
+	if cmd := strings.TrimSpace(Getenv("WUPHF_GBRAIN_COMMAND")); cmd != "" {
 		_, err := exec.LookPath(cmd)
 		return err == nil
 	}
@@ -421,7 +427,7 @@ func ResolveLLMProvider(flagValue string) string {
 	if v := normalizeLLMProvider(flagValue); v != "" {
 		return v
 	}
-	if v := normalizeLLMProvider(os.Getenv("WUPHF_LLM_PROVIDER")); v != "" {
+	if v := normalizeLLMProvider(Getenv("WUPHF_LLM_PROVIDER")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -512,7 +518,7 @@ var codexModelLinePattern = regexp.MustCompile(`(?m)^\s*model\s*=\s*("([^"\\]|\\
 // directory, following the documented Codex config layering:
 // WUPHF_CODEX_MODEL/CODEX_MODEL env > nearest .codex/config.toml > ~/.codex/config.toml.
 func ResolveCodexModel(cwd string) string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_CODEX_MODEL")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_CODEX_MODEL")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("CODEX_MODEL")); v != "" {
@@ -587,7 +593,7 @@ func codexModelFromFile(path string) string {
 // file layout WUPHF needs to inspect — users configure their Opencode
 // ~/.config/opencode settings directly, so there is no cwd-relative search.
 func ResolveOpencodeModel() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_OPENCODE_MODEL")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_OPENCODE_MODEL")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("OPENCODE_MODEL")); v != "" {
@@ -604,7 +610,7 @@ func ResolveAPIKey(flagValue string) string {
 	if flagValue != "" {
 		return flagValue
 	}
-	if v := os.Getenv("WUPHF_API_KEY"); v != "" {
+	if v := Getenv("WUPHF_API_KEY"); v != "" {
 		return v
 	}
 	if v := os.Getenv("NEX_API_KEY"); v != "" {
@@ -621,7 +627,7 @@ func ResolveOneSecret() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_ONE_SECRET")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_ONE_SECRET")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("ONE_SECRET")); v != "" {
@@ -637,7 +643,7 @@ func ResolveOneIdentity() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_ONE_IDENTITY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_ONE_IDENTITY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("ONE_IDENTITY")); v != "" {
@@ -653,7 +659,7 @@ func ResolveOneIdentityType() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_ONE_IDENTITY_TYPE")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_ONE_IDENTITY_TYPE")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("ONE_IDENTITY_TYPE")); v != "" {
@@ -702,7 +708,7 @@ func ResolveComposioAPIKey() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_COMPOSIO_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_COMPOSIO_API_KEY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("COMPOSIO_API_KEY")); v != "" {
@@ -718,7 +724,7 @@ func ResolveComposioUserAPIKey() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_COMPOSIO_USER_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_COMPOSIO_USER_API_KEY")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -730,7 +736,7 @@ func ResolveComposioOrgID() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_COMPOSIO_ORG_ID")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_COMPOSIO_ORG_ID")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -743,7 +749,7 @@ func ResolveComposioProjectID() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_COMPOSIO_PROJECT_ID")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_COMPOSIO_PROJECT_ID")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -782,7 +788,7 @@ func (c Config) IsAnalyticsSessionRecordingEnabled() bool {
 // (which is also empty in a stock OSS build, keeping analytics dormant).
 // Resolution: WUPHF_POSTHOG_KEY env > POSTHOG_KEY env.
 func ResolvePostHogKey() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_POSTHOG_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_POSTHOG_KEY")); v != "" {
 		return v
 	}
 	return strings.TrimSpace(os.Getenv("POSTHOG_KEY"))
@@ -792,7 +798,7 @@ func ResolvePostHogKey() string {
 // let the frontend use its build-time default (us.i.posthog.com).
 // Resolution: WUPHF_POSTHOG_HOST env > POSTHOG_HOST env.
 func ResolvePostHogHost() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_POSTHOG_HOST")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_POSTHOG_HOST")); v != "" {
 		return v
 	}
 	return strings.TrimSpace(os.Getenv("POSTHOG_HOST"))
@@ -800,7 +806,7 @@ func ResolvePostHogHost() string {
 
 // ResolveTelegramBotToken returns the stored Telegram bot token from config.
 func ResolveTelegramBotToken() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_TELEGRAM_BOT_TOKEN")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_TELEGRAM_BOT_TOKEN")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -897,7 +903,7 @@ func CompanyContextBlock() string {
 // ResolveGeminiAPIKey resolves the Gemini API key.
 // Resolution: WUPHF_GEMINI_API_KEY env > GEMINI_API_KEY env > config file.
 func ResolveGeminiAPIKey() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_GEMINI_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_GEMINI_API_KEY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("GEMINI_API_KEY")); v != "" {
@@ -910,7 +916,7 @@ func ResolveGeminiAPIKey() string {
 // ResolveAnthropicAPIKey resolves the Anthropic API key.
 // Resolution: WUPHF_ANTHROPIC_API_KEY env > ANTHROPIC_API_KEY env > config file.
 func ResolveAnthropicAPIKey() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_ANTHROPIC_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_ANTHROPIC_API_KEY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("ANTHROPIC_API_KEY")); v != "" {
@@ -923,7 +929,7 @@ func ResolveAnthropicAPIKey() string {
 // ResolveOpenAIAPIKey resolves the OpenAI API key.
 // Resolution: WUPHF_OPENAI_API_KEY env > OPENAI_API_KEY env > config file.
 func ResolveOpenAIAPIKey() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_OPENAI_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_OPENAI_API_KEY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("OPENAI_API_KEY")); v != "" {
@@ -941,7 +947,7 @@ const DefaultRealtimeModel = "gpt-realtime-2"
 // ResolveRealtimeModel resolves the OpenAI Realtime model for the demo call.
 // Resolution: WUPHF_REALTIME_MODEL env > config file > DefaultRealtimeModel.
 func ResolveRealtimeModel() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_REALTIME_MODEL")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_REALTIME_MODEL")); v != "" {
 		return v
 	}
 	if cfg, _ := Load(); strings.TrimSpace(cfg.RealtimeModel) != "" {
@@ -953,7 +959,7 @@ func ResolveRealtimeModel() string {
 // ResolveMinimaxAPIKey resolves the Minimax API key.
 // Resolution: WUPHF_MINIMAX_API_KEY env > MINIMAX_API_KEY env > config file.
 func ResolveMinimaxAPIKey() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_MINIMAX_API_KEY")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_MINIMAX_API_KEY")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("MINIMAX_API_KEY")); v != "" {
@@ -976,7 +982,7 @@ func ResolveComposioUserID() string {
 	if ResolveNoNex() {
 		return ""
 	}
-	if v := strings.TrimSpace(os.Getenv("WUPHF_COMPOSIO_USER_ID")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_COMPOSIO_USER_ID")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("COMPOSIO_USER_ID")); v != "" {
@@ -994,7 +1000,7 @@ func ResolveComposioUserID() string {
 // ResolveActionProvider resolves the preferred external action provider.
 // Resolution: WUPHF_ACTION_PROVIDER env > ACTION_PROVIDER env > config file > auto.
 func ResolveActionProvider() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_ACTION_PROVIDER")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_ACTION_PROVIDER")); v != "" {
 		return strings.ToLower(v)
 	}
 	if v := strings.TrimSpace(os.Getenv("ACTION_PROVIDER")); v != "" {
@@ -1055,7 +1061,7 @@ func PersistRegistration(data map[string]interface{}) error {
 
 func ResolveInsightsPollInterval() int {
 	minutes := 30
-	if raw := os.Getenv("WUPHF_INSIGHTS_INTERVAL_MINUTES"); raw != "" {
+	if raw := Getenv("WUPHF_INSIGHTS_INTERVAL_MINUTES"); raw != "" {
 		if n, err := strconv.Atoi(raw); err == nil {
 			minutes = n
 		}
@@ -1122,7 +1128,7 @@ func resolveTaskInterval(envKey, legacyEnvKey string, fromConfig func(Config) in
 // WUPHF_OPENCLAW_TOKEN wins for WUPHF-specific setup; OPENCLAW_GATEWAY_TOKEN is
 // accepted for compatibility with OpenClaw's own Gateway docs.
 func ResolveOpenclawToken() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_OPENCLAW_TOKEN")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_OPENCLAW_TOKEN")); v != "" {
 		return v
 	}
 	if v := strings.TrimSpace(os.Getenv("OPENCLAW_GATEWAY_TOKEN")); v != "" {
@@ -1134,7 +1140,7 @@ func ResolveOpenclawToken() string {
 
 // ResolveOpenclawGatewayURL returns the OpenClaw gateway URL from env > config > default loopback.
 func ResolveOpenclawGatewayURL() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_OPENCLAW_GATEWAY_URL")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_OPENCLAW_GATEWAY_URL")); v != "" {
 		return v
 	}
 	cfg, _ := Load()
@@ -1156,8 +1162,8 @@ func ResolveOpenclawGatewayURL() string {
 // helper never returns "" for a registered Kind.
 func ResolveProviderEndpoint(kind, defaultBaseURL, defaultModel string) (string, string) {
 	envKind := strings.ToUpper(strings.ReplaceAll(kind, "-", "_"))
-	baseURL := strings.TrimSpace(os.Getenv("WUPHF_" + envKind + "_BASE_URL"))
-	model := strings.TrimSpace(os.Getenv("WUPHF_" + envKind + "_MODEL"))
+	baseURL := strings.TrimSpace(Getenv("WUPHF_" + envKind + "_BASE_URL"))
+	model := strings.TrimSpace(Getenv("WUPHF_" + envKind + "_MODEL"))
 	if baseURL == "" || model == "" {
 		cfg, _ := Load()
 		if ep, ok := cfg.ProviderEndpoints[kind]; ok {
@@ -1187,7 +1193,7 @@ func ResolveProviderEndpoint(kind, defaultBaseURL, defaultModel string) (string,
 // is device-bound credentials, not workspace state. Per-workspace OpenClaw
 // identity is a separate feature decision deferred to post-v1.
 func ResolveOpenclawIdentityPath() string {
-	if v := strings.TrimSpace(os.Getenv("WUPHF_OPENCLAW_IDENTITY_PATH")); v != "" {
+	if v := strings.TrimSpace(Getenv("WUPHF_OPENCLAW_IDENTITY_PATH")); v != "" {
 		return v
 	}
 	home, err := os.UserHomeDir()

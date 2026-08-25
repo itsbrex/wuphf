@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/nex-crm/wuphf/internal/config"
 )
 
 var (
@@ -54,7 +56,11 @@ func fallbackDirs() []string {
 		dirs = append(dirs, dir)
 	}
 
-	for _, dir := range filepath.SplitList(getenvFn("WUPHF_CLI_PATHS")) {
+	// Resolved across the rename: the current prefix first, then older ones,
+	// so an operator whose shell still exports the previous spelling keeps
+	// working instead of silently losing their extra CLI directories.
+	cliPaths, _ := config.LookupEnvFunc(getenvFn, "WUPHF_CLI_PATHS")
+	for _, dir := range filepath.SplitList(cliPaths) {
 		add(dir)
 	}
 
