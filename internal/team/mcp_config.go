@@ -33,17 +33,17 @@ var codingAgentSlugs = map[string]bool{
 // agentMCPServers returns the MCP server keys that a given agent should receive.
 func agentMCPServers(slug string) []string {
 	channel := strings.TrimSpace(os.Getenv("WUPHF_CHANNEL"))
-	// DM mode: only wuphf-office (minimal tool set, no nex overhead).
+	// DM mode: only the office server (minimal tool set, no nex overhead).
 	// IsDMSlug, not a raw "dm-" prefix — the canonical slug is the pair-sorted
 	// "<a>__<b>", so the prefix test silently handed every canonical DM the
 	// full server set including nex.
 	if IsDMSlug(channel) {
-		return []string{"wuphf-office"}
+		return ServerKeys()
 	}
 	if codingAgentSlugs[slug] {
-		return []string{"wuphf-office"}
+		return ServerKeys()
 	}
-	return []string{"wuphf-office", "nex"}
+	return append(ServerKeys(), "nex")
 }
 
 // buildMCPServerMap constructs the full set of MCP server entries.
@@ -60,7 +60,15 @@ func (l *Launcher) buildMCPServerMap() (map[string]any, error) {
 		"command": wuphfBinary,
 		"args":    []string{"mcp-team"},
 	}
-	servers["wuphf-office"] = office
+	// Register the SAME entry under every key this runtime has ever published
+	// under, canonical first. A tool permission the user granted is stored on
+	// their disk as "mcp__<key>__<tool>"; drop a legacy key here and every one
+	// of those silently stops matching, with no error naming the rename as the
+	// cause and no way for us to reach the stale allowlist. An alias costs one
+	// map entry. See mcp_namespace.go.
+	for _, key := range ServerKeys() {
+		servers[key] = office
+	}
 	if oneSecret := strings.TrimSpace(config.ResolveOneSecret()); oneSecret != "" {
 		office["env"] = map[string]string{
 			"ONE_SECRET": oneSecret,

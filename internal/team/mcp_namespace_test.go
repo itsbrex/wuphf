@@ -1,6 +1,9 @@
-package teammcp
+package team
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 // Tool names are derived from the server key, and those fully-qualified strings
 // live in users' permission allowlists, saved skills, and transcripts we cannot
@@ -80,5 +83,76 @@ func TestCanonicalKeyIsNotAlsoListedAsLegacy(t *testing.T) {
 		if legacy == ServerKey {
 			t.Fatalf("%q is both the canonical and a legacy key", legacy)
 		}
+	}
+}
+
+// ── the WIRING, not just the helper ─────────────────────────────────────────
+//
+// ServerKeys() being correct is worth nothing if the config builders ignore it.
+// LegacyServerKeys is empty today, so a test that merely calls the builders
+// would pass whether or not they consult it — the alias path is unreachable
+// until a rename happens, which is exactly when nobody is watching.
+//
+// These tests therefore INJECT a legacy key and assert the builders honour it.
+// That is the mutation the guard exists for: it fails if someone rewrites
+// buildMCPServerMap or the opencode wiring back to a bare "wuphf-office"
+// literal, which is the change a future rename would otherwise ship silently.
+//
+// Why it matters more than its size: those tool-name strings live in USERS'
+// permission allowlists and saved skills, on their disks, which we cannot
+// reach. A rename without the alias revokes granted permissions with no error
+// naming the cause.
+
+// withLegacyKeyForTest appends a legacy key for the duration of one test.
+func withLegacyKeyForTest(t *testing.T, key string) {
+	t.Helper()
+	previous := LegacyServerKeys
+	LegacyServerKeys = append(append([]string(nil), LegacyServerKeys...), key)
+	t.Cleanup(func() { LegacyServerKeys = previous })
+}
+
+func TestBuildMCPServerMapRegistersEveryLegacyKey(t *testing.T) {
+	const legacy = "wuphf-office-legacy-probe"
+	withLegacyKeyForTest(t, legacy)
+
+	l := &Launcher{}
+	servers, err := l.buildMCPServerMap()
+	if err != nil {
+		t.Fatalf("buildMCPServerMap: %v", err)
+	}
+	canonical, ok := servers[ServerKey]
+	if !ok {
+		t.Fatalf("canonical key %q missing entirely", ServerKey)
+	}
+	alias, ok := servers[legacy]
+	if !ok {
+		t.Fatalf("legacy key %q was not registered — a permission granted under it "+
+			"would silently stop matching after a rename", legacy)
+	}
+	// The SAME entry, not a second server: two divergent entries would mean the
+	// alias drifts from the canonical one the moment either is edited.
+	if fmt.Sprintf("%p", canonical) != fmt.Sprintf("%p", alias) {
+		t.Error("the legacy key points at a different entry than the canonical key")
+	}
+}
+
+func TestAgentMCPServersReturnsEveryLegacyKey(t *testing.T) {
+	const legacy = "wuphf-office-legacy-probe"
+	withLegacyKeyForTest(t, legacy)
+
+	// Both branches: the DM/coding-agent minimal set and the full set.
+	t.Setenv("WUPHF_CHANNEL", DMSlugFor("ceo"))
+	dm := agentMCPServers("pm")
+	if !containsString(dm, ServerKey) || !containsString(dm, legacy) {
+		t.Errorf("DM branch returned %v, want both %q and %q", dm, ServerKey, legacy)
+	}
+
+	t.Setenv("WUPHF_CHANNEL", "product")
+	full := agentMCPServers("pm")
+	if !containsString(full, ServerKey) || !containsString(full, legacy) {
+		t.Errorf("full branch returned %v, want both %q and %q", full, ServerKey, legacy)
+	}
+	if !containsString(full, "nex") {
+		t.Errorf("full branch dropped nex: %v", full)
 	}
 }

@@ -1,6 +1,6 @@
-package teammcp
+package team
 
-// namespace.go owns the MCP server KEY that agents' tools are namespaced under,
+// mcp_namespace.go owns the MCP server KEY that agents' tools are namespaced under,
 // and the older keys that must keep working forever.
 //
 // WHY THIS IS AN ALIAS AND NEVER A RENAME.
@@ -25,6 +25,12 @@ package teammcp
 // burden nobody can debug from here. There is no deprecation date on this list
 // on purpose: unlike an environment variable, we have no way to warn the holder
 // of a stale allowlist, so it does not expire.
+// It lives in package team, NOT in package teammcp where it was written,
+// because teammcp already imports team — so team importing teammcp back is a
+// cycle, and the wiring that has to consult these keys (buildMCPServerMap,
+// agentMCPServers, the headless opencode entry) all lives here. The file has
+// no imports of its own, so moving it costs nothing; teammcp can still reach
+// these symbols through its existing dependency on team if it ever needs to.
 const (
 	// ServerKey is the canonical MCP server key. Tools are exposed to clients
 	// as mcp__<ServerKey>__<tool>.

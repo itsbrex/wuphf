@@ -72,7 +72,12 @@ func (l *Launcher) writeHeadlessOpencodeMCPConfig(slug string) (string, error) {
 	if mcp == nil {
 		mcp = map[string]any{}
 	}
-	mcp["wuphf-office"] = l.buildHeadlessOpencodeMCPEntry(wuphfBinary, slug)
+	// Same entry under every published key, so a permission granted before a
+	// rename keeps matching. See mcp_namespace.go.
+	entry := l.buildHeadlessOpencodeMCPEntry(wuphfBinary, slug)
+	for _, key := range ServerKeys() {
+		mcp[key] = entry
+	}
 	merged["mcp"] = mcp
 	if _, ok := merged["$schema"]; !ok {
 		merged["$schema"] = "https://opencode.ai/config.json"
