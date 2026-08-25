@@ -42,14 +42,56 @@ if [ ! -d "$W" ]; then
   exit 1
 fi
 
-# Everything that makes an office "already onboarded and populated". config.json
-# is deliberately NOT in this list.
-WIPE=(office team tasks apps wiki wiki.bak agent-scratch logs onboarded.json)
+# Check the thing we must preserve BEFORE we stop anyone's servers. Without
+# this the script kills the stack, then dies on the `cp` under `set -e`,
+# leaving the operator with no running office and no explanation.
+if [ ! -f "$W/config.json" ]; then
+  echo "no config.json at $W — refusing to wipe." >&2
+  echo "That file holds the API key and company name and cannot be recovered." >&2
+  echo "If this home genuinely has no config, it is already first-run state." >&2
+  exit 1
+fi
+
+# KEEP-LIST, not a wipe-list. Everything in .wuphf goes EXCEPT these.
+#
+# This used to be the other way round — an explicit list of directories to
+# delete (office team tasks apps wiki wiki.bak agent-scratch logs
+# onboarded.json). That list was exactly right for the runtime home as it stood
+# and silently wrong for the next one: any state directory added by a later
+# feature (routines, skills, calendar, notebooks) is not in the list, survives
+# the wipe, and leaves a "fresh" office carrying state from the old one. A
+# half-wipe is worse than no wipe, because it looks like it worked.
+#
+# Inverting it means new state is covered the day it is added, and the only
+# thing anyone has to remember is what must SURVIVE — which is the short list,
+# and the one a human can actually keep correct.
+KEEP=(config.json)
+KEEP_GLOB='config.json.bak-*'
+
+is_kept() {
+  local name="$1"
+  for k in "${KEEP[@]}"; do [ "$name" = "$k" ] && return 0; done
+  # shellcheck disable=SC2254
+  case "$name" in $KEEP_GLOB) return 0 ;; esac
+  return 1
+}
+
+WIPE=()
+while IFS= read -r entry; do
+  name=$(basename "$entry")
+  is_kept "$name" || WIPE+=("$name")
+done < <(find "$W" -mindepth 1 -maxdepth 1)
 
 echo "runtime home : $HOME_DIR"
 echo "preserving   : .wuphf/config.json (API key, company name, provider choice)"
 echo "removing     :"
-for item in "${WIPE[@]}"; do
+# macOS ships bash 3.2, where "${ARR[@]}" on an EMPTY array is an unbound
+# variable under `set -u`. The ${ARR[@]+...} guard keeps an already-clean home
+# from failing instead of reporting that there is nothing to do.
+if [ ${#WIPE[@]} -eq 0 ]; then
+  echo "  (nothing — this home is already at first-run state)"
+fi
+for item in ${WIPE[@]+"${WIPE[@]}"}; do
   target="$W/$item"
   [ -e "$target" ] || continue
   if [ -d "$target" ]; then
@@ -82,10 +124,20 @@ BACKUP="$W/config.json.bak-$(date +%s)"
 cp "$W/config.json" "$BACKUP"
 echo "config backed up to $BACKUP"
 
-for item in "${WIPE[@]}"; do
+for item in ${WIPE[@]+"${WIPE[@]}"}; do
   rm -rf "${W:?}/${item:?}"
 done
 echo "wiped."
+
+# The backup is the whole safety net, so prove it survived rather than assume
+# the loop skipped it. A keep-list that silently stopped matching would take
+# the API key with it, and this is the last moment anyone could notice.
+if [ ! -f "$W/config.json" ]; then
+  echo "config.json is GONE after the wipe — restoring from $BACKUP" >&2
+  cp "$BACKUP" "$W/config.json"
+  echo "restored. The keep-list is broken; do not run this again until it is fixed." >&2
+  exit 1
+fi
 
 if [ "$RELAUNCH" -eq 1 ]; then
   [ -x "$BIN" ] || { echo "no binary at $BIN — build first: go build -o $BIN ./cmd/wuphf" >&2; exit 1; }
