@@ -162,6 +162,18 @@ export interface Task {
    */
   lifecycle_state?: string;
   execution_mode?: string;
+  /**
+   * RFC3339 timestamp the silent-stall watchdog stamped when this task's
+   * owner went quiet, absent when it is not stalled and cleared automatically
+   * once fresh activity lands (broker_task_stall.go).
+   *
+   * The broker has emitted this on the wire for a while; nothing on the web
+   * read it, so the only delivery for "this went quiet" was a chat post from
+   * a sender called "system" — which the no-system-senders rule retires. The
+   * board is now the only place a stall can surface, so this field is what
+   * that surface reads.
+   */
+  stalled_since?: string;
   /** Per-task LLM runtime set in the new-task composer (model lives on the
    * task, not the agent). */
   provider?: string;

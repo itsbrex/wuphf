@@ -88,6 +88,64 @@ function taskMatchesQuery(task: Task, needle: string): boolean {
   return hay.toLowerCase().includes(needle);
 }
 
+/**
+ * How long a stalled task has been quiet, as short human text ("23m", "2h").
+ * Returns undefined when the task is not stalled or the stamp is unparseable
+ * — a marker is only worth showing when it can say HOW long, since "quiet"
+ * without a duration tells the reader nothing they cannot already see.
+ *
+ * A negative delta (clock skew between broker and browser) is treated as not
+ * stalled rather than rendered as "quiet for -3m".
+ */
+export function quietForLabel(stalledSince?: string): string | undefined {
+  const stamp = stalledSince?.trim();
+  if (!stamp) return undefined;
+  const since = new Date(stamp).getTime();
+  if (Number.isNaN(since)) return undefined;
+  const minutes = Math.floor((Date.now() - since) / 60_000);
+  if (minutes < 1) return undefined;
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+/**
+ * "N unassigned" toggle in the board header.
+ *
+ * Ownerless work has no other home on this board: a card reads "Unassigned"
+ * one at a time, and nothing says how many there are without scanning every
+ * lane. That mattered less when the CEO routed every task and held the whole
+ * board in its head. Now that agents file their own work, nobody is watching
+ * for a task nobody picked up.
+ *
+ * Counted from the tasks the board already fetched, so this needs no field in
+ * /office/stats.
+ */
+function UnassignedChip({
+  count,
+  active,
+  onToggle,
+}: {
+  count: number;
+  active: boolean;
+  onToggle: () => void;
+}) {
+  if (count <= 0) return null;
+  return (
+    <button
+      type="button"
+      className="issues-unassigned-chip"
+      data-testid="issues-unassigned-chip"
+      aria-pressed={active}
+      onClick={onToggle}
+      title={active ? "Show all tasks" : "Show only tasks nobody owns"}
+    >
+      {count} unassigned
+    </button>
+  );
+}
+
 /** Per-stage hint copy shown under the column header. The `scheduled`
  *  column is fed by routines, not lifecycle_state, so its hint reflects
  *  that. */
@@ -126,6 +184,17 @@ const TaskCard = memo(function TaskCard({
   );
   const isRunning = activityDotForLifecycleState(state) === "running";
   const activity = isRunning ? snapshot?.activity?.trim() : undefined;
+  // "Stuck" and "quiet" used to look identical on this board: a task whose
+  // owner hit an auth wall and one that is merely slow both rendered as a
+  // card in a lane. The broker has always known the difference — the
+  // silent-stall watchdog stamps stalled_since — but it only ever announced
+  // it as a chat post from "system", which is being retired, so the board is
+  // now the only place this can surface.
+  //
+  // Deliberately worded as "quiet", not "stuck": the watchdog detects absence
+  // of visible activity, which is not proof of failure. The card says what is
+  // observed and the title says what to do about it.
+  const stalledFor = quietForLabel(task.stalled_since);
   // Opens the shared task modal in place rather than navigating to the
   // chat-primary /tasks/$taskId surface. The route still works as a URL.
   const openTaskModal = useAppStore((s) => s.openTaskModal);
@@ -155,7 +224,18 @@ const TaskCard = memo(function TaskCard({
           </span>
         )}
       </div>
-      {activity ? (
+      {stalledFor ? (
+        <div
+          className="issues-kanban-card-stalled"
+          data-testid="issue-stalled"
+          title="No visible activity from the owner. It may still be working — open the task to check or restart it."
+        >
+          <span className="issues-kanban-card-stalled-dot" aria-hidden={true} />
+          <span className="issues-kanban-card-activity-text">
+            Quiet for {stalledFor}
+          </span>
+        </div>
+      ) : activity ? (
         <div className="issues-kanban-card-activity" title={activity}>
           <TaskStatusDot lifecycleState={state} />
           <span className="issues-kanban-card-activity-text">{activity}</span>
@@ -483,6 +563,7 @@ export function TasksList({
   initialInboxItems,
 }: TasksListProps = {}) {
   const [query, setQuery] = useState("");
+  const [showUnassignedOnly, setShowUnassignedOnly] = useState(false);
   // Inline dialog replaces /tasks/new full-page form for the in-app path.
   // The route stays mounted as a fallback for direct URL navigation.
   const [createOpen, setCreateOpen] = useState(false);
@@ -576,17 +657,25 @@ export function TasksList({
     );
   }, [schedulerResult.data]);
 
+  const unassignedCount = useMemo(
+    () => tasks.filter((t) => !t.owner?.trim()).length,
+    [tasks],
+  );
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return tasks;
+    const byOwner = showUnassignedOnly
+      ? tasks.filter((t) => !t.owner?.trim())
+      : tasks;
+    if (!needle) return byOwner;
     // A parent surfaces when it matches OR any of its sub-tasks match, so a
     // search for a child's text still finds it (nested under its parent).
-    return tasks.filter((t) => {
+    return byOwner.filter((t) => {
       if (taskMatchesQuery(t, needle)) return true;
       const children = childrenByParent.get(t.id) ?? [];
       return children.some((child) => taskMatchesQuery(child, needle));
     });
-  }, [tasks, query, childrenByParent]);
+  }, [tasks, query, childrenByParent, showUnassignedOnly]);
 
   const filteredScheduled = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -679,7 +768,12 @@ export function TasksList({
     // ever print the same number. Every other lane reads its own bucket from
     // the same stats payload. While a search filter is active — or before the
     // stats query resolves — counts reflect exactly the cards rendered below.
-    if (!query.trim() && stats) {
+    // Stats counts describe the WHOLE board, so they are only correct while
+    // nothing is filtering it. With the search box or the unassigned filter
+    // active the header must count the cards actually rendered below it —
+    // otherwise the header and its own lane disagree, which is the drift this
+    // lane was just fixed for.
+    if (!(query.trim() || showUnassignedOnly) && stats) {
       if (stage === "needs_human") return needsYouCount(stats);
       const fromStats = statsCountForStage(stats.tasks, stage);
       if (fromStats !== null) return fromStats;
@@ -699,6 +793,11 @@ export function TasksList({
           onChange={(e) => setQuery(e.target.value)}
           aria-label="Filter tasks"
           data-testid="issues-list-search"
+        />
+        <UnassignedChip
+          count={unassignedCount}
+          active={showUnassignedOnly}
+          onToggle={() => setShowUnassignedOnly((v) => !v)}
         />
         <button
           type="button"
