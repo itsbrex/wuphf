@@ -482,6 +482,48 @@ as unproven. That was an overcorrection written before the cause was known: it
 would have taxed every search forever to work around a two-character bug in two
 files. Diagnose before you legislate.
 
+### A guard that can go quiet is worse than no guard
+
+The recurring failure in this repo's tooling is not a check that fails. It is a
+check that stops checking, keeps reporting success, and so manufactures
+confidence that nobody re-examines. Four instances, all found in one session,
+all in different mechanisms:
+
+- **CI concurrency.** `concurrency.group` was keyed on `github.ref`, which is
+  the same string for every push to main, with `cancel-in-progress: true`. Each
+  push cancelled the previous run. When pushes land faster than CI completes,
+  main accumulates commits nothing ever checked — 8 of 10 consecutive runs
+  cancelled. That is not a red main, it is an UNKNOWN main, and it is worse:
+  nothing gates the push, and the thing meant to catch it afterwards never
+  finishes. The one run that did complete had been failing for hours.
+- **The e2e spec list.** The job named 11 spec files; 7 had been deleted.
+  Playwright treats a positional argument as a filter, and a filter matching no
+  file contributes no tests, no warning, exit 0. The job ran 4 specs while
+  appearing to run 11.
+- **The phantom-token guard.** Built on grep, so it silently skipped
+  NUL-bearing files while reporting OK. Its coverage had shrunk from 838
+  components to 832 without a word.
+- **The MCP alias list.** Claude and opencode iterate `ServerKeys()`; the codex
+  runner writes one hardcoded key. An alias list that works in every runner
+  except one is worse than no alias list, because it passes every test anyone
+  would think to write.
+
+What they have in common: the mechanism reports success, the output looks
+normal, and the only evidence of the hole is an absence — a run that did not
+happen, a file that was not scanned, a spec that contributed no tests.
+
+So, for anything that exists to catch problems:
+
+- **Make it fail loudly rather than cover less.** A guard should refuse to run
+  on input it cannot handle, naming the input, instead of skipping it and
+  passing. The phantom-token guard now errors on a NUL-bearing file; the e2e
+  job now fails when it names a spec that does not exist.
+- **Assert the guard's own coverage.** Component and token counts, spec counts,
+  run counts. A number that can silently shrink should be checked, not printed.
+- **Ask what silence means.** If this check quietly stopped working, what would
+  the output look like? If the answer is "exactly like success", it needs a
+  coverage assertion before it needs anything else.
+
 ### A NUL byte makes a source file invisible to every text tool
 
 A literal NUL in a source file makes `file` classify it as data, and every
