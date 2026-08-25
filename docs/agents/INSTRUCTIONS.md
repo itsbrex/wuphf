@@ -476,6 +476,33 @@ The rule that follows:
   them is not corroboration. Check against reality by a route that does not
   share the assumption.
 
+### A caveat that names the wrong item is worse than a vague one
+
+Report limits on your own claims — but a PRECISE caveat is a claim too, and it
+can be wrong the same way any other claim can.
+
+Real example: an agent verifying six call sites reported "five are red by
+construction, not by demonstration — the `return ""` variant is the one that
+differs." Every part of that was written in good faith and the count was
+correct. The identification was backwards: the regex had matched the `return ""`
+site and missed the bare `return` majority, so the site named as uncovered was
+the one already proven. Acting on the sentence would have re-proved a proven
+site and left five unproven.
+
+A vague caveat makes a reader cautious everywhere. A precise one makes them
+cautious in exactly one place and relaxed everywhere else — so when the
+precision is wrong it does not merely fail to help, it redirects attention away
+from the real gap.
+
+- Name the SITES, not the shape. A shape is a description of the thing; the
+  sites are the thing.
+- Before writing "all but X" or "every one except Y", go and look at X and Y.
+  The caveat deserves the same verification as the claim it qualifies.
+- Prefer demonstrating every case to arguing that the remainder follows. "By
+  identical construction" is an inference, and it is exactly as strong as your
+  belief that the constructions are identical — which is the belief most likely
+  to be wrong, because it is the one nobody checks.
+
 ### Never drive the shared browser
 
 Agents must not automate the founder's running Chrome. Use Playwright with its
