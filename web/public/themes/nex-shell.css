@@ -47,6 +47,21 @@ html[data-theme="nex-shell"] {
     oklch(50.58% 0.2886 264.84) 32%,
     transparent
   );
+  /* Ink for text sitting ON an --accent fill. The comment above says --accent
+     has to "carry light text on a fill", and measured in the browser it does
+     not: this cobalt resolves to #607ffd, and white on it is 3.53:1 against a
+     4.5 bar — the primary approve buttons (.inbox-detail-action--primary,
+     .packet-action--approve, .nb-review-drawer-approve) are 13px-class body
+     text, not WCAG large text. Without this override they inherit global.css's
+     #ffffff and fail.
+     #0b0e1a measures 5.45:1. Near-black tinted toward the fill's own hue
+     rather than pure black (5.95): the house style is muted terminal contrast,
+     and the same choice was made for --cyan-on-pill. Darkening --accent itself
+     would also have worked, but that is the theme's identity colour and it
+     carries borders, links, focus rings and the mark — far too wide a blast
+     radius for ink on three buttons. --accent-fg exists so the ink can move
+     without the fill moving. */
+  --accent-fg: #0b0e1a;
 
   /* ── Status colors, softened so nothing glows on the muted surface ── */
   --green: oklch(0.76 0.11 158);

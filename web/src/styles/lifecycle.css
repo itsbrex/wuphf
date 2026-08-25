@@ -26,8 +26,15 @@
   --yellow-aa-500: #806010;
   --yellow-aa-200: #fbecc6;
   --yellow-aa-on-pill: #ffffff;
-  /* cyan-500 (#069de4) is theme-invariant; 5.3:1 AA on white. */
-  --cyan-on-pill: #ffffff;
+  /* Ink for pills filled with --cyan-500. This was #ffffff on the stated
+     grounds of "5.3:1 AA on white", and that number was wrong: measured in
+     the browser, white on #069de4 is 3.02:1, and on noir-gold's #b8881e it
+     is 3.19:1. Both fail the 4.5:1 body-text bar its consumers need (11px
+     and 13.5px). A near-black tinted toward the fill's own hue clears it in
+     every theme — 5.50 / 5.50 / 5.20 / 5.50 — and reads softer than pure
+     black (6.95). One value, not a per-theme flip, because --cyan-500 is
+     near theme-invariant. */
+  --cyan-on-pill: #06212e;
 }
 
 html[data-theme="nex-dark"] {
@@ -1007,7 +1014,14 @@ html[data-theme="noir-gold"] {
 .inbox-mail-detail-body--embed .nb-review-drawer-approve {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  /* Was a #ffffff literal. Measured on --accent: 4.90:1 in nex/nex-dark
+     but 2.42:1 in noir-gold and 3.53:1 in nex-shell, against a 4.5 bar
+     (this is 13px-class body text, not WCAG large text). --accent-fg is
+     the token for ink on an accent fill and carries noir-gold's flip to
+     --gold-950, which measures 7.66:1. NOTE: nex-shell has no
+     --accent-fg override, so it still resolves to #ffffff and still
+     fails at 3.53 — that theme needs a value, see the report. */
+  color: var(--accent-fg);
 }
 
 .inbox-mail-detail-body--embed .nb-review-drawer-approve:hover {
@@ -1656,7 +1670,14 @@ html[data-theme="noir-gold"] {
 .inbox-detail-action--primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  /* Was a #ffffff literal. Measured on --accent: 4.90:1 in nex/nex-dark
+     but 2.42:1 in noir-gold and 3.53:1 in nex-shell, against a 4.5 bar
+     (this is 13px-class body text, not WCAG large text). --accent-fg is
+     the token for ink on an accent fill and carries noir-gold's flip to
+     --gold-950, which measures 7.66:1. NOTE: nex-shell has no
+     --accent-fg override, so it still resolves to #ffffff and still
+     fails at 3.53 — that theme needs a value, see the report. */
+  color: var(--accent-fg);
 }
 
 .inbox-detail-action--primary:hover {
@@ -1813,7 +1834,10 @@ html[data-theme="noir-gold"] {
 
 .inbox-filter--chip.active .num {
   background: var(--cyan-500);
-  color: #ffffff;
+  /* Was a #ffffff literal: 3.02:1 here (11px/600, so the bar is 4.5). The
+     --cyan-on-pill token already existed for exactly this fill; this site
+     just was not using it. */
+  color: var(--cyan-on-pill);
 }
 
 .inbox-filter--chip:focus-visible {
@@ -2399,6 +2423,11 @@ button.verification-badge {
   gap: 8px;
   padding: 10px 16px;
   background: var(--accent);
+  /* DEAD DECLARATION — kept only so the diff stays narrow. A later
+     .btn-primary rule wins in every theme, so the computed ink here is
+     already --accent-fg (measured: 4.90 / 4.90 / 7.66 / 11.39, all pass).
+     It reads like an active choice and is not one; do not measure this
+     literal and conclude the button is broken. */
   color: white;
   border-radius: var(--radius-full);
   text-decoration: none;
@@ -3075,7 +3104,14 @@ button.verification-badge {
 
 .packet-action--approve {
   background: var(--accent);
-  color: white;
+  /* Was a #ffffff literal. Measured on --accent: 4.90:1 in nex/nex-dark
+     but 2.42:1 in noir-gold and 3.53:1 in nex-shell, against a 4.5 bar
+     (this is 13px-class body text, not WCAG large text). --accent-fg is
+     the token for ink on an accent fill and carries noir-gold's flip to
+     --gold-950, which measures 7.66:1. NOTE: nex-shell has no
+     --accent-fg override, so it still resolves to #ffffff and still
+     fails at 3.53 — that theme needs a value, see the report. */
+  color: var(--accent-fg);
   font-weight: 600;
 }
 
