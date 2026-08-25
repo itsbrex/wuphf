@@ -338,7 +338,13 @@ func humanNoteHaltMessage(taskID, action string, note *TaskHumanNote) string {
 //   - everyone else: specialist — only `comment` is open.
 //
 // Caller holds b.mu.
-func (b *Broker) checkTaskActionAuthLocked(action, actor, targetTaskID string) error {
+// checkTaskActionAuthLocked gates task mutations.
+//
+// intendedOwner is the owner the CALLER is asking for (body.Owner). It only
+// matters for `create`, where there is no existing task to read ownership
+// from: an agent may file its OWN work, but handing work to somebody else is
+// reassignment wearing a different hat and stays a CEO/human decision.
+func (b *Broker) checkTaskActionAuthLocked(action, actor, targetTaskID, intendedOwner string) error {
 	a := strings.ToLower(strings.TrimSpace(action))
 	actorSlug := strings.ToLower(strings.TrimSpace(actor))
 
@@ -373,6 +379,42 @@ func (b *Broker) checkTaskActionAuthLocked(action, actor, targetTaskID string) e
 	// Issues that should go through CEO.
 	if b.findMemberLocked(actorSlug) == nil {
 		return nil
+	}
+
+	// An agent files its OWN work.
+	//
+	// This used to route through the CEO, which made sense when the whole
+	// office shared one channel: the CEO saw all the work, so the hop bought
+	// dedup and prioritisation for free. Under DM-first the CEO is not in the
+	// conversation — when the human asks the designer directly, going via the
+	// CEO is three async agent turns to authorise something the human already
+	// asked for, and every hop is a place a wake can silently fail.
+	//
+	// What is NOT widened here: reassign, approve, reject, and reopening
+	// somebody else's task all fall through to the CEO/human path below.
+	// Those are decisions about another agent's work.
+	//
+	// The dedup argument for the old gate did not need a manager: an open
+	// task covering the same ground is found by findReusableTaskLocked on the
+	// create path — fuzzy title match, regardless of who is filing — so a
+	// near-duplicate collapses onto the existing task rather than spawning a
+	// second one.
+	if a == "create" {
+		owner := normalizeActorSlug(intendedOwner)
+		// Empty owner is the unassigned case, not work put on someone else;
+		// RULE ZERO tells agents to set an owner, and refusing here would add
+		// a failure mode nobody asked for.
+		if owner == "" || owner == actorSlug {
+			return nil
+		}
+		return taskMutationError(
+			TaskMutationForbidden,
+			fmt.Sprintf(
+				"you can create Issues for your own work, but not assign them to @%s. File it with owner=@%s (yourself), or ask @%s to scope it for someone else.",
+				owner, actorSlug, leadSlug,
+			),
+			nil,
+		)
 	}
 
 	// Owner-allowed actions: the task's current owner can move their
@@ -595,7 +637,7 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 	// pre-phases, so a task whose owner/reviewer changes while a verification
 	// command runs is rechecked before mutation.
 	b.mu.Lock()
-	if err := b.checkTaskActionAuthLocked(action, actor, body.ID); err != nil {
+	if err := b.checkTaskActionAuthLocked(action, actor, body.ID, body.Owner); err != nil {
 		b.mu.Unlock()
 		return TaskResponse{}, err
 	}
@@ -650,22 +692,25 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// CEO-managed Issues gate (hybrid model, Slice 7):
-	//   - scope-shaping actions (create / reassign / approve / reject /
-	//     reopen / block / cancel) are restricted to CEO + human. They
-	//     change WHAT the Issue is or WHO owns it.
-	//   - owner status-transition actions (submit_for_review / complete
-	//     / request_changes / resume / release / claim / assign) are
-	//     allowed for CEO + human OR the task's current owner. They
-	//     report WHERE the owner's own work is.
+	// Issues gate. Split on WHERE THE WORK CAME FROM, not on who may file:
+	//   - create is open to any agent FOR ITS OWN WORK (owner = itself or
+	//     unassigned). The human asking an agent directly in its DM is the
+	//     authorization; routing that through the CEO is three async turns
+	//     for permission the human already gave.
+	//   - decisions about SOMEBODY ELSE's work (reassign / approve / reject /
+	//     reopen another's, and create with a different owner) stay CEO +
+	//     human. They change WHAT the Issue is or WHO carries it.
+	//   - owner status-transition actions (submit_for_review / complete /
+	//     request_changes / resume / release / claim / assign / block /
+	//     cancel) are allowed for CEO + human OR the task's current owner.
+	//     They report WHERE the owner's own work is.
 	//   - comment is always open — every agent can leave a note.
 	//
-	// Specialists who try to scope-edit get a clear error pointing them
-	// at the suggestion channel (team_task action=comment with
-	// [SUGGESTION] prefix). The auto-resolve / broker-internal create
-	// path passes actor="system" or the broker's own slug which we
-	// allow-list below so safety-net Issue creation keeps working.
-	if err := b.checkTaskActionAuthLocked(action, actor, body.ID); err != nil {
+	// Specialists who try to act on another agent's work get a clear error
+	// naming the CEO. The auto-resolve / broker-internal create path passes
+	// actor="system" or the broker's own slug, which the gate allow-lists so
+	// safety-net Issue creation keeps working.
+	if err := b.checkTaskActionAuthLocked(action, actor, body.ID, body.Owner); err != nil {
 		return TaskResponse{}, err
 	}
 
