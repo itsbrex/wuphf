@@ -25,12 +25,16 @@ BROKER_PORT="${WUPHF_BROKER_PORT:-7899}"
 WEB_PORT="${WUPHF_WEB_PORT:-7900}"
 CONFIRM=0
 RELAUNCH=0
+HOME_EXPLICIT=0
+# Did the caller actually choose these ports, or are they just the defaults?
+PORTS_EXPLICIT=0
+[ -n "${WUPHF_BROKER_PORT:-}${WUPHF_WEB_PORT:-}" ] && PORTS_EXPLICIT=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --yes) CONFIRM=1 ;;
     --relaunch) RELAUNCH=1 ;;
-    --home) shift; HOME_DIR="$1" ;;
+    --home) shift; HOME_DIR="$1"; HOME_EXPLICIT=1 ;;
     *) echo "unknown flag: $1" >&2; exit 2 ;;
   esac
   shift
@@ -109,16 +113,34 @@ if [ "$CONFIRM" -ne 1 ]; then
 fi
 
 # Stop anything holding the ports before removing state underneath it.
-for P in "$BROKER_PORT" "$WEB_PORT"; do
-  for PID in $(lsof -nP -iTCP:"$P" -t 2>/dev/null || true); do
-    CWD=$(lsof -a -p "$PID" -d cwd -Fn 2>/dev/null | grep '^n' | sed 's/^n//' || true)
-    case "$CWD" in
-      */Google\ Chrome*|*/Chrome*) continue ;;  # a browser holding the socket, not a server
-    esac
-    kill "$PID" 2>/dev/null || true
+#
+# BUT ONLY IF THOSE PORTS BELONG TO THE HOME WE ARE WIPING. `--home` used to
+# retarget the wipe while leaving BROKER_PORT/WEB_PORT at their 7899/7900
+# defaults, so pointing this script at a throwaway directory still killed
+# whatever was serving the DEFAULT home. That is exactly what happened: a test
+# run against /tmp killed the operator's live dev stack, which had nothing to
+# do with the home being wiped and was not mentioned anywhere in the output.
+#
+# A wipe must not reach outside the home it was aimed at. If the caller named a
+# home but not the ports, we have no reason to believe the default ports serve
+# it, so we leave them alone and say so.
+if [ "$HOME_EXPLICIT" -eq 1 ] && [ "$PORTS_EXPLICIT" -eq 0 ]; then
+  echo "note: --home was given without explicit ports, so nothing on $BROKER_PORT/$WEB_PORT"
+  echo "      will be stopped. Those ports serve the DEFAULT home, not this one."
+  echo "      If a server is running against $HOME_DIR, stop it yourself, or set"
+  echo "      WUPHF_BROKER_PORT / WUPHF_WEB_PORT so this script knows which to stop."
+else
+  for P in "$BROKER_PORT" "$WEB_PORT"; do
+    for PID in $(lsof -nP -iTCP:"$P" -t 2>/dev/null || true); do
+      CWD=$(lsof -a -p "$PID" -d cwd -Fn 2>/dev/null | grep '^n' | sed 's/^n//' || true)
+      case "$CWD" in
+        */Google\ Chrome*|*/Chrome*) continue ;;  # a browser holding the socket, not a server
+      esac
+      kill "$PID" 2>/dev/null || true
+    done
   done
-done
-sleep 1
+  sleep 1
+fi
 
 BACKUP="$W/config.json.bak-$(date +%s)"
 cp "$W/config.json" "$BACKUP"
