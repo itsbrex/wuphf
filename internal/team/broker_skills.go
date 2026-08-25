@@ -240,9 +240,25 @@ func (b *Broker) handlePostSkill(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
-	channel := normalizeChannelSlug(body.Channel)
+	// Raw emptiness first: normalizeChannelSlug("") is "general", so a missing
+	// channel used to be silently laundered into the shared room. Resolve a real
+	// home instead — while #general is enabled this still answers "general", so
+	// today is unchanged; once it is off this is the agent's DM, or a refusal.
+	//
+	// homeChannelFor is the correct variant HERE specifically: b.mu is
+	// NOT held at this point. The other variant would
+	// read the roster unsynchronised.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
-		channel = "general"
+		home, err := b.homeChannelFor(body.CreatedBy)
+		if err != nil {
+			http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.`, http.StatusBadRequest)
+			return
+		}
+		channel = home
 	}
 
 	const msgKind = "skill_update"

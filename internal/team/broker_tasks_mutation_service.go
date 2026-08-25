@@ -666,9 +666,24 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 		}
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
-	channel := normalizeChannelSlug(body.Channel)
+	// Raw emptiness first: normalizeChannelSlug("") is "general". Unchanged while
+	// #general is enabled.
+	//
+	// MutateTask returns an error rather than writing a response, so the refusal
+	// is a typed TaskMutationInvalid naming the field — the caller turns it into
+	// whatever its surface needs. homeChannelFor is the lock-TAKING variant and
+	// is correct here: b.mu is not taken until further down this function.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
-		channel = "general"
+		home, err := b.homeChannelFor(body.CreatedBy)
+		if err != nil {
+			return TaskResponse{}, taskMutationError(TaskMutationInvalid,
+				"channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.", nil)
+		}
+		channel = home
 	}
 
 	// Permission preflight must run before any gate with external side

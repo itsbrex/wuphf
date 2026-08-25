@@ -349,9 +349,23 @@ func (b *Broker) handleStudioGeneratePackage(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
-	channel := normalizeChannelSlug(body.Channel)
+	// Raw emptiness first: normalizeChannelSlug("") is "general", so a missing
+	// channel used to be laundered into the shared room. While #general is on
+	// this still resolves to it, so today is unchanged.
+	//
+	// homeChannelFor (the lock-TAKING variant) is correct here: b.mu is NOT held
+	// at this point. homeChannelForLocked would read the roster unsynchronised.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
-		channel = "general"
+		home, err := b.homeChannelFor(body.Actor)
+		if err != nil {
+			http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.`, http.StatusBadRequest)
+			return
+		}
+		channel = home
 	}
 	actor := strings.TrimSpace(body.Actor)
 	if actor == "" {
@@ -689,9 +703,23 @@ func (b *Broker) handleStudioRunWorkflow(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	channel := normalizeChannelSlug(body.Channel)
+	// Raw emptiness first: normalizeChannelSlug("") is "general", so a missing
+	// channel used to be laundered into the shared room. While #general is on
+	// this still resolves to it, so today is unchanged.
+	//
+	// homeChannelFor (the lock-TAKING variant) is correct here: b.mu is NOT held
+	// at this point. homeChannelForLocked would read the roster unsynchronised.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
-		channel = "general"
+		home, err := b.homeChannelFor(body.Actor)
+		if err != nil {
+			http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.`, http.StatusBadRequest)
+			return
+		}
+		channel = home
 	}
 	actor := strings.TrimSpace(body.Actor)
 	if actor == "" {

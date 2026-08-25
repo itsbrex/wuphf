@@ -86,9 +86,25 @@ func (b *Broker) handlePostMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b.counter++
-	channel := normalizeChannelSlug(body.Channel)
+	// Raw emptiness first: normalizeChannelSlug("") is "general", so a missing
+	// channel used to be silently laundered into the shared room. Resolve a real
+	// home instead — while #general is enabled this still answers "general", so
+	// today is unchanged; once it is off this is the agent's DM, or a refusal.
+	//
+	// homeChannelForLocked is the correct variant HERE specifically: b.mu is
+	// held at this point. The other variant would
+	// take the lock again and deadlock.
+	channel := ""
+	if raw := strings.TrimSpace(body.Channel); raw != "" {
+		channel = normalizeChannelSlug(raw)
+	}
 	if channel == "" {
-		channel = "general"
+		home, err := b.homeChannelForLocked(body.From)
+		if err != nil {
+			http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.`, http.StatusBadRequest)
+			return
+		}
+		channel = home
 	}
 	// Auto-create DM conversations on first message (like Slack's conversations.open)
 	if b.findChannelLocked(channel) == nil {

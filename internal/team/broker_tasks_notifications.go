@@ -3,6 +3,7 @@ package team
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -47,6 +48,39 @@ func parseAtMentions(body string) []string {
 // user; human↔ceo self-DM is not a valid DM target).
 //
 // Must be called while b.mu is held for write.
+// taskCardHasNoHome reports whether a card ABOUT this task has nowhere to go,
+// and logs it when so.
+//
+// A task with no channel has no conversation. A card about it is an OPTIONAL
+// write, so it is SKIPPED rather than redirected: posting it into the acting
+// agent's DM would drop a card about task X into a conversation that may have
+// nothing to do with task X, and defaulting it to a shared room is the exact
+// laundering the channel retirement exists to stop. Skipping writes nothing,
+// which is the strictest available answer.
+//
+// It is logged rather than silent for one reason: a homeless task is an
+// ANOMALY, not a normal state. If these fire in volume, something upstream is
+// minting tasks with no conversation home, and this skip is the only place that
+// would ever know. Silent, it turns an upstream bug into "I reassigned that and
+// nothing happened" weeks later with no thread to pull.
+//
+// The log names WHICH card was dropped, not just that one was: reassign,
+// cancel, and rejection cards are the ones a human is most likely to come
+// asking about. Informational, not a warning — a homeless task genuinely has
+// nowhere to post, so this is expected behaviour, just expected behaviour
+// somebody may need to see.
+func taskCardHasNoHome(card string, task *teamTask) bool {
+	if task == nil {
+		return true
+	}
+	if strings.TrimSpace(task.Channel) != "" {
+		return false
+	}
+	log.Printf("task card skipped: no conversation home for task %s (card=%s)",
+		strings.TrimSpace(task.ID), card)
+	return true
+}
+
 func (b *Broker) postTaskReassignNotificationsLocked(actor string, task *teamTask, prevOwner string) {
 	if task == nil {
 		return
@@ -60,10 +94,10 @@ func (b *Broker) postTaskReassignNotificationsLocked(actor string, task *teamTas
 	if newOwner == prevOwner {
 		return
 	}
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("reassign", task) {
+		return
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
@@ -113,10 +147,10 @@ func (b *Broker) postTaskCancelNotificationsLocked(actor string, task *teamTask,
 		actor = "system"
 	}
 	prevOwner = strings.TrimSpace(prevOwner)
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("cancel", task) {
+		return
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
@@ -212,10 +246,10 @@ func (b *Broker) postTaskRequestChangesNotificationsLocked(actor string, task *t
 		actor = "system"
 	}
 	owner := strings.TrimSpace(task.Owner)
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("request_changes", task) {
+		return
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
@@ -269,10 +303,10 @@ func (b *Broker) postTaskRejectedNotificationsLocked(actor string, task *teamTas
 		actor = "system"
 	}
 	owner := strings.TrimSpace(task.Owner)
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("rejected", task) {
+		return
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
@@ -330,10 +364,11 @@ func (b *Broker) postIssueCreatedCardLocked(actor string, task *teamTask) string
 	if task == nil {
 		return ""
 	}
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("issue_created", task) {
+		// No card, so no thread root for the caller to anchor on.
+		return ""
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
@@ -436,10 +471,10 @@ func (b *Broker) postIssueLifecycleCardLocked(task *teamTask, from, to Lifecycle
 		return
 	}
 	transition := classifyIssueLifecycleTransition(from, to)
-	taskChannel := normalizeChannelSlug(task.Channel)
-	if taskChannel == "" {
-		taskChannel = "general"
+	if taskCardHasNoHome("issue_lifecycle", task) {
+		return
 	}
+	taskChannel := normalizeChannelSlug(task.Channel)
 	title := strings.TrimSpace(task.Title)
 	if title == "" {
 		title = task.ID
