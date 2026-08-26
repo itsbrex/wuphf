@@ -1,6 +1,7 @@
 package team
 
 import (
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -223,6 +224,64 @@ func (b *Broker) ensureDefaultChannelsLocked() {
 	// Always seed the "Backup & Migration" system task that owns #general,
 	// now that we have guaranteed #general exists.
 	b.ensureBackupMigrationTaskLocked()
+
+	// With #general retired, every conversation is a 1:1 DM — so the DMs have
+	// to exist, or the roster has nowhere to talk.
+	b.ensureAgentDMsLocked()
+}
+
+// ensureAgentDMsLocked gives every roster member a 1:1 DM with the human.
+//
+// THIS IS THE THING #general WAS BLOCKING ON. The kill switch was threaded
+// through seven gates and left off, and flipping it produced a workspace with
+// six agents and ZERO channels: a full roster and nowhere to say anything. The
+// switch removed the shared room without anyone building what replaces it.
+// Measured, not assumed — a fresh broker with generalEnabled=false seeded
+// `channels: 0, members: 6`.
+//
+// A DM per agent is the replacement the product design already calls for:
+// "all chats will be in agent DMs, and you can tag an agent in a DM to make
+// your agent go consult them and report back". This seeds exactly that.
+//
+// Idempotent by slug, so it is safe on every Load: an existing DM is left
+// completely alone, including its history and its member list.
+//
+// Runs regardless of the switch. When #general is enabled these DMs sit
+// alongside it and nothing is lost; when it is disabled they are the only way
+// to reach an agent. Gating this on the switch would mean the DMs appear only
+// in the configuration where they are load-bearing, which is the configuration
+// least able to survive a bug in this function.
+func (b *Broker) ensureAgentDMsLocked() {
+	if b.channelStore == nil {
+		return
+	}
+	now := time.Now().UTC().Format(time.RFC3339)
+	for _, m := range b.members {
+		agent := strings.TrimSpace(strings.ToLower(m.Slug))
+		if agent == "" || isHumanMessageSender(agent) {
+			continue
+		}
+		slug := channel.DirectSlug("human", agent)
+		if b.findChannelLocked(slug) != nil {
+			continue // already there; never touch an existing conversation
+		}
+		if _, err := b.channelStore.GetOrCreateDirect("human", agent); err != nil {
+			// Degrade rather than fail the boot: one unseedable DM must not
+			// stop the office from starting.
+			log.Printf("seed: could not create DM with %s: %v", agent, err)
+			continue
+		}
+		b.channels = append(b.channels, teamChannel{
+			Slug:        slug,
+			Name:        m.Name,
+			Type:        "dm",
+			Description: "Direct messages with " + agent,
+			Members:     []string{"human", agent},
+			CreatedBy:   "system",
+			CreatedAt:   now,
+			UpdatedAt:   now,
+		})
+	}
 }
 
 // ensureDefaultOfficeMembersLocked seeds the DefaultManifest roster ONLY when
@@ -331,9 +390,32 @@ func (b *Broker) normalizeLoadedStateLocked() {
 			}
 			b.channels[i].Members = allSlugs
 		}
+		// A DM's membership is its ACCESS CONTROL LIST, not a roster view.
+		// canAccessChannelLocked authorizes an agent by membership alone, so
+		// anything added here is granted read AND post on that conversation.
+		//
+		// Two bugs lived in this block, both invisible until #general was
+		// switched off and DMs became the only surface:
+		//
+		//  1. The filter below drops any slug that is not a roster member.
+		//     "human" is not an agent, so it was stripped from every DM --
+		//     the one participant who is always a party to it.
+		//  2. The CEO pin below prepended "ceo" to EVERY channel, DMs
+		//     included. Measured before this fix:
+		//         app-builder__human members = [ceo app-builder]
+		//         canAccess(ceo, app-builder__human) = true
+		//     The blanket read the CEO/Librarian/App-Builder bypasses were
+		//     deliberately removed for (see broker_channel_access.go) was
+		//     handed straight back through the seed. The access check was
+		//     never wrong; its input was.
+		//
+		// So DMs keep exactly their two participants and skip the pin. The
+		// CEO still routes work and consults specialists -- by DMing them,
+		// not by sitting inside their conversations.
+		isDM := b.channels[i].Type == "dm" || IsDMSlug(b.channels[i].Slug)
 		filteredMembers := make([]string, 0, len(b.channels[i].Members))
 		for _, slug := range uniqueSlugs(b.channels[i].Members) {
-			if b.findMemberLocked(slug) != nil {
+			if isHumanMessageSender(slug) || b.findMemberLocked(slug) != nil {
 				filteredMembers = append(filteredMembers, slug)
 			}
 		}
@@ -341,7 +423,7 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		// the packs/CEO removal an office may have no CEO at all, and pinning
 		// the slug into channel membership renders a ghost participant.
 		channelSeed := filteredMembers
-		if b.findMemberLocked("ceo") != nil {
+		if !isDM && b.findMemberLocked("ceo") != nil {
 			channelSeed = append([]string{"ceo"}, filteredMembers...)
 		}
 		b.channels[i].Members = uniqueSlugs(channelSeed)
