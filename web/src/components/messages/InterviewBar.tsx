@@ -498,7 +498,7 @@ export function CeoCardSection() {
   return (
     <section
       className="ceo-card-section"
-      aria-label="CEO question"
+      aria-label="Chief of Staff question"
       data-testid="ceo-card-section"
       data-kind={pendingSuggestion.kind}
       data-suggestion-id={pendingSuggestion.id}

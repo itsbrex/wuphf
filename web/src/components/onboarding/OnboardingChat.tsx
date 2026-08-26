@@ -10,7 +10,7 @@
  * destination, not the wizard.
  *
  * Lifts from the onboarding spec (docs/specs/onboarding-into-office.md):
- *   "Onboarding is a wizard mocked as a CEO chat. The user is not really in
+ *   "Onboarding is a wizard mocked as a Chief of Staff chat. The user is not really in
  *    the office yet until onboarding finishes."
  *
  * Component shape mirrors DMView's chat region but drops the workbench

@@ -202,7 +202,7 @@ var channelSlashCommands = []tui.SlashCommand{
 	{Name: "collapse", Description: "Collapse a thread — keep the office tidy, Dwight approves", Category: "conversation"},
 	{Name: "cancel", Description: "Exit current mode — that's what she said (probably)", Category: "conversation"},
 	{Name: "collab", Description: "Open-floor mode — everyone hears everything, Michael Scott style", Category: "session"},
-	{Name: "focus", Description: "Delegation mode — CEO routes, specialists execute (that's how it was always meant to work)", Category: "session"},
+	{Name: "focus", Description: "Delegation mode — Chief of Staff routes, specialists execute (that's how it was always meant to work)", Category: "session"},
 	{Name: "reset", Description: "Reset channel and agents", Category: "session"},
 	{Name: "reset-dm", Description: "Clear direct messages with an agent", Category: "session"},
 	{Name: "quit", Description: "Exit WUPHF — Michael would make a speech first", Category: "session"},

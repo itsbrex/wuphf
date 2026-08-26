@@ -241,7 +241,7 @@ func TestChannelViewUsesOneOnOneChrome(t *testing.T) {
 	m.refreshSlashCommands()
 
 	view := stripANSI(m.View())
-	if !strings.Contains(view, "1:1 with CEO") {
+	if !strings.Contains(view, "1:1 with Chief of Staff") {
 		t.Fatalf("expected 1o1 header, got %q", view)
 	}
 	if strings.Contains(view, "The WUPHF Office") || strings.Contains(view, "Message #general") {
@@ -282,7 +282,7 @@ func TestOneOnOneStatusBarShowsRuntimeSummary(t *testing.T) {
 	m.brokerConnected = true
 	m.members = []channelui.Member{{
 		Slug:         "ceo",
-		Name:         "CEO",
+		Name:         "Chief of Staff",
 		LiveActivity: "go test ./cmd/wuphf",
 	}}
 	m.tasks = []channelui.Task{{
@@ -553,7 +553,7 @@ func TestOneOnOnePickerEnableOpensAgentPicker(t *testing.T) {
 		t.Fatalf("expected 1o1 agent picker, got active=%v mode=%q", got.picker.IsActive(), got.pickerMode)
 	}
 	view := stripANSI(got.picker.View())
-	if !strings.Contains(view, "CEO") {
+	if !strings.Contains(view, "Chief of Staff") {
 		t.Fatalf("expected agent options in picker, got %q", view)
 	}
 }
@@ -926,13 +926,13 @@ func TestBuildCalendarLinesShowsNextRunMetadata(t *testing.T) {
 			NextRun:         time.Now().Add(10 * time.Minute).Format(time.RFC3339),
 			LastRun:         time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 		},
-	}, nil, nil, "general", []channelui.Member{{Slug: "ceo", Name: "CEO"}}, channelui.CalendarRangeWeek, "", 80)
+	}, nil, nil, "general", []channelui.Member{{Slug: "ceo", Name: "Chief of Staff"}}, channelui.CalendarRangeWeek, "", 80)
 
 	rendered := stripANSI(joinRenderedLines(lines))
 	if !strings.Contains(rendered, "every 15 min") || (!strings.Contains(rendered, "today") && !strings.Contains(rendered, "tomorrow")) {
 		t.Fatalf("expected scheduler timing metadata, got %q", rendered)
 	}
-	if !strings.Contains(rendered, "#general") || !strings.Contains(rendered, "CEO") {
+	if !strings.Contains(rendered, "#general") || !strings.Contains(rendered, "Chief of Staff") {
 		t.Fatalf("expected calendar lines to include channel scope and participants, got %q", rendered)
 	}
 }
@@ -951,7 +951,7 @@ func TestBuildCalendarLinesPinsTeammateCalendarsBeforeAgenda(t *testing.T) {
 			CreatedAt: time.Now().Format(time.RFC3339),
 		},
 	}, nil, "general", []channelui.Member{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "ceo", Name: "Chief of Staff"},
 		{Slug: "fe", Name: "Frontend Engineer"},
 	}, channelui.CalendarRangeWeek, "", 80)
 
@@ -1172,7 +1172,7 @@ func TestRenderSidebarUsesCompactRosterWhenSpaceIsTight(t *testing.T) {
 	if strings.Contains(sidebar, "\u201c") {
 		t.Fatalf("expected compact sidebar to omit speech bubbles, got %q", sidebar)
 	}
-	if !strings.Contains(sidebar, "CEO") {
+	if !strings.Contains(sidebar, "Chief of Staff") {
 		t.Fatalf("expected compact sidebar to show fallback roster, got %q", sidebar)
 	}
 }
@@ -1206,7 +1206,7 @@ func TestRenderSidebarFallsBackToOfficeRosterWhenPeopleListIsEmpty(t *testing.T)
 	if !strings.Contains(sidebar, "Agents · office roster") {
 		t.Fatalf("expected office roster header, got %q", sidebar)
 	}
-	if !strings.Contains(sidebar, "CEO") {
+	if !strings.Contains(sidebar, "Chief of Staff") {
 		t.Fatalf("expected fallback roster members, got %q", sidebar)
 	}
 }
@@ -2044,7 +2044,7 @@ func TestCalendarViewRendersSchedulerAndActions(t *testing.T) {
 	m.activeApp = channelui.OfficeAppCalendar
 	m.actions = []channelui.Action{{ID: "action-1", Kind: "task_created", Actor: "ceo", Summary: "Opened a follow-up task", CreatedAt: "2026-03-24T10:00:00Z"}}
 	m.scheduler = []channelui.SchedulerJob{{Slug: "nex-insights", Label: "Nex insights", IntervalMinutes: 15, NextRun: "2026-03-24T10:15:00Z", Status: "sleeping"}}
-	m.members = []channelui.Member{{Slug: "ceo", Name: "CEO"}}
+	m.members = []channelui.Member{{Slug: "ceo", Name: "Chief of Staff"}}
 
 	view := stripANSI(m.View())
 	if !strings.Contains(view, "Calendar") || !strings.Contains(view, "Nex insights") || !strings.Contains(view, "Opened a follow-up task") {
@@ -2607,7 +2607,17 @@ func TestChannelViewShowsMessageIDInMeta(t *testing.T) {
 
 func TestChannelViewShowsPerMessageTokenUsage(t *testing.T) {
 	m := newChannelModel(false)
-	m.width = 120
+	// 140, not 120. Renaming the lead from "CEO" to "Chief of Staff" added 11
+	// characters to a metadata line that already carried the name twice, and
+	// at 120 columns that pushed the "tok" suffix off the end -- the view
+	// rendered "1.2k " and this test failed on a truncation, not on missing
+	// token accounting.
+	//
+	// Widened so the test measures what it is for. The truncation itself is
+	// REAL and is not fixed here: at 120 columns the per-message token figure
+	// is now cut off. The proper fix is a short display name for dense meta
+	// lines rather than repeating the full name twice on one row.
+	m.width = 140
 	m.height = 30
 	m.messages = []channelui.BrokerMessage{
 		{

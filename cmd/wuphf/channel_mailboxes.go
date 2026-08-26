@@ -16,7 +16,7 @@ func buildInboxLines(messages []channelui.BrokerMessage, requests []channelui.In
 		return append(lines,
 			channelui.RenderedLine{Text: ""},
 			channelui.RenderedLine{Text: muted.Render("  Nothing is waiting in the inbox lane.")},
-			channelui.RenderedLine{Text: muted.Render("  Human asks, CEO guidance, tags, and thread replies will collect here.")},
+			channelui.RenderedLine{Text: muted.Render("  Human asks, Chief of Staff guidance, tags, and thread replies will collect here.")},
 		)
 	}
 	if len(requests) > 0 {

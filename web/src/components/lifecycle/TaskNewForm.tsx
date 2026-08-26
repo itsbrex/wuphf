@@ -187,7 +187,7 @@ export function TaskNewForm() {
               type="text"
               value={assignee}
               onChange={(e) => setAssignee(e.target.value)}
-              placeholder="agent slug — leave blank for CEO to triage"
+              placeholder="agent slug — leave blank for Chief of Staff to triage"
               data-testid="issue-new-assignee"
             />
           </div>

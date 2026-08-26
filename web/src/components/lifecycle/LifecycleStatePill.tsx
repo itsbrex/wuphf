@@ -82,7 +82,7 @@ export function StaffingStatePill() {
       data-state="staffing"
       data-activity="running"
       data-testid="staffing-state-pill"
-      title="The CEO is picking the owner"
+      title="The Chief of Staff is picking the owner"
     >
       <span
         className="dot dot--blink"

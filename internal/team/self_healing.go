@@ -562,7 +562,7 @@ func agentDisplayNameFromSlug(slug string) string {
 	}
 	upper := strings.ToUpper(slug)
 	switch upper {
-	case "CEO", "CTO", "CFO", "COO", "CMO", "VP", "PM":
+	case "Chief of Staff", "CTO", "CFO", "COO", "CMO", "VP", "PM":
 		return upper
 	}
 	// Title-case the slug, replacing hyphens/underscores with spaces.
@@ -684,13 +684,13 @@ func selfHealingTaskDetails(agentSlug, taskID, parentTitle, parentDetails string
 func whatNeedsToHappen(reason agent.EscalationReason) string {
 	switch reason {
 	case agent.EscalationStuck:
-		return "The CEO (or another suitable agent) will pick this up and try a different approach. You usually don't need to act — but if you have additional context or a workaround, drop it in the comments and the agent will use it on the next turn."
+		return "The Chief of Staff (or another suitable agent) will pick this up and try a different approach. You usually don't need to act — but if you have additional context or a workaround, drop it in the comments and the agent will use it on the next turn."
 	case agent.EscalationMaxRetries:
-		return "The CEO will look at the failing pattern and either fix the root cause or escalate to you with a specific question. If you know which step keeps breaking (e.g. \"the email send is rate-limited\"), comment it here — that often resolves it in one turn."
+		return "The Chief of Staff will look at the failing pattern and either fix the root cause or escalate to you with a specific question. If you know which step keeps breaking (e.g. \"the email send is rate-limited\"), comment it here — that often resolves it in one turn."
 	case agent.EscalationCapabilityGap:
-		return "The CEO will identify what's missing (a tool, a skill, an integration, or a piece of information) and either enable it, request it from you, or hire a specialist who has it. If you already know the answer — e.g. \"use the Gmail integration\" — comment it here and the agent will proceed."
+		return "The Chief of Staff will identify what's missing (a tool, a skill, an integration, or a piece of information) and either enable it, request it from you, or hire a specialist who has it. If you already know the answer — e.g. \"use the Gmail integration\" — comment it here and the agent will proceed."
 	default:
-		return "The CEO will review and decide how to proceed. If you have context that would unblock the agent, add it as a comment."
+		return "The Chief of Staff will review and decide how to proceed. If you have context that would unblock the agent, add it as a comment."
 	}
 }
 

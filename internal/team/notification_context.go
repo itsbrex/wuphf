@@ -886,7 +886,7 @@ func changesRequestedPacketLines(task teamTask) []string {
 		"  Address this feedback FIRST — point by point, in the actual artifact — then resubmit with team_task action=submit_for_review. Do not guess at what the reviewer meant when the text above answers it.",
 	}
 	if task.HumanObjection != nil {
-		lines = append(lines, "  This objection is from the HUMAN and is sovereign: no agent (including the lead/CEO) can approve or complete this task while it stands. Only the human can clear it by approving or completing.")
+		lines = append(lines, "  This objection is from the HUMAN and is sovereign: no agent (including the lead/Chief of Staff) can approve or complete this task while it stands. Only the human can clear it by approving or completing.")
 	}
 	return lines
 }

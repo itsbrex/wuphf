@@ -130,7 +130,7 @@ function buildLabel(active: ReadonlyArray<OfficeMember>): string {
  * The raw broker string can carry runtime internals — tool-call JSON
  * ('[{"tool_name":"mcp__…","type":"tool_reference"}]'), MCP tool ids,
  * process exhaust (ICP-eval v3 [18:43:37]: raw JSON rendered verbatim in
- * the "CEO is typing" preview). humanizeActivity collapses anything
+ * the "Chief of Staff is typing" preview). humanizeActivity collapses anything
  * machine-shaped to "Working…" so the strip never shows code.
  */
 function resolveProgressDetail(active: ReadonlyArray<OfficeMember>): string {

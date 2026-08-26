@@ -170,7 +170,7 @@ type TeamPollArgs struct {
 	MySlug  string `json:"my_slug,omitempty" jsonschema:"Your agent slug so tagged_count can be computed. Defaults to WUPHF_AGENT_SLUG."`
 	SinceID string `json:"since_id,omitempty" jsonschema:"Only return messages after this message ID"`
 	Limit   int    `json:"limit,omitempty" jsonschema:"Maximum messages to return (default 10, max 100)"`
-	Scope   string `json:"scope,omitempty" jsonschema:"Transcript scope: all, agent, inbox, or outbox. Defaults to agent-scoped for non-CEO office agents."`
+	Scope   string `json:"scope,omitempty" jsonschema:"Transcript scope: all, agent, inbox, or outbox. Defaults to agent-scoped for non-Chief of Staff office agents."`
 }
 
 type TeamStatusArgs struct {
@@ -248,7 +248,7 @@ type TeamTaskDeliverable struct {
 }
 
 type TeamTaskArgs struct {
-	Action               string   `json:"action" jsonschema:"One of: create, define, claim, assign, submit_for_review, comment, request_changes, approve, reject, complete, block, resume, release, reopen. claim takes the task for yourself; assign hands it to the owner slug you name, moving it off whoever had it. define (CEO/human only) sets the structured task definition — goal, deliverables, success_criteria, access_needed — call it on a task BEFORE assigning owners or creating subtasks. submit_for_review hands an in-progress task to its reviewer. comment leaves a PR-style note with no state change. request_changes (reviewer only) bounces the task back to its owner for revision — non-terminal. approve marks reviewed work as canonical and unblocks dependents. reject (reviewer only) marks the work as permanently un-landable; downstream dependents stay blocked. complete is for tasks that do not need structured review. reopen (CEO/human only) reverses a terminal close (done/approved/rejected/cancelled/archived): a task with a real owner lands back in running and re-engages that owner — use it when work was closed wrongly instead of creating a duplicate task. NOTE: while a HUMAN's request_changes objection is open on a task, approve/complete by any agent is refused; only the human can clear it."`
+	Action               string   `json:"action" jsonschema:"One of: create, define, claim, assign, submit_for_review, comment, request_changes, approve, reject, complete, block, resume, release, reopen. claim takes the task for yourself; assign hands it to the owner slug you name, moving it off whoever had it. define (Chief of Staff/human only) sets the structured task definition — goal, deliverables, success_criteria, access_needed — call it on a task BEFORE assigning owners or creating subtasks. submit_for_review hands an in-progress task to its reviewer. comment leaves a PR-style note with no state change. request_changes (reviewer only) bounces the task back to its owner for revision — non-terminal. approve marks reviewed work as canonical and unblocks dependents. reject (reviewer only) marks the work as permanently un-landable; downstream dependents stay blocked. complete is for tasks that do not need structured review. reopen (Chief of Staff/human only) reverses a terminal close (done/approved/rejected/cancelled/archived): a task with a real owner lands back in running and re-engages that owner — use it when work was closed wrongly instead of creating a duplicate task. NOTE: while a HUMAN's request_changes objection is open on a task, approve/complete by any agent is refused; only the human can clear it."`
 	Channel              string   `json:"channel,omitempty" jsonschema:"Channel slug. Defaults to the agent's current channel or general."`
 	ID                   string   `json:"id,omitempty" jsonschema:"Task ID for non-create actions"`
 	Title                string   `json:"title,omitempty" jsonschema:"Task title when creating a task"`
@@ -287,7 +287,7 @@ type TeamChannelArgs struct {
 	Channel     string   `json:"channel" jsonschema:"Channel slug"`
 	Name        string   `json:"name,omitempty" jsonschema:"Optional channel display name on create"`
 	Description string   `json:"description,omitempty" jsonschema:"One-sentence explanation of what the channel is for. Required in practice when creating channels."`
-	Members     []string `json:"members,omitempty" jsonschema:"Optional initial member slugs to add when creating the channel. CEO is always included."`
+	Members     []string `json:"members,omitempty" jsonschema:"Optional initial member slugs to add when creating the channel. Chief of Staff is always included."`
 	MySlug      string   `json:"my_slug,omitempty" jsonschema:"Your agent slug. Defaults to WUPHF_AGENT_SLUG."`
 }
 

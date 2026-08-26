@@ -247,7 +247,7 @@ func main() {
 	brokerPort := flag.Int("broker-port", 0, "Port for the local broker (default 7890)")
 	noNex := flag.Bool("no-nex", false, "Disable Nex completely for this run")
 	memoryBackend := flag.String("memory-backend", "", "Memory backend for organizational context (nex, gbrain, none)")
-	opusCEO := flag.Bool("opus-ceo", false, "Upgrade CEO agent from Sonnet to Opus")
+	opusCEO := flag.Bool("opus-ceo", false, "Upgrade Chief of Staff agent from Sonnet to Opus")
 	collabMode := flag.Bool("collab", false, "Start in collaborative mode (all agents see all messages)")
 	noOpen := flag.Bool("no-open", false, "Don't open browser automatically on launch")
 	// --workspace=<name> overrides the active workspace for a single

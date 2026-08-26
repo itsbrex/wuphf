@@ -158,7 +158,7 @@ func synthesizeStarterPlan(name string, input SynthesisInput, workstreams []stri
 		GeneralChannelDescription: fmt.Sprintf("Command deck for %s. Use this room to steer the operation, approve risky actions, and unblock the specialists.", name),
 		KickoffPrompt:             fmt.Sprintf("Stand up %s from scratch. Use the starter lanes, turn the objective into a repeatable operating system, create the first durable tasks, and keep external side effects behind human approval.", name),
 		Agents: []StarterAgent{
-			{Slug: "ceo", Emoji: "👔", Name: "CEO", Role: "Owns priorities, approvals, and escalation decisions", Checked: true, Type: "lead", BuiltIn: true},
+			{Slug: "ceo", Emoji: "👔", Name: "Chief of Staff", Role: "Owns priorities, approvals, and escalation decisions", Checked: true, Type: "lead", BuiltIn: true},
 			{Slug: "planner", Emoji: "🧭", Name: "Planner", Role: "Turns objectives into workstreams, milestones, and task plans", Checked: true, Type: "specialist", BuiltIn: true, Expertise: workstreams, Personality: "Clarifies scope quickly and turns ambiguity into an operating plan."},
 			{Slug: "builder", Emoji: "🛠️", Name: "Builder", Role: "Implements the first deliverables and workflow assets", Checked: true, Type: "specialist", BuiltIn: true, Expertise: []string{"Execution packets", "Workflow setup", "Deliverable assembly"}, Personality: "Biases toward shipping real artifacts, not commentary."},
 			{Slug: "operator", Emoji: "⚙️", Name: "Operator", Role: "Owns operational handoffs, runbooks, and automation hygiene", Checked: true, Type: "specialist", BuiltIn: true, Expertise: []string{"Runbooks", "Approvals", "Automation loops"}, Personality: "Keeps the system durable and visible."},

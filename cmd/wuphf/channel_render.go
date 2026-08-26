@@ -19,7 +19,7 @@ func buildOfficeMessageLines(messages []channelui.BrokerMessage, expanded map[st
 			channelui.RenderedLine{Text: mutedStyle.Render("  Drop a company-building thought in #general, or tag a teammate to get things moving.")},
 			channelui.RenderedLine{Text: ""},
 			channelui.RenderedLine{Text: mutedStyle.Render("  Suggested: Let's build an AI notetaking company. (Ryan Howard would've called it NoteWUPHF.)")},
-			channelui.RenderedLine{Text: mutedStyle.Render("  The CEO triages first, then the right specialists pile in — unlike the original WUPHF.com, this ships.")},
+			channelui.RenderedLine{Text: mutedStyle.Render("  The Chief of Staff triages first, then the right specialists pile in — unlike the original WUPHF.com, this ships.")},
 		)
 		return lines
 	}

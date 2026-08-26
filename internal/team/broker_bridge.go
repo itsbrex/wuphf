@@ -72,7 +72,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 
 	actor := normalizeActorSlug(body.Actor)
 	if actor != "ceo" {
-		http.Error(w, "only the CEO can bridge channel context", http.StatusForbidden)
+		http.Error(w, "only the Chief of Staff can bridge channel context", http.StatusForbidden)
 		return
 	}
 	// Raw emptiness before normalising: with the normalise first, a bridge
@@ -103,7 +103,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 		Source:     "channel_bridge",
 		Kind:       "bridge",
 		Title:      "Cross-channel bridge",
-		Content:    fmt.Sprintf("CEO bridged context from #%s to #%s: %s", source, target, summary),
+		Content:    fmt.Sprintf("Chief of Staff bridged context from #%s to #%s: %s", source, target, summary),
 		Channel:    target,
 		Owner:      "ceo",
 		Confidence: "explicit",
@@ -120,8 +120,8 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 	decision, err := b.RecordDecision(
 		"bridge_channel",
 		target,
-		fmt.Sprintf("CEO bridged context from #%s to #%s.", source, target),
-		"Relevant context existed in another channel, so the CEO carried it into this channel explicitly.",
+		fmt.Sprintf("Chief of Staff bridged context from #%s to #%s.", source, target),
+		"Relevant context existed in another channel, so the Chief of Staff carried it into this channel explicitly.",
 		"ceo",
 		signalIDs,
 		false,
@@ -143,7 +143,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 		content,
 		decision.ID,
 		"ceo_bridge",
-		"CEO bridge",
+		"Chief of Staff bridge",
 		uniqueSlugs(body.Tagged),
 		strings.TrimSpace(body.ReplyTo),
 	)

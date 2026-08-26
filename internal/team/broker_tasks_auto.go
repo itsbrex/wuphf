@@ -10,7 +10,7 @@ import (
 //
 // A task can be assigned to the "auto" sentinel instead of a concrete agent
 // slug — the floor assignment when the user does not want to pick an owner
-// themselves. "auto" is never a registered member; it means "the CEO should
+// themselves. "auto" is never a registered member; it means "the Chief of Staff should
 // pick the best specialist." Resolution reuses the normal chat→notify→CEO loop:
 // we post a human-authored, @ceo-tagged message in the task's channel asking
 // the CEO to assign + start, and the CEO reassigns via its existing team_task

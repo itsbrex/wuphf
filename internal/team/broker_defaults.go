@@ -352,6 +352,12 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		if isLibrarianSlug(member.Slug) {
 			member.Name = librarianName
 		}
+		// Same treatment for the lead: "Chief of Staff" became "Chief of Staff", and
+		// without this the rename would only ever reach brand-new workspaces.
+		if member.Slug == "ceo" {
+			member.Name = company.ChiefOfStaffName()
+			member.Role = company.ChiefOfStaffRole()
+		}
 		member.Expertise = normalizeStringList(member.Expertise)
 		member.AllowedTools = normalizeStringList(member.AllowedTools)
 		normalizedMembers = append(normalizedMembers, member)

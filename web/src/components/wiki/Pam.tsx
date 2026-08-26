@@ -66,7 +66,7 @@ const JIM_PAM_CONVERSATIONS: readonly (readonly JimPamLine[])[] = [
   [
     {
       who: "jim",
-      text: "Did you hear? CEO merged 12 PRs. Didn't ask anyone.",
+      text: "Did you hear? Chief of Staff merged 12 PRs. Didn't ask anyone.",
     },
     { who: "pam", text: "Twelve? I'd better update the wiki." },
     { who: "jim", text: "Honestly kind of amazing." },
@@ -79,7 +79,7 @@ const JIM_PAM_CONVERSATIONS: readonly (readonly JimPamLine[])[] = [
   [
     {
       who: "jim",
-      text: "Michael is giving the CEO agent a performance review.",
+      text: "Michael is giving the Chief of Staff agent a performance review.",
     },
     { who: "pam", text: "The AI agent." },
     { who: "jim", text: "It scored Outstanding. Michael cried." },

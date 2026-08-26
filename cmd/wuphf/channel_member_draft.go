@@ -60,7 +60,7 @@ func (m channelModel) submitMemberDraft() (tea.Model, tea.Cmd) {
 		}
 		draft.Slug = channelui.NormalizeDraftSlug(value)
 		if draft.Slug == "ceo" {
-			m.notice = "CEO is reserved."
+			m.notice = "Chief of Staff is reserved."
 			return m, nil
 		}
 		draft.Step++

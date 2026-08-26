@@ -60,7 +60,7 @@ func (b *Broker) advancePhase(s *onboarding.State, next string) error {
 	// Ensure the CEO DM channel exists before trying to post into it.
 	dmSlug, err := b.EnsureDirectChannel("ceo")
 	if err != nil {
-		return fmt.Errorf("onboarding phase %s: ensure CEO DM: %w", next, err)
+		return fmt.Errorf("onboarding phase %s: ensure Chief of Staff DM: %w", next, err)
 	}
 
 	// At the seed phase, run the atomic office seed BEFORE posting the
@@ -96,7 +96,7 @@ func (b *Broker) advancePhase(s *onboarding.State, next string) error {
 		// confused-deputy injection surface (mirrors PR #684 audit closure).
 		sanitized, err := sanitizeCEOPayload(payload)
 		if err != nil {
-			return fmt.Errorf("onboarding: sanitize CEO payload for phase %q: %w", next, err)
+			return fmt.Errorf("onboarding: sanitize Chief of Staff payload for phase %q: %w", next, err)
 		}
 		b.counter++
 		b.appendMessageLocked(channelMessage{
@@ -313,7 +313,7 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 	b.members = []officeMember{
 		{
 			Slug:      "ceo",
-			Name:      "CEO",
+			Name:      "Chief of Staff",
 			Role:      "lead",
 			BuiltIn:   true,
 			CreatedBy: "wuphf",
@@ -569,7 +569,7 @@ type ceoMessagePayload struct {
 // on entering the given phase. Each entry maps to one channelMessage in the
 // CEO DM.
 //
-// All strings are verbatim from the spec "## CEO Voice — deterministic
+// All strings are verbatim from the spec "## Chief of Staff Voice — deterministic
 // templates" section. No LLM tokens are spent here.
 //
 // Returns nil for phases not handled in Phase 2 (draft/approve/kickoff).

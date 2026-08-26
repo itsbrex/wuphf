@@ -765,7 +765,7 @@ func (t *SlackTransport) displayNameForOffice(from string) string {
 // renderOfficeTags rewrites office-internal "@slug" tokens for SLACK READERS:
 // a REGISTERED foreign agent becomes a real <@U…> mention so the bot is
 // actually pinged; the office LEAD becomes the bot's own Slack name (WUPHF is
-// one coordinating bot — there is no public "CEO"); every other member token
+// one coordinating bot — there is no public "Chief of Staff"); every other member token
 // becomes its plain display name, because a tag that cannot be tagged in
 // Slack is just noise. Two properties keep this injection-safe: replacement
 // values come exclusively from the roster/registry/auth.test (never from

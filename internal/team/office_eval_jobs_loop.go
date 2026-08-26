@@ -196,7 +196,7 @@ func evalJobCompletionHook(fx *officeEvalFixture, r *OfficeEvalReport) error {
 //	    lead included, on both the team_task path and the
 //	    /tasks/{id}/decision path) is refused with an error naming the
 //	    objection; a HUMAN approve clears it and lands the task
-//	    ([01:04]: "CEO self-approves over a human rejection").
+//	    ([01:04]: "Chief of Staff self-approves over a human rejection").
 //	(c) reopen symmetric with close — the lead reopens the closed task
 //	    and the owner is re-enqueued through the same wake path a fresh
 //	    assignment uses ([01:06]: the CEO could close over an objection

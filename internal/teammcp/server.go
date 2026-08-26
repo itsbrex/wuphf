@@ -299,7 +299,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 	), handleAgentMessage)
 	mcp.AddTool(server, readOnlyTool(
 		"team_inbox",
-		"Read only the messages that currently belong in your agent inbox: human asks, CEO guidance, tags to you, and replies in your threads.",
+		"Read only the messages that currently belong in your agent inbox: human asks, Chief of Staff guidance, tags to you, and replies in your threads.",
 	), handleTeamInbox)
 	mcp.AddTool(server, readOnlyTool(
 		"team_outbox",
@@ -410,7 +410,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		), handleTeamPlan)
 		mcp.AddTool(server, officeWriteTool(
 			"team_bridge",
-			"CEO-only tool to bridge relevant context from one channel into another and leave a visible cross-channel trail.",
+			"Chief of Staff-only tool to bridge relevant context from one channel into another and leave a visible cross-channel trail.",
 		), handleTeamBridge)
 		mcp.AddTool(server, officeWriteTool(
 			"team_channel",

@@ -477,7 +477,7 @@ func (w *watchdogScheduler) recordLedger(channel, kind, targetID, owner, summary
 	blocking := false
 	if decisionOwner == "" {
 		decisionKind = "escalate_to_ceo"
-		decisionReason = "The watchdog detected work without a live owner, so the CEO should re-triage it."
+		decisionReason = "The watchdog detected work without a live owner, so the Chief of Staff should re-triage it."
 		decisionOwner = "ceo"
 	}
 	if kind == "request_waiting" {

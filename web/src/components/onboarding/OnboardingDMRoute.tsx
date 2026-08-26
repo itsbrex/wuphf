@@ -9,9 +9,9 @@
  *
  * The spec hard-rule (docs/specs/onboarding-into-office.md "Eng review
  * decisions"):
- *   "Frontend reuses DMView for the CEO chat. A small OnboardingDMRoute
+ *   "Frontend reuses DMView for the Chief of Staff chat. A small OnboardingDMRoute
  *    wrapper provides the preview-overlay context and points DMView at
- *    the CEO DM channel."
+ *    the Chief of Staff DM channel."
  *
  * No new chat shell, no new composer, no duplicated SSE/scroll/optimistic-post
  * code. CEO DM inherits all of that from DMView.

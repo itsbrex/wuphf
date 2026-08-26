@@ -71,6 +71,6 @@ describe("staffing state", () => {
     const pill = screen.getByTestId("staffing-state-pill");
     expect(pill.textContent).toMatch(/staffing/i);
     expect(pill.textContent).not.toMatch(/parked/i);
-    expect(pill).toHaveAttribute("title", "The CEO is picking the owner");
+    expect(pill).toHaveAttribute("title", "The Chief of Staff is picking the owner");
   });
 });

@@ -15,6 +15,21 @@ import (
 	"github.com/nex-crm/wuphf/internal/provider"
 )
 
+// The lead agent is the Chief of Staff. The SLUG stays "ceo" on purpose.
+//
+// The slug is an identifier, not a label: it appears in DM slugs
+// ("ceo__human"), task owners, channel membership, and saved rosters on
+// users' disks. Renaming it would orphan every one of those rows for anyone
+// with an existing workspace, in exchange for changing a string nobody sees.
+// The same reasoning applies to the other agent slugs.
+//
+// So the identifier is frozen and the display name is free to change. Anything
+// a person reads comes from Name/Role; anything the system keys on uses Slug.
+const (
+	chiefOfStaffName = "Chief of Staff"
+	chiefOfStaffRole = "Chief of Staff"
+)
+
 // generalChannelSlug aliases channel.GeneralSlug for use inside this file.
 // Several loops here bind a range variable named `channel`, which shadows the
 // package identifier; the alias keeps those bodies able to name the slug.
@@ -276,7 +291,7 @@ func DefaultManifest() Manifest {
 		}
 	}
 	manifest.Members = []MemberSpec{
-		{Slug: "ceo", Name: "CEO", Role: "CEO", System: true},
+		{Slug: "ceo", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
 		appBuilderMemberSpec(),
 		{Slug: "planner", Name: "Planner", Role: "Planner"},
 		{Slug: "executor", Name: "Executor", Role: "Executor"},
@@ -577,3 +592,8 @@ func humanizeSlug(slug string) string {
 	}
 	return strings.Join(parts, " ")
 }
+
+// ChiefOfStaffName and ChiefOfStaffRole expose the lead's display strings to
+// other packages, so the name lives in exactly one place.
+func ChiefOfStaffName() string { return chiefOfStaffName }
+func ChiefOfStaffRole() string { return chiefOfStaffRole }

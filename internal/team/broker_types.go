@@ -349,7 +349,7 @@ type teamTask struct {
 	// TaskMutationForbidden naming the objection; only a human actor can
 	// approve/complete (which clears it) or refresh it with another
 	// request_changes. The human's no is sovereign (core-loop fix family
-	// #1, ICP-eval v2 J2: "CEO self-approves over a human rejection").
+	// #1, ICP-eval v2 J2: "Chief of Staff self-approves over a human rejection").
 	// Wire key "human_objection" is additive.
 	HumanObjection *TaskReviewObjection `json:"human_objection,omitempty"`
 	// HumanNotePending is the latest human message posted into this task's

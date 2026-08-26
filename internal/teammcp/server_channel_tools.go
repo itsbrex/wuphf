@@ -39,7 +39,7 @@ func handleTeamChannels(ctx context.Context, _ *mcp.CallToolRequest, _ TeamChann
 		}
 		lines = append(lines, line)
 	}
-	return textResult("Office channels:\n" + strings.Join(lines, "\n") + "\n\nYou can inspect channel names and descriptions even if you are not a member. Only the CEO has full cross-channel content context by default."), nil, nil
+	return textResult("Office channels:\n" + strings.Join(lines, "\n") + "\n\nYou can inspect channel names and descriptions even if you are not a member. Only the Chief of Staff has full cross-channel content context by default."), nil, nil
 }
 
 func handleTeamDMOpen(ctx context.Context, _ *mcp.CallToolRequest, args TeamDMOpenArgs) (*mcp.CallToolResult, any, error) {
@@ -149,7 +149,7 @@ func handleTeamBridge(ctx context.Context, _ *mcp.CallToolRequest, args TeamBrid
 		return toolError(err), nil, nil
 	}
 	if slug != "ceo" {
-		return toolError(fmt.Errorf("only the CEO can bridge channel context; ask @ceo to do it")), nil, nil
+		return toolError(fmt.Errorf("only the Chief of Staff can bridge channel context; ask @ceo to do it")), nil, nil
 	}
 	source := resolveChannel(args.SourceChannel)
 	target := resolveChannel(args.TargetChannel)
@@ -171,7 +171,7 @@ func handleTeamBridge(ctx context.Context, _ *mcp.CallToolRequest, args TeamBrid
 	}, &result); err != nil {
 		return toolError(err), nil, nil
 	}
-	text := fmt.Sprintf("CEO bridged context from #%s to #%s", source, target)
+	text := fmt.Sprintf("Chief of Staff bridged context from #%s to #%s", source, target)
 	if result.ID != "" {
 		text += " (" + result.ID + ")"
 	}

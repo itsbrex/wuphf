@@ -503,7 +503,7 @@ var activityWatchdogEnabled = true
 // activity state before the watchdog forcibly resets it to idle. Set long
 // enough to cover normal long turns (tool chains, big edits) but short enough
 // that a crashed spawn does not leave the agent looking "active" for hours —
-// which blocks the CEO's "Already active in this thread" re-route guard and
+// which blocks the Chief of Staff's "Already active in this thread" re-route guard and
 // prevents the specialist from being dispatched again.
 const staleActivityThreshold = 5 * time.Minute
 
@@ -530,7 +530,7 @@ const stuckThresholdSeconds = 90
 //
 //  2. Stale-active reset (>= staleActivityThreshold): the long-standing
 //     safety net. Treat the agent as crashed and force it back to idle so
-//     the CEO's "Already active in this thread" re-route guard releases.
+//     the Chief of Staff's "Already active in this thread" re-route guard releases.
 //
 // Must be called with b.mu held. Returns the snapshots that need to be
 // published to subscribers after the caller releases the lock.

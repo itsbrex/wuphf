@@ -552,7 +552,7 @@ func buildCompanyPlaceholderMD(name string) string {
 	}
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("# %s\n\n", displayName))
-	sb.WriteString("<!-- TODO: replace this placeholder with a short description of what the company does, who it serves, and what the current focus is. The CEO-onboarding scan or any agent with `wiki.write` permission can rewrite this file. -->\n\n")
+	sb.WriteString("<!-- TODO: replace this placeholder with a short description of what the company does, who it serves, and what the current focus is. The Chief of Staff-onboarding scan or any agent with `wiki.write` permission can rewrite this file. -->\n\n")
 	sb.WriteString("This article will hold a short description of what the company does, who it serves, and what the current focus is. It is a placeholder so the link from `README.md` resolves on day one; the scan or any agent can rewrite it with the real profile.\n")
 	return sb.String()
 }

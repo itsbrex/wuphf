@@ -91,7 +91,7 @@ func launcherForBrokerFixture(b *Broker) *Launcher {
 		pack: &agent.PackDefinition{
 			LeadSlug: "ceo",
 			Agents: []agent.AgentConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "ceo", Name: "Chief of Staff"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -130,7 +130,7 @@ func newOfficeEvalFixture(dir string) (*officeEvalFixture, error) {
 	// TODO: wire planning through the eval scenarios as first-class coverage.
 	b.disablePlanFirstDefault = true
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "ceo", Name: "Chief of Staff"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
@@ -395,7 +395,7 @@ func evalJobIntakeDefinition(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	var mutationErr *TaskMutationError
 	rejected := errors.As(defineErr, &mutationErr) && mutationErr.Kind == TaskMutationForbidden
 	after := fx.broker.TaskByID(created.Task.ID)
-	r.add(job, "define by a non-CEO specialist is rejected", rejected &&
+	r.add(job, "define by a non-Chief of Staff specialist is rejected", rejected &&
 		after != nil && after.Definition != nil && after.Definition.Goal == def.Goal,
 		fmt.Sprintf("err=%v", defineErr), "")
 	return nil

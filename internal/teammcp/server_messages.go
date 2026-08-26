@@ -28,7 +28,7 @@ func handleTeamBroadcast(ctx context.Context, _ *mcp.CallToolRequest, args TeamB
 	if !isOneOnOneMode() {
 		if messages, tasks, err := fetchBroadcastContext(ctx, channel, slug); err == nil {
 			if reason := suppressBroadcastReason(slug, args.Content, replyTo, messages, tasks); reason != "" {
-				return textResult(fmt.Sprintf("Held reply for @%s: %s. Poll again if the thread changes or if the CEO tags you in.", slug, reason)), nil, nil
+				return textResult(fmt.Sprintf("Held reply for @%s: %s. Poll again if the thread changes or if the Chief of Staff tags you in.", slug, reason)), nil, nil
 			}
 		}
 	}

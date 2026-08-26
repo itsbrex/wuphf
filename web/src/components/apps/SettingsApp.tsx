@@ -1020,7 +1020,7 @@ const CLI_FLAGS: [string, string][] = [
   ["--tui", "Launch tmux TUI instead of web UI"],
   ["--web-port <port>", "Web UI port (default: 7891)"],
   ["--broker-port <port>", "Local broker port (default: 7890)"],
-  ["--opus-ceo", "Upgrade CEO agent to Opus model"],
+  ["--opus-ceo", "Upgrade Chief of Staff agent to Opus model"],
   ["--collab", "Collaborative mode (all agents see all messages)"],
   ["--1o1", "Direct 1:1 session with a single agent"],
   ["--unsafe", "Bypass agent permission checks (dev only)"],

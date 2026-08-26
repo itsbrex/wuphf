@@ -760,7 +760,7 @@ func postToChannel(text string, replyTo string, channel string) tea.Cmd {
 func channelMentionAgents(members []channelui.Member) []tui.AgentMention {
 	defaults := []tui.AgentMention{
 		{Slug: "all", Name: "All agents"},
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "ceo", Name: "Chief of Staff"},
 		{Slug: "pm", Name: "Product Manager"},
 		{Slug: "fe", Name: "Frontend Engineer"},
 		{Slug: "be", Name: "Backend Engineer"},

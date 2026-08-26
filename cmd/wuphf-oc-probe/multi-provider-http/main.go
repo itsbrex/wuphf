@@ -139,7 +139,7 @@ func main() {
 	// specific agent by @mention. This exercises two-hop reasoning: human →
 	// CEO → specialist. Watch for CEO's routing message followed by the
 	// specialist's reply, both in #general.
-	fmt.Println("\n═══ PHASE 4: CEO assigns work ═══")
+	fmt.Println("\n═══ PHASE 4: Chief of Staff assigns work ═══")
 	ceoPrompt := "@ceo please ask one of your product managers (pm-alpha or pm-beta) to give us a one-sentence " +
 		"positioning statement for a new CRM tool. Just delegate it; they'll answer."
 	beforeCEO := len(fetchMessages())
@@ -149,7 +149,7 @@ func main() {
 	// least one reply from a PM in the next 180s.
 	time.Sleep(180 * time.Second)
 	postCEO := fetchMessages()
-	fmt.Printf("  messages after CEO prompt (last %d):\n", min(10, len(postCEO)-beforeCEO))
+	fmt.Printf("  messages after Chief of Staff prompt (last %d):\n", min(10, len(postCEO)-beforeCEO))
 	for _, m := range postCEO[beforeCEO:] {
 		fmt.Printf("    [%s] %s → #%s: %s\n", m.Source, m.From, m.Channel, truncate(m.Content, 140))
 	}

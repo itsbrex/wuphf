@@ -49,7 +49,7 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 			LeadSlug:                  "ceo",
 			GeneralChannelDescription: "Primary coordination channel.",
 			Agents: []operations.StarterAgent{
-				{Slug: "ceo", Name: "CEO", Role: "lead", Checked: true, BuiltIn: true},
+				{Slug: "ceo", Name: "Chief of Staff", Role: "lead", Checked: true, BuiltIn: true},
 				{Slug: "eng", Name: "Engineer", Role: "engineering", Checked: true},
 			},
 			Tasks: []operations.StarterTask{{
@@ -314,7 +314,7 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// Contaminate the packet: the LAST packet actor is the CEO, not the
 	// owner. The cards must keep naming the owner from the task record.
 	fx.broker.mu.Lock()
-	fx.broker.AppendPacketFeedbackLocked(eID, "ceo", "Packet-side note from the CEO — must not become the card actor.")
+	fx.broker.AppendPacketFeedbackLocked(eID, "ceo", "Packet-side note from the Chief of Staff — must not become the card actor.")
 	fx.broker.mu.Unlock()
 	if err := fx.broker.RecordTaskDecisionWithComment(eID, "approve", "", "human"); err != nil {
 		return fmt.Errorf("start via decision path: %w", err)
@@ -324,7 +324,7 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	startedOwner, startedFound := latestLifecycleCardOwner(fx.broker, eID, string(IssueLifecycleTransitionStarted))
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "submit_for_review", ID: eID, Channel: "general", CreatedBy: "ceo",
-		Details: "Submitted on the owner's behalf by the CEO.",
+		Details: "Submitted on the owner's behalf by the Chief of Staff.",
 	}); err != nil {
 		return err
 	}

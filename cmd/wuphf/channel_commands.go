@@ -244,7 +244,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		return m, switchFocusMode(false)
 	case trimmed == "/focus":
 		clearCurrent()
-		m.notice = "Delegation mode: CEO routes, specialists execute. This is how a real office works."
+		m.notice = "Delegation mode: Chief of Staff routes, specialists execute. This is how a real office works."
 		return m, switchFocusMode(true)
 	case trimmed == "/reset":
 		clearCurrent()

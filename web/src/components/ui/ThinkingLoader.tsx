@@ -22,7 +22,7 @@ const NO_PHRASES: readonly string[] = [];
  */
 interface ThinkingLoaderProps {
   variant?: "inline" | "block";
-  /** Accessible description announced to screen readers (e.g. "CEO is typing"). */
+  /** Accessible description announced to screen readers (e.g. "Chief of Staff is typing"). */
   label?: string;
   /** Rotating decorative phrases (e.g. OFFICE_LOADING_PHRASES). */
   phrases?: readonly string[];

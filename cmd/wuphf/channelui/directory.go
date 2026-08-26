@@ -67,7 +67,7 @@ func DisplayName(slug string) string {
 	}
 	switch slug {
 	case "ceo":
-		return "CEO"
+		return "Chief of Staff"
 	case "pm":
 		return "Product Manager"
 	case "fe":

@@ -262,8 +262,8 @@ export function TaskComposer() {
 
   const isAuto = ownerSlug === AUTO_OWNER;
   const ownerLabel = isAuto
-    ? "Auto — CEO picks the specialist"
-    : ownerMember?.name || ownerSlug || "CEO";
+    ? "Auto — Chief of Staff picks the specialist"
+    : ownerMember?.name || ownerSlug || "Chief of Staff";
   const runtimeLabel = model.trim() || "runtime default";
 
   return (
@@ -399,7 +399,7 @@ export function TaskComposer() {
               disabled={submitting}
               title={
                 isAuto
-                  ? "Create and have the CEO assign + start it now"
+                  ? "Create and have the Chief of Staff assign + start it now"
                   : `Assign @${ownerSlug} and start now`
               }
               data-testid="task-composer-start"
