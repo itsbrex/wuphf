@@ -123,7 +123,7 @@ func TestParkedEntryRaisesNoInboxNotice(t *testing.T) {
 	b := newTestBroker(t)
 
 	b.mu.Lock()
-	b.tasks = []teamTask{{ID: "OFFICE-7", TaskType: "issue", Owner: "ceo", Channel: "general"}}
+	b.tasks = []teamTask{{ID: "OFFICE-7", TaskType: "issue", Owner: "ceo", Channel: "team"}}
 	_, err := b.transitionLifecycleLocked("OFFICE-7", LifecycleStateDrafting, "composer park")
 	b.mu.Unlock()
 	if err != nil {

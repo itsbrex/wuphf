@@ -224,7 +224,7 @@ func TestRunHeadlessClaudeTurn_NoResumeFlag(t *testing.T) {
 		return exec.CommandContext(ctx, "/bin/true")
 	}
 
-	b := NewBrokerAt(filepath.Join(tmpDir, "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(tmpDir, "broker-state.json"))
 	l := minimalLauncher(false)
 	l.broker = b
 	l.cwd = tmpDir

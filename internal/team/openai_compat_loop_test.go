@@ -451,7 +451,7 @@ func TestOpenAICompatToolLoop_BridgeDiesMidCallSurfacesAsToolError(t *testing.T)
 	stream := &scriptedStreamFn{
 		turns: []scriptedTurn{
 			{chunks: []agent.StreamChunk{
-				{Type: "tool_use", ToolName: "broker_post_message", ToolParams: map[string]any{"channel": "general"}, ToolInput: `{"channel":"general"}`},
+				{Type: "tool_use", ToolName: "broker_post_message", ToolParams: map[string]any{"channel": "team"}, ToolInput: `{"channel":"team"}`},
 			}},
 			{
 				chunks: []agent.StreamChunk{
@@ -478,7 +478,7 @@ func TestOpenAICompatToolLoop_BridgeDiesMidCallSurfacesAsToolError(t *testing.T)
 		toolTimeout: time.Second,
 	}
 	final, _, _, streamErr, err := loop.run(context.Background(), []agent.Message{
-		{Role: "user", Content: "post hi to #general"},
+		{Role: "user", Content: "post hi to #team"},
 	})
 	if err != nil {
 		t.Fatalf("loop.run returned Go error (should have surfaced via prompt instead): %v", err)

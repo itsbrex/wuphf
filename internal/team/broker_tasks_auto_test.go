@@ -39,7 +39,7 @@ func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 		t.Fatalf("seed provider config: %v", err)
 	}
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	ensureTestMemberAccess(b, "team", "builder", "Builder")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("failed to start broker: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 	plan := func(t *testing.T, task map[string]any) teamTask {
 		t.Helper()
 		body, _ := json.Marshal(map[string]any{
-			"channel":    "general",
+			"channel":    "team",
 			"created_by": "human",
 			"tasks":      []map[string]any{task},
 		})
@@ -144,8 +144,8 @@ func TestOwnerlessTaskCreate_TriageMessageWakesCEO(t *testing.T) {
 		t.Fatalf("seed provider config: %v", err)
 	}
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "ceo", "CEO")
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	ensureTestMemberAccess(b, "team", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "builder", "Builder")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("failed to start broker: %v", err)
 	}
@@ -175,7 +175,7 @@ func TestOwnerlessTaskCreate_TriageMessageWakesCEO(t *testing.T) {
 	defer unsubscribe()
 
 	body, _ := json.Marshal(map[string]any{
-		"channel":    "general",
+		"channel":    "team",
 		"created_by": "human",
 		"tasks": []map[string]any{
 			{"title": "Ownerless start-now task", "assignee": "auto"},

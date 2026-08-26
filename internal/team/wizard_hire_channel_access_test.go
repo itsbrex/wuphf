@@ -31,7 +31,7 @@ import (
 
 func newBrokerWithPackChannels(t *testing.T, packAgents []agent.AgentConfig) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 	b.mu.Lock()
 	// Seed pack-like roster.
 	members := make([]officeMember, 0, len(packAgents))
@@ -57,7 +57,7 @@ func newBrokerWithPackChannels(t *testing.T, packAgents []agent.AgentConfig) *Br
 	// seed, don't wait.
 	backdated := time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: packSlugs, CreatedAt: backdated, UpdatedAt: backdated},
+		{Slug: "team", Name: "team", Members: packSlugs, CreatedAt: backdated, UpdatedAt: backdated},
 		{Slug: "engineering", Name: "engineering", Members: []string{"ceo"}, CreatedAt: backdated, UpdatedAt: backdated},
 		// A DM channel that must NOT receive the new hire.
 		{Slug: "dm-human-ceo", Name: "DM: CEO", Type: "dm", Members: []string{"ceo"}, CreatedAt: backdated, UpdatedAt: backdated},
@@ -114,11 +114,11 @@ func TestWizardHire_AddsNewMemberToAllNonDMChannels(t *testing.T) {
 	defer b.mu.Unlock()
 
 	// #general already contained qa-spec? No, seeded without it. Must be added.
-	general := b.findChannelLocked("general")
+	general := b.findChannelLocked("team")
 	if general == nil || !containsString(general.Members, "qa-spec") {
 		t.Fatalf("general must contain qa-spec after hire; got members=%v", general.Members)
 	}
-	if general.UpdatedAt == preUpdated["general"] {
+	if general.UpdatedAt == preUpdated["team"] {
 		t.Fatalf("general.UpdatedAt did not advance (%q); SSE subscribers will not see the roster change", general.UpdatedAt)
 	}
 
@@ -173,7 +173,7 @@ drain:
 	if !seenMemberCreated {
 		t.Fatalf("expected member_created event for qa-spec")
 	}
-	if !updatedSlugs["general"] || !updatedSlugs["engineering"] {
+	if !updatedSlugs["team"] || !updatedSlugs["engineering"] {
 		t.Fatalf("expected channel_updated events for general and engineering; got %v", updatedSlugs)
 	}
 	if updatedSlugs["dm-human-ceo"] {
@@ -192,7 +192,7 @@ func TestWizardHire_ClearsStaleDisabledEntryFromPriorLifecycle(t *testing.T) {
 	b.token = "test-token"
 	// Simulate a leftover disabled entry for the slug we're about to hire.
 	for i := range b.channels {
-		if b.channels[i].Slug == "general" {
+		if b.channels[i].Slug == "team" {
 			b.channels[i].Disabled = []string{"qa-spec"}
 		}
 	}
@@ -218,7 +218,7 @@ func TestWizardHire_ClearsStaleDisabledEntryFromPriorLifecycle(t *testing.T) {
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	general := b.findChannelLocked("general")
+	general := b.findChannelLocked("team")
 	if general == nil {
 		t.Fatalf("general channel missing")
 	}
@@ -281,7 +281,7 @@ func TestWizardHire_RemoveReversesChannelMembership(t *testing.T) {
 //
 //  1. Start broker with CEO + PM (pack) plus #general seeded.
 //  2. POST /office-members action=create { slug: "qa-spec" }.
-//  3. POST /messages { from: "qa-spec", channel: "general", content: "…" }.
+//  3. POST /messages { from: "qa-spec", channel: "team", content: "…" }.
 //     Today: 403 "channel access denied".
 //     Expected: 200 with a message id.
 func TestBug_WizardHiredSpecialist_ReplyEndToEnd_HTTPFlow(t *testing.T) {
@@ -338,11 +338,11 @@ func TestBug_WizardHiredSpecialist_ReplyEndToEnd_HTTPFlow(t *testing.T) {
 	//    at the end of a turn, and is what fails today with 403.
 	replyResp, replyBody := do("POST", "/messages", map[string]any{
 		"from":    "qa-spec",
-		"channel": "general",
-		"content": "Ack — qa-spec reply to #general after wizard-hire",
+		"channel": "team",
+		"content": "Ack — qa-spec reply to #team after wizard-hire",
 	})
 	if replyResp.StatusCode != http.StatusOK {
-		t.Fatalf("bug reproduced: wizard-hired qa-spec cannot post reply to #general. "+
+		t.Fatalf("bug reproduced: wizard-hired qa-spec cannot post reply to #team. "+
 			"status=%d body=%s — this is why the user sees 'no response comes back' "+
 			"after tagging a specialist added via the web wizard.",
 			replyResp.StatusCode, strings.TrimSpace(string(replyBody)))

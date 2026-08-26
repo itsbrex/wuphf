@@ -39,7 +39,7 @@ func TestExternalQueueDoesNotReplayPersistedHistoryAfterRestart(t *testing.T) {
 	}
 
 	// Boot exactly as production does — loadState runs in the constructor.
-	b := NewBrokerAt(path)
+	b := newBrokerWithTeamRoom(path)
 
 	if replayed := b.ExternalQueue("slack"); len(replayed) != 0 {
 		t.Fatalf("restart replayed %d persisted message(s) to the external queue: %+v", len(replayed), replayed)

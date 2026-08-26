@@ -9,14 +9,14 @@ import (
 
 func TestAppendMessageLocked_CapsAtMax(t *testing.T) {
 	t.Setenv("WUPHF_MAX_MESSAGES", "10")
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 
 	b.mu.Lock()
 	for i := 0; i < 25; i++ {
 		b.appendMessageLocked(channelMessage{
 			ID:      fmt.Sprintf("msg-%03d", i),
 			Content: fmt.Sprintf("hello-%d", i),
-			Channel: "general",
+			Channel: "team",
 		})
 	}
 	count := len(b.messages)
@@ -38,7 +38,7 @@ func TestAppendMessageLocked_CapsAtMax(t *testing.T) {
 
 func TestPruneCompletedTasksLocked_RemovesMergedOldTasks(t *testing.T) {
 	t.Setenv("WUPHF_TASK_RETENTION_DAYS", "1")
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 
 	old := time.Now().Add(-48 * time.Hour).UTC().Format(time.RFC3339)
 	recent := time.Now().UTC().Format(time.RFC3339)
@@ -63,7 +63,7 @@ func TestPruneCompletedTasksLocked_RemovesMergedOldTasks(t *testing.T) {
 }
 
 func TestPruneCompletedTasksLocked_KeepsAllWhenNoneExpired(t *testing.T) {
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 
 	recent := time.Now().UTC().Format(time.RFC3339)
 

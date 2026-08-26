@@ -42,12 +42,12 @@ func seedSurfaceMessage(t *testing.T, b *Broker, channel, content string) {
 // a sleep so the test is deterministic.
 func TestOutboundDispatcherFormatsAndSendsEachQueuedMessage(t *testing.T) {
 	b := newTestBroker(t)
-	seedSurfaceMessage(t, b, "general", "alpha")
-	seedSurfaceMessage(t, b, "general", "beta")
+	seedSurfaceMessage(t, b, "team", "alpha")
+	seedSurfaceMessage(t, b, "team", "beta")
 	// Skip-shaped: formatter returns ok=false for messages whose content is
 	// "skip-me". Verifies the dispatcher honors the skip and does not call
 	// sender for that message.
-	seedSurfaceMessage(t, b, "general", "skip-me")
+	seedSurfaceMessage(t, b, "team", "skip-me")
 
 	var sentMu sync.Mutex
 	sent := []string{}
@@ -105,7 +105,7 @@ func TestOutboundDispatcherFormatsAndSendsEachQueuedMessage(t *testing.T) {
 // semantics the prior in-adapter loop had.
 func TestOutboundDispatcherLogsButContinuesOnSendError(t *testing.T) {
 	b := newTestBroker(t)
-	seedSurfaceMessage(t, b, "general", "fail-me")
+	seedSurfaceMessage(t, b, "team", "fail-me")
 	// Second message is enqueued only after the first fail completes — see
 	// the failedOnce signal below — so its arrival on a later poll cycle is
 	// guaranteed by ordering, not by sleep duration.
@@ -148,7 +148,7 @@ func TestOutboundDispatcherLogsButContinuesOnSendError(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("dispatcher did not call sender for fail-me within 5s")
 	}
-	seedSurfaceMessage(t, b, "general", "deliver-me")
+	seedSurfaceMessage(t, b, "team", "deliver-me")
 
 	select {
 	case <-delivered:

@@ -114,7 +114,7 @@ func TestSlackTaskCardNeverCardsInactiveOrUnbridgedTasks(t *testing.T) {
 	// Active work in a channel with no Slack surface gets no card either.
 	b.mu.Lock()
 	b.tasks = append(b.tasks, teamTask{
-		ID: "OFFICE-3", Channel: "general", Title: "internal", Owner: "ceo",
+		ID: "OFFICE-3", Channel: "team", Title: "internal", Owner: "ceo",
 		LifecycleState: LifecycleStateRunning,
 	})
 	b.mu.Unlock()
@@ -159,7 +159,7 @@ func TestSlackTaskCardRegistryPersistsToDisk(t *testing.T) {
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatalf("write: %v", err)
 	}
-	b := NewBrokerAt(path)
+	b := newBrokerWithTeamRoom(path)
 	rec, ok := b.SlackTaskCard("OFFICE-5")
 	if !ok || rec.Timestamp != "1700.1" || !rec.Pinned {
 		t.Fatalf("card registry did not survive a state reload: %+v ok=%v", rec, ok)

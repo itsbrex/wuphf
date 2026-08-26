@@ -76,7 +76,7 @@ func TestRichArtifactNaturalWorkflowPromptAndToolLoop(t *testing.T) {
 				if !strings.Contains("\n"+broadcast+"\n", "\nvisual-artifact:"+artifactID+"\n") {
 					return "", fmt.Errorf("broadcast missing standalone visual-artifact marker: %q", broadcast)
 				}
-				return "Posted to #general as @pm", nil
+				return "Posted to #team as @pm", nil
 			},
 		},
 	}
@@ -142,8 +142,8 @@ func TestRichArtifactNaturalWorkflowPromptAndToolLoop(t *testing.T) {
 				chunks: []agent.StreamChunk{{
 					Type:       "tool_use",
 					ToolName:   "team_broadcast",
-					ToolParams: map[string]any{"channel": "general", "content": "I saved the source note and made the launch-risk artifact.\nvisual-artifact:" + artifactID},
-					ToolInput:  `{"channel":"general","content":"I saved the source note and made the launch-risk artifact.\nvisual-artifact:` + artifactID + `"}`,
+					ToolParams: map[string]any{"channel": "team", "content": "I saved the source note and made the launch-risk artifact.\nvisual-artifact:" + artifactID},
+					ToolInput:  `{"channel":"team","content":"I saved the source note and made the launch-risk artifact.\nvisual-artifact:` + artifactID + `"}`,
 				}},
 			},
 			{

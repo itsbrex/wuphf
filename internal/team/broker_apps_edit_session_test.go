@@ -17,12 +17,12 @@ import (
 //
 // The minted slug used to be `task-<id>`, derived from whatever channel the
 // backing task landed in. The one-room change removed per-task channels, so that
-// task landed in #general, the stamp skipped "general" on purpose, and nothing
+// task landed in #general, the stamp skipped "team" on purpose, and nothing
 // was ever bound: this endpoint 500'd with "edit session created but no channel
 // was bound" and every app in the workspace became un-editable.
 //
 // The slug now comes from the APP id instead, which is what makes it
-// unambiguous — one app, one thread — where "general" would have had every app
+// unambiguous — one app, one thread — where "team" would have had every app
 // claiming the same channel and appForEditChannel, appBuilderRunTaskID and
 // appBuildChatSnippet unable to tell them apart. It is not a room the roster
 // navigates into: ChannelList hides the `app-` prefix exactly as it hides
@@ -63,7 +63,7 @@ func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 	}
 	// Never the office channel: that is the binding that broke, and it would
 	// mount the whole office chat inside the app's Edit panel.
-	if ch1 == "general" {
+	if ch1 == "team" {
 		t.Fatalf("an app's edit thread must never be the office channel")
 	}
 	// It is a real channel, not a dangling slug.

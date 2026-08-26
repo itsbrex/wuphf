@@ -36,12 +36,12 @@ func newObjectionTestBroker(t *testing.T) *Broker {
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng", "reviewer"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng", "reviewer"}},
 	}
 	b.tasks = []teamTask{
 		{
 			ID:        "task-obj-1",
-			Channel:   "general",
+			Channel:   "team",
 			Title:     "Draft the renewal one-pager",
 			Owner:     "eng",
 			status:    "review",
@@ -56,7 +56,7 @@ const objectionFeedback = "Use Dana as the champion, not a fabricated contact, a
 func humanRequestChanges(t *testing.T, b *Broker, taskID string) {
 	t.Helper()
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "request_changes", ID: taskID, Channel: "general",
+		Action: "request_changes", ID: taskID, Channel: "team",
 		Details: objectionFeedback, CreatedBy: "human",
 	}); err != nil {
 		t.Fatalf("human request_changes: %v", err)
@@ -100,7 +100,7 @@ func TestHumanObjection_AgentApproveBlockedHumanApproveClears(t *testing.T) {
 	humanRequestChanges(t, b, "task-obj-1")
 
 	// Lead approve over the open objection → forbidden, naming the objection.
-	_, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "general", CreatedBy: "ceo"})
+	_, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "ceo"})
 	var mutationErr *TaskMutationError
 	if !errors.As(err, &mutationErr) || mutationErr.Kind != TaskMutationForbidden {
 		t.Fatalf("ceo approve over open human objection: want TaskMutationForbidden, got %v", err)
@@ -110,7 +110,7 @@ func TestHumanObjection_AgentApproveBlockedHumanApproveClears(t *testing.T) {
 	}
 
 	// Owner complete is blocked the same way (the steer is submit_for_review).
-	_, err = b.MutateTask(TaskPostRequest{Action: "complete", ID: "task-obj-1", Channel: "general", CreatedBy: "eng"})
+	_, err = b.MutateTask(TaskPostRequest{Action: "complete", ID: "task-obj-1", Channel: "team", CreatedBy: "eng"})
 	if !errors.As(err, &mutationErr) || mutationErr.Kind != TaskMutationForbidden {
 		t.Fatalf("owner complete over open human objection: want TaskMutationForbidden, got %v", err)
 	}
@@ -127,7 +127,7 @@ func TestHumanObjection_AgentApproveBlockedHumanApproveClears(t *testing.T) {
 	}
 
 	// HUMAN approve clears the objection and lands the task.
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "general", CreatedBy: "human"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "human"}); err != nil {
 		t.Fatalf("human approve: %v", err)
 	}
 	done := b.TaskByID("task-obj-1")
@@ -150,7 +150,7 @@ func TestHumanObjection_HumanRequestChangesRefreshes(t *testing.T) {
 	}
 	const second = "Second pass: the pricing table is still wrong — use the Q4 sheet."
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "request_changes", ID: "task-obj-1", Channel: "general",
+		Action: "request_changes", ID: "task-obj-1", Channel: "team",
 		Details: second, CreatedBy: "human",
 	}); err != nil {
 		t.Fatalf("second human request_changes: %v", err)
@@ -172,7 +172,7 @@ func TestHumanObjection_AgentRequestChangesDoesNotArmTheGate(t *testing.T) {
 	b := newObjectionTestBroker(t)
 	const agentFeedback = "Tighten the summary section — it repeats the intro."
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "request_changes", ID: "task-obj-1", Channel: "general",
+		Action: "request_changes", ID: "task-obj-1", Channel: "team",
 		Details: agentFeedback, CreatedBy: "reviewer",
 	}); err != nil {
 		t.Fatalf("agent request_changes: %v", err)
@@ -186,7 +186,7 @@ func TestHumanObjection_AgentRequestChangesDoesNotArmTheGate(t *testing.T) {
 	}
 	// Without a human objection the lead can still approve — and the
 	// approve retires the now-stale feedback stamp.
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatalf("ceo approve with no human objection: %v", err)
 	}
 	if got := b.TaskByID("task-obj-1"); got.ChangesRequested != nil {
@@ -228,7 +228,7 @@ func TestTaskReviewObjection_WireRoundTripAdditive(t *testing.T) {
 	t.Parallel()
 	objection := &TaskReviewObjection{Actor: "human", Body: objectionFeedback, At: "2026-06-11T00:00:00Z"}
 	task := teamTask{
-		ID: "task-wire-1", Channel: "general", Title: "Wire check",
+		ID: "task-wire-1", Channel: "team", Title: "Wire check",
 		ChangesRequested: objection, HumanObjection: objection,
 	}
 	blob, err := json.Marshal(task)
@@ -251,7 +251,7 @@ func TestTaskReviewObjection_WireRoundTripAdditive(t *testing.T) {
 	}
 	// Additive: a blob WITHOUT the new keys still unmarshals clean.
 	var legacy teamTask
-	if err := json.Unmarshal([]byte(`{"id":"task-legacy","channel":"general","title":"old","status":"open","created_at":"x","updated_at":"x"}`), &legacy); err != nil {
+	if err := json.Unmarshal([]byte(`{"id":"task-legacy","channel":"team","title":"old","status":"open","created_at":"x","updated_at":"x"}`), &legacy); err != nil {
 		t.Fatalf("legacy unmarshal: %v", err)
 	}
 	if legacy.ChangesRequested != nil || legacy.HumanObjection != nil {

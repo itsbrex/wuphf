@@ -15,7 +15,7 @@ import (
 // authorized.
 func TestActionGrantExactMatchOnly(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	now := time.Now().UTC()
 
 	b.addActionGrant(actionGrant{AgentSlug: "ceo", Platform: "gmail", ActionScope: "GMAIL_SEND_EMAIL", GrantedBy: "human"})
@@ -42,7 +42,7 @@ func TestActionGrantExactMatchOnly(t *testing.T) {
 // closed (treated as expired) rather than silently authorizing.
 func TestActionGrantExpiryAndRevoke(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	now := time.Now().UTC()
 
 	expired := b.addActionGrant(actionGrant{
@@ -73,7 +73,7 @@ func TestActionGrantExpiryAndRevoke(t *testing.T) {
 // not stack duplicate grants.
 func TestActionGrantIdempotent(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	g1 := b.addActionGrant(actionGrant{AgentSlug: "ceo", Platform: "gmail", ActionScope: "GMAIL_SEND_EMAIL"})
 	g2 := b.addActionGrant(actionGrant{AgentSlug: "ceo", Platform: "gmail", ActionScope: "GMAIL_SEND_EMAIL"})
 	if g1.ID != g2.ID {
@@ -89,7 +89,7 @@ func TestActionGrantIdempotent(t *testing.T) {
 // depth against the broker-token trust boundary).
 func TestActionGrantCappedToMaxTTL(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	now := time.Now().UTC()
 
 	g := b.addActionGrant(actionGrant{AgentSlug: "ceo", Platform: "gmail", ActionScope: "GMAIL_SEND_EMAIL"})
@@ -147,7 +147,7 @@ func TestResolveProceedsWithGrant(t *testing.T) {
 	defer composioServer.Close()
 	t.Setenv("WUPHF_COMPOSIO_BASE_URL", composioServer.URL)
 
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -180,7 +180,7 @@ type grantListResponse struct {
 func TestActionGrantEndpointLifecycle(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	statePath := filepath.Join(t.TempDir(), "state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -193,7 +193,7 @@ func TestActionGrantEndpointLifecycle(t *testing.T) {
 	resp.Body.Close()
 
 	create, _ := json.Marshal(map[string]any{
-		"agent_slug": "ceo", "platform": "gmail", "action_scope": "GMAIL_SEND_EMAIL", "channel": "general",
+		"agent_slug": "ceo", "platform": "gmail", "action_scope": "GMAIL_SEND_EMAIL", "channel": "team",
 	})
 	resp = integrationRequest(t, srv, b, http.MethodPost, "/integrations/grants", create)
 	if resp.StatusCode != http.StatusOK {
@@ -234,7 +234,7 @@ func TestActionGrantEndpointLifecycle(t *testing.T) {
 	}
 
 	// Persists across reload (revoked state included).
-	b2 := NewBrokerAt(statePath)
+	b2 := newBrokerWithTeamRoom(statePath)
 	if err := b2.loadState(); err != nil {
 		t.Fatalf("loadState: %v", err)
 	}

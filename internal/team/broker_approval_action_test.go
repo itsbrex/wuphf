@@ -14,13 +14,13 @@ import (
 // the connection-unverified signal — the broker side of slice 4b / review LOW #5.
 func TestApprovalRequestStoresMaskedStructuredAction(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
 	body, _ := json.Marshal(map[string]any{
 		"action":                "create",
 		"kind":                  "approval",
 		"from":                  "ceo",
-		"channel":               "general",
+		"channel":               "team",
 		"title":                 "Send Email via Gmail",
 		"question":              "Approve?",
 		"blocking":              true,

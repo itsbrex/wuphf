@@ -8,6 +8,7 @@ package team
 
 import (
 	"fmt"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"strings"
 	"unicode/utf8"
 
@@ -43,7 +44,18 @@ func (l *Launcher) postEscalation(slug, taskID string, reason agent.EscalationRe
 	default:
 		body = fmt.Sprintf("Heads up: %s escalation on %s: %s", who, taskID, publicDetail)
 	}
-	l.broker.PostSystemMessage("general", body, "escalation")
+	// Escalations go to the LEAD's DM, not to a shared room.
+	//
+	// This used to be a hardcoded post into #general. #general is retiring,
+	// and "shout it into the lobby" was never the right destination anyway:
+	// an escalation is an ask for a specific person's attention, and the
+	// person is the Chief of Staff. In a DM it is addressed to someone and
+	// cannot be lost among unrelated traffic.
+	//
+	// Falls back to #general only while the kill switch is still on and no
+	// lead DM exists, so this is behaviour-preserving for an office that has
+	// not migrated yet.
+	l.broker.PostSystemMessage(l.escalationChannel(), body, "escalation")
 	_, _, _ = l.requestSelfHealing(slug, taskID, reason, publicDetail)
 }
 
@@ -74,4 +86,25 @@ func sanitizeEscalationDetail(detail string) string {
 		return "(no detail)"
 	}
 	return one
+}
+
+// escalationChannel resolves where an escalation should land: the lead's DM
+// when there is a lead, and #general only as a legacy fallback while the kill
+// switch is still on.
+//
+// It never returns "": an empty channel is laundered straight back into
+// #general by normalizeChannelSlug, which is the exact leak the switch exists
+// to close.
+func (l *Launcher) escalationChannel() string {
+	if l.broker == nil {
+		return GeneralChannelSlug
+	}
+	l.broker.mu.Lock()
+	defer l.broker.mu.Unlock()
+
+	lead, _ := leadSlugAndName(l.broker.members)
+	if lead != "" {
+		return channel.DirectSlug("human", lead)
+	}
+	return GeneralChannelSlug
 }

@@ -15,10 +15,10 @@ import (
 
 func newStallTestBroker(t *testing.T) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
 		{Slug: "task-office-1", Name: "task-office-1", Members: []string{"human", "ceo", "eng"}},
 	}
 	b.mu.Unlock()
@@ -140,10 +140,10 @@ func TestStallWatchdogIgnoresNonRunningAndSystemTasks(t *testing.T) {
 	base := time.Now().UTC().Add(-2 * taskStallThreshold)
 	b.mu.Lock()
 	b.tasks = append(b.tasks,
-		teamTask{ID: "OFFICE-2", Channel: "general", Title: "done fixture", Owner: "eng",
+		teamTask{ID: "OFFICE-2", Channel: "team", Title: "done fixture", Owner: "eng",
 			status: "done", LifecycleState: LifecycleStateApproved,
 			CreatedAt: base.Format(time.RFC3339), UpdatedAt: base.Format(time.RFC3339)},
-		teamTask{ID: "task-general", Channel: "general", Title: "system fixture", System: true,
+		teamTask{ID: "task-general", Channel: "team", Title: "system fixture", System: true,
 			status: "in_progress", LifecycleState: LifecycleStateRunning,
 			CreatedAt: base.Format(time.RFC3339), UpdatedAt: base.Format(time.RFC3339)},
 	)
@@ -156,7 +156,7 @@ func TestStallWatchdogIgnoresNonRunningAndSystemTasks(t *testing.T) {
 	if got := taskStalledSince(t, b, "task-general"); got != "" {
 		t.Fatalf("system task must not be marked stalled, got %q", got)
 	}
-	if msgs := stallMessages(b, "general"); len(msgs) != 0 {
+	if msgs := stallMessages(b, "team"); len(msgs) != 0 {
 		t.Fatalf("expected no stall lines, got %d", len(msgs))
 	}
 }

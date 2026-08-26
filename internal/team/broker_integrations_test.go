@@ -45,7 +45,7 @@ func integrationRequest(t *testing.T, srv *httptest.Server, b *Broker, method, p
 
 func TestIntegrationsEndpointReportsUnconfiguredProviders(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -114,7 +114,7 @@ func TestIntegrationsEndpointReportsUnconfiguredProviders(t *testing.T) {
 // so the page showed "Configured" with zero available integrations.
 func TestIntegrationsEndpointIgnoresUndefinedQuerySentinels(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -202,7 +202,7 @@ func TestIntegrationConnectStatusDisconnectAndAudit(t *testing.T) {
 	defer composioServer.Close()
 	t.Setenv("WUPHF_COMPOSIO_BASE_URL", composioServer.URL)
 
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -255,7 +255,7 @@ func TestIntegrationConnectStatusDisconnectAndAudit(t *testing.T) {
 		t.Fatalf("unexpected repeated status code=%d", resp.StatusCode)
 	}
 
-	if err := b.RecordActionWithMetadata("external_action_executed", "composio", "general", "agent", "Sent email", "GMAIL_SEND_EMAIL", nil, "", map[string]string{
+	if err := b.RecordActionWithMetadata("external_action_executed", "composio", "team", "agent", "Sent email", "GMAIL_SEND_EMAIL", nil, "", map[string]string{
 		"provider":       "composio",
 		"platform":       "gmail",
 		"action_id":      "GMAIL_SEND_EMAIL",
@@ -353,7 +353,7 @@ func TestIntegrationConnectStatusDisconnectAndAudit(t *testing.T) {
 
 func TestIntegrationConnectRejectsOversizedBody(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 

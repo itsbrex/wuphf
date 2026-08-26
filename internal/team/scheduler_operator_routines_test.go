@@ -91,7 +91,7 @@ func awaitRun(t *testing.T, b *Broker, recorded <-chan string, slug string) sche
 
 func TestOperatorRoutineFireHitsAgentServiceAndRecordsRun(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	srv := newRoutineTestServer(t, b)
 
 	var gotBody atomic.Value
@@ -125,8 +125,8 @@ func TestOperatorRoutineFireHitsAgentServiceAndRecordsRun(t *testing.T) {
 		}
 	}
 	// No office channel got the prompt (operator routines never post to chat).
-	if msgs := b.ChannelMessages("general"); len(msgs) != 0 {
-		t.Fatalf("operator routine leaked into #general: %+v", msgs)
+	if msgs := b.ChannelMessages("team"); len(msgs) != 0 {
+		t.Fatalf("operator routine leaked into #team: %+v", msgs)
 	}
 	// The cron stays alive and re-armed into the future.
 	b.mu.Lock()
@@ -172,7 +172,7 @@ func TestOperatorRoutineOutcomeMapping(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			statePath := filepath.Join(t.TempDir(), "broker-state.json")
-			b := NewBrokerAt(statePath)
+			b := newBrokerWithTeamRoom(statePath)
 			srv := newRoutineTestServer(t, b)
 			agentSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { tc.respond(w) }))
 			t.Cleanup(agentSrv.Close)
@@ -195,7 +195,7 @@ func TestOperatorRoutineOutcomeMapping(t *testing.T) {
 
 func TestOperatorRoutineUnreachableServiceRecordsFailureAndKeepsCron(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	srv := newRoutineTestServer(t, b)
 	// A dead endpoint: the port is closed the moment the server stops.
 	dead := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))

@@ -30,7 +30,7 @@ func newUtteranceTestBroker(t *testing.T) *Broker {
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
 		{Slug: "task-acme", Name: "Acme renewal", Members: []string{"human", "ceo", "eng"}},
 	}
 	return b
@@ -49,7 +49,7 @@ func TestMutateTaskRequestChangesFallsBackToOverrideReason(t *testing.T) {
 	// Exact FE field placement (web/src/api/tasks.ts): the typed reason
 	// rides override_reason, details is empty.
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "request_changes", ID: "task-rc-1", Channel: "general",
+		Action: "request_changes", ID: "task-rc-1", Channel: "team",
 		CreatedBy: "human", OverrideReason: text,
 		MemoryWorkflowOverrideReason: text,
 	}); err != nil {
@@ -70,7 +70,7 @@ func TestMutateTaskRequestChangesFallsBackToOverrideReason(t *testing.T) {
 		LifecycleState: LifecycleStateReview,
 	})
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "request_changes", ID: "task-rc-2", Channel: "general",
+		Action: "request_changes", ID: "task-rc-2", Channel: "team",
 		CreatedBy: "human", Details: "details text wins", OverrideReason: "ignored",
 	}); err != nil {
 		t.Fatalf("request_changes with details: %v", err)
@@ -102,7 +102,7 @@ func TestHumanNoteWakesOwnerOnWaitingTaskStates(t *testing.T) {
 		mk("task-w-done", LifecycleStateApproved, "task-acme"),
 		mk("task-w-drafting", LifecycleStateDrafting, "task-acme"),
 		mk("task-w-archived", LifecycleStateArchived, "task-acme"),
-		mk("task-w-general", LifecycleStateDecision, "general"),
+		mk("task-w-general", LifecycleStateDecision, "team"),
 	}
 
 	if _, err := b.PostMessage("you", "task-acme", "Redlines: Corti date July 15, sender Maya.", nil, ""); err != nil {
@@ -135,7 +135,7 @@ func TestHumanNoteWakesOwnerOnWaitingTaskStates(t *testing.T) {
 
 	// #general carve-out: a decision task parked in the lobby is neither
 	// stamped nor woken by lobby chatter.
-	if _, err := b.PostMessage("you", "general", "Lobby chatter about something else.", nil, ""); err != nil {
+	if _, err := b.PostMessage("you", "team", "Lobby chatter about something else.", nil, ""); err != nil {
 		t.Fatalf("lobby post: %v", err)
 	}
 	if followUps["task-w-general"] {
@@ -147,7 +147,7 @@ func TestInterviewAnnouncementAnchorsThreadAndReplyAnswers(t *testing.T) {
 	t.Parallel()
 	b := newUtteranceTestBroker(t)
 	req, err := b.CreateRequest(humanInterview{
-		Kind: "interview", From: "eng", Channel: "general",
+		Kind: "interview", From: "eng", Channel: "team",
 		Title: "Human interview", Question: "What is your sender name?",
 	})
 	if err != nil {
@@ -157,7 +157,7 @@ func TestInterviewAnnouncementAnchorsThreadAndReplyAnswers(t *testing.T) {
 		t.Fatalf("interview has no thread anchor — announcement message must anchor it")
 	}
 	var announcement *channelMessage
-	for _, msg := range b.ChannelMessages("general") {
+	for _, msg := range b.ChannelMessages("team") {
 		if msg.Kind == "human_request_raised" {
 			m := msg
 			announcement = &m
@@ -178,7 +178,7 @@ func TestInterviewAnnouncementAnchorsThreadAndReplyAnswers(t *testing.T) {
 
 	// A human thread reply on the anchor IS the answer — not a cancel.
 	const reply = "Sender name: Maya Reyes."
-	if _, err := b.PostMessage("you", "general", reply, nil, req.ReplyTo); err != nil {
+	if _, err := b.PostMessage("you", "team", reply, nil, req.ReplyTo); err != nil {
 		t.Fatalf("thread reply: %v", err)
 	}
 	b.mu.Lock()
@@ -211,7 +211,7 @@ func TestBlockingRequestGateIsChannelScoped(t *testing.T) {
 	if _, err := b.PostMessage("you", "task-acme", "Trying to chat past the gate.", nil, ""); err == nil {
 		t.Fatalf("chat in the blocking request's channel must 409")
 	}
-	if _, err := b.PostMessage("you", "general", "The rest of the office keeps talking.", nil, ""); err != nil {
+	if _, err := b.PostMessage("you", "team", "The rest of the office keeps talking.", nil, ""); err != nil {
 		t.Fatalf("chat in another channel must flow: %v", err)
 	}
 }
@@ -220,7 +220,7 @@ func TestAgentAwaitingInterviewAnswerScopesToAsker(t *testing.T) {
 	t.Parallel()
 	b := newUtteranceTestBroker(t)
 	req, err := b.CreateRequest(humanInterview{
-		Kind: "interview", From: "eng", Channel: "general",
+		Kind: "interview", From: "eng", Channel: "team",
 		Title: "Human interview", Question: "Which export format?",
 	})
 	if err != nil {

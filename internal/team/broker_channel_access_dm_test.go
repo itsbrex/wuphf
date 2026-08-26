@@ -93,7 +93,7 @@ func TestMembershipGrantsChannelAccess(t *testing.T) {
 // An absent channel must add NOBODY to ANYTHING.
 //
 // The guard used to sit after `channel = normalizeChannelSlug(channel)`, and
-// normalizeChannelSlug("") returns "general" — so the guard was unreachable
+// normalizeChannelSlug("") returns "team" — so the guard was unreachable
 // and an empty channel silently made the task owner a member of the general
 // room. Same trap on `owner`, which was additionally run through the CHANNEL
 // normaliser despite being an actor slug. These cases pin the ordering: they
@@ -101,8 +101,8 @@ func TestMembershipGrantsChannelAccess(t *testing.T) {
 func TestOwnerPromotionIgnoresAbsentChannelOrOwner(t *testing.T) {
 	general := func() []teamChannel {
 		return []teamChannel{{
-			Slug:    "general",
-			Name:    "general",
+			Slug:    "team",
+			Name:    "team",
 			Members: []string{"human"},
 		}}
 	}
@@ -114,8 +114,8 @@ func TestOwnerPromotionIgnoresAbsentChannelOrOwner(t *testing.T) {
 	}{
 		{"empty channel", "", "eng"},
 		{"blank channel", "   ", "eng"},
-		{"empty owner", "general", ""},
-		{"blank owner", "general", "  "},
+		{"empty owner", "team", ""},
+		{"blank owner", "team", "  "},
 		{"both empty", "", ""},
 	}
 	for _, tc := range cases {
@@ -131,7 +131,7 @@ func TestOwnerPromotionIgnoresAbsentChannelOrOwner(t *testing.T) {
 
 			got := b.channels[0].Members
 			if len(got) != 1 || got[0] != "human" {
-				t.Fatalf("absent channel/owner must not touch membership; #general members = %v", got)
+				t.Fatalf("absent channel/owner must not touch membership; #team members = %v", got)
 			}
 		})
 	}

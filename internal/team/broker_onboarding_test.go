@@ -102,7 +102,7 @@ func TestOnboardingDraftPhaseCreatesFirstIssueFromTaskPrompt(t *testing.T) {
 
 	b := newTestBroker(t)
 	b.mu.Lock()
-	ensureTestMemberAccess(b, "general", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "ceo", "CEO")
 	b.mu.Unlock()
 
 	state := &onboarding.State{
@@ -527,7 +527,7 @@ func TestBlankSlateOfficeChannelsFromBlueprint_RendersCommandSlug(t *testing.T) 
 
 	var found bool
 	for _, ch := range channels {
-		if ch.Slug == "general" {
+		if ch.Slug == "team" {
 			continue
 		}
 		if strings.Contains(ch.Slug, "{{") || strings.Contains(ch.Slug, "}}") {

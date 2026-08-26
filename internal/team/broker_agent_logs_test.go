@@ -18,7 +18,53 @@ import (
 // the tmpDir is in scope.
 func newTestBroker(t *testing.T) *Broker {
 	t.Helper()
-	return NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	seedTestTeamRoom(b)
+	return b
+}
+
+// testTeamRoom is the shared room tests post to when the thing under test is
+// NOT the DM model itself -- mention routing, message scoping, task plumbing.
+//
+// It used to be #general, which every test leaned on because it existed and
+// held the whole roster. #general is retired, and a DM is the wrong
+// substitute: a DM has exactly two members, so an agent posting into another
+// agent's DM is correctly refused with "channel access denied". That refusal
+// is the DM privacy model working, not a broken fixture.
+//
+// So tests that need a room where several agents can speak get a NAMED
+// channel, which is still a real product surface. Tests that are about DMs
+// use DMs.
+const testTeamRoom = "team"
+
+// newBrokerWithTeamRoom is NewBrokerAt plus the shared test room. Tests call
+// this instead of NewBrokerAt directly so that every test broker has a room
+// several agents can speak in, which is what #general used to provide for
+// free. Idempotent.
+func newBrokerWithTeamRoom(path string) *Broker {
+	b := NewBrokerAt(path)
+	seedTestTeamRoom(b)
+	return b
+}
+
+func seedTestTeamRoom(b *Broker) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.findChannelLocked(testTeamRoom) != nil {
+		return
+	}
+	members := make([]string, 0, len(b.members)+1)
+	members = append(members, "human")
+	for _, m := range b.members {
+		members = append(members, m.Slug)
+	}
+	b.channels = append(b.channels, teamChannel{
+		Slug:        testTeamRoom,
+		Name:        testTeamRoom,
+		Type:        "channel",
+		Description: "Shared room for tests that are not about DMs",
+		Members:     members,
+	})
 }
 
 func TestHandleAgentLogs_ListsRecent(t *testing.T) {

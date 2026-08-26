@@ -27,7 +27,7 @@ import (
 
 func TestBrokerStatePersistsAcrossReload_ChannelAndMember(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("StartOnPort: %v", err)
 	}

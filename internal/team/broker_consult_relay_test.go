@@ -14,7 +14,7 @@ import (
 
 func relayBroker(t *testing.T) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
 		{Slug: "ops", Name: "Bagel Ops", Role: "Operations"},
@@ -142,7 +142,7 @@ func TestConsultMarkersOnlyInHumanDMs(t *testing.T) {
 	b.messages = []channelMessage{
 		{ID: "m1", From: "ops", Channel: "ops__social", Content: "hi", Timestamp: "2026-08-23T10:00:00Z"},
 	}
-	for _, ch := range []string{"general", "ops__social"} {
+	for _, ch := range []string{"team", "ops__social"} {
 		if markers := b.deriveConsultMarkersLocked(ch); len(markers) != 0 {
 			t.Errorf("channel %q must carry no relay markers, got %d", ch, len(markers))
 		}

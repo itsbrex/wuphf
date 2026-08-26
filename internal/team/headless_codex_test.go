@@ -376,10 +376,10 @@ func TestRunHeadlessCodexTurnUsesAssignedWorktreeForCodingAgents(t *testing.T) {
 	t.Setenv("CODEX_TUI_SESSION_LOG_PATH", "/tmp/controller-session.jsonl")
 
 	broker := newTestBroker(t)
-	ensureTestMemberAccess(broker, "general", "builder", "Builder")
-	ensureTestMemberAccess(broker, "general", "operator", "Operator")
+	ensureTestMemberAccess(broker, "team", "builder", "Builder")
+	ensureTestMemberAccess(broker, "team", "operator", "Operator")
 	task, _, err := broker.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Build the automation runtime",
 		Details:       "Implement in the assigned worktree.",
 		Owner:         "eng",
@@ -493,9 +493,9 @@ func TestRunHeadlessCodexTurnUsesAssignedWorktreeForLocalWorktreeBuilder(t *test
 	t.Setenv("PWD", repoRoot)
 
 	broker := newTestBroker(t)
-	ensureTestMemberAccess(broker, "general", "builder", "Builder")
+	ensureTestMemberAccess(broker, "team", "builder", "Builder")
 	task, _, err := broker.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Build the dry-run intake packet",
 		Details:       "Implement in the assigned worktree.",
 		Owner:         "builder",
@@ -568,7 +568,7 @@ func TestRunHeadlessCodexTurnPassesScopedChannelEnv(t *testing.T) {
 	t.Setenv("HEADLESS_CODEX_RECORD_FILE", recordFile)
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("OPENAI_API_KEY", "test-key")
-	t.Setenv("WUPHF_CHANNEL", "general")
+	t.Setenv("WUPHF_CHANNEL", "team")
 
 	l := &Launcher{
 		pack:     agent.GetPack("founding-team"),
@@ -1102,7 +1102,7 @@ func TestEnqueueHeadlessCodexTurnRecordQueuesUrgentLeadWakeForSameTask(t *testin
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Review and advance the proof lane",
 		Owner:         "builder",
 		CreatedBy:     "ceo",
@@ -1342,10 +1342,10 @@ func TestWakeLeadAfterSpecialistFallsBackToCompletedTaskUpdateWhenNoBroadcast(t 
 	})
 
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
-	ensureTestMemberAccess(b, "general", "operator", "Operator")
+	ensureTestMemberAccess(b, "team", "builder", "Builder")
+	ensureTestMemberAccess(b, "team", "operator", "Operator")
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Lock the faceless YouTube niche",
 		Owner:         "gtm",
 		CreatedBy:     "ceo",
@@ -1397,14 +1397,14 @@ func TestRecoverTimedOutHeadlessTurnBlocksTaskWithoutSubstantiveReply(t *testing
 	b.mu.Lock()
 	b.members = append(b.members, officeMember{Slug: "cmo", Name: "Chief Marketing Officer"})
 	for i := range b.channels {
-		if b.channels[i].Slug == "general" {
+		if b.channels[i].Slug == "team" {
 			b.channels[i].Members = append(b.channels[i].Members, "cmo")
 			break
 		}
 	}
 	b.mu.Unlock()
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Research the best faceless wedge",
 		Owner:         "cmo",
 		CreatedBy:     "ceo",
@@ -1414,7 +1414,7 @@ func TestRecoverTimedOutHeadlessTurnBlocksTaskWithoutSubstantiveReply(t *testing
 	if err != nil || reused {
 		t.Fatalf("ensure planned task: %v reused=%v", err, reused)
 	}
-	if _, err := b.PostMessage("cmo", "general", "[STATUS] still researching", nil, task.ThreadID); err != nil {
+	if _, err := b.PostMessage("cmo", "team", "[STATUS] still researching", nil, task.ThreadID); err != nil {
 		t.Fatalf("post status: %v", err)
 	}
 
@@ -1447,14 +1447,14 @@ func TestRecoverTimedOutHeadlessTurnLeavesTaskRunningAfterSubstantiveReply(t *te
 	b.mu.Lock()
 	b.members = append(b.members, officeMember{Slug: "cmo", Name: "Chief Marketing Officer"})
 	for i := range b.channels {
-		if b.channels[i].Slug == "general" {
+		if b.channels[i].Slug == "team" {
 			b.channels[i].Members = append(b.channels[i].Members, "cmo")
 			break
 		}
 	}
 	b.mu.Unlock()
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Research the best faceless wedge",
 		Owner:         "cmo",
 		CreatedBy:     "ceo",
@@ -1465,7 +1465,7 @@ func TestRecoverTimedOutHeadlessTurnLeavesTaskRunningAfterSubstantiveReply(t *te
 		t.Fatalf("ensure planned task: %v reused=%v", err, reused)
 	}
 	startedAt := time.Now().UTC().Add(-2 * time.Second)
-	if _, err := b.PostMessage("cmo", "general", "Best wedge is a high-volume historical facts channel with sponsor ladder.", nil, task.ThreadID); err != nil {
+	if _, err := b.PostMessage("cmo", "team", "Best wedge is a high-volume historical facts channel with sponsor ladder.", nil, task.ThreadID); err != nil {
 		t.Fatalf("post substantive message: %v", err)
 	}
 
@@ -1492,10 +1492,10 @@ func TestRecoverTimedOutHeadlessTurnRetriesLocalWorktreeOnceBeforeBlocking(t *te
 	t.Setenv("HOME", t.TempDir())
 
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
-	ensureTestMemberAccess(b, "general", "operator", "Operator")
+	ensureTestMemberAccess(b, "team", "builder", "Builder")
+	ensureTestMemberAccess(b, "team", "operator", "Operator")
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the studio build",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1511,7 +1511,7 @@ func TestRecoverTimedOutHeadlessTurnRetriesLocalWorktreeOnceBeforeBlocking(t *te
 
 	turn := headlessCodexTurn{
 		Prompt:   "Build #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: 0,
 	}
@@ -1553,7 +1553,7 @@ func TestRecoverFailedHeadlessTurnRetriesLocalWorktreeOnceBeforeBlocking(t *test
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement queue mode for the YouTube factory",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1569,7 +1569,7 @@ func TestRecoverFailedHeadlessTurnRetriesLocalWorktreeOnceBeforeBlocking(t *test
 
 	turn := headlessCodexTurn{
 		Prompt:   "Build #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: 0,
 	}
@@ -1611,7 +1611,7 @@ func TestRecoverTimedOutLocalWorktreeRetriesEvenAfterSubstantiveReplyIfTaskStill
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the studio build",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1625,7 +1625,7 @@ func TestRecoverTimedOutLocalWorktreeRetriesEvenAfterSubstantiveReplyIfTaskStill
 	b.messages = append(b.messages, channelMessage{
 		ID:        "msg-test-eng-timeout",
 		From:      "eng",
-		Channel:   "general",
+		Channel:   "team",
 		Content:   "I found the right files and I am wiring the generator now.",
 		ReplyTo:   task.ThreadID,
 		Timestamp: startedAt.Add(time.Second).Format(time.RFC3339),
@@ -1636,7 +1636,7 @@ func TestRecoverTimedOutLocalWorktreeRetriesEvenAfterSubstantiveReplyIfTaskStill
 
 	turn := headlessCodexTurn{
 		Prompt:   "Build #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: 0,
 	}
@@ -1668,7 +1668,7 @@ func TestRecoverTimedOutLocalWorktreeLeavesReviewReadyTaskUnchanged(t *testing.T
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the studio build",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1694,7 +1694,7 @@ func TestRecoverTimedOutLocalWorktreeLeavesReviewReadyTaskUnchanged(t *testing.T
 
 	l.recoverTimedOutHeadlessTurn("eng", headlessCodexTurn{
 		Prompt:   "Build #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: 0,
 	}, time.Now().UTC().Add(-2*time.Second), headlessCodexLocalWorktreeTurnTimeout)
@@ -1723,7 +1723,7 @@ func TestRecoverTimedOutHeadlessTurnBlocksLocalWorktreeAfterRetryExhausted(t *te
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the studio build",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1739,7 +1739,7 @@ func TestRecoverTimedOutHeadlessTurnBlocksLocalWorktreeAfterRetryExhausted(t *te
 
 	l.recoverTimedOutHeadlessTurn("eng", headlessCodexTurn{
 		Prompt:   "Ship #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: headlessCodexLocalWorktreeRetryLimit,
 	}, time.Now().UTC().Add(-2*time.Second), headlessCodexLocalWorktreeTurnTimeout)
@@ -1774,7 +1774,7 @@ func TestRecoverFailedHeadlessTurnBlocksLocalWorktreeAfterRetryExhausted(t *test
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement queue mode for the YouTube factory",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -1790,7 +1790,7 @@ func TestRecoverFailedHeadlessTurnBlocksLocalWorktreeAfterRetryExhausted(t *test
 
 	l.recoverFailedHeadlessTurn("eng", headlessCodexTurn{
 		Prompt:   "Ship #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: headlessCodexLocalWorktreeRetryLimit,
 	}, time.Now().UTC().Add(-2*time.Second), "Selected model is at capacity. Please try a different model.")
@@ -1830,7 +1830,7 @@ func TestRecoverFailedHeadlessTurnRequeuesExternalActionBeforeBlocking(t *testin
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Send a live Slack kickoff update and pivot to Notion if needed",
 		Details:       "Use the connected Slack target first. If it fails, pivot to the smallest useful live Notion action.",
 		Owner:         "operator",
@@ -1847,7 +1847,7 @@ func TestRecoverFailedHeadlessTurnRequeuesExternalActionBeforeBlocking(t *testin
 
 	turn := headlessCodexTurn{
 		Prompt:   "Send #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:  "general",
+		Channel:  "team",
 		TaskID:   task.ID,
 		Attempts: 0,
 	}
@@ -1891,7 +1891,7 @@ func TestHeadlessTurnCompletedDurablyRejectsCodingTurnWithoutTaskStateOrEvidence
 	b.mu.Lock()
 	b.tasks = []teamTask{{
 		ID:            "task-1",
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the durable turn guard",
 		Owner:         "eng",
 		status:        "open",
@@ -1933,7 +1933,7 @@ func TestHeadlessTurnCompletedDurablyAcceptsReviewReadyTask(t *testing.T) {
 	b.mu.Lock()
 	b.tasks = []teamTask{{
 		ID:            "task-1",
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the durable turn guard",
 		Owner:         "eng",
 		status:        "review",
@@ -1969,7 +1969,7 @@ func TestHeadlessTurnCompletedDurablyRejectsLocalWorktreeBuilderWithoutTaskState
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Build the dry-run intake packet",
 		Owner:         "builder",
 		CreatedBy:     "ceo",
@@ -2004,7 +2004,7 @@ func TestHeadlessTurnCompletedDurablyRejectsExternalCompletionWithoutWorkflowEvi
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:     "general",
+		Channel:     "team",
 		Title:       "Create one new Notion client workspace page for the consulting engagement",
 		Details:     "Use the connected Notion workspace and leave the new client-facing page link in channel.",
 		Owner:       "builder",
@@ -2043,7 +2043,7 @@ func TestHeadlessTurnCompletedDurablyAcceptsExternalCompletionWithWorkflowEviden
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:     "general",
+		Channel:     "team",
 		Title:       "Create one new Notion client workspace page for the consulting engagement",
 		Details:     "Use the connected Notion workspace and leave the new client-facing page link in channel.",
 		Owner:       "builder",
@@ -2084,7 +2084,7 @@ func TestHeadlessTurnCompletedDurablyAcceptsExternalCompletionWithActionEvidence
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:     "general",
+		Channel:     "team",
 		Title:       "Verify the new Notion client workspace page for the consulting engagement",
 		Details:     "Use the connected Notion workspace and confirm the client-facing page is live.",
 		Owner:       "reviewer",
@@ -2135,9 +2135,9 @@ func TestBeginHeadlessCodexTurnCapturesWorktreeForLocalWorktreeBuilder(t *testin
 	})
 
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "builder", "Builder")
+	ensureTestMemberAccess(b, "team", "builder", "Builder")
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Build the dry-run intake packet",
 		Owner:         "builder",
 		CreatedBy:     "ceo",
@@ -2178,9 +2178,9 @@ func TestRunHeadlessCodexQueueRetriesLocalWorktreeAfterGenericError(t *testing.T
 	setCleanupTaskWorktreeForTest(t, func(string, string) error { return nil })
 	setHeadlessWakeLeadFn(t, func(_ *Launcher, _ string) {})
 
-	b := NewBrokerAt(filepath.Join(tmpDir, "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(tmpDir, "broker-state.json"))
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement queue mode for the YouTube factory",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -2207,7 +2207,7 @@ func TestRunHeadlessCodexQueueRetriesLocalWorktreeAfterGenericError(t *testing.T
 	l.headless.workers[headlessLane{slug: "eng"}] = true
 	l.headless.queues[headlessLane{slug: "eng"}] = []headlessCodexTurn{{
 		Prompt:     "Build #task-" + strings.TrimPrefix(task.ID, "task-"),
-		Channel:    "general",
+		Channel:    "team",
 		TaskID:     task.ID,
 		Attempts:   0,
 		EnqueuedAt: time.Now(),
@@ -2237,7 +2237,7 @@ func TestHeadlessCodexTurnTimeoutForLocalWorktreeTask(t *testing.T) {
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Implement the studio build",
 		Owner:         "eng",
 		CreatedBy:     "ceo",
@@ -2264,7 +2264,7 @@ func TestHeadlessCodexTurnTimeoutForOfficeLaunchTask(t *testing.T) {
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Produce the launch assets and operating pack",
 		Owner:         "gtm",
 		CreatedBy:     "ceo",
@@ -2297,7 +2297,7 @@ func TestHeadlessCodexTurnTimeoutForOfficeOrchestrationTask(t *testing.T) {
 
 	b := newTestBroker(t)
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Build a daily digest from my emails",
 		Owner:         "ceo",
 		CreatedBy:     "ceo",
@@ -2371,9 +2371,9 @@ func TestEnqueueHeadlessCodexTurnBypassesLeadHoldForReviewReadyTask(t *testing.T
 		return filepath.Join(stateDir, "wuphf-task-"+taskID), "wuphf-" + taskID, nil
 	})
 	setCleanupTaskWorktreeForTest(t, func(string, string) error { return nil })
-	b := NewBrokerAt(filepath.Join(stateDir, "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(stateDir, "broker-state.json"))
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Define channel thesis and monetization system",
 		Owner:         "gtm",
 		CreatedBy:     "ceo",
@@ -2402,7 +2402,7 @@ func TestEnqueueHeadlessCodexTurnBypassesLeadHoldForReviewReadyTask(t *testing.T
 	action := officeActionLog{
 		Kind:      "task_updated",
 		Actor:     "gtm",
-		Channel:   "general",
+		Channel:   "team",
 		RelatedID: task.ID,
 	}
 	content := l.taskNotificationContent(action, task)
@@ -2417,7 +2417,7 @@ func TestEnqueueHeadlessCodexTurnBypassesLeadHoldForReviewReadyTask(t *testing.T
 	// bypass never fires.
 	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{
 		Prompt:  packet,
-		Channel: "general",
+		Channel: "team",
 		TaskID:  task.ID,
 	})
 
@@ -2473,7 +2473,7 @@ func TestPreflightHeadlessCodexAuthFailsAndPostsSystemMessage(t *testing.T) {
 	broker := newTestBroker(t)
 	l := &Launcher{broker: broker}
 
-	err := l.preflightHeadlessCodexAuth("operator", "general")
+	err := l.preflightHeadlessCodexAuth("operator", "team")
 	if err == nil {
 		t.Fatal("expected preflight to fail with no auth available")
 	}
@@ -2484,7 +2484,7 @@ func TestPreflightHeadlessCodexAuthFailsAndPostsSystemMessage(t *testing.T) {
 	// The channel should now contain a system message naming the agent and
 	// the remediation the user needs to take. Without this the user sees
 	// nothing but "Routing..." forever.
-	messages := broker.ChannelMessages("general")
+	messages := broker.ChannelMessages("team")
 	if len(messages) == 0 {
 		t.Fatal("expected a system message in general, got none")
 	}
@@ -2510,7 +2510,7 @@ func TestPreflightHeadlessCodexAuthPassesWhenOpenAIKeySet(t *testing.T) {
 	}
 
 	l := &Launcher{broker: newTestBroker(t)}
-	if err := l.preflightHeadlessCodexAuth("operator", "general"); err != nil {
+	if err := l.preflightHeadlessCodexAuth("operator", "team"); err != nil {
 		t.Fatalf("expected preflight to pass with OPENAI_API_KEY set, got %v", err)
 	}
 }
@@ -2534,7 +2534,7 @@ func TestPreflightHeadlessCodexAuthPassesWhenAuthJSONPresent(t *testing.T) {
 	}
 
 	l := &Launcher{broker: newTestBroker(t)}
-	if err := l.preflightHeadlessCodexAuth("operator", "general"); err != nil {
+	if err := l.preflightHeadlessCodexAuth("operator", "team"); err != nil {
 		t.Fatalf("expected preflight to pass when auth.json exists, got %v", err)
 	}
 }

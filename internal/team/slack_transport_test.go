@@ -294,7 +294,7 @@ func newTestBrokerWithSlackChannel(t *testing.T, channelID string) *Broker {
 		Surface: &channelSurface{
 			Provider:    "slack",
 			RemoteID:    channelID,
-			RemoteTitle: "general",
+			RemoteTitle: "team",
 			Mode:        "channel",
 			BotTokenEnv: "SLACK_BOT_TOKEN",
 		},

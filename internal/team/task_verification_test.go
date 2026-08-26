@@ -84,7 +84,7 @@ func newVerificationTestBroker(t *testing.T) *Broker {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}, {Slug: "qa", Name: "QA"}}
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng", "qa"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng", "qa"}}}
 	b.mu.Unlock()
 	return b
 }
@@ -92,7 +92,7 @@ func newVerificationTestBroker(t *testing.T) *Broker {
 func createVerifiedTask(t *testing.T, b *Broker, spec string) string {
 	t.Helper()
 	resp, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Gated work " + spec,
+		Action: "create", Channel: "team", Title: "Gated work " + spec,
 		Details: "work with a definition of done", Owner: "eng", CreatedBy: "ceo",
 		VerificationKind: "command", VerificationSpec: spec, VerificationRequired: true,
 	})
@@ -109,7 +109,7 @@ func TestVerificationGateBlocksFailingComplete(t *testing.T) {
 	b := newVerificationTestBroker(t)
 	id := createVerifiedTask(t, b, "echo not-done-yet && exit 1")
 
-	_, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"})
+	_, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"})
 	if err == nil {
 		t.Fatal("complete on failing check: want error")
 	}
@@ -133,7 +133,7 @@ func TestVerificationGateAllowsPassingComplete(t *testing.T) {
 	b := newVerificationTestBroker(t)
 	id := createVerifiedTask(t, b, "exit 0")
 
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"}); err != nil {
 		t.Fatalf("complete on passing check: %v", err)
 	}
 	task := b.TaskByID(id)
@@ -142,7 +142,7 @@ func TestVerificationGateAllowsPassingComplete(t *testing.T) {
 	}
 	// Structured-review tasks route to review on complete; approve is the
 	// done transition and runs the gate again.
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatalf("approve on passing check: %v", err)
 	}
 	if got := strings.TrimSpace(b.TaskByID(id).Status()); !strings.EqualFold(got, "done") {
@@ -153,7 +153,7 @@ func TestVerificationGateAllowsPassingComplete(t *testing.T) {
 func TestVerificationFailureRendersInExecutionPacket(t *testing.T) {
 	b := newVerificationTestBroker(t)
 	id := createVerifiedTask(t, b, "echo missing-export-file && exit 2")
-	_, _ = b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"})
+	_, _ = b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"})
 
 	l := launcherForBrokerFixture(b)
 	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *b.TaskByID(id), "Back to you.")
@@ -188,7 +188,7 @@ func TestVerificationGateRunsInOwnerScratchDirWhenNoWorktree(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Remove(decoy) })
 
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"}); err == nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"}); err == nil {
 		t.Fatal("complete must fail while the deliverable exists only in the process cwd")
 	}
 
@@ -197,7 +197,7 @@ func TestVerificationGateRunsInOwnerScratchDirWhenNoWorktree(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(scratch, "j3-deliverable.html"), []byte("real work"), 0o644); err != nil {
 		t.Fatalf("write deliverable: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"}); err != nil {
 		t.Fatalf("complete with the deliverable in the owner scratch dir: %v", err)
 	}
 	task := b.TaskByID(id)
@@ -215,7 +215,7 @@ func TestVerificationGateDefersToParkedGateOnDrafting(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newVerificationTestBroker(t)
 	resp, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Gated parked work",
+		Action: "create", Channel: "team", Title: "Gated parked work",
 		Details: "work with a definition of done", Owner: "eng", CreatedBy: "ceo",
 		VerificationKind: "command", VerificationSpec: "exit 1", VerificationRequired: true,
 	})
@@ -226,7 +226,7 @@ func TestVerificationGateDefersToParkedGateOnDrafting(t *testing.T) {
 	if err := b.TransitionLifecycle(resp.Task.ID, LifecycleStateDrafting, "parked by composer"); err != nil {
 		t.Fatalf("park: %v", err)
 	}
-	_, completeErr := b.MutateTask(TaskPostRequest{Action: "complete", ID: resp.Task.ID, Channel: "general", CreatedBy: "eng"})
+	_, completeErr := b.MutateTask(TaskPostRequest{Action: "complete", ID: resp.Task.ID, Channel: "team", CreatedBy: "eng"})
 	var mErr *TaskMutationError
 	if !errors.As(completeErr, &mErr) {
 		t.Fatalf("want TaskMutationError; got %v", completeErr)
@@ -252,7 +252,7 @@ func TestVerificationGateAuthPreflightBlocksForbiddenActorSideEffects(t *testing
 	defer srv.Close()
 
 	resp, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "URL-gated work",
+		Action: "create", Channel: "team", Title: "URL-gated work",
 		Details: "work with a URL definition of done", Owner: "eng", CreatedBy: "ceo",
 		VerificationKind: "url", VerificationSpec: srv.URL + "/ok", VerificationRequired: true,
 	})
@@ -263,7 +263,7 @@ func TestVerificationGateAuthPreflightBlocksForbiddenActorSideEffects(t *testing
 	// forbidden actor's complete is the only call that could touch the
 	// URL gate.
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "complete", ID: resp.Task.ID, Channel: "general", CreatedBy: "qa",
+		Action: "complete", ID: resp.Task.ID, Channel: "team", CreatedBy: "qa",
 	})
 	var mErr *TaskMutationError
 	if !errors.As(err, &mErr) || mErr.Kind != TaskMutationForbidden {

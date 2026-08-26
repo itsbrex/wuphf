@@ -157,8 +157,8 @@ func TestEmitHeadlessTextDropsEmptyAndCarriesTurn(t *testing.T) {
 func TestEmitHeadlessToolUseAndToolResult(t *testing.T) {
 	stream := &agentStreamBuffer{subs: make(map[int]agentStreamSubscriber)}
 
-	emitHeadlessToolUse(stream, "turn-2", HeadlessProviderCodex, "eng", "task-7", "team_broadcast", `{"channel":"general","content":"shipped"}`, "response.function_call.delta")
-	emitHeadlessToolResult(stream, "turn-2", HeadlessProviderCodex, "eng", "task-7", "team_broadcast", "Posted to #general as @eng", "response.function_call_result")
+	emitHeadlessToolUse(stream, "turn-2", HeadlessProviderCodex, "eng", "task-7", "team_broadcast", `{"channel":"team","content":"shipped"}`, "response.function_call.delta")
+	emitHeadlessToolResult(stream, "turn-2", HeadlessProviderCodex, "eng", "task-7", "team_broadcast", "Posted to #team as @eng", "response.function_call_result")
 
 	// Empty tool name must be silently dropped — the runner's stream
 	// callback can't always tag a name (Codex pre-streams arguments

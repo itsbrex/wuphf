@@ -93,7 +93,7 @@ func TestHandleStudioGeneratePackagePersistsAction(t *testing.T) {
 
 	b := newTestBroker(t)
 	body := map[string]any{
-		"channel": "general",
+		"channel": "team",
 		"actor":   "eng",
 		"workspace": map[string]any{
 			"name": "Faceless Foundry",
@@ -343,7 +343,7 @@ func TestHandleMemoryRoundTripScopedStudioRecords(t *testing.T) {
 		"publishPackages": []map[string]any{{"id": "pkg-1"}},
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/memory?channel=general", nil)
+	req := httptest.NewRequest(http.MethodGet, "/memory?channel=team", nil)
 	rec := httptest.NewRecorder()
 	b.handleMemory(rec, req)
 	if rec.Code != http.StatusOK {

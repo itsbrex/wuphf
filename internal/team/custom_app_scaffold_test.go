@@ -18,7 +18,7 @@ import (
 func TestScaffoldCreatesBuildingDraft(t *testing.T) {
 	store := newCustomAppStore(t.TempDir())
 	now := time.Unix(1_700_000_000, 0).UTC()
-	id := customAppID("lead-scorer", "Lead Scorer", "general")
+	id := customAppID("lead-scorer", "Lead Scorer", "team")
 
 	app, err := store.Scaffold(id, "Lead Scorer", "", "app-builder", now)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestScaffoldCreatesBuildingDraft(t *testing.T) {
 func TestScaffoldIsIdempotent(t *testing.T) {
 	store := newCustomAppStore(t.TempDir())
 	now := time.Unix(1_700_000_000, 0).UTC()
-	id := customAppID("lead-scorer", "Lead Scorer", "general")
+	id := customAppID("lead-scorer", "Lead Scorer", "team")
 
 	if _, err := store.Scaffold(id, "Lead Scorer", "", "app-builder", now); err != nil {
 		t.Fatalf("Scaffold 1: %v", err)
@@ -95,7 +95,7 @@ func TestPublishFlipsDraftToReadyAndPreservesNodeModules(t *testing.T) {
 	store := newCustomAppStore(t.TempDir())
 	store.buildBundle = stubBuildBundle
 	now := time.Unix(1_700_000_000, 0).UTC()
-	id := customAppID("lead-scorer", "Lead Scorer", "general")
+	id := customAppID("lead-scorer", "Lead Scorer", "team")
 
 	if _, err := store.Scaffold(id, "Lead Scorer", "", "app-builder", now); err != nil {
 		t.Fatalf("Scaffold: %v", err)
@@ -177,12 +177,12 @@ func TestMutateTaskPrescaffoldsNewAppBuild(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Build app: Lead Scorer",
 		Details:   "Score inbound leads by ICP fit.",
 		Owner:     appBuilderSlug,
@@ -226,11 +226,11 @@ func TestMutateTaskImproveDoesNotPrescaffold(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
 	}
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Improve app: Lead Scorer",
 		Owner:     appBuilderSlug,
 		CreatedBy: "ceo",
@@ -382,12 +382,12 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Build app: Lead Scorer",
 		Details:   "Score inbound leads by ICP fit.",
 		Owner:     appBuilderSlug,
@@ -406,7 +406,7 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 	if apps[0].EditChannel != wantChannel {
 		t.Fatalf("app EditChannel = %q, want %q", apps[0].EditChannel, wantChannel)
 	}
-	if apps[0].EditChannel == "general" {
+	if apps[0].EditChannel == "team" {
 		t.Fatal("an app's edit thread must never be the office channel")
 	}
 	// The build task works IN that thread, so appForEditChannel (app acceptance)
@@ -436,17 +436,17 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
 	}
 	// An already-published app the improve task targets.
-	id := customAppID("lead-scorer", "Lead Scorer", "general")
+	id := customAppID("lead-scorer", "Lead Scorer", "team")
 	if _, err := b.appStore().Scaffold(id, "Lead Scorer", "", appBuilderSlug, time.Now()); err != nil {
 		t.Fatalf("Scaffold: %v", err)
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Improve app: Lead Scorer",
 		Details:   "Improve the existing app `" + id + "`.\n\nAdd a CSV export button.\n\nWhen the build passes, register it with register_app (app_id=" + id + ") so it appears under Apps.",
 		Owner:     appBuilderSlug,
@@ -471,7 +471,7 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 	// re-pointed at whatever task ran most recently.
 	second, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Improve app: Lead Scorer",
 		Details:   "Improve the existing app `" + id + "`.\n\nAdd a date filter.\n\nWhen the build passes, register it with register_app (app_id=" + id + ") so it appears under Apps.",
 		Owner:     appBuilderSlug,

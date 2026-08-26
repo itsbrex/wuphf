@@ -57,8 +57,8 @@ func TestNormalizeLoadedStateKeepsEmptyOfficeEmpty(t *testing.T) {
 	b.mu.Lock()
 	b.members = nil
 	b.channels = []teamChannel{{
-		Slug:        "general",
-		Name:        "general",
+		Slug:        "team",
+		Name:        "team",
 		Description: "Primary coordination channel.",
 		Members:     []string{},
 	}}
@@ -67,7 +67,7 @@ func TestNormalizeLoadedStateKeepsEmptyOfficeEmpty(t *testing.T) {
 	members := len(b.members)
 	var generalMembers []string
 	for _, ch := range b.channels {
-		if ch.Slug == "general" {
+		if ch.Slug == "team" {
 			generalMembers = ch.Members
 		}
 	}
@@ -78,7 +78,7 @@ func TestNormalizeLoadedStateKeepsEmptyOfficeEmpty(t *testing.T) {
 	}
 	for _, slug := range generalMembers {
 		if slug == "ceo" {
-			t.Fatal("expected no ceo ghost pinned into #general membership")
+			t.Fatal("expected no ceo ghost pinned into #team membership")
 		}
 	}
 }

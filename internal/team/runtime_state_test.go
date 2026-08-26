@@ -144,7 +144,7 @@ func TestDetectRuntimeCapabilitiesWhenTmuxServerIsMissing(t *testing.T) {
 
 func TestBuildRuntimeSnapshotFormatsRecoveryAndCapabilities(t *testing.T) {
 	snapshot := BuildRuntimeSnapshot(RuntimeSnapshotInput{
-		Channel:     "general",
+		Channel:     "team",
 		SessionMode: SessionModeOneOnOne,
 		DirectAgent: "pm",
 		Tasks: []RuntimeTask{{
@@ -226,7 +226,7 @@ func TestBuildRuntimeSnapshotFormatsRecoveryAndCapabilities(t *testing.T) {
 
 	text := snapshot.FormatText()
 	for _, want := range []string{
-		"Runtime state for #general",
+		"Runtime state for #team",
 		"Session mode: 1:1 with @pm",
 		"Pending human requests: 1",
 		"Retained execution artifacts: 2",

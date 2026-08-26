@@ -81,8 +81,8 @@ func TestOpenAICompatBridge_E2E(t *testing.T) {
 					{
 						Type:       "tool_use",
 						ToolName:   "broker_post_message",
-						ToolParams: map[string]any{"channel": "general", "body": "hi team"},
-						ToolInput:  `{"channel":"general","body":"hi team"}`,
+						ToolParams: map[string]any{"channel": "team", "body": "hi team"},
+						ToolInput:  `{"channel":"team","body":"hi team"}`,
 						ToolUseID:  "c1",
 					},
 				},
@@ -107,7 +107,7 @@ func TestOpenAICompatBridge_E2E(t *testing.T) {
 					if last.Role != "user" {
 						t.Errorf("turn 2 last role = %q", last.Role)
 					}
-					if !strings.Contains(last.Content, "posted to #general") {
+					if !strings.Contains(last.Content, "posted to #team") {
 						t.Errorf("turn 2 missing tool result: %q", last.Content)
 					}
 				},
@@ -125,7 +125,7 @@ func TestOpenAICompatBridge_E2E(t *testing.T) {
 
 	final, iters, _, streamErr, err := loop.run(ctx, []agent.Message{
 		{Role: "system", Content: "You're a helpful office agent."},
-		{Role: "user", Content: "Tell the team hi in #general."},
+		{Role: "user", Content: "Tell the team hi in #team."},
 	})
 	if err != nil {
 		t.Fatalf("loop.run: %v", err)
@@ -142,7 +142,7 @@ func TestOpenAICompatBridge_E2E(t *testing.T) {
 	if len(posted) != 1 {
 		t.Fatalf("server got %d posts, want 1", len(posted))
 	}
-	if posted[0].Channel != "general" || posted[0].Body != "hi team" {
+	if posted[0].Channel != "team" || posted[0].Body != "hi team" {
 		t.Errorf("server received %+v", posted[0])
 	}
 }

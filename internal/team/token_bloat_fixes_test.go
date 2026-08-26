@@ -20,7 +20,7 @@ func TestDuplicateAgentBroadcastIsSuppressed(t *testing.T) {
 		{
 			ID:        "msg-1",
 			From:      "ceo",
-			Channel:   "general",
+			Channel:   "team",
 			Content:   "Ball is in reviewer's court, shipping the PR now.",
 			ReplyTo:   "",
 			Timestamp: now,
@@ -32,23 +32,23 @@ func TestDuplicateAgentBroadcastIsSuppressed(t *testing.T) {
 	defer b.mu.Unlock()
 
 	// Byte-identical → drop.
-	if !b.isDuplicateAgentBroadcastLocked("ceo", "general", "", "Ball is in reviewer's court, shipping the PR now.") {
+	if !b.isDuplicateAgentBroadcastLocked("ceo", "team", "", "Ball is in reviewer's court, shipping the PR now.") {
 		t.Error("exact duplicate should be detected")
 	}
 	// Paraphrased but same semantic content → drop (Jaccard over word set).
-	if !b.isDuplicateAgentBroadcastLocked("ceo", "general", "", "Ball is in the reviewer's court — shipping the PR now.") {
+	if !b.isDuplicateAgentBroadcastLocked("ceo", "team", "", "Ball is in the reviewer's court — shipping the PR now.") {
 		t.Error("near-duplicate with trivial punctuation drift should be detected")
 	}
 	// Truly different content → allow.
-	if b.isDuplicateAgentBroadcastLocked("ceo", "general", "", "Planner is blocked on a missing spec.") {
+	if b.isDuplicateAgentBroadcastLocked("ceo", "team", "", "Planner is blocked on a missing spec.") {
 		t.Error("distinct content must not be flagged duplicate")
 	}
 	// Different agent → allow.
-	if b.isDuplicateAgentBroadcastLocked("planner", "general", "", "Ball is in reviewer's court, shipping the PR now.") {
+	if b.isDuplicateAgentBroadcastLocked("planner", "team", "", "Ball is in reviewer's court, shipping the PR now.") {
 		t.Error("duplicate detection must scope to the sender")
 	}
 	// Different thread → allow.
-	if b.isDuplicateAgentBroadcastLocked("ceo", "general", "msg-99", "Ball is in reviewer's court, shipping the PR now.") {
+	if b.isDuplicateAgentBroadcastLocked("ceo", "team", "msg-99", "Ball is in reviewer's court, shipping the PR now.") {
 		t.Error("duplicate detection must scope to (channel, thread)")
 	}
 }
@@ -60,11 +60,11 @@ func TestDuplicateAgentBroadcastWindowExpires(t *testing.T) {
 	old := time.Now().UTC().Add(-2 * duplicateBroadcastWindow).Format(time.RFC3339)
 	b.mu.Lock()
 	b.messages = []channelMessage{
-		{ID: "msg-1", From: "ceo", Channel: "general", Content: "same content", Timestamp: old},
+		{ID: "msg-1", From: "ceo", Channel: "team", Content: "same content", Timestamp: old},
 	}
 	defer b.mu.Unlock()
 
-	if b.isDuplicateAgentBroadcastLocked("ceo", "general", "", "same content") {
+	if b.isDuplicateAgentBroadcastLocked("ceo", "team", "", "same content") {
 		t.Error("messages older than duplicateBroadcastWindow must not trigger dedup")
 	}
 }
@@ -97,9 +97,9 @@ func TestStaleUnansweredFilteredOnResume(t *testing.T) {
 		{Slug: "planner", Name: "Planner"},
 	}
 	b.messages = []channelMessage{
-		{ID: "h1", From: "you", Channel: "general", Content: "stale — ignore", Tagged: []string{"planner"}, Timestamp: stale},
-		{ID: "h2", From: "you", Channel: "general", Content: "fresh — answer", Tagged: []string{"planner"}, Timestamp: fresh},
-		{ID: "h3", From: "you", Channel: "general", Content: "malformed — ignore", Tagged: []string{"planner"}, Timestamp: "not-a-time"},
+		{ID: "h1", From: "you", Channel: "team", Content: "stale — ignore", Tagged: []string{"planner"}, Timestamp: stale},
+		{ID: "h2", From: "you", Channel: "team", Content: "fresh — answer", Tagged: []string{"planner"}, Timestamp: fresh},
+		{ID: "h3", From: "you", Channel: "team", Content: "malformed — ignore", Tagged: []string{"planner"}, Timestamp: "not-a-time"},
 	}
 	b.mu.Unlock()
 

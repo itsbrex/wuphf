@@ -2,6 +2,7 @@ package team
 
 import (
 	"encoding/json"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -180,17 +181,22 @@ func TestOperationBlueprintMatrixSeedsBrokerOffice(t *testing.T) {
 				}
 			}
 
+			// Was: every starter agent must be a member of #general. With
+			// #general retired, "the blueprint's agents are all reachable"
+			// means each one has its own DM.
 			b.mu.Lock()
-			general := b.findChannelLocked("general")
-			b.mu.Unlock()
-			if general == nil {
-				t.Fatal("expected general channel to exist")
+			// Only meaningful once the kill switch is off. While #general is
+			// still enabled it is legitimately seeded, and asserting its
+			// absence here would fail on a correct build.
+			if !generalChannelEnabled() && b.findChannelLocked(GeneralChannelSlug) != nil {
+				t.Error("#general is retired and must not be seeded")
 			}
 			for _, starter := range blueprint.Starter.Agents {
-				if !teamContainsString(general.Members, starter.Slug) {
-					t.Fatalf("expected general channel to include %q, got %+v", starter.Slug, general.Members)
+				if b.findChannelLocked(channel.DirectSlug("human", starter.Slug)) == nil {
+					t.Errorf("starter agent %q has no DM and is unreachable", starter.Slug)
 				}
 			}
+			b.mu.Unlock()
 		})
 	}
 }

@@ -161,7 +161,7 @@ func TestDetectInlineWorkflowAppRaisesProposal(t *testing.T) {
 		}
 	}
 
-	b.detectInlineWorkflowApp("ceo", "general")
+	b.detectInlineWorkflowApp("ceo", "team")
 
 	var proposal *humanInterview
 	for i := range b.requests {
@@ -183,7 +183,7 @@ func TestDetectInlineWorkflowAppRaisesProposal(t *testing.T) {
 	// A second pass is bounded: a proposal is already on the board, so the judge
 	// is not consulted again.
 	before := judgeCalls
-	b.detectInlineWorkflowApp("ceo", "general")
+	b.detectInlineWorkflowApp("ceo", "team")
 	if judgeCalls != before {
 		t.Errorf("judge re-consulted while a proposal was already pending (%d -> %d)", before, judgeCalls)
 	}
@@ -212,7 +212,7 @@ func TestDetectInlineWorkflowAppSkipsAlreadyProposedShape(t *testing.T) {
 		AppProposal: &appProposalSpec{Name: "Lead Scorer", Fingerprint: "crm_fetch_leads>score_leads"},
 	})
 
-	b.detectInlineWorkflowApp("ceo", "general")
+	b.detectInlineWorkflowApp("ceo", "team")
 
 	if judgeCalls != 0 {
 		t.Errorf("an already-proposed shape must not be re-judged, judgeCalls=%d", judgeCalls)

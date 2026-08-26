@@ -21,9 +21,9 @@ func TestBuildChatDigestJobs_KeepsMeaningfulDropsChatter(t *testing.T) {
 	base := time.Date(2026, 6, 25, 9, 0, 0, 0, time.UTC)
 	msgs := []chatDigestMessage{
 		// general: a real thread — two participants, replies.
-		digestMsg("jim", "general", "should we ship the wiki today?", "", base),
-		digestMsg("pam", "general", "yes, tests are green", "jim-090000", base.Add(time.Minute)),
-		digestMsg("jim", "general", "great, merging", "pam-090100", base.Add(2*time.Minute)),
+		digestMsg("jim", "team", "should we ship the wiki today?", "", base),
+		digestMsg("pam", "team", "yes, tests are green", "jim-090000", base.Add(time.Minute)),
+		digestMsg("jim", "team", "great, merging", "pam-090100", base.Add(2*time.Minute)),
 		// random: single-message chatter — must be dropped.
 		digestMsg("dwight", "random", "good morning", "", base.Add(time.Hour)),
 		// noise: pure system posts — must be dropped.
@@ -39,8 +39,8 @@ func TestBuildChatDigestJobs_KeepsMeaningfulDropsChatter(t *testing.T) {
 	if job.Kind != SourceKindChat {
 		t.Errorf("kind = %q, want chat", job.Kind)
 	}
-	if job.Origin != "general:2026-06-25" {
-		t.Errorf("origin = %q, want general:2026-06-25", job.Origin)
+	if job.Origin != "team:2026-06-25" {
+		t.Errorf("origin = %q, want team:2026-06-25", job.Origin)
 	}
 	for _, want := range []string{"should we ship the wiki today?", "yes, tests are green", "jim", "pam"} {
 		if !strings.Contains(job.Content, want) {
@@ -55,8 +55,8 @@ func TestBuildChatDigestJobs_KeepsMeaningfulDropsChatter(t *testing.T) {
 func TestBuildChatDigestJobs_StableIDAcrossRuns(t *testing.T) {
 	base := time.Date(2026, 6, 25, 9, 0, 0, 0, time.UTC)
 	msgs := []chatDigestMessage{
-		digestMsg("jim", "general", "a", "", base),
-		digestMsg("pam", "general", "b", "jim-090000", base.Add(time.Minute)),
+		digestMsg("jim", "team", "a", "", base),
+		digestMsg("pam", "team", "b", "jim-090000", base.Add(time.Minute)),
 	}
 	first := buildChatDigestJobs(msgs, 24*time.Hour)
 	second := buildChatDigestJobs(msgs, 24*time.Hour)
@@ -81,8 +81,8 @@ func TestSweepChatDigests_CapturesAndDedupes(t *testing.T) {
 	base := time.Date(2026, 6, 25, 9, 0, 0, 0, time.UTC)
 	b.mu.Lock()
 	b.messages = append(b.messages,
-		channelMessage{ID: "m1", From: "jim", Channel: "general", Content: "ship it?", Timestamp: base.Format(time.RFC3339)},
-		channelMessage{ID: "m2", From: "pam", Channel: "general", Content: "green, go", ReplyTo: "m1", Timestamp: base.Add(time.Minute).Format(time.RFC3339)},
+		channelMessage{ID: "m1", From: "jim", Channel: "team", Content: "ship it?", Timestamp: base.Format(time.RFC3339)},
+		channelMessage{ID: "m2", From: "pam", Channel: "team", Content: "green, go", ReplyTo: "m1", Timestamp: base.Add(time.Minute).Format(time.RFC3339)},
 		// single-message chatter that must NOT produce a digest.
 		channelMessage{ID: "m3", From: "dwight", Channel: "random", Content: "hi", Timestamp: base.Format(time.RFC3339)},
 	)
@@ -98,7 +98,7 @@ func TestSweepChatDigests_CapturesAndDedupes(t *testing.T) {
 		}
 	})
 
-	wantSlug := DeriveSourceID(SourceKindChat, "general:2026-06-25", "", "")
+	wantSlug := DeriveSourceID(SourceKindChat, "team:2026-06-25", "", "")
 
 	b.sweepChatDigests(base.Add(time.Hour))
 	testTickUntil(t, 5*time.Second, func() bool {

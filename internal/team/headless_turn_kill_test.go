@@ -59,7 +59,7 @@ func TestNoteChatTurnStallTasklessVsTask(t *testing.T) {
 	l.broker = b
 
 	// Task-attached turn: no chat note (the task path owns the surfacing).
-	l.noteChatTurnStall("eng", headlessCodexTurn{TaskID: "task-x", Channel: "general"}, "the reply hit an error")
+	l.noteChatTurnStall("eng", headlessCodexTurn{TaskID: "task-x", Channel: "team"}, "the reply hit an error")
 	for _, m := range b.AllMessages() {
 		if m.From == "system" && strings.Contains(m.Content, "couldn't finish replying") {
 			t.Fatalf("task-attached turn must not post a chat stall note: %q", m.Content)
@@ -67,7 +67,7 @@ func TestNoteChatTurnStallTasklessVsTask(t *testing.T) {
 	}
 
 	// Taskless chat reply (ceo has no active task): one honest note.
-	l.noteChatTurnStall("ceo", headlessCodexTurn{Channel: "general"}, "the reply timed out after 4m0s")
+	l.noteChatTurnStall("ceo", headlessCodexTurn{Channel: "team"}, "the reply timed out after 4m0s")
 	var note string
 	for _, m := range b.AllMessages() {
 		if m.From == "system" && strings.Contains(m.Content, "couldn't finish replying") {
@@ -106,15 +106,15 @@ func TestNoteChatTurnNoReplyGating(t *testing.T) {
 	}
 
 	// Not human-prompted: agent-to-agent turns may legitimately stay silent.
-	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "general"}, start)
+	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "team"}, start)
 	// Task-attached (even if human-prompted): the task path owns surfacing.
-	l.noteChatTurnNoReply("eng", headlessCodexTurn{TaskID: "task-x", Channel: "general", FromHuman: true}, start)
+	l.noteChatTurnNoReply("eng", headlessCodexTurn{TaskID: "task-x", Channel: "team", FromHuman: true}, start)
 	if got := noReplyNotes(); got != 0 {
 		t.Fatalf("expected no notes for non-human / task turns, got %d", got)
 	}
 
 	// Human-prompted, taskless, silent: one honest note.
-	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "general", FromHuman: true}, start)
+	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "team", FromHuman: true}, start)
 	if got := noReplyNotes(); got != 1 {
 		t.Fatalf("expected exactly one no-reply note, got %d", got)
 	}
@@ -134,12 +134,12 @@ func TestNoteChatTurnNoReplyGating(t *testing.T) {
 	b.messages = append(b.messages, channelMessage{
 		ID:        "seed-gtm",
 		From:      "gtm",
-		Channel:   "general",
+		Channel:   "team",
 		Content:   "here is my answer",
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 	b.mu.Unlock()
-	l.noteChatTurnNoReply("gtm", headlessCodexTurn{Channel: "general", FromHuman: true}, start)
+	l.noteChatTurnNoReply("gtm", headlessCodexTurn{Channel: "team", FromHuman: true}, start)
 	for _, m := range b.AllMessages() {
 		if m.From == "system" && strings.Contains(m.Content, "finished without posting a reply") && strings.Contains(m.Content, "@gtm") {
 			t.Fatalf("no note expected when the agent already replied: %q", m.Content)
@@ -156,12 +156,12 @@ func TestHeadlessQueueHumanChatSilentSuccessPostsNote(t *testing.T) {
 	})
 
 	l := newHeadlessLauncherForTest(t)
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	l.installBroker(b)
 
 	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{
 		Prompt:     "are you there?",
-		Channel:    "general",
+		Channel:    "team",
 		FromHuman:  true,
 		EnqueuedAt: time.Now(),
 	})
@@ -201,7 +201,7 @@ func TestHeadlessQueueChatTimeoutPostsStallNote(t *testing.T) {
 	})
 
 	l := newHeadlessLauncherForTest(t)
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	l.installBroker(b)
 
 	l.enqueueHeadlessCodexTurn("fe", "are you there?")
@@ -237,7 +237,7 @@ func TestHeadlessQueueKilledTurnPostsHumanReadableNote(t *testing.T) {
 	})
 
 	l := newHeadlessLauncherForTest(t)
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	l.installBroker(b)
 
 	l.enqueueHeadlessCodexTurn("fe", "do the thing")

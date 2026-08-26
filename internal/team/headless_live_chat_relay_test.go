@@ -40,7 +40,7 @@ func TestHeadlessRunnersWireLiveChatRelay(t *testing.T) {
 
 func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 	b := newTestBroker(t)
-	root, err := b.PostMessage("you", "general", "What is happening?", nil, "")
+	root, err := b.PostMessage("you", "team", "What is happening?", nil, "")
 	if err != nil {
 		t.Fatalf("post human message: %v", err)
 	}
@@ -50,14 +50,14 @@ func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 	relay := newHeadlessLiveChatRelay(
 		l,
 		"ceo",
-		"general",
+		"team",
 		fmt.Sprintf(`Reply using team_broadcast with reply_to_id "%s".`, root.ID),
 		func(line string) { logs = append(logs, line) },
 	)
 
 	relay.OnText("I will check the live stream now.")
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 2 {
 		t.Fatalf("expected human root + streamed agent message, got %d: %+v", len(msgs), msgs)
 	}
@@ -69,7 +69,7 @@ func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 		t.Fatalf("expected relay log entry, got %+v", logs)
 	}
 
-	_, posted, err := l.postHeadlessFinalMessageIfSilent("ceo", "general", "", "late summary", startedAt)
+	_, posted, err := l.postHeadlessFinalMessageIfSilent("ceo", "team", "", "late summary", startedAt)
 	if err != nil {
 		t.Fatalf("fallback post: %v", err)
 	}
@@ -80,20 +80,20 @@ func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 
 func TestOpenAICompatLiveChatRelayDoesNotPostJSONToolShape(t *testing.T) {
 	b := newTestBroker(t)
-	if _, err := b.PostMessage("you", "general", "Please do the task.", nil, ""); err != nil {
+	if _, err := b.PostMessage("you", "team", "Please do the task.", nil, ""); err != nil {
 		t.Fatalf("post human message: %v", err)
 	}
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "general", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
 	sinks := &fakeTurnSinks{}
 	st := newOpenAICompatTurnState(sinks, relay)
 
 	st.onText(`{"name":`)
 	st.onText(`"team_broadcast","arguments":`)
-	st.onText(`{"channel":"general","content":"hello"}}`)
-	st.onToolUseChunk("team_broadcast", `{"channel":"general"}`)
+	st.onText(`{"channel":"team","content":"hello"}}`)
+	st.onToolUseChunk("team_broadcast", `{"channel":"team"}`)
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 1 {
 		t.Fatalf("expected only the human root; JSON tool stream leaked to chat: %+v", msgs)
 	}
@@ -101,7 +101,7 @@ func TestOpenAICompatLiveChatRelayDoesNotPostJSONToolShape(t *testing.T) {
 
 func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 	b := newTestBroker(t)
-	root, err := b.PostMessage("you", "general", "Open the browser.", nil, "")
+	root, err := b.PostMessage("you", "team", "Open the browser.", nil, "")
 	if err != nil {
 		t.Fatalf("post human message: %v", err)
 	}
@@ -109,14 +109,14 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 	relay := newHeadlessLiveChatRelay(
 		l,
 		"ceo",
-		"general",
+		"team",
 		fmt.Sprintf(`Reply using team_broadcast with reply_to_id "%s".`, root.ID),
 		nil,
 	)
 
 	relay.ReportIssue("browser access is not available")
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 3 {
 		t.Fatalf("expected issue to post immediately, got %+v", msgs)
 	}
@@ -130,7 +130,7 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 	if tasks := b.AllTasks(); len(tasks) != 0 {
 		t.Fatalf("expected issue report to ask before creating self-heal task, got %+v", tasks)
 	}
-	requests := b.Requests("general", false)
+	requests := b.Requests("team", false)
 	if len(requests) != 1 || requests[0].RecommendedID != "approve" {
 		t.Fatalf("expected recommended approval request, got %+v", requests)
 	}
@@ -139,12 +139,12 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 func TestHeadlessLiveChatRelayFlushesBufferedTextBeforeIssue(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "general", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
 
 	relay.OnText("I found context and will continue")
 	relay.ReportIssue("browser access is not available")
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 3 {
 		t.Fatalf("expected prose, issue, and approval messages, got %+v", msgs)
 	}
@@ -159,13 +159,13 @@ func TestHeadlessLiveChatRelayFlushesBufferedTextBeforeIssue(t *testing.T) {
 func TestHeadlessLiveChatRelayPreservesWhitespaceChunks(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "general", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
 
 	relay.OnText("Starting live")
 	relay.OnText(" ")
 	relay.OnText("now.")
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 1 {
 		t.Fatalf("expected one flushed prose message, got %+v", msgs)
 	}
@@ -176,17 +176,17 @@ func TestHeadlessLiveChatRelayPreservesWhitespaceChunks(t *testing.T) {
 
 func TestOpenAICompatToolErrorReportsIssueToChat(t *testing.T) {
 	b := newTestBroker(t)
-	if _, err := b.PostMessage("you", "general", "Use the browser.", nil, ""); err != nil {
+	if _, err := b.PostMessage("you", "team", "Use the browser.", nil, ""); err != nil {
 		t.Fatalf("post human message: %v", err)
 	}
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "general", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
 	sinks := &fakeTurnSinks{}
 	st := newOpenAICompatTurnState(sinks, relay)
 
 	st.onToolResult("browser_open", "ERROR: browser access is not available", nil)
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 3 {
 		t.Fatalf("expected tool error to post to chat, got %+v", msgs)
 	}
@@ -201,15 +201,15 @@ func TestOpenAICompatToolErrorReportsIssueToChat(t *testing.T) {
 func TestReportIncidentSuppressesStructuredPayloads(t *testing.T) {
 	b := newTestBroker(t)
 
-	_, _, posted, err := b.ReportIncident("ceo", "general", "", `{"error":"browser access is not available"}`)
+	_, _, posted, err := b.ReportIncident("ceo", "team", "", `{"error":"browser access is not available"}`)
 	if err != nil {
 		t.Fatalf("report incident: %v", err)
 	}
 	if posted {
 		t.Fatal("expected structured JSON payload to be suppressed")
 	}
-	if len(b.ChannelMessages("general")) != 0 {
-		t.Fatalf("expected no chat messages, got %+v", b.ChannelMessages("general"))
+	if len(b.ChannelMessages("team")) != 0 {
+		t.Fatalf("expected no chat messages, got %+v", b.ChannelMessages("team"))
 	}
 	if len(b.Incidents()) != 0 {
 		t.Fatalf("expected no incidents, got %+v", b.Incidents())
@@ -219,12 +219,12 @@ func TestReportIncidentSuppressesStructuredPayloads(t *testing.T) {
 func TestReportIncidentDedupesRepeatedStreamIssue(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "general", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
 
 	relay.ReportIssue("browser access is not available")
 	relay.ReportIssue("ERROR: browser access is not available")
 
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 2 {
 		t.Fatalf("expected one incident message, got %+v", msgs)
 	}
@@ -232,7 +232,7 @@ func TestReportIncidentDedupesRepeatedStreamIssue(t *testing.T) {
 	if len(incidents) != 1 || incidents[0].Count != 2 {
 		t.Fatalf("expected one counted incident, got %+v", incidents)
 	}
-	requests := b.Requests("general", false)
+	requests := b.Requests("team", false)
 	if len(requests) != 1 {
 		t.Fatalf("expected one approval request, got %+v", requests)
 	}
@@ -240,9 +240,9 @@ func TestReportIncidentDedupesRepeatedStreamIssue(t *testing.T) {
 
 func TestReportIncidentAttachesActiveTaskAndWaitsForApproval(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Use the browser",
 		Owner:     "eng",
 		CreatedBy: "ceo",
@@ -252,7 +252,7 @@ func TestReportIncidentAttachesActiveTaskAndWaitsForApproval(t *testing.T) {
 		t.Fatalf("ensure task: %v reused=%v", err, reused)
 	}
 
-	if _, _, posted, err := b.ReportIncident("eng", "general", "", "browser access is not available"); err != nil || !posted {
+	if _, _, posted, err := b.ReportIncident("eng", "team", "", "browser access is not available"); err != nil || !posted {
 		t.Fatalf("report incident: posted=%v err=%v", posted, err)
 	}
 
@@ -277,16 +277,16 @@ func TestReportIncidentAttachesActiveTaskAndWaitsForApproval(t *testing.T) {
 
 func TestApprovedIncidentCreatesSelfHealTask(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
 	defer b.Stop()
 
-	if _, _, posted, err := b.ReportIncident("eng", "general", "", "browser access is not available"); err != nil || !posted {
+	if _, _, posted, err := b.ReportIncident("eng", "team", "", "browser access is not available"); err != nil || !posted {
 		t.Fatalf("report incident: posted=%v err=%v", posted, err)
 	}
-	requests := b.Requests("general", false)
+	requests := b.Requests("team", false)
 	if len(requests) != 1 {
 		t.Fatalf("expected approval request, got %+v", requests)
 	}
@@ -336,7 +336,7 @@ func TestApprovedIncidentCreatesSelfHealTask(t *testing.T) {
 
 func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	b.mu.Lock()
@@ -345,7 +345,7 @@ func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 		Kind:      "approval",
 		Status:    "answered",
 		From:      "system",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Approve self-heal",
 		Question:  "Proceed?",
 		CreatedAt: now,
@@ -355,9 +355,9 @@ func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 	b.incidents = append(b.incidents, incidentRecord{
 		ID:                "issue-1",
 		Agent:             "eng",
-		Channel:           "general",
+		Channel:           "team",
 		Detail:            "browser access is not available",
-		NormalizedKey:     normalizedIncidentKey("eng", "general", "browser access is not available"),
+		NormalizedKey:     normalizedIncidentKey("eng", "team", "browser access is not available"),
 		ApprovalRequestID: "request-issue-1",
 		Count:             1,
 		CreatedAt:         now,
@@ -370,7 +370,7 @@ func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 	}, "browser access is not available")
 	b.mu.Unlock()
 
-	requests := b.Requests("general", true)
+	requests := b.Requests("team", true)
 	if got := len(requests); got != 1 {
 		t.Fatalf("expected answered approval to be reused, got %d requests: %+v", got, requests)
 	}
@@ -382,7 +382,7 @@ func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 
 func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 
 	now := time.Now().UTC().Format(time.RFC3339)
 	b.mu.Lock()
@@ -392,7 +392,7 @@ func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
 		Kind:      "approval",
 		Status:    "answered",
 		From:      "system",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Approve self-heal",
 		Question:  "Proceed?",
 		CreatedAt: now,
@@ -402,9 +402,9 @@ func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
 	b.incidents = append(b.incidents, incidentRecord{
 		ID:                "issue-1",
 		Agent:             "eng",
-		Channel:           "general",
+		Channel:           "team",
 		Detail:            "browser access is not available",
-		NormalizedKey:     normalizedIncidentKey("eng", "general", "browser access is not available"),
+		NormalizedKey:     normalizedIncidentKey("eng", "team", "browser access is not available"),
 		ApprovalRequestID: "request-issue-1",
 		Count:             1,
 		CreatedAt:         now,
@@ -418,7 +418,7 @@ func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
 	if len(incidents) != 1 || incidents[0].SelfHealError == "" {
 		t.Fatalf("expected self-heal creation error to be recorded, got %+v", incidents)
 	}
-	msgs := b.ChannelMessages("general")
+	msgs := b.ChannelMessages("team")
 	if len(msgs) != 1 {
 		t.Fatalf("expected one surfaced failure message, got %+v", msgs)
 	}
@@ -436,7 +436,7 @@ func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
 func TestMaybeCreateApprovedSelfHealTask_OverflowMarksError(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	ensureTestMemberAccess(b, "general", "eng", "Engineer")
+	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 
 	// Pin @eng at the cap with self-heal tasks for taskIDs the incident does
 	// not match. The approved request below carries a fresh TaskID, so the
@@ -455,7 +455,7 @@ func TestMaybeCreateApprovedSelfHealTask_OverflowMarksError(t *testing.T) {
 		Kind:      "approval",
 		Status:    "answered",
 		From:      "system",
-		Channel:   "general",
+		Channel:   "team",
 		Title:     "Approve self-heal",
 		Question:  "Proceed?",
 		CreatedAt: now,
@@ -465,10 +465,10 @@ func TestMaybeCreateApprovedSelfHealTask_OverflowMarksError(t *testing.T) {
 	b.incidents = append(b.incidents, incidentRecord{
 		ID:                "issue-overflow-1",
 		Agent:             "eng",
-		Channel:           "general",
+		Channel:           "team",
 		TaskID:            "eng-fresh-1",
 		Detail:            "browser access is not available",
-		NormalizedKey:     normalizedIncidentKey("eng", "general", "browser access is not available"),
+		NormalizedKey:     normalizedIncidentKey("eng", "team", "browser access is not available"),
 		ApprovalRequestID: "request-overflow-1",
 		Count:             1,
 		CreatedAt:         now,
@@ -506,14 +506,14 @@ func TestIncidentDoesNotCountAsSubstantiveProgress(t *testing.T) {
 	l := &Launcher{broker: b}
 	startedAt := time.Now().UTC().Add(-1 * time.Second)
 
-	if _, _, posted, err := b.ReportIncident("ceo", "general", "", "browser access is not available"); err != nil || !posted {
+	if _, _, posted, err := b.ReportIncident("ceo", "team", "", "browser access is not available"); err != nil || !posted {
 		t.Fatalf("report incident: posted=%v err=%v", posted, err)
 	}
 	if l.agentPostedSubstantiveMessageSince("ceo", startedAt) {
 		t.Fatal("agent_issue should not count as substantive progress")
 	}
 
-	if _, err := b.PostMessage("ceo", "general", "I can continue with the code inspection.", nil, ""); err != nil {
+	if _, err := b.PostMessage("ceo", "team", "I can continue with the code inspection.", nil, ""); err != nil {
 		t.Fatalf("post normal message: %v", err)
 	}
 	if !l.agentPostedSubstantiveMessageSince("ceo", startedAt) {

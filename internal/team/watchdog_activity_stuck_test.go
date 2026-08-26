@@ -44,7 +44,7 @@ func TestWatchdogActivityStuck_SingleAlertFlipsKindToStuck(t *testing.T) {
 	defer unsub()
 
 	const owner = "eng"
-	_, _, err := b.CreateWatchdogAlert("task_stalled", "general", "task", "task-1", owner, "Waiting for unblock")
+	_, _, err := b.CreateWatchdogAlert("task_stalled", "team", "task", "task-1", owner, "Waiting for unblock")
 	if err != nil {
 		t.Fatalf("CreateWatchdogAlert: %v", err)
 	}
@@ -69,7 +69,7 @@ func TestWatchdogActivityStuck_ResolveLastAlertFlipsKindToRoutine(t *testing.T) 
 	defer unsub()
 
 	const owner = "fe"
-	_, _, err := b.CreateWatchdogAlert("task_stalled", "general", "task", "task-2", owner, "Waiting")
+	_, _, err := b.CreateWatchdogAlert("task_stalled", "team", "task", "task-2", owner, "Waiting")
 	if err != nil {
 		t.Fatalf("CreateWatchdogAlert: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestWatchdogActivityStuck_ResolveLastAlertFlipsKindToRoutine(t *testing.T) 
 
 	// Resolve the only alert — must flip back to routine.
 	b.mu.Lock()
-	b.resolveWatchdogAlertsLocked("task", "task-2", "general")
+	b.resolveWatchdogAlertsLocked("task", "task-2", "team")
 	b.mu.Unlock()
 
 	if got := activityKindNow(b, owner); got != "routine" {
@@ -106,12 +106,12 @@ func TestWatchdogActivityStuck_TwoAlertsResolveOneKindStaysStuck(t *testing.T) {
 	const owner = "be"
 
 	// First alert: task-3
-	_, _, err := b.CreateWatchdogAlert("task_stalled", "general", "task", "task-3", owner, "Waiting on task-3")
+	_, _, err := b.CreateWatchdogAlert("task_stalled", "team", "task", "task-3", owner, "Waiting on task-3")
 	if err != nil {
 		t.Fatalf("CreateWatchdogAlert task-3: %v", err)
 	}
 	// Second alert: task-4 (different targetID, same owner)
-	_, _, err = b.CreateWatchdogAlert("task_stalled", "general", "task", "task-4", owner, "Waiting on task-4")
+	_, _, err = b.CreateWatchdogAlert("task_stalled", "team", "task", "task-4", owner, "Waiting on task-4")
 	if err != nil {
 		t.Fatalf("CreateWatchdogAlert task-4: %v", err)
 	}
@@ -126,7 +126,7 @@ func TestWatchdogActivityStuck_TwoAlertsResolveOneKindStaysStuck(t *testing.T) {
 
 	// Resolve only the first alert. The second is still active.
 	b.mu.Lock()
-	b.resolveWatchdogAlertsLocked("task", "task-3", "general")
+	b.resolveWatchdogAlertsLocked("task", "task-3", "team")
 	b.mu.Unlock()
 
 	// Kind must remain "stuck" because task-4's alert is still active.
@@ -148,7 +148,7 @@ func TestWatchdogActivityStuck_TwoAlertsResolveOneKindStaysStuck(t *testing.T) {
 
 	// Now resolve the second alert — only now should Kind drop to routine.
 	b.mu.Lock()
-	b.resolveWatchdogAlertsLocked("task", "task-4", "general")
+	b.resolveWatchdogAlertsLocked("task", "task-4", "team")
 	b.mu.Unlock()
 
 	if got := activityKindNow(b, owner); got != "routine" {
@@ -173,7 +173,7 @@ func TestWatchdogActivityStuck_NoCollisionWithStalenessReaper(t *testing.T) {
 	b := newTestBroker(t)
 
 	const owner = "data"
-	_, _, err := b.CreateWatchdogAlert("task_stalled", "general", "task", "task-5", owner, "Direct watchdog test")
+	_, _, err := b.CreateWatchdogAlert("task_stalled", "team", "task", "task-5", owner, "Direct watchdog test")
 	if err != nil {
 		t.Fatalf("CreateWatchdogAlert: %v", err)
 	}

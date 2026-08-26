@@ -18,7 +18,7 @@ import (
 
 func postTestMessage(t *testing.T, b *Broker, content string) {
 	t.Helper()
-	body := strings.NewReader(fmt.Sprintf(`{"from":"you","channel":"general","content":%q}`, content))
+	body := strings.NewReader(fmt.Sprintf(`{"from":"you","channel":"team","content":%q}`, content))
 	req, err := http.NewRequest(http.MethodPost, "/messages", body)
 	if err != nil {
 		t.Fatal(err)
@@ -34,7 +34,7 @@ func postTestMessage(t *testing.T, b *Broker, content string) {
 func TestHandlePostMessagePersistsToDiskBeforeReturning(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"ceo"}}}
 	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}}
 	b.rebuildMemberIndexLocked()
 	b.mu.Unlock()
@@ -60,7 +60,7 @@ func TestHandlePostMessagePersistsToDiskBeforeReturning(t *testing.T) {
 func TestHandlePostMessageConcurrentPostsConvergeOnDisk(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"ceo"}}}
 	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}}
 	b.rebuildMemberIndexLocked()
 	b.mu.Unlock()

@@ -40,7 +40,7 @@ func seedTaskInReview(t *testing.T, b *Broker, taskID string, reviewers []string
 	b.tasks = append(b.tasks, teamTask{
 		ID:                   taskID,
 		Title:                "test-" + taskID,
-		Channel:              "general",
+		Channel:              "team",
 		LifecycleState:       LifecycleStateRunning,
 		Reviewers:            reviewers,
 		ReviewTimeoutSeconds: timeoutSeconds,

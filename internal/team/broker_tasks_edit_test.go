@@ -16,7 +16,7 @@ import (
 func TestEditActionRenamesWithoutMovingStatus(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Old name",
+		Action: "create", Channel: "team", Title: "Old name",
 		Details: "old body", CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
@@ -26,8 +26,7 @@ func TestEditActionRenamesWithoutMovingStatus(t *testing.T) {
 
 	got, err := b.MutateTask(TaskPostRequest{
 		Action: "edit", ID: created.Task.ID,
-		Title: "New name", Details: "new body", CreatedBy: "human",
-	})
+		Title: "New name", Details: "new body", CreatedBy: "human", Channel: "team"})
 	if err != nil {
 		t.Fatalf("edit failed: %v", err)
 	}
@@ -52,7 +51,7 @@ func TestEditActionRenamesWithoutMovingStatus(t *testing.T) {
 func TestEditActionClearsDescription(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Has a body",
+		Action: "create", Channel: "team", Title: "Has a body",
 		Details: "delete me", CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
@@ -60,8 +59,7 @@ func TestEditActionClearsDescription(t *testing.T) {
 	}
 	got, err := b.MutateTask(TaskPostRequest{
 		Action: "edit", ID: created.Task.ID, Title: "Has a body",
-		Details: "", CreatedBy: "human",
-	})
+		Details: "", CreatedBy: "human", Channel: "team"})
 	if err != nil {
 		t.Fatalf("edit failed: %v", err)
 	}
@@ -74,15 +72,14 @@ func TestEditActionClearsDescription(t *testing.T) {
 func TestEditActionRejectsEmptyTitle(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Keeps its name",
+		Action: "create", Channel: "team", Title: "Keeps its name",
 		CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "edit", ID: created.Task.ID, Title: "   ", CreatedBy: "human",
-	}); err == nil {
+		Action: "edit", ID: created.Task.ID, Title: "   ", CreatedBy: "human", Channel: "team"}); err == nil {
 		t.Fatal("an empty title must be rejected")
 	}
 	b.mu.Lock()
@@ -99,7 +96,7 @@ func TestEditActionRejectsEmptyTitle(t *testing.T) {
 func TestEditActionAnnouncesTheChange(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Before",
+		Action: "create", Channel: "team", Title: "Before",
 		CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
@@ -115,8 +112,7 @@ func TestEditActionAnnouncesTheChange(t *testing.T) {
 	b.mu.Unlock()
 
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "edit", ID: created.Task.ID, Title: "After", CreatedBy: "human",
-	}); err != nil {
+		Action: "edit", ID: created.Task.ID, Title: "After", CreatedBy: "human", Channel: "team"}); err != nil {
 		t.Fatalf("edit failed: %v", err)
 	}
 

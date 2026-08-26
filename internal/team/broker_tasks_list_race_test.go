@@ -20,14 +20,14 @@ import (
 )
 
 func TestListTasksSnapshotIsSafeToMarshalOutsideTheLock(t *testing.T) {
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}}}
 	now := time.Now().UTC().Format(time.RFC3339)
 	for i := 0; i < 200; i++ {
 		b.tasks = append(b.tasks, teamTask{
 			ID:             fmt.Sprintf("OFFICE-%d", i+1),
-			Channel:        "general",
+			Channel:        "team",
 			Title:          fmt.Sprintf("board fixture %d", i+1),
 			Owner:          "eng",
 			status:         "in_progress",
@@ -46,7 +46,7 @@ func TestListTasksSnapshotIsSafeToMarshalOutsideTheLock(t *testing.T) {
 	}
 	b.mu.Unlock()
 
-	result, err := b.ListTasks(TaskListRequest{Channel: "general"})
+	result, err := b.ListTasks(TaskListRequest{Channel: "team"})
 	if err != nil {
 		t.Fatal(err)
 	}

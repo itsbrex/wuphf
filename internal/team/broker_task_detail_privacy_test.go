@@ -32,7 +32,7 @@ func TestTaskDetailNeverLeaksTheHumanNote(t *testing.T) {
 	const secret = "the acquisition price is 4.2 million, do not repeat this"
 
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Draft the memo",
+		Action: "create", Channel: "team", Title: "Draft the memo",
 		CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
@@ -54,7 +54,7 @@ func TestTaskDetailNeverLeaksTheHumanNote(t *testing.T) {
 
 	b.mu.Lock()
 	b.markHumanNoteOnChannelTasksLocked(channelMessage{
-		From: "you", Channel: "general",
+		From: "you", Channel: "team",
 		Content: created.Task.ID + " " + secret,
 	})
 	stamped := false
@@ -104,7 +104,7 @@ func TestTaskDetailNeverLeaksTheHumanNote(t *testing.T) {
 func TestHumanNoteSurvivesInProcessAfterWireRedaction(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Still needs the note",
+		Action: "create", Channel: "team", Title: "Still needs the note",
 		CreatedBy: "human", Owner: "ceo",
 	})
 	if err != nil {
@@ -118,7 +118,7 @@ func TestHumanNoteSurvivesInProcessAfterWireRedaction(t *testing.T) {
 		}
 	}
 	b.markHumanNoteOnChannelTasksLocked(channelMessage{
-		From: "you", Channel: "general", Content: created.Task.ID + " please use the shorter framing",
+		From: "you", Channel: "team", Content: created.Task.ID + " please use the shorter framing",
 	})
 	var note *TaskHumanNote
 	for i := range b.tasks {

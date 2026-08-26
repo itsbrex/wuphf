@@ -28,7 +28,7 @@ func TestIsDeterministicPhase2CEODM_GatesCEODMDuringPhase2(t *testing.T) {
 		{"CEO DM after onboarding complete", "ceo__human", onboarding.PhaseComplete, true, false},
 		{"CEO DM in LLM-backed draft phase", "ceo__human", onboarding.PhaseDraft, false, false},
 		{"non-CEO DM during Phase 2", "engineer__human", onboarding.PhaseTeam, false, false},
-		{"non-DM channel during Phase 2", "general", onboarding.PhaseTeam, false, false},
+		{"non-DM channel during Phase 2", "team", onboarding.PhaseTeam, false, false},
 		{"empty channel during Phase 2", "", onboarding.PhaseTeam, false, false},
 	}
 

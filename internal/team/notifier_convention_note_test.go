@@ -36,7 +36,7 @@ func TestSlackChannelConventionNote(t *testing.T) {
 		}
 	}
 
-	if got := l.slackChannelConventionNote("general"); got != "" {
+	if got := l.slackChannelConventionNote("team"); got != "" {
 		t.Errorf("non-slack channel should get no note, got %q", got)
 	}
 }

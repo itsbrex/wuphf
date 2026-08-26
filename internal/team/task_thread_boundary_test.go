@@ -23,14 +23,14 @@ import (
 // root message in its channel.
 func TestTaskPlanAnchorsThreadRoot(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "general", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "ceo", "CEO")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
 	defer b.Stop()
 
 	body, _ := json.Marshal(map[string]any{
-		"channel":    "general",
+		"channel":    "team",
 		"created_by": "ceo",
 		"tasks": []map[string]any{
 			{"title": "Compare two plans", "details": "TESTING run.", "assignee": "ceo", "execution_mode": "office"},

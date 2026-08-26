@@ -68,7 +68,7 @@ func seedAndReload(t *testing.T, b *Broker) *Broker {
 	}
 	b.mu.Unlock()
 
-	fresh := NewBrokerAt(b.statePath)
+	fresh := newBrokerWithTeamRoom(b.statePath)
 	if err := fresh.loadState(); err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestBootstrapHumanHasPosted_HumanMessage(t *testing.T) {
 		{
 			ID:        "msg-1",
 			From:      "human:najm",
-			Channel:   "general",
+			Channel:   "team",
 			Content:   "hello from a human",
 			Timestamp: "2026-05-06T10:00:00Z",
 		},
@@ -146,7 +146,7 @@ func TestBootstrapHumanHasPosted_EmptyFromLatch(t *testing.T) {
 				{
 					ID:        "msg-1",
 					From:      tc.from,
-					Channel:   "general",
+					Channel:   "team",
 					Content:   "mysterious origin",
 					Timestamp: "2026-05-06T10:00:00Z",
 				},
@@ -176,14 +176,14 @@ func TestBootstrapHumanHasPosted_AgentOnlyMessages(t *testing.T) {
 		{
 			ID:        "msg-1",
 			From:      "ceo",
-			Channel:   "general",
+			Channel:   "team",
 			Content:   "agent message one",
 			Timestamp: "2026-05-06T10:00:00Z",
 		},
 		{
 			ID:        "msg-2",
 			From:      "eng",
-			Channel:   "general",
+			Channel:   "team",
 			Content:   "agent message two",
 			Timestamp: "2026-05-06T10:01:00Z",
 		},

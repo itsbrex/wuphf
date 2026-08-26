@@ -279,7 +279,7 @@ func TestTelegramSendToTelegramMocked(t *testing.T) {
 	transport := &TelegramTransport{
 		BotToken: "test-token",
 		client:   server.Client(),
-		ChatMap:  map[string]string{"-100": "general"},
+		ChatMap:  map[string]string{"-100": "team"},
 		UserMap:  make(map[string]string),
 	}
 	// Override the API base by patching the sendMessage method's URL
@@ -328,7 +328,7 @@ func TestTelegramStartFailsWithoutChannels(t *testing.T) {
 	b := newTestBroker(t)
 	// Clear all channels so there are no telegram surfaces
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"ceo"}}}
 	b.mu.Unlock()
 	tr := NewTelegramTransport(b, "fake-token")
 

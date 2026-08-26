@@ -11,14 +11,14 @@ import (
 func newCompletionHookBroker(t *testing.T) *Broker {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
 		{Slug: "ceo", Name: "CEO"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -27,7 +27,7 @@ func newCompletionHookBroker(t *testing.T) *Broker {
 func completionHookCreateDefinedTask(t *testing.T, b *Broker) string {
 	t.Helper()
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Close the Acme Corp renewal",
+		Action: "create", Channel: "team", Title: "Close the Acme Corp renewal",
 		Details: "Coordinate with @eng on the Acme Corp renewal brief.",
 		Owner:   "eng", CreatedBy: "ceo",
 	})
@@ -35,7 +35,7 @@ func completionHookCreateDefinedTask(t *testing.T, b *Broker) string {
 		t.Fatalf("create: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
 		Definition: &TaskDefinition{
 			Goal:            "Renew Acme Corp for 12 months",
 			Deliverables:    []TaskDeliverable{{Name: "renewal brief", Format: "markdown in the wiki"}},
@@ -55,14 +55,14 @@ func completionHookCreateDefinedTask(t *testing.T, b *Broker) string {
 func finishTask(t *testing.T, b *Broker, taskID, artifactPath string) error {
 	t.Helper()
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "complete", ID: taskID, Channel: "general", CreatedBy: "eng",
+		Action: "complete", ID: taskID, Channel: "team", CreatedBy: "eng",
 		ArtifactPath: artifactPath,
 	}); err != nil {
 		return err
 	}
 	if cur := b.TaskByID(taskID); cur != nil && !strings.EqualFold(strings.TrimSpace(cur.status), "done") {
 		_, err := b.MutateTask(TaskPostRequest{
-			Action: "approve", ID: taskID, Channel: "general", CreatedBy: "ceo",
+			Action: "approve", ID: taskID, Channel: "team", CreatedBy: "ceo",
 			ArtifactPath: artifactPath,
 		})
 		return err
@@ -144,7 +144,7 @@ func TestArtifactGate_DonePostAndNoInboxCard(t *testing.T) {
 func TestArtifactGate_LegacyTaskWithoutDefinitionUnaffected(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Send the weekly digest",
+		Action: "create", Channel: "team", Title: "Send the weekly digest",
 		Details: "Send it to the list.", Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -166,7 +166,7 @@ func TestArtifactGate_RejectsInvalidArtifactPath(t *testing.T) {
 	taskID := completionHookCreateDefinedTask(t, b)
 	for _, bad := range []string{"/etc/passwd", "../../secrets.md"} {
 		_, err := b.MutateTask(TaskPostRequest{
-			Action: "comment", ID: taskID, Channel: "general", CreatedBy: "eng",
+			Action: "comment", ID: taskID, Channel: "team", CreatedBy: "eng",
 			Details: "note", ArtifactPath: bad,
 		})
 		var mutationErr *TaskMutationError
@@ -182,7 +182,7 @@ func TestArtifactGate_RejectsInvalidArtifactPath(t *testing.T) {
 func TestReopen_OwnedTaskReturnsToRunning(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the launch checklist",
+		Action: "create", Channel: "team", Title: "Ship the launch checklist",
 		Details: "Checklist work.", Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -192,7 +192,7 @@ func TestReopen_OwnedTaskReturnsToRunning(t *testing.T) {
 	if err := finishTask(t, b, created.Task.ID, ""); err != nil {
 		t.Fatalf("finish: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
 	task := b.TaskByID(created.Task.ID)
@@ -210,16 +210,16 @@ func TestReopen_OwnedTaskReturnsToRunning(t *testing.T) {
 func TestReopen_OwnerlessTaskReturnsToReady(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Backlog item to triage",
+		Action: "create", Channel: "team", Title: "Backlog item to triage",
 		Details: "No owner yet.", CreatedBy: "ceo",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "cancel", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "cancel", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatalf("cancel: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
 	task := b.TaskByID(created.Task.ID)

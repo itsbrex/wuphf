@@ -15,7 +15,7 @@ func compiledSkillSpec(name, description, createdBy string) teamSkill {
 		Description: description,
 		Content:     "Some content.",
 		CreatedBy:   createdBy,
-		Channel:     "general",
+		Channel:     "team",
 	}
 }
 

@@ -78,7 +78,7 @@ func TestLooksUnparsedToolCall(t *testing.T) {
 		// to the channel; the openAICompatToolLoop dispatches it instead.
 		{
 			name: "tools-tag basic",
-			in:   `<tools>{"name":"team_broadcast","arguments":{"channel":"general","content":"hi"}}</tools>`,
+			in:   `<tools>{"name":"team_broadcast","arguments":{"channel":"team","content":"hi"}}</tools>`,
 			want: true,
 		},
 		{

@@ -52,14 +52,14 @@ func containsSlugSet(targets []notificationTarget, want string) bool {
 	return false
 }
 
-// Scenario 1 (target layer): human tags @fe in #general. Specialist must be
+// Scenario 1 (target layer): human tags @fe in a shared team room. Specialist must be
 // among the immediate targets.
 func TestBug_HumanTagsSpecialist_CollaborativeMode_SpecialistIsImmediate(t *testing.T) {
 	l := collaborativeTestLauncher(t)
 
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@fe fix the button",
 		Tagged:  []string{"fe"},
 	})
@@ -76,7 +76,7 @@ func TestBug_CEOTagsSpecialist_CollaborativeMode_SpecialistIsImmediate(t *testin
 
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		From:    "ceo",
-		Channel: "general",
+		Channel: "team",
 		Content: "@fe please take this",
 		Tagged:  []string{"fe"},
 	})
@@ -180,7 +180,7 @@ func TestBug_HumanTagsSpecialist_Dispatch_SpecialistReceivesTurn(t *testing.T) {
 	msg := channelMessage{
 		ID:      "msg-1",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@fe fix the button",
 		Tagged:  []string{"fe"},
 	}
@@ -207,7 +207,7 @@ func TestBug_CEOTagsSpecialist_Dispatch_SpecialistReceivesTurn(t *testing.T) {
 	l.deliverMessageNotification(channelMessage{
 		ID:      "msg-2",
 		From:    "ceo",
-		Channel: "general",
+		Channel: "team",
 		Content: "@fe please take this",
 		Tagged:  []string{"fe"},
 	})
@@ -282,7 +282,7 @@ func TestBug_FocusMode_HumanTagsWizardHiredPM_SpecialistIsImmediate(t *testing.T
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "focus-1",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm please scope this",
 		Tagged:  []string{"pm"},
 	})
@@ -320,7 +320,7 @@ func TestBug_FocusMode_CEOTagsWizardHiredPM_SpecialistIsImmediate(t *testing.T) 
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "focus-2",
 		From:    "ceo",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm take this",
 		Tagged:  []string{"pm"},
 	})
@@ -342,7 +342,7 @@ func TestBug_DisabledMember_ExplicitTagDoesNotBypassMute(t *testing.T) {
 	b.members = append(b.members, officeMember{Slug: "pm", Name: "Product Manager"})
 	// Put pm in the channel then explicitly disable them.
 	for i := range b.channels {
-		if b.channels[i].Slug == "general" {
+		if b.channels[i].Slug == "team" {
 			b.channels[i].Members = append(b.channels[i].Members, "pm")
 			b.channels[i].Disabled = append(b.channels[i].Disabled, "pm")
 			break
@@ -363,7 +363,7 @@ func TestBug_DisabledMember_ExplicitTagDoesNotBypassMute(t *testing.T) {
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "mute-1",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm please take this",
 		Tagged:  []string{"pm"},
 	})
@@ -375,7 +375,7 @@ func TestBug_DisabledMember_ExplicitTagDoesNotBypassMute(t *testing.T) {
 	immediate2, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "mute-2",
 		From:    "ceo",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm please take this",
 		Tagged:  []string{"pm"},
 	})
@@ -391,7 +391,7 @@ func TestBug_DisabledMember_ExplicitTagDoesNotBypassMute(t *testing.T) {
 	immediate3, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "mute-3",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm please take this",
 		Tagged:  []string{"pm"},
 	})
@@ -478,14 +478,14 @@ func TestBug_TagWizardHiredPM_InGeneral_Dispatch(t *testing.T) {
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "tag-msg-1",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@pm please scope this epic",
 		Tagged:  []string{"pm"},
 	})
 
 	if !containsSlugSet(immediate, "pm") {
 		t.Fatalf(
-			"bug reproduced: @pm in #general did not reach pm. targetMap=%+v immediate=%+v. "+
+			"bug reproduced: @pm in #team did not reach pm. targetMap=%+v immediate=%+v. "+
 				"Wizard-hired agents must be reachable via explicit @-tag.",
 			l.targeter().NotificationTargets(), immediate,
 		)
@@ -534,7 +534,7 @@ func TestBug_RootCause_ChannelMembershipFilterDropsExplicitMention(t *testing.T)
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "msg-rc",
 		From:    "you",
-		Channel: "general",
+		Channel: "team",
 		Content: "@fe fix the button",
 		Tagged:  []string{"fe"},
 	})
@@ -543,7 +543,7 @@ func TestBug_RootCause_ChannelMembershipFilterDropsExplicitMention(t *testing.T)
 		t.Fatalf(
 			"ROOT CAUSE: explicit @fe was silently dropped by enabledMembers filter (general members = %v); "+
 				"immediate targets = %+v. Explicit tags must bypass the channel-membership filter.",
-			b.EnabledMembers("general"), immediate,
+			b.EnabledMembers("team"), immediate,
 		)
 	}
 }

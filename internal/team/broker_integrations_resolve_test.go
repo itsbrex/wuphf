@@ -27,7 +27,7 @@ func decodeResolve(t *testing.T, resp *http.Response) integrationResolveResponse
 // decision can guide setup), never proceeds blind.
 func TestResolveUnconfiguredRoutesToConnect(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -76,7 +76,7 @@ func TestResolveConnectedApproveAndReadOnlyProceed(t *testing.T) {
 	t.Setenv("WUPHF_COMPOSIO_BASE_URL", composioServer.URL)
 
 	statePath := filepath.Join(t.TempDir(), "state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -122,7 +122,7 @@ func TestResolveConnectedApproveAndReadOnlyProceed(t *testing.T) {
 	if entry, ok := b.lookupConnectionRegistry("gmail"); !ok || entry.State != "connected" || entry.ConnectionKey != "ca_123" {
 		t.Fatalf("registry not updated from probe: ok=%v entry=%+v", ok, entry)
 	}
-	b2 := NewBrokerAt(statePath)
+	b2 := newBrokerWithTeamRoom(statePath)
 	if err := b2.loadState(); err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
@@ -186,7 +186,7 @@ func TestMaskSensitivePayload(t *testing.T) {
 
 func TestResolveRejectsMissingFields(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 

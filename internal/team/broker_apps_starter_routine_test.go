@@ -135,12 +135,12 @@ func TestMintStarterRoutineForFirstBuild(t *testing.T) {
 
 // 2026-08-16 VP-RevOps QA regression: a second build whose derived name
 // matches a PUBLISHED agent must get a fresh app id — the old identity
-// (name, "general") briefed the new build to republish over the live agent.
+// (name, "team") briefed the new build to republish over the live agent.
 func TestPrescaffoldNeverReusesAPublishedAgentsID(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	b := newTestBroker(t)
 
-	first := b.maybePrescaffoldAppForCreate("create", "general", TaskPostRequest{
+	first := b.maybePrescaffoldAppForCreate("create", "team", TaskPostRequest{
 		Title:     "Build app: Pipeline Agent",
 		Owner:     appBuilderSlug,
 		CreatedBy: "human",
@@ -161,7 +161,7 @@ func TestPrescaffoldNeverReusesAPublishedAgentsID(t *testing.T) {
 		t.Fatalf("publish first app: %v", err)
 	}
 
-	second := b.maybePrescaffoldAppForCreate("create", "general", TaskPostRequest{
+	second := b.maybePrescaffoldAppForCreate("create", "team", TaskPostRequest{
 		Title:     "Build app: Pipeline Agent",
 		Owner:     appBuilderSlug,
 		CreatedBy: "human",
@@ -176,7 +176,7 @@ func TestPrescaffoldNeverReusesAPublishedAgentsID(t *testing.T) {
 	}
 
 	// A retry of an UNPUBLISHED build keeps continuing its own scaffold.
-	third := b.maybePrescaffoldAppForCreate("create", "general", TaskPostRequest{
+	third := b.maybePrescaffoldAppForCreate("create", "team", TaskPostRequest{
 		Title:     "Build app: Pipeline Agent",
 		Owner:     appBuilderSlug,
 		CreatedBy: "human",

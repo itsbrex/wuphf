@@ -77,10 +77,10 @@ func TestFallbackDecisionKindDefaults(t *testing.T) {
 // itself is covered by the action resolver unit tests.)
 func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	id1 := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "general", "ceo", "Notion", "", "Create the launch page")
-	id1b := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "general", "ceo", "Notion", "", "Create the launch page")
+	id1 := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "ceo", "Notion", "", "Create the launch page")
+	id1b := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "ceo", "Notion", "", "Create the launch page")
 	if id1 == "" || id1 != id1b {
 		t.Fatalf("same (platform, action) must dedupe: id1=%q id1b=%q", id1, id1b)
 	}
@@ -88,7 +88,7 @@ func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 		t.Fatalf("expected one handoff card for the repeated action, got %d", got)
 	}
 
-	id2 := b.ensureFallbackRequest("notion", "NOTION_APPEND_BLOCK", "general", "ceo", "Notion", "", "Append a block")
+	id2 := b.ensureFallbackRequest("notion", "NOTION_APPEND_BLOCK", "team", "ceo", "Notion", "", "Append a block")
 	if id2 == id1 {
 		t.Fatalf("a different action type must raise its own card, got %q for both", id2)
 	}
@@ -118,7 +118,7 @@ func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 	t.Setenv("WUPHF_COMPOSIO_USER_ID", "")
 	t.Setenv("COMPOSIO_USER_ID", "")
 
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
@@ -127,7 +127,7 @@ func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 			Platform: "gmail",
 			ActionID: "GMAIL_SEND_EMAIL",
 			Agent:    "ceo",
-			Channel:  "general",
+			Channel:  "team",
 			Data:     map[string]any{"to": "lead@acme.com"},
 		})
 		return decodeResolve(t, integrationRequest(t, srv, b, http.MethodPost, "/integrations/resolve", body))
@@ -169,9 +169,9 @@ func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 // action resumes with zero re-asking. It must be idempotent across repeat polls.
 func TestFanOutConnectedResolvesParkedCard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	reqID := b.ensureConnectRequest("gmail", "general", "ceo", "Gmail", "")
+	reqID := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
 	if reqID == "" {
 		t.Fatalf("ensureConnectRequest returned no id")
 	}
@@ -217,9 +217,9 @@ func TestFanOutConnectedResolvesParkedCard(t *testing.T) {
 // backstop.)
 func TestExpireStaleConnectCard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	id := b.ensureConnectRequest("gmail", "general", "ceo", "Gmail", "")
+	id := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
 	if id == "" {
 		t.Fatalf("ensureConnectRequest returned no id")
 	}
@@ -285,13 +285,13 @@ func TestConnectStatusFanOutEndToEnd(t *testing.T) {
 	defer composioServer.Close()
 	t.Setenv("WUPHF_COMPOSIO_BASE_URL", composioServer.URL)
 
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
 
 	// Park a Connect card directly (the resolve path that raises it is covered
 	// separately; here we exercise the connect-status -> fan-out wiring).
-	reqID := b.ensureConnectRequest("gmail", "general", "ceo", "Gmail", "")
+	reqID := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
 	if got := len(activeConnectCards(b, "gmail")); got != 1 {
 		t.Fatalf("expected a parked connect card, got %d", got)
 	}

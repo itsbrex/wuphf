@@ -18,7 +18,7 @@ func TestNormalizeSchedulerSlug_StripsAndJoinsParts(t *testing.T) {
 		want string
 	}{
 		// Underscores collapse to dashes inside each part.
-		{[]string{"task_follow_up", "general", "task-1"}, "task-follow-up:general:task-1"},
+		{[]string{"task_follow_up", "team", "task-1"}, "task-follow-up:team:task-1"},
 		{[]string{"  Task Follow Up  ", "", "task-1"}, "task-follow-up:task-1"},
 		{[]string{"", "", ""}, ""},
 		{[]string{"only"}, "only"},
@@ -70,15 +70,15 @@ func TestSchedulerJobDue_BoundaryAtExactNow(t *testing.T) {
 func TestCompleteSchedulerJobsLocked_NoOpForUnknownTarget(t *testing.T) {
 	b := newTestBroker(t)
 	if err := b.SetSchedulerJob(schedulerJob{
-		Slug: "task-follow-up:general:task-1", Kind: "task_follow_up",
-		TargetType: "task", TargetID: "task-1", Channel: "general",
+		Slug: "task-follow-up:team:task-1", Kind: "task_follow_up",
+		TargetType: "task", TargetID: "task-1", Channel: "team",
 		Status: "scheduled",
 	}); err != nil {
 		t.Fatalf("SetSchedulerJob: %v", err)
 	}
 	b.mu.Lock()
 	before := append([]schedulerJob(nil), b.scheduler...)
-	b.completeSchedulerJobsLocked("task", "ghost-task", "general")
+	b.completeSchedulerJobsLocked("task", "ghost-task", "team")
 	after := append([]schedulerJob(nil), b.scheduler...)
 	b.mu.Unlock()
 
@@ -281,12 +281,12 @@ func TestRunSchedulerJob_WorkflowJobBumpsNextRun(t *testing.T) {
 func TestSchedulerDueOnlyFiltersFutureJobs(t *testing.T) {
 	b := newTestBroker(t)
 	if err := b.SetSchedulerJob(schedulerJob{
-		Slug:            "task-follow-up:general:task-1",
+		Slug:            "task-follow-up:team:task-1",
 		Kind:            "task_follow_up",
 		Label:           "Follow up",
 		TargetType:      "task",
 		TargetID:        "task-1",
-		Channel:         "general",
+		Channel:         "team",
 		IntervalMinutes: 15,
 		DueAt:           time.Now().UTC().Add(10 * time.Minute).Format(time.RFC3339),
 		NextRun:         time.Now().UTC().Add(10 * time.Minute).Format(time.RFC3339),

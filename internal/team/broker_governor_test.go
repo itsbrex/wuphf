@@ -27,7 +27,7 @@ func (f *fakeHeadlessController) CancelHeadlessTurns(slug string) {
 
 func newGovernorTestBroker(t *testing.T) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	return b
 }
 

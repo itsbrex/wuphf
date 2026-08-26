@@ -64,7 +64,7 @@ func TestOfficeStats_MatchesListEndpoints(t *testing.T) {
 			ID:            id,
 			Title:         title,
 			TaskType:      taskType,
-			Channel:       "general",
+			Channel:       "team",
 			ParentIssueID: parent,
 			CreatedAt:     now.Format(time.RFC3339),
 		}
@@ -87,14 +87,14 @@ func TestOfficeStats_MatchesListEndpoints(t *testing.T) {
 	seedTask("task-sub", "Sub-task", "issue", LifecycleStateRunning, "task-running")
 	seedTask("task-followup", "Follow up", "follow_up", LifecycleStateRunning, "")
 	// Legacy task with bare status only (no lifecycle state).
-	legacy := teamTask{ID: "task-legacy", Title: "Legacy open", TaskType: "issue", Channel: "general", CreatedAt: now.Format(time.RFC3339)}
+	legacy := teamTask{ID: "task-legacy", Title: "Legacy open", TaskType: "issue", Channel: "team", CreatedAt: now.Format(time.RFC3339)}
 	legacy.status = "open"
 	b.tasks = append(b.tasks, legacy)
 
 	b.requests = []humanInterview{
-		{ID: "req-blocking", From: "ceo", Channel: "general", Question: "Approve spend?", Kind: "approval", Blocking: true},
-		{ID: "req-notice", From: "ada", Channel: "general", Question: "FYI", Kind: "notice"},
-		{ID: "req-answered", From: "ceo", Channel: "general", Question: "Old", Kind: "approval", Blocking: true, Status: "answered"},
+		{ID: "req-blocking", From: "ceo", Channel: "team", Question: "Approve spend?", Kind: "approval", Blocking: true},
+		{ID: "req-notice", From: "ada", Channel: "team", Question: "FYI", Kind: "notice"},
+		{ID: "req-answered", From: "ceo", Channel: "team", Question: "Old", Kind: "approval", Blocking: true, Status: "answered"},
 	}
 	b.mu.Unlock()
 

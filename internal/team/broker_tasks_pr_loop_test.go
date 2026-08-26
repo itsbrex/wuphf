@@ -19,12 +19,12 @@ func TestPRLoop_RequestChangesBouncesToOwnerWithFeedback(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"executor", "reviewer", "ceo"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "ceo"}},
 	}
 	b.tasks = []teamTask{
 		{
 			ID:        "task-rc-1",
-			Channel:   "general",
+			Channel:   "team",
 			Title:     "Implement ToShortcode helper",
 			Owner:     "executor",
 			status:    "review",
@@ -38,7 +38,7 @@ func TestPRLoop_RequestChangesBouncesToOwnerWithFeedback(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:  "request_changes",
 		ID:      "task-rc-1",
-		Channel: "general",
+		Channel: "team",
 		Details: feedback,
 		// Reviewer can request_changes on tasks where they're on the
 		// Reviewers list (Slice 7 carve-out). This task seeds reviewer
@@ -92,12 +92,12 @@ func TestPRLoop_SubmitForReviewCapturesArtifact(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"executor", "reviewer"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer"}},
 	}
 	b.tasks = []teamTask{
 		{
 			ID:      "task-sub-1",
-			Channel: "general",
+			Channel: "team",
 			Title:   "Write Greet helper",
 			Owner:   "executor",
 			status:  "in_progress",
@@ -108,7 +108,7 @@ func TestPRLoop_SubmitForReviewCapturesArtifact(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:    "submit_for_review",
 		ID:        "task-sub-1",
-		Channel:   "general",
+		Channel:   "team",
 		Details:   artifact,
 		CreatedBy: "executor",
 	})
@@ -149,12 +149,12 @@ func TestPRLoop_CommentDoesNotChangeState(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"executor", "reviewer"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer"}},
 	}
 	b.tasks = []teamTask{
 		{
 			ID:      "task-cmt-1",
-			Channel: "general",
+			Channel: "team",
 			Title:   "Stable task",
 			Owner:   "executor",
 			status:  "review",
@@ -164,7 +164,7 @@ func TestPRLoop_CommentDoesNotChangeState(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:  "comment",
 		ID:      "task-cmt-1",
-		Channel: "general",
+		Channel: "team",
 		Details: "Reviewer drive-by: nice catch on the edge case.",
 		// Comment is open to all (Slice 7); the test asserts the
 		// author propagates, so use "reviewer" as the comment author.
@@ -206,19 +206,19 @@ func TestPRLoop_RejectIsTerminalAndDoesNotUnblockDependents(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"executor", "reviewer", "ceo"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "ceo"}},
 	}
 	b.tasks = []teamTask{
 		{
 			ID:      "task-rej-1",
-			Channel: "general",
+			Channel: "team",
 			Title:   "Doomed implementation",
 			Owner:   "executor",
 			status:  "review",
 		},
 		{
 			ID:        "task-rej-2",
-			Channel:   "general",
+			Channel:   "team",
 			Title:     "Downstream that depends on rejected upstream",
 			Owner:     "executor",
 			status:    "blocked",
@@ -231,7 +231,7 @@ func TestPRLoop_RejectIsTerminalAndDoesNotUnblockDependents(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:    "reject",
 		ID:        "task-rej-1",
-		Channel:   "general",
+		Channel:   "team",
 		Details:   reason,
 		CreatedBy: "ceo",
 	})
@@ -279,9 +279,9 @@ func TestPRLoop_CommentEndpointResolvesActorFromAuth(t *testing.T) {
 	}
 	defer b.Stop()
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"executor", "reviewer"}}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"executor", "reviewer"}}}
 	b.tasks = []teamTask{{
-		ID: "task-http-1", Channel: "general", Title: "Auth me",
+		ID: "task-http-1", Channel: "team", Title: "Auth me",
 		Owner: "executor", status: "review",
 	}}
 	b.mu.Unlock()
@@ -323,7 +323,7 @@ func TestPRLoop_CommentEndpointResolvesActorFromAuth(t *testing.T) {
 	b.mu.Lock()
 	var posted *channelMessage
 	for i := range b.messages {
-		if normalizeChannelSlug(b.messages[i].Channel) == "general" &&
+		if normalizeChannelSlug(b.messages[i].Channel) == "team" &&
 			strings.Contains(b.messages[i].Content, "ship it after the doc bump") {
 			posted = &b.messages[i]
 			break
@@ -332,7 +332,7 @@ func TestPRLoop_CommentEndpointResolvesActorFromAuth(t *testing.T) {
 	packet, _ := b.findDecisionPacketLocked("task-http-1")
 	b.mu.Unlock()
 	if posted == nil {
-		t.Fatalf("expected the comment body to be posted as a chat message in #general")
+		t.Fatalf("expected the comment body to be posted as a chat message in #team")
 	}
 	if posted.From != got.Author {
 		t.Fatalf("chat author %q must match the auth-resolved sender %q", posted.From, got.Author)
@@ -349,16 +349,16 @@ func TestPRLoop_RejectRequiresNonEmptyReason(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	// CreatedBy below is "ceo", a member of #general in every real workspace.
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"reviewer", "executor", "ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"reviewer", "executor", "ceo"}}}
 	b.tasks = []teamTask{{
-		ID: "task-rej-empty-1", Channel: "general", Title: "Blank-reason reject",
+		ID: "task-rej-empty-1", Channel: "team", Title: "Blank-reason reject",
 		Owner: "executor", status: "review",
 	}}
 
 	_, err := b.MutateTask(TaskPostRequest{
 		Action:    "reject",
 		ID:        "task-rej-empty-1",
-		Channel:   "general",
+		Channel:   "team",
 		Details:   "   ",
 		CreatedBy: "ceo",
 	})
@@ -380,8 +380,8 @@ func TestPRLoop_CommentEndpointRequiresBody(t *testing.T) {
 	}
 	defer b.Stop()
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "general", Members: []string{"reviewer"}}}
-	b.tasks = []teamTask{{ID: "task-empty-1", Channel: "general", Title: "x"}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"reviewer"}}}
+	b.tasks = []teamTask{{ID: "task-empty-1", Channel: "team", Title: "x"}}
 	b.mu.Unlock()
 
 	url := fmt.Sprintf("http://%s/tasks/task-empty-1/comment", b.Addr())

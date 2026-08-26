@@ -50,7 +50,7 @@ func newOfficeModeTaskForTest(t *testing.T, b *Broker) teamTask {
 func newOfficeModeTaskForTestWithOwner(t *testing.T, b *Broker, owner string) teamTask {
 	t.Helper()
 	task, reused, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Refresh the weekly metrics summary layout",
 		Owner:         owner,
 		CreatedBy:     "ceo",

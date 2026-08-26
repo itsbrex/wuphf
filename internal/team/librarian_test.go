@@ -43,7 +43,7 @@ func TestLibrarianIsBuiltInDefaultMember(t *testing.T) {
 // scheduled for removal; what this pins is "the room the task lands in".
 func TestLibrarianIsInTheRoomTheTaskLandsIn(t *testing.T) {
 	b := newTestBroker(t)
-	createdFrom := "general"
+	createdFrom := "team"
 	ensureTestMemberAccess(b, createdFrom, LibrarianSlug, librarianName)
 	ensureTestMemberAccess(b, createdFrom, "eng", "Engineer")
 
@@ -92,11 +92,11 @@ func TestLibrarianTaskChannelSeedNoopsWithoutMember(t *testing.T) {
 	// workspace; membership is authoritative for agents now, so the fixture
 	// has to say so. The librarian is still deliberately absent — that
 	// absence is what this test is about.
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"eng", "ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"eng", "ceo"}}}
 	b.mu.Unlock()
 
 	task, _, err := b.EnsurePlannedTask(plannedTaskInput{
-		Channel:       "general",
+		Channel:       "team",
 		Title:         "Legacy task",
 		Owner:         "eng",
 		CreatedBy:     "ceo",

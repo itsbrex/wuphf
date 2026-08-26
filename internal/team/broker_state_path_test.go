@@ -80,7 +80,7 @@ func TestBrokerStateSnapshotPathIsLastGoodSibling(t *testing.T) {
 	// on this exact shape. If snapshot derivation ever drifts to a
 	// different directory or format, recovery silently breaks.
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 
 	got := b.stateSnapshotPath()
 	want := statePath + ".last-good"
@@ -98,7 +98,7 @@ func TestBrokerStateSnapshotPathIsLastGoodSibling(t *testing.T) {
 
 func TestNewBroker_SkipStateLoadGateRespected(t *testing.T) {
 	// The TestMain in this package flips skipBrokerStateLoadOnConstruct
-	// to true so NewBrokerAt() starts fresh and tests don't cross-
+	// to true so newBrokerWithTeamRoom() starts fresh and tests don't cross-
 	// contaminate via a shared broker-state.json. Persistence-checking
 	// tests opt back into disk load via reloadedBroker(t, b). Track A
 	// must preserve this contract: a test-mode constructor must NOT
@@ -106,8 +106,8 @@ func TestNewBroker_SkipStateLoadGateRespected(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
 
 	// Seed disk with a distinctive message. If the gate is broken,
-	// NewBrokerAt() will pick it up.
-	seed := NewBrokerAt(statePath)
+	// newBrokerWithTeamRoom() will pick it up.
+	seed := newBrokerWithTeamRoom(statePath)
 	seed.mu.Lock()
 	seed.messages = []channelMessage{{
 		ID:        "seed-msg",
@@ -126,12 +126,12 @@ func TestNewBroker_SkipStateLoadGateRespected(t *testing.T) {
 	if !skipBrokerStateLoadOnConstruct {
 		t.Fatal("precondition: skipBrokerStateLoadOnConstruct should be true in tests")
 	}
-	gated := NewBrokerAt(statePath)
+	gated := newBrokerWithTeamRoom(statePath)
 	if got := len(gated.Messages()); got != 0 {
 		t.Fatalf("gate=true must yield 0 messages on construct; got %d", got)
 	}
 
-	// Gate OFF (production default): NewBrokerAt() reads from disk.
+	// Gate OFF (production default): newBrokerWithTeamRoom() reads from disk.
 	//
 	// Mutating skipBrokerStateLoadOnConstruct mid-test is safe today
 	// because no test in this package calls t.Parallel() — the gate is
@@ -141,7 +141,7 @@ func TestNewBroker_SkipStateLoadGateRespected(t *testing.T) {
 	oldGate := skipBrokerStateLoadOnConstruct
 	skipBrokerStateLoadOnConstruct = false
 	t.Cleanup(func() { skipBrokerStateLoadOnConstruct = oldGate })
-	loaded := NewBrokerAt(statePath)
+	loaded := newBrokerWithTeamRoom(statePath)
 	msgs := loaded.Messages()
 	if len(msgs) != 1 || msgs[0].ID != "seed-msg" {
 		t.Fatalf("gate=false must auto-load seed; got %+v", msgs)
@@ -156,14 +156,14 @@ func TestNewBrokerAt_PathSnapshottedAtConstruction(t *testing.T) {
 	// what other brokers (constructed later, with other paths) are doing
 	// in the same process.
 	boundPath := filepath.Join(t.TempDir(), "bound-state.json")
-	b := NewBrokerAt(boundPath)
+	b := newBrokerWithTeamRoom(boundPath)
 
 	// Construct a second broker at a distinct path — simulates another
 	// test running alongside this one. Its statePath must not bleed into
 	// b's saves. Held by `other` so a future constructor-time goroutine in
 	// NewBrokerAt would still have an explicit reference to stop on.
 	unboundPath := filepath.Join(t.TempDir(), "should-not-be-written.json")
-	other := NewBrokerAt(unboundPath)
+	other := newBrokerWithTeamRoom(unboundPath)
 	_ = other
 
 	b.mu.Lock()
@@ -201,10 +201,10 @@ func TestNewBrokerAt_PanicsOnEmptyPath(t *testing.T) {
 	defer func() {
 		r := recover()
 		if r == nil {
-			t.Fatal("expected NewBrokerAt(\"\") to panic; got nil")
+			t.Fatal("expected newBrokerWithTeamRoom(\"\") to panic; got nil")
 		}
 	}()
-	_ = NewBrokerAt("")
+	_ = newBrokerWithTeamRoom("")
 }
 
 func TestBrokerStop_ClosesStopChannelAndPreservesState(t *testing.T) {
@@ -225,7 +225,7 @@ func TestBrokerStop_ClosesStopChannelAndPreservesState(t *testing.T) {
 	// goroutine is actually present — without that, Stop is a near-noop
 	// and the test wouldn't exercise the drain path at all.
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("StartOnPort: %v", err)
 	}

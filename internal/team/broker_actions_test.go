@@ -17,7 +17,7 @@ func TestHandleActionsPostRecordsAction(t *testing.T) {
 	body, _ := json.Marshal(map[string]any{
 		"kind":    "external_action_executed",
 		"source":  "one",
-		"channel": "general",
+		"channel": "team",
 		"actor":   "ceo",
 		"summary": "Sent a Gmail draft via One",
 	})
@@ -50,12 +50,12 @@ func TestHandleSchedulerPostRecordsWorkflowJob(t *testing.T) {
 	defer b.Stop()
 
 	body, _ := json.Marshal(map[string]any{
-		"slug":          "one-workflow:general:daily-digest",
+		"slug":          "one-workflow:team:daily-digest",
 		"kind":          "one_workflow",
 		"label":         "Run Daily Digest",
 		"target_type":   "workflow",
 		"target_id":     "daily-digest",
-		"channel":       "general",
+		"channel":       "team",
 		"provider":      "one",
 		"schedule_expr": "daily",
 		"workflow_key":  "daily-digest",

@@ -480,12 +480,12 @@ func TestBuildResumePacketIncludesWorktreePath(t *testing.T) {
 
 func TestBuildResumePacketIncludesReplyToInstructions(t *testing.T) {
 	msgs := []channelMessage{
-		{ID: "h1", From: "you", Channel: "general", Content: "What is the plan?", Timestamp: "2026-04-14T10:00:00Z"},
+		{ID: "h1", From: "you", Channel: "team", Content: "What is the plan?", Timestamp: "2026-04-14T10:00:00Z"},
 	}
 	packet := buildResumePacket("ceo", nil, msgs)
 
 	// Spec: packet must include channel and reply_to_id so agent knows how to thread their response.
-	if !strings.Contains(packet, "general") {
+	if !strings.Contains(packet, "team") {
 		t.Error("expected packet to include channel 'general' for reply routing")
 	}
 	if !strings.Contains(packet, "h1") {
@@ -621,7 +621,7 @@ func TestBuildResumePacketSpecSectionTasksLabel(t *testing.T) {
 func TestBuildResumePacketSpecSectionMessagesLabel(t *testing.T) {
 	// Spec: messages section label must be "Unanswered messages:" (not "## Unanswered messages awaiting your response")
 	msgs := []channelMessage{
-		{ID: "h1", From: "you", Channel: "general", Content: "What is the plan?", Timestamp: "2026-04-14T10:00:00Z"},
+		{ID: "h1", From: "you", Channel: "team", Content: "What is the plan?", Timestamp: "2026-04-14T10:00:00Z"},
 	}
 	packet := buildResumePacket("ceo", nil, msgs)
 

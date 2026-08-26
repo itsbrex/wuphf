@@ -86,9 +86,9 @@ func TestInboxItem_RequestKind_AuthByFrom(t *testing.T) {
 
 	b.mu.Lock()
 	b.requests = []humanInterview{
-		{ID: "req-1", From: "mira", Channel: "general", Question: "Approve?", CreatedAt: now, Kind: "approval"},
-		{ID: "req-2", From: "alex", Channel: "general", Question: "Confirm?", CreatedAt: now, Kind: "confirm"},
-		{ID: "req-3", From: "alex", Channel: "general", Question: "Choice?", CreatedAt: now, Kind: "choice"},
+		{ID: "req-1", From: "mira", Channel: "team", Question: "Approve?", CreatedAt: now, Kind: "approval"},
+		{ID: "req-2", From: "alex", Channel: "team", Question: "Confirm?", CreatedAt: now, Kind: "confirm"},
+		{ID: "req-3", From: "alex", Channel: "team", Question: "Choice?", CreatedAt: now, Kind: "choice"},
 	}
 	b.mu.Unlock()
 
@@ -199,7 +199,7 @@ func TestInboxFanout_1000MixedItems_P95Under100ms(t *testing.T) {
 		b.requests = append(b.requests, humanInterview{
 			ID:        fmt.Sprintf("req-%04d", i),
 			From:      "owner",
-			Channel:   "general",
+			Channel:   "team",
 			Question:  fmt.Sprintf("Question %d", i),
 			Kind:      "approval",
 			CreatedAt: now.Add(-time.Duration(i) * time.Minute).Format(time.RFC3339),

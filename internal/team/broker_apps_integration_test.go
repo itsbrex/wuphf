@@ -25,7 +25,7 @@ func TestProposeAppApprovalSpawnsAppBuilderTask(t *testing.T) {
 	body, _ := json.Marshal(map[string]any{
 		"kind":     "approval",
 		"from":     "ceo",
-		"channel":  "general",
+		"channel":  "team",
 		"title":    "Build a new internal tool: Lead Scorer?",
 		"question": "Build a new internal tool: Lead Scorer?",
 		"blocking": false,
@@ -87,7 +87,7 @@ func TestProposeAppRejectionSpawnsNoTask(t *testing.T) {
 	body, _ := json.Marshal(map[string]any{
 		"kind":     "approval",
 		"from":     "ceo",
-		"channel":  "general",
+		"channel":  "team",
 		"question": "Build a new internal tool: Throwaway?",
 		"blocking": false,
 		"app_proposal": map[string]any{

@@ -126,7 +126,7 @@ func TestMain(m *testing.M) {
 // must opt in through this helper.
 func reloadedBroker(t *testing.T, b *Broker) *Broker {
 	t.Helper()
-	fresh := NewBrokerAt(b.statePath)
+	fresh := newBrokerWithTeamRoom(b.statePath)
 	if err := fresh.loadState(); err != nil {
 		t.Fatalf("loadState: %v", err)
 	}
@@ -202,7 +202,7 @@ func TestBrokerPersistsAndReloadsState(t *testing.T) {
 func TestBrokerLoadsLastGoodSnapshotWhenPrimaryStateIsClobbered(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.messages = []channelMessage{{ID: "msg-1", From: "human", Channel: "general", Content: "Run the consulting loop", Timestamp: "2026-04-16T00:00:00Z"}}
+	b.messages = []channelMessage{{ID: "msg-1", From: "human", Channel: "team", Content: "Run the consulting loop", Timestamp: "2026-04-16T00:00:00Z"}}
 	b.tasks = []teamTask{{ID: "task-1", Channel: "delivery", Title: "Create the client brief", Owner: "builder", status: "in_progress", ExecutionMode: "office", CreatedBy: "operator", CreatedAt: "2026-04-16T00:00:01Z", UpdatedAt: "2026-04-16T00:00:01Z"}}
 	b.actions = []officeActionLog{{ID: "act-1", Kind: "task_created", Channel: "delivery", Actor: "operator", Summary: "Create the client brief", RelatedID: "task-1", CreatedAt: "2026-04-16T00:00:01Z"}}
 	b.counter = 2
@@ -222,7 +222,7 @@ func TestBrokerLoadsLastGoodSnapshotWhenPrimaryStateIsClobbered(t *testing.T) {
 	clobbered.tasks = nil
 	clobbered.actions = nil
 	clobbered.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "builder"}},
+		{Slug: "team", Name: "team", Members: []string{"ceo", "builder"}},
 		{Slug: "delivery", Name: "delivery", Members: []string{"ceo", "builder"}},
 	}
 	clobbered.members = []officeMember{
@@ -325,9 +325,9 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 
 	bridgeBody, _ := json.Marshal(map[string]any{
 		"actor":          "ceo",
-		"source_channel": "general",
+		"source_channel": "team",
 		"target_channel": "launch",
-		"summary":        "Use the stronger product narrative from #general in this launch channel before drafting the landing page.",
+		"summary":        "Use the stronger product narrative from #team in this launch channel before drafting the landing page.",
 		"tagged":         []string{"cmo"},
 	})
 	req, _ = http.NewRequest(http.MethodPost, base+"/bridges", bytes.NewReader(bridgeBody))
@@ -347,7 +347,7 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 	if len(messages) != 1 {
 		t.Fatalf("expected one bridge message in launch, got %d", len(messages))
 	}
-	if messages[0].Source != "ceo_bridge" || !strings.Contains(messages[0].Content, "#general") {
+	if messages[0].Source != "ceo_bridge" || !strings.Contains(messages[0].Content, "#team") {
 		t.Fatalf("unexpected bridge message: %+v", messages[0])
 	}
 	if got := len(b.Signals()); got != 1 {

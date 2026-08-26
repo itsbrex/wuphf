@@ -33,7 +33,7 @@ func TestInboxThreads_GroupsItemsByAgent(t *testing.T) {
 		}
 	}
 	b.requests = []humanInterview{
-		{ID: "req-1", From: "ada", Channel: "general", Question: "Bump dep?", Kind: "approval", CreatedAt: now.Add(-10 * time.Minute).Format(time.RFC3339)},
+		{ID: "req-1", From: "ada", Channel: "team", Question: "Bump dep?", Kind: "approval", CreatedAt: now.Add(-10 * time.Minute).Format(time.RFC3339)},
 	}
 	b.mu.Unlock()
 
@@ -94,7 +94,7 @@ func TestInboxThreads_PreviewFromLatestMessage(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 	b.messages = []channelMessage{
-		{ID: "m-1", From: "mira", Channel: "general", Content: "I just shipped the refactor", Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339)},
+		{ID: "m-1", From: "mira", Channel: "team", Content: "I just shipped the refactor", Timestamp: now.Add(-1 * time.Minute).Format(time.RFC3339)},
 	}
 	b.mu.Unlock()
 
@@ -123,8 +123,8 @@ func TestInboxThreads_DetailInterleavesMessagesAndItems(t *testing.T) {
 		t.Fatalf("seed: %v", err)
 	}
 	b.messages = []channelMessage{
-		{ID: "m-1", From: "mira", Channel: "general", Content: "starting work", Timestamp: now.Add(-20 * time.Minute).Format(time.RFC3339)},
-		{ID: "m-2", From: "mira", Channel: "general", Content: "almost done", Timestamp: now.Add(-5 * time.Minute).Format(time.RFC3339)},
+		{ID: "m-1", From: "mira", Channel: "team", Content: "starting work", Timestamp: now.Add(-20 * time.Minute).Format(time.RFC3339)},
+		{ID: "m-2", From: "mira", Channel: "team", Content: "almost done", Timestamp: now.Add(-5 * time.Minute).Format(time.RFC3339)},
 	}
 	b.mu.Unlock()
 

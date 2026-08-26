@@ -29,7 +29,7 @@ func TestHandleInboxItems_OwnerSeesAllKinds(t *testing.T) {
 		t.Fatalf("seed task: %v", err)
 	}
 	b.requests = []humanInterview{
-		{ID: "req-1", From: "owner", Channel: "general", Question: "Approve?", CreatedAt: now.Format(time.RFC3339), Kind: "approval"},
+		{ID: "req-1", From: "owner", Channel: "team", Question: "Approve?", CreatedAt: now.Format(time.RFC3339), Kind: "approval"},
 	}
 	b.mu.Unlock()
 
@@ -82,7 +82,7 @@ func TestHandleInboxItems_KindFilterNarrowsResponse(t *testing.T) {
 		t.Fatalf("seed task: %v", err)
 	}
 	b.requests = []humanInterview{
-		{ID: "req-1", From: "owner", Channel: "general", Question: "Approve?", CreatedAt: now.Format(time.RFC3339), Kind: "approval"},
+		{ID: "req-1", From: "owner", Channel: "team", Question: "Approve?", CreatedAt: now.Format(time.RFC3339), Kind: "approval"},
 	}
 	b.mu.Unlock()
 

@@ -105,7 +105,7 @@ func TestTurnState_BroadcastedGateFiresOnUserVisibleTool(t *testing.T) {
 	if !st.shouldPostFinalText() {
 		t.Fatal("initial state should allow final-text post")
 	}
-	st.onToolResult("team_broadcast", "Posted to #general", nil)
+	st.onToolResult("team_broadcast", "Posted to #team", nil)
 	if st.shouldPostFinalText() {
 		t.Error("broadcastedThisTurn did not flip after team_broadcast — runner will double-post")
 	}

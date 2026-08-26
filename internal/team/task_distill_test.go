@@ -32,10 +32,10 @@ func newDistillTestBroker(t *testing.T) *Broker {
 func TestDistillCompletedTaskWritesVerifiedLearning(t *testing.T) {
 	b := newDistillTestBroker(t)
 	id := createVerifiedTask(t, b, "exit 0")
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "general", CreatedBy: "eng"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatal(err)
 	}
 	// The mutation queues distillation async; call the worker directly for
@@ -76,14 +76,14 @@ func TestDistillCompletedTaskWritesVerifiedLearning(t *testing.T) {
 
 func TestDistillSkipsUnverifiedDone(t *testing.T) {
 	b := newDistillTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Unverified chore", "no definition of done", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Unverified chore", "no definition of done", "eng", "ceo", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: task.ID, Channel: "general", CreatedBy: "eng"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: task.ID, Channel: "team", CreatedBy: "eng"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatal(err)
 	}
 	b.distillCompletedTask(task.ID)
@@ -112,7 +112,7 @@ func TestLearningKeyFromTitle(t *testing.T) {
 func TestDistillHandlesPunctuatedTitles(t *testing.T) {
 	b := newDistillTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Fix #42: crash in v2.0 (prod)",
+		Action: "create", Channel: "team", Title: "Fix #42: crash in v2.0 (prod)",
 		Details: "gated", Owner: "eng", CreatedBy: "ceo",
 		VerificationKind: "command", VerificationSpec: "exit 0", VerificationRequired: true,
 	})
@@ -120,10 +120,10 @@ func TestDistillHandlesPunctuatedTitles(t *testing.T) {
 		t.Fatal(err)
 	}
 	startPlanning(t, b, created.Task.ID)
-	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: created.Task.ID, Channel: "general", CreatedBy: "eng"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "complete", ID: created.Task.ID, Channel: "team", CreatedBy: "eng"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
 		t.Fatal(err)
 	}
 	b.distillCompletedTask(created.Task.ID)

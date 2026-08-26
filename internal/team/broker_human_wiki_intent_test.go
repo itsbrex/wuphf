@@ -77,7 +77,7 @@ func TestHumanWikiIntent_PostMessage_LandsInTeamWiki(t *testing.T) {
 	b, repo, teardown := brokerWithHumanWikiWriter(t)
 	defer teardown()
 
-	if _, err := b.PostMessage("human", "general",
+	if _, err := b.PostMessage("human", "team",
 		"remember this: the retro deadline is every Friday", nil, ""); err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}
@@ -117,14 +117,14 @@ func TestHumanWikiIntent_AgentSenderProducesNoWrite(t *testing.T) {
 		t.Skip("default manifest missing 'ceo'; cannot exercise agent-sender path")
 	}
 
-	if _, err := b.PostMessage("ceo", "general",
+	if _, err := b.PostMessage("ceo", "team",
 		"remember this: agents must not trigger this path", nil, ""); err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}
 
 	// Drain by posting a human sentinel that DOES match — when its write
 	// lands, every prior PostMessage hook has run to completion.
-	if _, err := b.PostMessage("human", "general",
+	if _, err := b.PostMessage("human", "team",
 		"remember this: human sentinel", nil, ""); err != nil {
 		t.Fatalf("PostMessage human sentinel: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestHumanWikiIntent_NonIntentMessageSkipped(t *testing.T) {
 	b, _, teardown := brokerWithHumanWikiWriter(t)
 	defer teardown()
 
-	if _, err := b.PostMessage("human", "general",
+	if _, err := b.PostMessage("human", "team",
 		"the dashboard is loading slowly today", nil, ""); err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}

@@ -90,12 +90,12 @@ func TestLifecycleStageScheduledIsNeverReturnedByLifecycleStageFor(t *testing.T)
 func TestArchiveActionTransitionsToArchivedState(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human"}},
+		{Slug: "team", Name: "team", Members: []string{"human"}},
 	}
 	b.mu.Lock()
 	b.tasks = []teamTask{{
 		ID:             "task-archive",
-		Channel:        "general",
+		Channel:        "team",
 		Title:          "Work to archive",
 		LifecycleState: LifecycleStateApproved,
 		status:         "done",
@@ -106,7 +106,7 @@ func TestArchiveActionTransitionsToArchivedState(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:    "archive",
 		ID:        "task-archive",
-		Channel:   "general",
+		Channel:   "team",
 		Details:   "moving off the board",
 		CreatedBy: "human",
 	})
@@ -140,16 +140,16 @@ func TestArchivedTaskIsTerminalStatus(t *testing.T) {
 func TestArchivedTaskExcludedFromDefaultListingIncludedWithIncludeDone(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"pm"}},
+		{Slug: "team", Name: "team", Members: []string{"pm"}},
 	}
 	b.tasks = []teamTask{
-		{ID: "active-task", Channel: "general", Title: "Active", status: "open"},
-		{ID: "done-task", Channel: "general", Title: "Done", status: "done"},
-		{ID: "archived-task", Channel: "general", Title: "Archived", status: "archived", LifecycleState: LifecycleStateArchived},
+		{ID: "active-task", Channel: "team", Title: "Active", status: "open"},
+		{ID: "done-task", Channel: "team", Title: "Done", status: "done"},
+		{ID: "archived-task", Channel: "team", Title: "Archived", status: "archived", LifecycleState: LifecycleStateArchived},
 	}
 
 	// Default listing (include_done=false): archived tasks must be excluded.
-	got, err := b.ListTasks(TaskListRequest{Channel: "general", ViewerSlug: "pm"})
+	got, err := b.ListTasks(TaskListRequest{Channel: "team", ViewerSlug: "pm"})
 	if err != nil {
 		t.Fatalf("ListTasks default: %v", err)
 	}
@@ -164,7 +164,7 @@ func TestArchivedTaskExcludedFromDefaultListingIncludedWithIncludeDone(t *testin
 	assertTaskIDs(t, got.Tasks, []string{"active-task"})
 
 	// With include_done=true: both done and archived tasks must appear.
-	gotAll, err := b.ListTasks(TaskListRequest{Channel: "general", ViewerSlug: "pm", IncludeDone: true})
+	gotAll, err := b.ListTasks(TaskListRequest{Channel: "team", ViewerSlug: "pm", IncludeDone: true})
 	if err != nil {
 		t.Fatalf("ListTasks include_done: %v", err)
 	}

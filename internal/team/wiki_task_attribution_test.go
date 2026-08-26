@@ -11,8 +11,8 @@ func TestResolveArticleAttribution_ByTaskArtifactPointer(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.tasks = []teamTask{
-		{ID: "OFFICE-1", Title: "Q2 pricing launch", Owner: "revops", Channel: "general", Artifact: "team/briefs/launch.md"},
-		{ID: "OFFICE-2", Title: "Other", Owner: "ceo", Channel: "general"},
+		{ID: "OFFICE-1", Title: "Q2 pricing launch", Owner: "revops", Channel: "team", Artifact: "team/briefs/launch.md"},
+		{ID: "OFFICE-2", Title: "Other", Owner: "ceo", Channel: "team"},
 	}
 	b.mu.Unlock()
 
@@ -55,7 +55,7 @@ func TestHandleArticleAttribution_LivePath(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.tasks = []teamTask{
-		{ID: "OFFICE-7", Title: "Write playbook", Owner: "ops", Channel: "general", Artifact: "team/playbooks/p.md"},
+		{ID: "OFFICE-7", Title: "Write playbook", Owner: "ops", Channel: "team", Artifact: "team/playbooks/p.md"},
 	}
 	b.mu.Unlock()
 

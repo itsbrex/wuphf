@@ -8,7 +8,7 @@ import (
 
 func newTestBrokerWithSkills(t *testing.T, skills []teamSkill) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 	b.mu.Lock()
 	b.skills = append(b.skills, skills...)
 	b.mu.Unlock()

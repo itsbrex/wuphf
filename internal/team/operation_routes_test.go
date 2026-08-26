@@ -21,7 +21,7 @@ import (
 
 func TestOperationBootstrapPackageRoutesReachHandler(t *testing.T) {
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("StartOnPort: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestOperationBootstrapPackageRouteRejectsUnauth(t *testing.T) {
 	// for-loop. If a future refactor splits this into per-subtest
 	// brokers, move `defer b.Stop()` inside the subtest closure.
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
-	b := NewBrokerAt(statePath)
+	b := newBrokerWithTeamRoom(statePath)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("StartOnPort: %v", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -126,16 +127,27 @@ func TestNewBrokerSeedsDefaultOfficeRosterOnFreshState(t *testing.T) {
 	}
 	b.mu.Lock()
 	ceo := b.findMemberLocked("ceo")
-	general := b.findChannelLocked("general")
 	b.mu.Unlock()
 	if members[0].Slug != "ceo" && ceo == nil {
 		t.Fatalf("expected ceo to be present in default office roster")
 	}
-	if general == nil {
-		t.Fatal("expected general channel to exist")
+	// This used to assert that #general existed and held the whole roster.
+	// With #general retired the equivalent property is that every agent on
+	// the roster is REACHABLE -- which now means a DM each, not one shared
+	// room. The point of the old assertion was "nobody is stranded off the
+	// only conversation", and that is what is checked here.
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if !generalChannelEnabled() && b.findChannelLocked(GeneralChannelSlug) != nil {
+		t.Error("#general is retired and must not be seeded")
 	}
-	if len(general.Members) < len(members) {
-		t.Fatalf("expected general channel to include office roster, got %v for %d members", general.Members, len(members))
+	for _, m := range members {
+		if isHumanMessageSender(m.Slug) {
+			continue
+		}
+		if b.findChannelLocked(channel.DirectSlug("human", m.Slug)) == nil {
+			t.Errorf("agent %q has no DM: it is on the roster and unreachable", m.Slug)
+		}
 	}
 }
 

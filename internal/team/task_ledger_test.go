@@ -10,7 +10,7 @@ import (
 
 func TestAppendTaskLedgerEntryCapsAndPersists(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Long-running build", "many turns", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Long-running build", "many turns", "eng", "ceo", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestAppendTaskLedgerEntryCapsAndPersists(t *testing.T) {
 
 func TestRecordTaskLedgerEntryAssemblesFromBrokerFacts(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Instrumented work", "watch the journal", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Instrumented work", "watch the journal", "eng", "ceo", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestRecordTaskLedgerEntryAssemblesFromBrokerFacts(t *testing.T) {
 func TestRecordTaskLedgerEntrySkipsTasklessTurns(t *testing.T) {
 	b := newVerificationTestBroker(t)
 	l := launcherForBrokerFixture(b)
-	l.recordTaskLedgerEntry("eng", headlessCodexTurn{Channel: "general"}, time.Now(), nil)
+	l.recordTaskLedgerEntry("eng", headlessCodexTurn{Channel: "team"}, time.Now(), nil)
 	// Nothing to assert on a specific task — the contract is simply that a
 	// task-less turn must not panic or write anywhere.
 }
@@ -75,7 +75,7 @@ func TestRecordTaskLedgerEntrySkipsTasklessTurns(t *testing.T) {
 // ledger entry verbatim and survives the JSON wire (additive field).
 func TestRecordTaskLedgerEntryCarriesContextUsed(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Context audit work", "track what was injected", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Context audit work", "track what was injected", "eng", "ceo", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestRecordTaskLedgerEntryCarriesContextUsed(t *testing.T) {
 // settled turn appears as a kind="turn" event carrying its context manifest.
 func TestIssueActivityCarriesTurnEvents(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Activity rail work", "surface the turns", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Activity rail work", "surface the turns", "eng", "ceo", "")
 	if err != nil {
 		t.Fatal(err)
 	}

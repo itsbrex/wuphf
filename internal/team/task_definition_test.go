@@ -14,14 +14,14 @@ import (
 // "ceo" and "eng" is a registered specialist).
 func newDefineTestBroker(t *testing.T) *Broker {
 	t.Helper()
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
 		{Slug: "ceo", Name: "CEO"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -131,7 +131,7 @@ func TestMutateTaskDefine(t *testing.T) {
 	t.Parallel()
 	b := newDefineTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Launch the newsletter",
+		Action: "create", Channel: "team", Title: "Launch the newsletter",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -140,7 +140,7 @@ func TestMutateTaskDefine(t *testing.T) {
 
 	// Missing goal → invalid.
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
 		Definition: &TaskDefinition{},
 	})
 	var mErr *TaskMutationError
@@ -150,7 +150,7 @@ func TestMutateTaskDefine(t *testing.T) {
 
 	// Happy path: definition + verification in the same call.
 	res, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
 		Definition: &TaskDefinition{
 			Goal:            "send the first newsletter",
 			Deliverables:    []TaskDeliverable{{Name: "draft", Format: "markdown"}},
@@ -175,7 +175,7 @@ func TestMutateTaskDefine(t *testing.T) {
 	// Re-define updates the definition but must NOT overwrite an
 	// established verification gate.
 	res, err = b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
 		Definition:       &TaskDefinition{Goal: "send the first newsletter to partners only"},
 		VerificationKind: "command", VerificationSpec: "exit 1", VerificationRequired: true,
 	})
@@ -191,7 +191,7 @@ func TestMutateTaskDefine(t *testing.T) {
 
 	// Specialists cannot define — not even the task owner.
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "eng",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "eng",
 		Definition: &TaskDefinition{Goal: "owner rewrite"},
 	})
 	if !errors.As(err, &mErr) || mErr.Kind != TaskMutationForbidden {
@@ -211,7 +211,7 @@ func TestIntakeTaskArrivesPreDefined(t *testing.T) {
 		"targetOutcome": "triage runs nightly",
 		"acceptanceCriteria": [
 			{"statement": "cron entry registered"},
-			{"statement": "digest lands in #general"}
+			{"statement": "digest lands in #team"}
 		],
 		"assignment": "owner-agent picks up"
 	}`
@@ -227,7 +227,7 @@ func TestIntakeTaskArrivesPreDefined(t *testing.T) {
 	if task.Definition.Goal != "inbox triage is manual" {
 		t.Fatalf("goal mapping: got %q", task.Definition.Goal)
 	}
-	if len(task.Definition.SuccessCriteria) != 2 || task.Definition.SuccessCriteria[1] != "digest lands in #general" {
+	if len(task.Definition.SuccessCriteria) != 2 || task.Definition.SuccessCriteria[1] != "digest lands in #team" {
 		t.Fatalf("success criteria mapping: %v", task.Definition.SuccessCriteria)
 	}
 	if task.Definition.DefinedAt == "" {
@@ -242,14 +242,14 @@ func TestExecutionPacketCarriesDefinition(t *testing.T) {
 	t.Parallel()
 	b := newDefineTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Launch the newsletter",
+		Action: "create", Channel: "team", Title: "Launch the newsletter",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
 		Definition: &TaskDefinition{
 			Goal:            "first partner newsletter shipped",
 			Deliverables:    []TaskDeliverable{{Name: "draft", Format: "markdown in the wiki"}},

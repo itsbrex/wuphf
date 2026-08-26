@@ -35,7 +35,7 @@ func TestTaskDeliveredRaisesNoAcknowledgeCard(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	before := len(b.requests)
-	task := &teamTask{ID: "DUNDE-97", Title: "Land the thing", Channel: "general", Owner: "eng", CompletedAt: "2026-08-22T00:00:00Z"}
+	task := &teamTask{ID: "DUNDE-97", Title: "Land the thing", Channel: "team", Owner: "eng", CompletedAt: "2026-08-22T00:00:00Z"}
 	b.postTaskDeliveredLocked(task)
 	posts, cards := 0, len(b.requests)-before
 	for _, m := range b.messages {

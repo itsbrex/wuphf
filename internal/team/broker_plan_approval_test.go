@@ -15,7 +15,16 @@ func startPlanning(t *testing.T, b *Broker, id string) {
 	if cur == nil || cur.LifecycleState != LifecycleStatePlanning {
 		return
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, CreatedBy: "human"}); err != nil {
+	// Pass the task's OWN channel. With #general retired there is no default
+	// room to fall back to, so a mutation that names no channel is refused --
+	// which is the point of the change, not a snag to work around. A task
+	// always knows where its conversation lives.
+	if _, err := b.MutateTask(TaskPostRequest{
+		Action:    "approve",
+		ID:        id,
+		CreatedBy: "human",
+		Channel:   cur.Channel,
+	}); err != nil {
 		t.Fatalf("startPlanning approve %s: %v", id, err)
 	}
 }
@@ -25,7 +34,7 @@ func newPlanApprovalBroker(t *testing.T) *Broker {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -37,7 +46,7 @@ func newPlanApprovalBroker(t *testing.T) *Broker {
 func TestNewIssueLandsInPlanning(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the onboarding revamp",
+		Action: "create", Channel: "team", Title: "Ship the onboarding revamp",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -68,13 +77,13 @@ func TestAppBuilderBuildSkipsPlanGate(t *testing.T) {
 func TestApprovePlanStartsExecution(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the onboarding revamp",
+		Action: "create", Channel: "team", Title: "Ship the onboarding revamp",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, CreatedBy: "human"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, CreatedBy: "human", Channel: "team"}); err != nil {
 		t.Fatalf("approve plan: %v", err)
 	}
 	if task := b.TaskByID(created.Task.ID); task == nil || task.LifecycleState != LifecycleStateRunning {
@@ -87,14 +96,14 @@ func TestApprovePlanStartsExecution(t *testing.T) {
 func TestPlanGateBlocksSubtaskCreation(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Build the billing system",
+		Action: "create", Channel: "team", Title: "Build the billing system",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
 		t.Fatalf("create parent: %v", err)
 	}
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Wire Stripe webhooks",
+		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
 		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {
@@ -106,7 +115,7 @@ func TestPlanGateBlocksSubtaskCreation(t *testing.T) {
 	// After approval, sub-issue creation is allowed.
 	startPlanning(t, b, parent.Task.ID)
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Wire Stripe webhooks",
+		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
 		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
 	}); err != nil {
 		t.Fatalf("sub-issue after approval should succeed: %v", err)
@@ -117,7 +126,7 @@ func TestPlanGateBlocksSubtaskCreation(t *testing.T) {
 func TestShallowSubtaskRestatingParentRejected(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the MVP",
+		Action: "create", Channel: "team", Title: "Ship the MVP",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -125,7 +134,7 @@ func TestShallowSubtaskRestatingParentRejected(t *testing.T) {
 	}
 	startPlanning(t, b, parent.Task.ID)
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the MVP!",
+		Action: "create", Channel: "team", Title: "Ship the MVP!",
 		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {
@@ -141,7 +150,7 @@ func TestShallowSubtaskRestatingParentRejected(t *testing.T) {
 func TestRaisePlanApprovalIdempotent(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Build the billing system",
+		Action: "create", Channel: "team", Title: "Build the billing system",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -170,7 +179,7 @@ func TestRaisePlanApprovalIdempotent(t *testing.T) {
 func TestRejectPlanLeavesTaskInPlanning(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Ship the redesign",
+		Action: "create", Channel: "team", Title: "Ship the redesign",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -193,7 +202,7 @@ func TestRejectPlanLeavesTaskInPlanning(t *testing.T) {
 func TestCompleteFromPlanningRefused(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Write the launch post",
+		Action: "create", Channel: "team", Title: "Write the launch post",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -215,7 +224,7 @@ func TestCompleteFromPlanningRefused(t *testing.T) {
 func TestDuplicateSiblingSubtaskRejected(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Build the billing system",
+		Action: "create", Channel: "team", Title: "Build the billing system",
 		Owner: "eng", CreatedBy: "ceo",
 	})
 	if err != nil {
@@ -223,13 +232,13 @@ func TestDuplicateSiblingSubtaskRejected(t *testing.T) {
 	}
 	startPlanning(t, b, parent.Task.ID)
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "Wire Stripe webhooks",
+		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
 		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
 	}); err != nil {
 		t.Fatalf("first sibling: %v", err)
 	}
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "create", Channel: "general", Title: "wire the stripe webhook",
+		Action: "create", Channel: "team", Title: "wire the stripe webhook",
 		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {

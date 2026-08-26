@@ -23,7 +23,7 @@ func TestHostUpsertParticipantMarksMemberOnline(t *testing.T) {
 	before := time.Now()
 	err := host.UpsertParticipant(context.Background(),
 		transport.Participant{AdapterName: openclawAdapterName, Key: "session-abc", DisplayName: "eng"},
-		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "eng", ChannelSlug: "general"},
+		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "eng", ChannelSlug: "team"},
 	)
 	if err != nil {
 		t.Fatalf("UpsertParticipant: %v", err)
@@ -68,7 +68,7 @@ func TestHostUpsertParticipantSkipsNonMemberScope(t *testing.T) {
 		binding transport.Binding
 	}{
 		{"office (share)", shareAdapterName, transport.Binding{Scope: transport.ScopeOffice, MemberSlug: "team-member"}},
-		{"channel (telegram)", "telegram", transport.Binding{Scope: transport.ScopeChannel, ChannelSlug: "general"}},
+		{"channel (telegram)", "telegram", transport.Binding{Scope: transport.ScopeChannel, ChannelSlug: "team"}},
 		{"member with empty slug", openclawAdapterName, transport.Binding{Scope: transport.ScopeMember, MemberSlug: ""}},
 	}
 	for _, tc := range cases {

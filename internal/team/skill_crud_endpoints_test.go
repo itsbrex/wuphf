@@ -60,7 +60,7 @@ func seedProposedSkill(t *testing.T, b *Broker, name string) {
 		Description: "Seeded for tests.",
 		Content:     "Step 1: do something.",
 		CreatedBy:   "archivist",
-		Channel:     "general",
+		Channel:     "team",
 		Status:      "proposed",
 		CreatedAt:   "2026-04-28T00:00:00Z",
 		UpdatedAt:   "2026-04-28T00:00:00Z",
@@ -334,7 +334,7 @@ func TestSkillArchiveStatusSurvivesRestart(t *testing.T) {
 	// Use a named temp dir so the state path is in scope for both brokers.
 	statePath := filepath.Join(t.TempDir(), "broker-state.json")
 
-	b1 := NewBrokerAt(statePath)
+	b1 := newBrokerWithTeamRoom(statePath)
 	mux := http.NewServeMux()
 	mux.HandleFunc("/skills", b1.requireAuth(b1.handleSkills))
 	mux.HandleFunc("/skills/", b1.requireAuth(b1.handleSkillsSubpath))
@@ -369,7 +369,7 @@ func TestSkillArchiveStatusSurvivesRestart(t *testing.T) {
 		Description: "Regression test skill.",
 		Content:     "Step 1: verify.",
 		CreatedBy:   "archivist",
-		Channel:     "general",
+		Channel:     "team",
 		Status:      "active",
 		CreatedAt:   "2026-04-28T00:00:00Z",
 		UpdatedAt:   "2026-04-28T00:00:00Z",
@@ -703,7 +703,7 @@ func TestSkillRestoreRejectsSlugCollision(t *testing.T) {
 		Description: "Replacement active skill.",
 		Content:     "Step 1: replace.",
 		CreatedBy:   "archivist",
-		Channel:     "general",
+		Channel:     "team",
 		Status:      "active",
 		CreatedAt:   "2026-04-29T00:00:00Z",
 		UpdatedAt:   "2026-04-29T00:00:00Z",

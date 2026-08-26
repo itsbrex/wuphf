@@ -94,7 +94,7 @@ func TestOnboardingCompleteWikiIsIdempotent(t *testing.T) {
 	// same broker-state.json as `b` so normalizeLoadedStateLocked observes
 	// the persistence from the first run (matches production behavior
 	// where a CLI restart reads ~/.wuphf/team/broker-state.json).
-	b2 := NewBrokerAt(b.statePath)
+	b2 := newBrokerWithTeamRoom(b.statePath)
 	if err := b2.onboardingCompleteFn("Re-pick niche CRM", false, "niche-crm", nil, ""); err != nil {
 		t.Fatalf("second onboardingCompleteFn: %v", err)
 	}

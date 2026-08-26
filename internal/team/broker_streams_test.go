@@ -102,7 +102,7 @@ func TestAgentStreamBuffer_SubscribeTaskWithRecentHasNoReplayGap(t *testing.T) {
 
 func TestHandleAgentToolEvent_ScopesLineToActiveTask(t *testing.T) {
 	b := newTestBroker(t)
-	task, _, err := b.EnsureTask("general", "Inspect terminal", "Verify tool output", "ceo", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Inspect terminal", "Verify tool output", "ceo", "ceo", "")
 	if err != nil {
 		t.Fatalf("EnsureTask: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestBrokerMessageSubscribersReceivePostedMessages(t *testing.T) {
 	msgs, unsubscribe := b.SubscribeMessages(4)
 	defer unsubscribe()
 
-	want, err := b.PostMessage("ceo", "general", "Push this immediately", nil, "")
+	want, err := b.PostMessage("ceo", "team", "Push this immediately", nil, "")
 	if err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}
@@ -205,7 +205,7 @@ func TestBrokerActionSubscribersReceiveTaskLifecycle(t *testing.T) {
 	actions, unsubscribe := b.SubscribeActions(4)
 	defer unsubscribe()
 
-	if _, _, err := b.EnsureTask("general", "Landing page", "Build the hero", "fe", "ceo", ""); err != nil {
+	if _, _, err := b.EnsureTask("team", "Landing page", "Build the hero", "fe", "ceo", ""); err != nil {
 		t.Fatalf("EnsureTask: %v", err)
 	}
 
@@ -367,8 +367,8 @@ func TestBrokerEventsEndpointStreamsMessages(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
 		{
-			Slug: "general",
-			Name: "general",
+			Slug: "team",
+			Name: "team",
 			// The test posts as "ceo" below. Production always seeds the CEO
 			// into #general (broker_onboarding.go) and re-populates it with
 			// every member on load (broker_defaults.go); this fixture only
@@ -413,7 +413,7 @@ func TestBrokerEventsEndpointStreamsMessages(t *testing.T) {
 		close(lines)
 	}()
 
-	if _, err := b.PostMessage("ceo", "general", "Stream this", nil, ""); err != nil {
+	if _, err := b.PostMessage("ceo", "team", "Stream this", nil, ""); err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}
 

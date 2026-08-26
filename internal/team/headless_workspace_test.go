@@ -53,9 +53,9 @@ func TestHeadlessTurnWorkspace_WorktreeElseScratch(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.members = []officeMember{{Slug: "eng", Name: "Engineer"}}
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"human", "eng"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "eng"}}}
 	b.tasks = []teamTask{{
-		ID: "task-wt-1", Channel: "general", Title: "worktree task", Owner: "eng",
+		ID: "task-wt-1", Channel: "team", Title: "worktree task", Owner: "eng",
 		status: "in_progress", ExecutionMode: "local_worktree", WorktreePath: worktree,
 	}}
 	b.mu.Unlock()
@@ -103,7 +103,7 @@ func TestRunHeadlessClaudeTurn_NoWorktreeRunsInAgentScratch(t *testing.T) {
 		return captured
 	}
 
-	b := NewBrokerAt(filepath.Join(tmpDir, "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(tmpDir, "broker-state.json"))
 	l := minimalLauncher(false)
 	l.broker = b
 	l.cwd = tmpDir
@@ -113,7 +113,7 @@ func TestRunHeadlessClaudeTurn_NoWorktreeRunsInAgentScratch(t *testing.T) {
 
 	// Parse error from /bin/true's empty output is expected; cmd.Dir is set
 	// before Start so the captured command carries the resolved dir.
-	_ = l.runHeadlessClaudeTurn(t.Context(), "ceo", "answer the human in #general")
+	_ = l.runHeadlessClaudeTurn(t.Context(), "ceo", "answer the human in #team")
 
 	if captured == nil {
 		t.Fatal("headlessClaudeCommandContext hook was not called")

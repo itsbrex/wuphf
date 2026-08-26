@@ -27,7 +27,7 @@ import (
 func autonomyBroker(t *testing.T) *Broker {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
 		{Slug: "ceo", Name: "CEO", Role: "Chief Executive"},

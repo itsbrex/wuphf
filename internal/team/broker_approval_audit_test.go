@@ -28,7 +28,7 @@ func TestApprovalAuditRoundTrip(t *testing.T) {
 					OutcomeSummary:       "Sent email to alex@nex.ai",
 					OutcomeChatMessageID: "msg-101",
 					Actor:                "ceo",
-					Channel:              "general",
+					Channel:              "team",
 					CreatedAt:            "2026-05-27T13:16:00Z",
 				},
 			},
@@ -63,7 +63,7 @@ func TestApprovalAuditRoundTrip(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "broker-state.json")
-			b := NewBrokerAt(path)
+			b := newBrokerWithTeamRoom(path)
 			for _, entry := range tc.seed {
 				if err := b.RecordApprovalAudit(entry); err != nil {
 					t.Fatalf("record: %v", err)
@@ -94,7 +94,7 @@ func TestApprovalAuditRoundTrip(t *testing.T) {
 			}
 
 			// Reload from disk and confirm the state round-tripped.
-			b2 := NewBrokerAt(path)
+			b2 := newBrokerWithTeamRoom(path)
 			if err := b2.loadState(); err != nil {
 				t.Fatalf("loadState: %v", err)
 			}
@@ -120,7 +120,7 @@ func TestApprovalAuditRoundTrip(t *testing.T) {
 // caller may retry POST /approval-audit on transient network errors and we
 // don't want the inbox trail to show "executed_ok → executed_ok → executed_ok".
 func TestApprovalAuditIdempotent(t *testing.T) {
-	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 	entry := ApprovalAuditEntry{
 		ApprovalRequestID: "req-1",
 		TaskID:            "task-1",
@@ -163,7 +163,7 @@ func TestApprovalAuditLoadMissingField(t *testing.T) {
 	if err := os.WriteFile(path, data, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	b := NewBrokerAt(path)
+	b := newBrokerWithTeamRoom(path)
 	if err := b.loadState(); err != nil {
 		t.Fatalf("loadState should tolerate missing approval_audit: %v", err)
 	}

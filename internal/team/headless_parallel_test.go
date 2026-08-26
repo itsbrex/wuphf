@@ -98,8 +98,8 @@ func TestParallelInstancesRunDistinctWorktreesConcurrently(t *testing.T) {
 		return ctx.Err()
 	})
 
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-a", Channel: "general", TaskID: "task-a"})
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-b", Channel: "general", TaskID: "task-b"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-a", Channel: "team", TaskID: "task-a"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-b", Channel: "team", TaskID: "task-b"})
 
 	got := map[string]bool{}
 	deadline := time.After(10 * time.Second)
@@ -160,7 +160,7 @@ func TestHeadlessTurnPanicFreesActiveSlot(t *testing.T) {
 
 	// Drive eng first and wait for its turn to start (and therefore panic),
 	// so the second agent is enqueued only after the slot should have freed.
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-eng", Channel: "general", TaskID: "task-eng"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-eng", Channel: "team", TaskID: "task-eng"})
 	select {
 	case got := <-started:
 		if got != "eng" {
@@ -170,7 +170,7 @@ func TestHeadlessTurnPanicFreesActiveSlot(t *testing.T) {
 		t.Fatal("eng turn never started")
 	}
 
-	l.enqueueHeadlessCodexTurnRecord("gtm", headlessCodexTurn{Prompt: "work #task-gtm", Channel: "general", TaskID: "task-gtm"})
+	l.enqueueHeadlessCodexTurnRecord("gtm", headlessCodexTurn{Prompt: "work #task-gtm", Channel: "team", TaskID: "task-gtm"})
 	select {
 	case got := <-started:
 		if got != "gtm" {
@@ -211,8 +211,8 @@ func TestParallelInstancesRunNonDependentOfficeTasksConcurrently(t *testing.T) {
 		return ctx.Err()
 	})
 
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-a", Channel: "general", TaskID: "task-a"})
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-b", Channel: "general", TaskID: "task-b"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-a", Channel: "team", TaskID: "task-a"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-b", Channel: "team", TaskID: "task-b"})
 
 	got := map[string]bool{}
 	deadline := time.After(10 * time.Second)
@@ -251,8 +251,8 @@ func TestLeadRunsNonDependentTasksConcurrently(t *testing.T) {
 		return ctx.Err()
 	})
 
-	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-a", Channel: "general", TaskID: "task-a"})
-	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-b", Channel: "general", TaskID: "task-b"})
+	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-a", Channel: "team", TaskID: "task-a"})
+	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-b", Channel: "team", TaskID: "task-b"})
 
 	got := map[string]bool{}
 	deadline := time.After(10 * time.Second)
@@ -387,8 +387,8 @@ func TestHeadlessConcurrencyCapParksAndDrains(t *testing.T) {
 		return ctx.Err()
 	})
 
-	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-a", Channel: "general", TaskID: "task-a"})
-	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-b", Channel: "general", TaskID: "task-b"})
+	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-a", Channel: "team", TaskID: "task-a"})
+	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{Prompt: "work #task-b", Channel: "team", TaskID: "task-b"})
 
 	// Exactly one should start; the other parks under the cap.
 	var first string
@@ -452,8 +452,8 @@ func TestHeadlessGlobalConcurrencyCapParksAndDrains(t *testing.T) {
 		return ctx.Err()
 	})
 
-	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-eng", Channel: "general", TaskID: "task-eng"})
-	l.enqueueHeadlessCodexTurnRecord("gtm", headlessCodexTurn{Prompt: "work #task-gtm", Channel: "general", TaskID: "task-gtm"})
+	l.enqueueHeadlessCodexTurnRecord("eng", headlessCodexTurn{Prompt: "work #task-eng", Channel: "team", TaskID: "task-eng"})
+	l.enqueueHeadlessCodexTurnRecord("gtm", headlessCodexTurn{Prompt: "work #task-gtm", Channel: "team", TaskID: "task-gtm"})
 
 	// Exactly one should start; the other parks under the global cap.
 	var first string

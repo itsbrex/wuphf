@@ -40,7 +40,7 @@ func TestTaskChangedWakesTheSpecialistOwner(t *testing.T) {
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		From:    "you",
 		Kind:    "task_changed",
-		Channel: "general",
+		Channel: "team",
 		Content: "Updated DUNDE-12 (Fix the header): status open -> in_progress. @designer — you own this.",
 		Tagged:  []string{"designer"},
 	})
@@ -67,7 +67,7 @@ func TestTaskChangedWakesTheCEOByDefault(t *testing.T) {
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		From:    "you",
 		Kind:    "task_changed",
-		Channel: "general",
+		Channel: "team",
 		Content: "Updated DUNDE-13 (Ship the docs): title -> \"Ship the docs\". @ceo — you own this.",
 		Tagged:  []string{"ceo"},
 	})

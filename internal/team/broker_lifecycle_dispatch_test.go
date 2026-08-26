@@ -141,7 +141,7 @@ func TestBrokerRefusesDispatchForNonExecutableLifecycle(t *testing.T) {
 			b.mu.Lock()
 			b.tasks = append(b.tasks, teamTask{
 				ID:      "task-gate-test",
-				Channel: "general",
+				Channel: "team",
 				Title:   "Gate test task",
 				Owner:   "eng",
 			})
@@ -163,7 +163,7 @@ func TestBrokerRefusesDispatchForNonExecutableLifecycle(t *testing.T) {
 				ID:        "action-1",
 				Kind:      "task_updated",
 				Actor:     "system",
-				Channel:   "general",
+				Channel:   "team",
 				RelatedID: "task-gate-test",
 			}
 			target := notificationTarget{Slug: "eng", PaneTarget: "wuphf:eng"}
@@ -207,11 +207,11 @@ func TestCommentPathAllowedInAllLifecycleStates(t *testing.T) {
 			b := newTestBroker(t)
 			b.mu.Lock()
 			b.channels = []teamChannel{
-				{Slug: "general", Name: "general", Members: []string{"human", "eng"}},
+				{Slug: "team", Name: "team", Members: []string{"human", "eng"}},
 			}
 			b.tasks = append(b.tasks, teamTask{
 				ID:      "task-comment-state",
-				Channel: "general",
+				Channel: "team",
 				Title:   "Comment path test",
 				Owner:   "eng",
 			})
@@ -232,7 +232,7 @@ func TestCommentPathAllowedInAllLifecycleStates(t *testing.T) {
 			_, err := b.MutateTask(TaskPostRequest{
 				Action:    "comment",
 				ID:        "task-comment-state",
-				Channel:   "general",
+				Channel:   "team",
 				Details:   "drive-by comment from state " + string(state),
 				CreatedBy: "human",
 			})

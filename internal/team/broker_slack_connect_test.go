@@ -8,12 +8,12 @@ import (
 func TestCreateSlackChannelBindsSurface(t *testing.T) {
 	b := newTestBroker(t)
 
-	ch, err := b.createSlackChannel("C0123", "general")
+	ch, err := b.createSlackChannel("C0123", "team")
 	if err != nil {
 		t.Fatalf("createSlackChannel: %v", err)
 	}
-	if ch.Slug != "slack-general" {
-		t.Fatalf("slug = %q, want slack-general", ch.Slug)
+	if ch.Slug != "slack-team" {
+		t.Fatalf("slug = %q, want slack-team", ch.Slug)
 	}
 	if ch.Surface == nil || ch.Surface.Provider != "slack" || ch.Surface.RemoteID != "C0123" {
 		t.Fatalf("surface = %+v, want slack/C0123", ch.Surface)
@@ -33,17 +33,17 @@ func TestCreateSlackChannelBindsSurface(t *testing.T) {
 
 func TestCreateSlackChannelIdempotentAndConflict(t *testing.T) {
 	b := newTestBroker(t)
-	if _, err := b.createSlackChannel("C0123", "general"); err != nil {
+	if _, err := b.createSlackChannel("C0123", "team"); err != nil {
 		t.Fatalf("first connect: %v", err)
 	}
 
 	// Reconnecting the same channel id to the same slug is idempotent.
-	if _, err := b.createSlackChannel("C0123", "general"); !errors.Is(err, errChannelAlreadyExists) {
+	if _, err := b.createSlackChannel("C0123", "team"); !errors.Is(err, errChannelAlreadyExists) {
 		t.Fatalf("reconnect should be idempotent, got %v", err)
 	}
 
 	// A different channel id on the same slug is a conflict.
-	if _, err := b.createSlackChannel("C9999", "general"); !errors.Is(err, errSlackChannelAlreadyBridges) {
+	if _, err := b.createSlackChannel("C9999", "team"); !errors.Is(err, errSlackChannelAlreadyBridges) {
 		t.Fatalf("conflicting bind should error, got %v", err)
 	}
 }

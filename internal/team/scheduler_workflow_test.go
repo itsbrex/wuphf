@@ -96,7 +96,7 @@ func TestSchedulerProcessWorkflowJob_LookupFailureRecordsAndReschedules(t *testi
 	s := newWorkflowJobScheduler(t, b, resolve)
 	s.processWorkflowJob(schedulerJob{
 		Slug:        "wf-1",
-		Channel:     "general",
+		Channel:     "team",
 		WorkflowKey: "report",
 		Provider:    "composio",
 	})
@@ -124,7 +124,7 @@ func TestSchedulerProcessWorkflowJob_ExecuteSuccessRecordsAndUpdatesStatus(t *te
 	s := newWorkflowJobScheduler(t, b, resolve)
 	s.processWorkflowJob(schedulerJob{
 		Slug:        "wf-2",
-		Channel:     "general",
+		Channel:     "team",
 		WorkflowKey: "report",
 		Provider:    "composio",
 	})
@@ -149,7 +149,7 @@ func TestSchedulerProcessWorkflowJob_ExecuteErrorRecordsFailure(t *testing.T) {
 	s := newWorkflowJobScheduler(t, b, resolve)
 	s.processWorkflowJob(schedulerJob{
 		Slug:        "wf-3",
-		Channel:     "general",
+		Channel:     "team",
 		WorkflowKey: "report",
 		Provider:    "composio",
 	})
@@ -179,7 +179,7 @@ func TestSchedulerProcessWorkflowJob_CanceledDoesNotRecordFailure(t *testing.T) 
 	s := newWorkflowJobScheduler(t, b, resolve)
 	s.processWorkflowJob(schedulerJob{
 		Slug:        "wf-4",
-		Channel:     "general",
+		Channel:     "team",
 		WorkflowKey: "report",
 		Provider:    "composio",
 	})
@@ -209,7 +209,7 @@ func TestSchedulerProcessWorkflowJob_DeadlineExceededDoesNotRecordFailure(t *tes
 	s := newWorkflowJobScheduler(t, b, resolve)
 	s.processWorkflowJob(schedulerJob{
 		Slug:        "wf-5",
-		Channel:     "general",
+		Channel:     "team",
 		WorkflowKey: "report",
 		Provider:    "composio",
 	})

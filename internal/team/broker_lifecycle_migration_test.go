@@ -164,7 +164,7 @@ func TestLifecycleMigrationLegacyMergedToApproved(t *testing.T) {
 	// confirm the on-disk string is the new canonical value.
 	legacy := []byte(`{
 		"id":"t-legacy",
-		"channel":"general",
+		"channel":"team",
 		"title":"shipped before the rename",
 		"status":"done",
 		"lifecycle_state":"merged"
@@ -218,7 +218,7 @@ func TestLifecycleMigrationLegacyBlockedOnPRMergeToBlocked(t *testing.T) {
 	// of falling through to the unknown/backlog fallback.
 	legacy := []byte(`{
 		"id":"OFFICE-3",
-		"channel":"general",
+		"channel":"team",
 		"title":"timed out before the rename",
 		"status":"blocked",
 		"lifecycle_state":"blocked_on_pr_merge"
