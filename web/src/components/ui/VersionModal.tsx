@@ -73,7 +73,7 @@ function deriveInstallCommand(check: UpgradeCheckResponse | undefined): string {
   ) {
     return check.install_command;
   }
-  return check?.upgrade_command ?? "npm install -g wuphf@latest";
+  return check?.upgrade_command ?? "npm install -g gawkbot@latest";
 }
 
 // Modal opened by clicking the version chip in the StatusBar. Mirrors the
@@ -234,7 +234,7 @@ export function VersionModal({ open, onClose }: VersionModalProps) {
         <header className="help-header">
           <div>
             <h2 id={VERSION_MODAL_TITLE_ID} className="help-title">
-              wuphf version
+              gawkbot version
             </h2>
             <p className="help-subtitle">
               See what's running, force a reinstall, or restart the broker.
@@ -261,7 +261,7 @@ export function VersionModal({ open, onClose }: VersionModalProps) {
 
           <ActionsSection
             installCommand={installCommand}
-            latestForCopy={formatVersion(check?.latest, "wuphf@latest")}
+            latestForCopy={formatVersion(check?.latest, "gawkbot@latest")}
             running={run.phase === "running"}
             restarting={restarting}
             onForceUpdate={onForceUpdateClick}

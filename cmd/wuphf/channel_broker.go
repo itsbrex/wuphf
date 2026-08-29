@@ -957,13 +957,13 @@ func applyTeamSetup() tea.Cmd {
 		}
 		cfg, _ := config.Load()
 		if current := strings.TrimSpace(os.Getenv("WUPHF_HEADLESS_PROVIDER")); current != "" {
-			return channelInitDoneMsg{notice: notice + " Setup saved. Restart WUPHF to reload the " + current + " office runtime with the new configuration."}
+			return channelInitDoneMsg{notice: notice + " Setup saved. Restart gawkbot to reload the " + current + " office runtime with the new configuration."}
 		}
 		if config.ResolveLLMProvider("") == "codex" || strings.TrimSpace(cfg.LLMProvider) == "codex" {
-			return channelInitDoneMsg{notice: notice + " Codex was saved as the LLM provider. Restart WUPHF to launch the headless Codex office runtime."}
+			return channelInitDoneMsg{notice: notice + " Codex was saved as the LLM provider. Restart gawkbot to launch the headless Codex office runtime."}
 		}
 		if config.ResolveLLMProvider("") == "opencode" || strings.TrimSpace(cfg.LLMProvider) == "opencode" {
-			return channelInitDoneMsg{notice: notice + " Opencode was saved as the LLM provider. Restart WUPHF to launch the headless Opencode office runtime."}
+			return channelInitDoneMsg{notice: notice + " Opencode was saved as the LLM provider. Restart gawkbot to launch the headless Opencode office runtime."}
 		}
 		l, err := team.NewLauncher("")
 		if err != nil {
@@ -994,7 +994,7 @@ func applyProviderSelection(providerName string) tea.Cmd {
 		}
 
 		if current := strings.TrimSpace(os.Getenv("WUPHF_HEADLESS_PROVIDER")); current != "" {
-			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart WUPHF to reload the office runtime with the new configuration."}
+			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the office runtime with the new configuration."}
 		}
 		if providerName == "codex" {
 			l, err := team.NewLauncher("")
@@ -1004,7 +1004,7 @@ func applyProviderSelection(providerName string) tea.Cmd {
 			if err := l.ReconfigureSession(); err != nil {
 				return channelInitDoneMsg{err: err}
 			}
-			return channelInitDoneMsg{notice: "Provider switched to codex. Claude teammate panes were stopped. Restart WUPHF to launch the headless Codex office runtime."}
+			return channelInitDoneMsg{notice: "Provider switched to codex. Claude teammate panes were stopped. Restart gawkbot to launch the headless Codex office runtime."}
 		}
 		if providerName == "opencode" {
 			l, err := team.NewLauncher("")
@@ -1014,10 +1014,10 @@ func applyProviderSelection(providerName string) tea.Cmd {
 			if err := l.ReconfigureSession(); err != nil {
 				return channelInitDoneMsg{err: err}
 			}
-			return channelInitDoneMsg{notice: "Provider switched to opencode. Claude teammate panes were stopped. Restart WUPHF to launch the headless Opencode office runtime."}
+			return channelInitDoneMsg{notice: "Provider switched to opencode. Claude teammate panes were stopped. Restart gawkbot to launch the headless Opencode office runtime."}
 		}
 		if currentProvider == "codex" || currentProvider == "opencode" {
-			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart WUPHF to reload the office runtime with the new configuration."}
+			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the office runtime with the new configuration."}
 		}
 
 		l, err := team.NewLauncher("")

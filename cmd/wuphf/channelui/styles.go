@@ -325,7 +325,7 @@ func MascotLines(slug, activity string, frame int) [3]string {
 }
 
 // AgentCharacter returns a compact mascot-like face for inline use.
-// WUPHF uses one coherent visual grammar: a role accent + a rounded face.
+// gawkbot uses one coherent visual grammar: a role accent + a rounded face.
 func AgentCharacter(slug, activity string, frame int) string {
 	leftEye, rightEye := MascotEyes(slug)
 	return MascotAccent(slug) + "(" + leftEye + MascotMouth(activity, frame) + rightEye + ")"

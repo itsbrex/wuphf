@@ -30,7 +30,7 @@ func (m channelModel) sidebarItemAt(y int) (sidebarItem, bool) {
 	}
 	lines := 0
 	lines++ // blank
-	lines++ // WUPHF
+	lines++ // gawkbot
 	lines++ // subtitle
 	lines++ // blank
 	lines++ // Channels header

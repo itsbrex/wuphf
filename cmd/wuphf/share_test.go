@@ -602,7 +602,7 @@ func TestWebShareControllerIssueInviteUsesAdapter(t *testing.T) {
 }
 
 // TestWebShareControllerIssueInviteFallsBackToHTTP confirms that when no
-// in-process broker handle is available (the standalone `wuphf share`
+// in-process broker handle is available (the standalone `gawkbot share`
 // subcommand path), issueInviteLocked uses the HTTP createShareInvite call.
 // We verify by pointing the controller at an httptest server that mimics the
 // broker's POST /humans/invites response shape.

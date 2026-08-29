@@ -10,7 +10,7 @@ import type { TreeNode } from "../lib/tree";
  * (c) render the folder index. It also calls `selectPage` + `expandPath` to
  * navigate after a link click.
  *
- * In WUPHF the page tree + navigation live in the host. The provider pushes the
+ * In gawkbot the page tree + navigation live in the host. The provider pushes the
  * current `nodes` in via {@link bindTreeStore} and supplies navigation
  * callbacks; `selectPage` / `expandPath` route OUT to those callbacks so the
  * host owns routing. Like editor-store this is a real Zustand store because the

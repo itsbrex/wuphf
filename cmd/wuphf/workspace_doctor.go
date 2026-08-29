@@ -1,6 +1,6 @@
 package main
 
-// `wuphf workspace doctor` — reconcile registry vs. reality, prompt to fix.
+// `gawkbot workspace doctor` — reconcile registry vs. reality, prompt to fix.
 //
 // The orchestrator's Doctor() does the heavy detection work (orphan trees,
 // zombie state, port conflicts, corrupt registry, missing/orphaned symlinks,
@@ -32,12 +32,12 @@ func runWorkspaceDoctor(args []string) {
 	dryRun := fs.Bool("dry-run", false, "Report issues but do not prompt for or apply fixes")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace doctor — reconcile workspace registry against reality")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace doctor — reconcile workspace registry against reality")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace doctor             Interactive: prompt y/N per issue")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace doctor --dry-run   Report issues, never prompt or fix")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace doctor --yes       Apply every fix without prompting")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace doctor             Interactive: prompt y/N per issue")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace doctor --dry-run   Report issues, never prompt or fix")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace doctor --yes       Apply every fix without prompting")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Detects: orphan trees, zombie state, port conflicts, corrupt registry,")
 		fmt.Fprintln(os.Stderr, "orphaned/missing compatibility symlinks, partial migrations, stuck `stopping`")

@@ -458,7 +458,7 @@ function AskAiDock({
         type="button"
         className="opr-ask-fab"
         onClick={() => onOpenChange(true)}
-        aria-label={`Ask Wuphf about ${app.name}`}
+        aria-label={`Ask gawkbot about ${app.name}`}
       >
         <Sparkles size={16} strokeWidth={2} aria-hidden={true} />
         Ask Agent
@@ -479,7 +479,7 @@ function AskAiDock({
         ref={panelRef}
         tabIndex={-1}
         className={`opr-ask-panel is-${size}`}
-        aria-label={`Ask Wuphf about ${app.name}`}
+        aria-label={`Ask gawkbot about ${app.name}`}
       >
         <div className="opr-ask-bar">
           <span className="opr-ask-bar-title">

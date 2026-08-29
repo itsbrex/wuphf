@@ -185,7 +185,7 @@ describe("<CredentialRegistrationPanel>", () => {
 
 function creationOptions(): webauthn.WebAuthnCreationOptionsJson {
   return {
-    rp: { id: "localhost", name: "WUPHF" },
+    rp: { id: "localhost", name: "gawkbot" },
     user: { id: "AQID", name: "approver", displayName: "Approver" },
     challenge: "BAU",
     pubKeyCredParams: [{ type: "public-key", alg: -7 }],

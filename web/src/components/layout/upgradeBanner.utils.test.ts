@@ -399,6 +399,6 @@ describe("formatVersion", () => {
     expect(formatVersion("")).toBe("unknown");
     expect(formatVersion("   ")).toBe("unknown"); // trimmed-empty is still empty
     expect(formatVersion(null, "version")).toBe("version");
-    expect(formatVersion("", "wuphf@latest")).toBe("wuphf@latest");
+    expect(formatVersion("", "gawkbot@latest")).toBe("gawkbot@latest");
   });
 });

@@ -395,7 +395,7 @@ export function StepTeam({
                 Start from scratch
               </span>
               <span className="onboarding-pack-card-desc">
-                Skip the packs. WUPHF stands up a small founding team and you
+                Skip the packs. gawkbot stands up a small founding team and you
                 grow it from there.
               </span>
               <span className="onboarding-pack-card-count">No pack</span>
@@ -407,7 +407,7 @@ export function StepTeam({
             <PackDrawer id="pack-drawer-scratch" open={open}>
               <div className="onboarding-pack-team onboarding-pack-team--inline">
                 <p className="onboarding-pack-team-hint">
-                  Starting from scratch. WUPHF will stand up a CEO and a small
+                  Starting from scratch. gawkbot will stand up a CEO and a small
                   founding team. Add a custom agent below, or grow the team
                   later from the office.
                 </p>

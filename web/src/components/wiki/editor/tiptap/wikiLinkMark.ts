@@ -1,5 +1,5 @@
 /**
- * Tiptap mark for WUPHF wikilinks.
+ * Tiptap mark for gawkbot wikilinks.
  *
  * Renders `[[slug]]` / `[[slug|Display]]` as an anchor that matches the live
  * preview's wikilink shape (`src/lib/wikilink.ts` -> `wikiLinkRemarkPlugin`):
@@ -17,7 +17,7 @@
  * (path traversal, absolute path, control bytes) never becomes a mark — it is
  * left as literal text, exactly as the preview would treat it.
  *
- * The slug grammar and the anchor attributes are WUPHF's own, distinct from
+ * The slug grammar and the anchor attributes are gawkbot's own, distinct from
  * any upstream `#page:` / `data-page-name` convention.
  */
 

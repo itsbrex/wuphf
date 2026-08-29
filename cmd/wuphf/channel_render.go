@@ -15,7 +15,7 @@ func buildOfficeMessageLines(messages []channelui.BrokerMessage, expanded map[st
 	if len(messages) == 0 {
 		lines = append(lines,
 			channelui.RenderedLine{Text: ""},
-			channelui.RenderedLine{Text: mutedStyle.Render("  Welcome to The WUPHF Office. The cast is assembled.")},
+			channelui.RenderedLine{Text: mutedStyle.Render("  Welcome to The gawkbot Office. The cast is assembled.")},
 			channelui.RenderedLine{Text: mutedStyle.Render("  Drop a company-building thought in #general, or tag a teammate to get things moving.")},
 			channelui.RenderedLine{Text: ""},
 			channelui.RenderedLine{Text: mutedStyle.Render("  Suggested: Let's build an AI notetaking company. (Ryan Howard would've called it NoteWUPHF.)")},

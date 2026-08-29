@@ -2,8 +2,8 @@ package main
 
 // skills_publish.go wires the public-hub publish/install loop:
 //
-//   wuphf skills publish <slug-or-path> --to <hub>     (export)
-//   wuphf skills install <name>          --from <hub>  (import)
+//   gawkbot skills publish <slug-or-path> --to <hub>     (export)
+//   gawkbot skills install <name>          --from <hub>  (import)
 //
 // Publish shells out to `gh` for actual PR creation so we never roll our own
 // GitHub API client. Install is a public raw-fetch + broker POST round-trip.
@@ -41,11 +41,11 @@ const skillsHTTPTimeout = 30 * time.Second
 // and credential prompts.
 const ghCommandTimeout = 60 * time.Second
 
-// runSkillsCmd is the dispatcher for the `wuphf skills <verb>` subcommand
+// runSkillsCmd is the dispatcher for the `gawkbot skills <verb>` subcommand
 // family. Verbs are kept thin so each handler can own its own flag set.
 //
-// Help routing: bare `wuphf skills` and `wuphf skills --help` print the
-// family-level usage; per-verb help (`wuphf skills publish --help`) is
+// Help routing: bare `gawkbot skills` and `gawkbot skills --help` print the
+// family-level usage; per-verb help (`gawkbot skills publish --help`) is
 // handled inside each verb's own FlagSet so users see flag-level docs.
 func runSkillsCmd(args []string) {
 	if len(args) == 0 {
@@ -63,13 +63,13 @@ func runSkillsCmd(args []string) {
 	case "install":
 		runSkillsInstall(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "wuphf skills: unknown verb %q — run `wuphf skills --help` for the list.\n", verb)
+		fmt.Fprintf(os.Stderr, "gawkbot skills: unknown verb %q — run `gawkbot skills --help` for the list.\n", verb)
 		os.Exit(2)
 	}
 }
 
 // isFamilyHelp reports whether the first arg is a family-level help flag
-// (so `wuphf skills --help` prints the verb table, but `wuphf skills publish
+// (so `gawkbot skills --help` prints the verb table, but `gawkbot skills publish
 // --help` falls through to publish's own flag-set).
 func isFamilyHelp(first string) bool {
 	switch first {
@@ -80,18 +80,18 @@ func isFamilyHelp(first string) bool {
 }
 
 func printSkillsHelp() {
-	fmt.Fprintln(os.Stderr, "wuphf skills — publish/install team skills against public hubs")
+	fmt.Fprintln(os.Stderr, "gawkbot skills — publish/install team skills against public hubs")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  wuphf skills publish <slug-or-path> --to <hub>     Open a PR with this skill")
-	fmt.Fprintln(os.Stderr, "  wuphf skills install <name> --from <hub>           Pull a skill into your wiki")
+	fmt.Fprintln(os.Stderr, "  gawkbot skills publish <slug-or-path> --to <hub>     Open a PR with this skill")
+	fmt.Fprintln(os.Stderr, "  gawkbot skills install <name> --from <hub>           Pull a skill into your wiki")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Hubs: anthropics, lobehub, github:owner/repo[@branch]")
 }
 
 // ── publish ────────────────────────────────────────────────────────────────
 
-// runSkillsPublish handles `wuphf skills publish`.
+// runSkillsPublish handles `gawkbot skills publish`.
 //
 // Stages:
 //  1. Parse + validate args / flags.
@@ -107,12 +107,12 @@ func runSkillsPublish(args []string) {
 	ghTokenFlag := fs.String("github-token", "", "Override gh's saved token; falls back to GH_TOKEN env when blank")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf skills publish — open a PR contributing your skill to a public hub")
+		fmt.Fprintln(os.Stderr, "gawkbot skills publish — open a PR contributing your skill to a public hub")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf skills publish <slug>          --to anthropics")
-		fmt.Fprintln(os.Stderr, "  wuphf skills publish team/skills/x.md --to lobehub")
-		fmt.Fprintln(os.Stderr, "  wuphf skills publish <slug>          --to github:owner/repo[@branch]")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills publish <slug>          --to anthropics")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills publish team/skills/x.md --to lobehub")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills publish <slug>          --to github:owner/repo[@branch]")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Flags:")
 		fs.PrintDefaults()
@@ -468,11 +468,11 @@ func resolveSkillPath(input string) (string, error) {
 // repoSlugForSource picks a stable provenance slug for the manifest's
 // `source` field. We use the basename of the workspace dir (cwd) so multiple
 // teams publishing from different repos still produce distinct sources.
-// Falls back to "wuphf" when cwd is unavailable.
+// Falls back to "gawkbot" when cwd is unavailable.
 func repoSlugForSource() string {
 	cwd, err := os.Getwd()
 	if err != nil || strings.TrimSpace(cwd) == "" {
-		return "wuphf"
+		return "gawkbot"
 	}
 	return filepath.Base(cwd)
 }
@@ -501,7 +501,7 @@ func buildPublishPRBody(m skillpublish.Manifest, extra string) string {
 	b.WriteString(m.Description)
 	b.WriteString("\n\n")
 	b.WriteString(fmt.Sprintf("Skill: `%s` (v%s, %s)\n", m.Name, m.Version, m.License))
-	b.WriteString(fmt.Sprintf("Source: `%s` (published via WUPHF skills compiler)\n", m.Source))
+	b.WriteString(fmt.Sprintf("Source: `%s` (published via gawkbot skills compiler)\n", m.Source))
 	b.WriteString(fmt.Sprintf("Published at: %s\n", m.PublishedAt))
 	if strings.TrimSpace(extra) != "" {
 		b.WriteString("\n")
@@ -521,18 +521,18 @@ func indentBlock(s, prefix string) string {
 
 // ── install ────────────────────────────────────────────────────────────────
 
-// runSkillsInstall handles `wuphf skills install`. Reverse of publish.
+// runSkillsInstall handles `gawkbot skills install`. Reverse of publish.
 func runSkillsInstall(args []string) {
 	fs := flag.NewFlagSet("skills install", flag.ContinueOnError)
 	from := fs.String("from", "", "Source hub: anthropics, lobehub, or github:owner/repo[@branch]")
 	channel := fs.String("channel", "general", "Channel to log the install event into")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf skills install — pull a public skill into your team's wiki")
+		fmt.Fprintln(os.Stderr, "gawkbot skills install — pull a public skill into your team's wiki")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf skills install <name> --from anthropics")
-		fmt.Fprintln(os.Stderr, "  wuphf skills install <name> --from github:owner/repo[@branch]")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills install <name> --from anthropics")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills install <name> --from github:owner/repo[@branch]")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Flags:")
 		fs.PrintDefaults()
@@ -591,7 +591,7 @@ func runSkillsInstall(args []string) {
 	}
 
 	// Post to the broker's /skills endpoint. The user invoking
-	// `wuphf skills install` IS the human approval — this is the internal
+	// `gawkbot skills install` IS the human approval — this is the internal
 	// seeding/install path, not an agent-reachable surface (agents get
 	// skills only through playbook compilation).
 	createdBy := "hub:" + sanitizeHubLabel(hub)
@@ -683,7 +683,7 @@ func postBrokerSkill(ctx context.Context, payload map[string]any) error {
 	}
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("broker unreachable at %s: %w (start it with `wuphf` first)", url, err)
+		return fmt.Errorf("broker unreachable at %s: %w (start it with `gawkbot` first)", url, err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
@@ -694,7 +694,7 @@ func postBrokerSkill(ctx context.Context, payload map[string]any) error {
 }
 
 // reorderFlagsFirst is a small ergonomic helper: Go's stdlib flag package
-// stops parsing at the first non-flag token, so `wuphf skills publish my-slug
+// stops parsing at the first non-flag token, so `gawkbot skills publish my-slug
 // --to anthropics` would otherwise treat `--to` as another positional. This
 // helper walks args, detects flag tokens (and their value-arg when not in
 // `--key=value` form), and emits them ahead of positionals.
@@ -717,7 +717,7 @@ func reorderFlagsFirst(fs *flag.FlagSet, args []string) []string {
 			// If the flag is in `--key=value` form or is a boolean flag,
 			// no value-arg follows. For value flags, eagerly consume the
 			// next token so Go's stdlib flag parser still accepts
-			// `wuphf skills publish slug --to anthropics`.
+			// `gawkbot skills publish slug --to anthropics`.
 			if !strings.Contains(a, "=") && !flagIsBool(fs, a) && i+1 < len(args) {
 				next := args[i+1]
 				if !strings.HasPrefix(next, "-") {

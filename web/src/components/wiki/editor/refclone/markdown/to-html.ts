@@ -108,14 +108,14 @@ function upgradeProviderVideos(html: string): string {
 }
 
 /**
- * Rewrite relative URLs (./file.pdf, ./image.png) to the WUPHF wiki file API
+ * Rewrite relative URLs (./file.pdf, ./image.png) to the gawkbot wiki file API
  * and convert PDF links to inline embedded viewers. Applies to href, src, and
  * data-src attributes (the last is used by embed blocks).
  *
  * `pagePath` is the open article's DIRECTORY (repo-root-relative, e.g.
  * `team/people`); a relative `./assets/x.png` resolves against it to
  * `team/people/assets/x.png` and is served through `/api/wiki/file?path=…`
- * (the reference app's `/api/assets/<path>` route does not exist in WUPHF).
+ * (the reference app's `/api/assets/<path>` route does not exist in gawkbot).
  */
 function assetUrlFor(dirPath: string, file: string): string {
   const rel = dirPath ? `${dirPath}/${file}` : file;

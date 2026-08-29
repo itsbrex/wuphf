@@ -72,8 +72,8 @@ func (m channelModel) buildOfficeIntroLines(contentWidth int) []channelui.Render
 		{Text: channelui.RenderDateSeparator(contentWidth, "Office overview")},
 		{Text: ""},
 	}
-	title := channelui.SubtlePill("office", "#F8FAFC", "#1264A3") + " " + lipgloss.NewStyle().Bold(true).Render("The WUPHF Office")
-	body := "Welcome to The WUPHF Office. Live company-building coordination across channels, direct sessions, tasks, and decisions. Michael Scott would be proud — and also confused, but mostly proud."
+	title := channelui.SubtlePill("office", "#F8FAFC", "#1264A3") + " " + lipgloss.NewStyle().Bold(true).Render("The gawkbot Office")
+	body := "Welcome to The gawkbot Office. Live company-building coordination across channels, direct sessions, tasks, and decisions. Michael Scott would be proud — and also confused, but mostly proud."
 	extra := []string{
 		fmt.Sprintf("%d teammates · %d running tasks · %d open requests", state.PeerCount, state.RunningTasks, state.OpenRequests),
 	}

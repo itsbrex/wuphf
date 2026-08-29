@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { AVATAR_MODE } from "../../lib/avatarMode";
+import { drawBlobAvatarCanvas } from "../../lib/blobAvatar";
 import {
   drawPixelAvatar,
   EYE_OPENNESS_MIN,
@@ -58,11 +60,25 @@ export function PixelAvatar({
         ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
         : false;
 
+    // One paint function for both avatar systems, so the animation loop below
+    // does not have to know which one is active.
+    const paint = (openness: number) => {
+      if (AVATAR_MODE === "blob") {
+        drawBlobAvatarCanvas(canvas, slug, size, { openness });
+        return;
+      }
+      drawPixelAvatar(canvas, slug, size, { eyes: wantsEyes, openness });
+    };
+
     // Static path. Idle agents, small avatars, and reduced-motion all land
     // here: one paint, no loop, nothing scheduled. Reduced-motion still shows
     // the eyes wide open — it drops the motion, not the identity.
-    if (!(working && wantsEyes) || reduceMotion) {
-      drawPixelAvatar(canvas, slug, size, { eyes: wantsEyes });
+    //
+    // The blob always has eyes; the sprite only draws them above a size floor,
+    // which is why `wantsEyes` gates the sprite path and not this one.
+    const canAnimate = AVATAR_MODE === "blob" || wantsEyes;
+    if (!(working && canAnimate) || reduceMotion) {
+      paint(1);
       return;
     }
 
@@ -81,7 +97,7 @@ export function PixelAvatar({
       const phase = ((now - start) % GAWK_PERIOD_MS) / GAWK_PERIOD_MS;
       const wave = 0.5 + 0.5 * Math.cos(phase * Math.PI * 2);
       const openness = EYE_OPENNESS_MIN + (1 - EYE_OPENNESS_MIN) * wave;
-      drawPixelAvatar(canvas, slug, size, { eyes: true, openness });
+      paint(openness);
     };
 
     frame = requestAnimationFrame(tick);

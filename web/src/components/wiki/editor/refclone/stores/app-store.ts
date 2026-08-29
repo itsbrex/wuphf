@@ -4,7 +4,7 @@ import { create } from "zustand";
  * app-store shim for the refclone editor.
  *
  * The reference editor calls `useAppStore.getState().openTaskPanelCompose(...)`
- * from the "Edit with AI" affordance. WUPHF has no task-compose panel inside
+ * from the "Edit with AI" affordance. gawkbot has no task-compose panel inside
  * the wiki editor, so this routes through an optional host callback and is a
  * no-op when the host doesn't supply one (per the integration contract).
  */

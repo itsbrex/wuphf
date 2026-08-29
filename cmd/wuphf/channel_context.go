@@ -58,7 +58,7 @@ func (m channelModel) composerHint(channelName, replyToID string, pending *chann
 		}
 		return tui.ContinuePrompt{
 			Title:       "Review change",
-			Description: "Confirm the disruptive action before WUPHF changes runtime state",
+			Description: "Confirm the disruptive action before gawkbot changes runtime state",
 		}.InlineHint()
 	case contextMemberDraft:
 		return "Enter save teammate · Ctrl+J newline · Esc cancel editor"

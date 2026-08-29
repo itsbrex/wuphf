@@ -116,7 +116,7 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			if target == quickJumpChannels {
 				m.setTransientNotice("No channel on that number. Even Michael checks the directory first.")
 			} else {
-				m.setTransientNotice("No app on that number. Try a different one — WUPHF believes in you.")
+				m.setTransientNotice("No app on that number. Try a different one — gawkbot believes in you.")
 			}
 			return m, nil
 		case "esc":

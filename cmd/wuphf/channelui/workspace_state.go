@@ -87,7 +87,7 @@ func DeriveWorkspaceReadiness(state WorkspaceUIState, doctor *DoctorReport) Work
 			Level:    WorkspaceReadinessPreview,
 			Headline: "Offline preview",
 			Detail:   "The workspace is showing manifest-backed context, not the live office runtime.",
-			NextStep: "Launch WUPHF to attach the live office, or run /doctor to inspect runtime readiness.",
+			NextStep: "Launch gawkbot to attach the live office, or run /doctor to inspect runtime readiness.",
 		}
 	}
 	if state.Memory.SelectedKind == config.MemoryBackendNone {

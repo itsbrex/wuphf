@@ -9,7 +9,7 @@ import { create } from "zustand";
  * load/save/create lifecycle. In the reference app that store talks directly to
  * a `/api` backend.
  *
- * In WUPHF the host controller (the RefcloneEditor wrapper) owns the content and
+ * In gawkbot the host controller (the RefcloneEditor wrapper) owns the content and
  * persistence. To keep the ported editor files byte-for-byte verbatim we expose
  * the SAME store API here, but make it a thin bridge:
  *

@@ -30,8 +30,8 @@ func TestDetectPathShadowsFindsEarlierBinary(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	self := filepath.Join(selfDir, "wuphf")
-	other := filepath.Join(otherDir, "wuphf")
+	self := filepath.Join(selfDir, "gawkbot")
+	other := filepath.Join(otherDir, "gawkbot")
 	writeExec(t, self)
 	writeExec(t, other)
 
@@ -44,7 +44,7 @@ func TestDetectPathShadowsFindsEarlierBinary(t *testing.T) {
 }
 
 func TestDetectPathShadowsIgnoresLaterBinary(t *testing.T) {
-	// Regression for U-05 (#942): a brew/global wuphf later in PATH than the
+	// Regression for U-05 (#942): a brew/global gawkbot later in PATH than the
 	// source build cannot actually shadow it. Warning about it was the
 	// boot-noise bug.
 	if runtime.GOOS == "windows" {
@@ -59,8 +59,8 @@ func TestDetectPathShadowsIgnoresLaterBinary(t *testing.T) {
 	if err := os.MkdirAll(otherDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	self := filepath.Join(selfDir, "wuphf")
-	other := filepath.Join(otherDir, "wuphf")
+	self := filepath.Join(selfDir, "gawkbot")
+	other := filepath.Join(otherDir, "gawkbot")
 	writeExec(t, self)
 	writeExec(t, other)
 
@@ -86,8 +86,8 @@ func TestDetectPathShadowsIgnoresWhenSelfNotOnPath(t *testing.T) {
 	if err := os.MkdirAll(brewDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	self := filepath.Join(buildDir, "wuphf")
-	brew := filepath.Join(brewDir, "wuphf")
+	self := filepath.Join(buildDir, "gawkbot")
+	brew := filepath.Join(brewDir, "gawkbot")
 	writeExec(t, self)
 	writeExec(t, brew)
 
@@ -111,9 +111,9 @@ func TestDetectPathShadowsIgnoresSelfSymlink(t *testing.T) {
 	if err := os.MkdirAll(linkDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	real := filepath.Join(realDir, "wuphf")
+	real := filepath.Join(realDir, "gawkbot")
 	writeExec(t, real)
-	link := filepath.Join(linkDir, "wuphf")
+	link := filepath.Join(linkDir, "gawkbot")
 	if err := os.Symlink(real, link); err != nil {
 		t.Fatal(err)
 	}
@@ -138,14 +138,14 @@ func TestDetectPathShadowsSkipsDirsAndNonExec(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	self := filepath.Join(selfDir, "wuphf")
+	self := filepath.Join(selfDir, "gawkbot")
 	writeExec(t, self)
-	// A directory literally named "wuphf".
-	if err := os.MkdirAll(filepath.Join(dirDir, "wuphf"), 0o755); err != nil {
+	// A directory literally named "gawkbot".
+	if err := os.MkdirAll(filepath.Join(dirDir, "gawkbot"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	// A non-executable regular file named "wuphf".
-	nonExec := filepath.Join(nonExecDir, "wuphf")
+	// A non-executable regular file named "gawkbot".
+	nonExec := filepath.Join(nonExecDir, "gawkbot")
 	if err := os.WriteFile(nonExec, []byte("text"), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -189,12 +189,12 @@ func TestWarnPathShadowNoopWhenNoShadows(t *testing.T) {
 }
 
 // TestDetectPathShadowsIgnoresNpmSiblingLauncher pins the npm install layout:
-// the package installs both a native `wuphf` binary and a `wuphf.js` launcher
+// the package installs both a native `gawkbot` binary and a `wuphf.js` launcher
 // into the same node_modules/wuphf/bin dir. npm then creates a symlink from
 // PATH (e.g. /opt/homebrew/bin/wuphf) pointing at the .js launcher, which in
 // turn execs the native binary.
 //
-// The effect: from outside, it LOOKS like two wuphf executables on disk. In
+// The effect: from outside, it LOOKS like two gawkbot executables on disk. In
 // reality they are a launcher + native binary from the same install. The old
 // EvalSymlinks-based detector warned about this every time.
 func TestDetectPathShadowsIgnoresNpmSiblingLauncher(t *testing.T) {
@@ -203,11 +203,11 @@ func TestDetectPathShadowsIgnoresNpmSiblingLauncher(t *testing.T) {
 	}
 	root := t.TempDir()
 
-	npmBin := filepath.Join(root, "lib", "node_modules", "wuphf", "bin")
+	npmBin := filepath.Join(root, "lib", "node_modules", "gawkbot", "bin")
 	if err := os.MkdirAll(npmBin, 0o755); err != nil {
 		t.Fatalf("mkdir npmBin: %v", err)
 	}
-	native := filepath.Join(npmBin, "wuphf")
+	native := filepath.Join(npmBin, "gawkbot")
 	writeExec(t, native)
 	jsLauncher := filepath.Join(npmBin, "wuphf.js")
 	writeExec(t, jsLauncher)
@@ -216,7 +216,7 @@ func TestDetectPathShadowsIgnoresNpmSiblingLauncher(t *testing.T) {
 	if err := os.MkdirAll(pathDir, 0o755); err != nil {
 		t.Fatalf("mkdir pathDir: %v", err)
 	}
-	pathEntry := filepath.Join(pathDir, "wuphf")
+	pathEntry := filepath.Join(pathDir, "gawkbot")
 	if err := os.Symlink(jsLauncher, pathEntry); err != nil {
 		t.Fatalf("symlink: %v", err)
 	}

@@ -1,5 +1,5 @@
 /**
- * TourMockupSidebar — a decorative, non-interactive mock of WUPHF's real left
+ * TourMockupSidebar — a decorative, non-interactive mock of gawkbot's real left
  * sidebar, used inside the office tour to show the office filling in.
  *
  * It is NOT the real sidebar and is never wired to routing or stores: the
@@ -100,7 +100,7 @@ export function TourMockupSidebar({
   return (
     <aside className="tour-mockup-sidebar" aria-hidden="true">
       <header className="tour-mockup-header">
-        <span className="tour-mockup-logo">WUPHF</span>
+        <span className="tour-mockup-logo">gawkbot</span>
       </header>
 
       <section className="tour-mockup-section">

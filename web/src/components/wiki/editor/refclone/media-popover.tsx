@@ -27,7 +27,7 @@ function titleFor(kind: MediaKind) {
 }
 
 export function MediaPopover({ kind, onCancel, onInsert, anchor }: Props) {
-  // Upload routes through the host context (WUPHF's POST /wiki/upload), which
+  // Upload routes through the host context (gawkbot's POST /wiki/upload), which
   // already knows the open page; the reference's per-call /api/upload/<path>
   // fetch is replaced by this injected uploader.
   const { uploadFile } = useRefcloneEditorContext();

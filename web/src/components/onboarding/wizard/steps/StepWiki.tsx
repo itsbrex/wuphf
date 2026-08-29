@@ -6,7 +6,7 @@
  * and agents read them as first-class context before they touch a record.
  *
  * The stage visual is a rendered Remotion clip (web/public/media/onboarding/
- * knowledge-base.gif): a "wuphf · wiki / revops" window where the RevOps
+ * knowledge-base.gif): a "gawkbot · wiki / revops" window where the RevOps
  * playbooks light up and @revops reads them. The clip is a self-contained
  * product window, so it reads correctly on every onboarding page theme.
  *

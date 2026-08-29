@@ -23,7 +23,7 @@ func BuildRecoveryLines(workspace WorkspaceUIState, contentWidth int, tasks []Ta
 	if !workspace.BrokerConnected && len(snapshot.Tasks) == 0 && len(snapshot.Requests) == 0 && len(snapshot.Recent) == 0 {
 		lines = append(lines,
 			RenderedLine{Text: ""},
-			RenderedLine{Text: muted.Render("  Offline preview. Launch WUPHF to hydrate the runtime state and recovery summary.")},
+			RenderedLine{Text: muted.Render("  Offline preview. Launch gawkbot to hydrate the runtime state and recovery summary.")},
 			RenderedLine{Text: muted.Render("  The recovery view will highlight focus, next steps, and recent changes once the office is live.")},
 		)
 		return lines

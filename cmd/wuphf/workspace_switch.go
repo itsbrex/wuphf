@@ -1,10 +1,10 @@
 package main
 
-// `wuphf workspace switch <name>` — update cli_current and (optionally) open.
+// `gawkbot workspace switch <name>` — update cli_current and (optionally) open.
 //
-// The CLI flag --workspace=<name> on the top-level wuphf command is the
+// The CLI flag --workspace=<name> on the top-level gawkbot command is the
 // "for this single command" override. `switch` is the persistent counterpart:
-// it writes registry.cli_current so unqualified `wuphf` invocations target
+// it writes registry.cli_current so unqualified `gawkbot` invocations target
 // the chosen workspace from this point on.
 
 import (
@@ -28,13 +28,13 @@ func runWorkspaceSwitch(args []string) {
 	openFlag := fs.Bool("open", false, "Also launch the default browser pointed at the new workspace's web UI")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace switch — change the CLI default workspace")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace switch — change the CLI default workspace")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace switch <name>")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace switch --open <name>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace switch <name>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace switch --open <name>")
 		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Updates registry.cli_current. Future unqualified `wuphf` runs target this workspace.")
+		fmt.Fprintln(os.Stderr, "Updates registry.cli_current. Future unqualified `gawkbot` runs target this workspace.")
 		fmt.Fprintln(os.Stderr, "Pass --workspace=<name> on a single command to override without switching.")
 	}
 	if err := fs.Parse(args); err != nil {

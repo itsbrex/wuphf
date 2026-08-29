@@ -1,6 +1,6 @@
 package main
 
-// This file owns the `wuphf workspace ...` CLI subcommand tree. The tree is a
+// This file owns the `gawkbot workspace ...` CLI subcommand tree. The tree is a
 // flat dispatcher: `workspace` is the top-level verb, every action below it
 // (list, create, switch, pause, resume, shred, restore, doctor) lives in its
 // own file (workspace_<action>.go) so each subcommand has a focused unit of
@@ -171,7 +171,7 @@ var orchestratorFactory = func() (workspaceOrchestrator, error) {
 	return nil, fmt.Errorf("workspace orchestrator not wired (Lane B integration pending)")
 }
 
-// runWorkspace is the entry point for `wuphf workspace ...`. Routes args[0]
+// runWorkspace is the entry point for `gawkbot workspace ...`. Routes args[0]
 // to the matching subcommand handler. Mirrors the dispatch shape used by
 // `runUpgradeCheck` / `runImport` / `runLogCmd` for consistency.
 func runWorkspace(args []string) {
@@ -203,39 +203,39 @@ func runWorkspace(args []string) {
 	case "doctor":
 		runWorkspaceDoctor(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "wuphf workspace: unknown subcommand %q\n", sub)
+		fmt.Fprintf(os.Stderr, "gawkbot workspace: unknown subcommand %q\n", sub)
 		fmt.Fprintln(os.Stderr, "")
 		printWorkspaceHelp()
 		os.Exit(1)
 	}
 }
 
-// printWorkspaceHelp owns the `wuphf workspace --help` copy. Kept here rather
+// printWorkspaceHelp owns the `gawkbot workspace --help` copy. Kept here rather
 // than in printSubcommandHelp() so adding a new subcommand only touches one
 // file.
 func printWorkspaceHelp() {
-	fmt.Fprintln(os.Stderr, "wuphf workspace — manage WUPHF workspaces (the offices upstairs)")
+	fmt.Fprintln(os.Stderr, "gawkbot workspace — manage gawkbot workspaces (the offices upstairs)")
 	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "Each workspace is one fully isolated WUPHF instance — its own team, wiki,")
+	fmt.Fprintln(os.Stderr, "Each workspace is one fully isolated gawkbot instance — its own team, wiki,")
 	fmt.Fprintln(os.Stderr, "office tasks, broker process, and per-workspace token bill. Like having")
 	fmt.Fprintln(os.Stderr, "Scranton and Stamford in separate buildings, except both are localhost.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace list                       List all workspaces")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace list --json                Stable JSON for scripting")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace list --trash               Show trashed workspaces with restore IDs")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace create <name>              Create a new workspace")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace list                       List all workspaces")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace list --json                Stable JSON for scripting")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace list --trash               Show trashed workspaces with restore IDs")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace create <name>              Create a new workspace")
 	fmt.Fprintln(os.Stderr, "      [--blueprint=X]                          Blueprint slug (defaults to current's)")
 	fmt.Fprintln(os.Stderr, "      [--from-scratch]                         Skip blueprint inheritance — start blank")
 	fmt.Fprintln(os.Stderr, "      [--inherit-from=Y]                       Source workspace for inherited fields")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace switch <name> [--open]     Switch CLI default workspace")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace pause <name> [--force]     Pause (graceful 90s, --force kills hard)")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace resume <name>              Resume a paused workspace")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace shred <name> [--permanent] Shred (to trash; --permanent skips trash)")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace restore <trash-id>         Restore from trash with a fresh port pair")
-	fmt.Fprintln(os.Stderr, "  wuphf workspace doctor                     Reconcile registry; interactive fixes")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace switch <name> [--open]     Switch CLI default workspace")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace pause <name> [--force]     Pause (graceful 90s, --force kills hard)")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace resume <name>              Resume a paused workspace")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace shred <name> [--permanent] Shred (to trash; --permanent skips trash)")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace restore <trash-id>         Restore from trash with a fresh port pair")
+	fmt.Fprintln(os.Stderr, "  gawkbot workspace doctor                     Reconcile registry; interactive fixes")
 	fmt.Fprintln(os.Stderr, "")
-	fmt.Fprintln(os.Stderr, "Per-command help: wuphf workspace <subcommand> --help")
+	fmt.Fprintln(os.Stderr, "Per-command help: gawkbot workspace <subcommand> --help")
 }
 
 // resolveOrchestrator builds the orchestrator instance via the factory and
@@ -313,7 +313,7 @@ func applyWorkspaceOverride(name string) {
 		printError("--workspace=%q: %v", name, err)
 	}
 	if ws.RuntimeHome == "" {
-		printError("--workspace=%q: workspace has no runtime_home in registry (run `wuphf workspace doctor`)", name)
+		printError("--workspace=%q: workspace has no runtime_home in registry (run `gawkbot workspace doctor`)", name)
 	}
 	_ = os.Setenv("WUPHF_RUNTIME_HOME", ws.RuntimeHome)
 	if ws.BrokerPort > 0 {

@@ -1,6 +1,6 @@
 package main
 
-// `wuphf workspace resume <name>` — spawn the broker, wait for port-bind.
+// `gawkbot workspace resume <name>` — spawn the broker, wait for port-bind.
 //
 // Resume is symmetric to pause: the orchestrator does the heavy lifting
 // (spawn process, write PID file, restore state from broker-state.json
@@ -18,10 +18,10 @@ func runWorkspaceResume(args []string) {
 	fs := flag.NewFlagSet("workspace resume", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace resume — restart a paused workspace")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace resume — restart a paused workspace")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace resume <name>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace resume <name>")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Spawns the broker process, waits for port-bind (30s), and prints the URL.")
 		fmt.Fprintln(os.Stderr, "Workspace state (team, wiki, office tasks) resumes exactly as it was at pause.")

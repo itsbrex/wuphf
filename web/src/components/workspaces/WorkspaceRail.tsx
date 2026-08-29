@@ -516,7 +516,7 @@ export function WorkspaceRail({
       }
       if (ws.state === "error") {
         showNotice(
-          `Workspace '${ws.name}' is in an error state. Run 'wuphf workspace doctor' to investigate.`,
+          `Workspace '${ws.name}' is in an error state. Run 'gawkbot workspace doctor' to investigate.`,
           "error",
         );
         return;

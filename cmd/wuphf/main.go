@@ -27,11 +27,11 @@ import (
 	"github.com/nex-crm/wuphf/internal/workspaces"
 )
 
-const appName = "wuphf"
+const appName = "gawkbot"
 
 // subcommandWantsHelp reports whether the remaining args after the subcommand
 // name request help. We intercept this BEFORE invoking the subcommand so that
-// `wuphf init --help` (and similar) never fire the destructive action.
+// `gawkbot init --help` (and similar) never fire the destructive action.
 func subcommandWantsHelp(rest []string) bool {
 	for _, a := range rest {
 		switch a {
@@ -48,17 +48,17 @@ func subcommandWantsHelp(rest []string) bool {
 func printSubcommandHelp(sub string) {
 	switch sub {
 	case "init":
-		fmt.Fprintln(os.Stderr, "wuphf init — first-time setup")
+		fmt.Fprintln(os.Stderr, "gawkbot init — first-time setup")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Installs the latest Nex CLI from npm and saves your default provider")
-		fmt.Fprintln(os.Stderr, "and pack so future `wuphf` invocations just work.")
+		fmt.Fprintln(os.Stderr, "and pack so future `gawkbot` invocations just work.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf init")
+		fmt.Fprintln(os.Stderr, "  gawkbot init")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "This writes to ~/.wuphf/config.json. Safe to re-run.")
 	case "shred":
-		fmt.Fprintln(os.Stderr, "wuphf shred — burn the whole workspace down")
+		fmt.Fprintln(os.Stderr, "gawkbot shred — burn the whole workspace down")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Stops the running session, clears broker state, and deletes the team")
 		fmt.Fprintln(os.Stderr, "roster, company identity, office task receipts, saved workflows, logs,")
@@ -68,80 +68,80 @@ func printSubcommandHelp(sub string) {
 		fmt.Fprintln(os.Stderr, "Preserved: task worktrees, OpenClaw device identity, config.json.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf shred           Prompts before wiping")
-		fmt.Fprintln(os.Stderr, "  wuphf shred -y        Skip the confirmation")
+		fmt.Fprintln(os.Stderr, "  gawkbot shred           Prompts before wiping")
+		fmt.Fprintln(os.Stderr, "  gawkbot shred -y        Skip the confirmation")
 	case "import":
-		fmt.Fprintln(os.Stderr, "wuphf import — pull state from another tool")
+		fmt.Fprintln(os.Stderr, "gawkbot import — pull state from another tool")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf import --from legacy           Auto-detect a running external orchestrator")
-		fmt.Fprintln(os.Stderr, "  wuphf import --from <directory>      Directory with state.json")
-		fmt.Fprintln(os.Stderr, "  wuphf import --from <file.json>      Direct path to an export")
+		fmt.Fprintln(os.Stderr, "  gawkbot import --from legacy           Auto-detect a running external orchestrator")
+		fmt.Fprintln(os.Stderr, "  gawkbot import --from <directory>      Directory with state.json")
+		fmt.Fprintln(os.Stderr, "  gawkbot import --from <file.json>      Direct path to an export")
 	case "memory":
-		fmt.Fprintln(os.Stderr, "wuphf memory — manage the team wiki and legacy memory backends")
+		fmt.Fprintln(os.Stderr, "gawkbot memory — manage the team wiki and legacy memory backends")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
 		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from nex           Import Nex memory into ~/.wuphf/wiki/team/")
-		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from gbrain        Import GBrain pages into the wiki")
-		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from <backend> --dry-run  Preview without committing")
-		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from <backend> --limit N  Cap the number imported")
+		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from gbrain        Import GBrain pages into the wiki")
+		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from <backend> --dry-run  Preview without committing")
+		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from <backend> --limit N  Cap the number imported")
 	case "log":
-		fmt.Fprintln(os.Stderr, "wuphf log — show agent task receipts")
+		fmt.Fprintln(os.Stderr, "gawkbot log — show agent task receipts")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Lists recent tasks from ~/.wuphf/office/tasks/ so you can see what")
 		fmt.Fprintln(os.Stderr, "each agent actually did — tool by tool, with timestamps.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf log                     List recent tasks")
-		fmt.Fprintln(os.Stderr, "  wuphf log <taskID>            Show one task in detail")
-		fmt.Fprintln(os.Stderr, "  wuphf log --agent eng         Filter to one agent")
+		fmt.Fprintln(os.Stderr, "  gawkbot log                     List recent tasks")
+		fmt.Fprintln(os.Stderr, "  gawkbot log <taskID>            Show one task in detail")
+		fmt.Fprintln(os.Stderr, "  gawkbot log --agent eng         Filter to one agent")
 	case "share":
-		fmt.Fprintln(os.Stderr, "wuphf share — invite one team member to this office")
+		fmt.Fprintln(os.Stderr, "gawkbot share — invite one team member to this office")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Starts a private-network web listener and prints a one-use invite URL.")
 		fmt.Fprintln(os.Stderr, "Prerequisite: both machines are on the same Tailscale or WireGuard network.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf share                         Use a Tailscale 100.x address")
-		fmt.Fprintln(os.Stderr, "  wuphf share --bind 100.x.y.z        Bind a specific private address")
-		fmt.Fprintln(os.Stderr, "  wuphf share --bind wireguard        Prefer a WireGuard interface")
-		fmt.Fprintln(os.Stderr, "  wuphf share --json                  Emit invite details for scripts")
-		fmt.Fprintln(os.Stderr, "  wuphf share --unsafe-lan            Allow RFC1918 LAN addresses")
+		fmt.Fprintln(os.Stderr, "  gawkbot share                         Use a Tailscale 100.x address")
+		fmt.Fprintln(os.Stderr, "  gawkbot share --bind 100.x.y.z        Bind a specific private address")
+		fmt.Fprintln(os.Stderr, "  gawkbot share --bind wireguard        Prefer a WireGuard interface")
+		fmt.Fprintln(os.Stderr, "  gawkbot share --json                  Emit invite details for scripts")
+		fmt.Fprintln(os.Stderr, "  gawkbot share --unsafe-lan            Allow RFC1918 LAN addresses")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Public interfaces are blocked by default.")
 	case "mcp-team":
-		fmt.Fprintln(os.Stderr, "wuphf mcp-team — start the team MCP server (used by agents, not humans)")
+		fmt.Fprintln(os.Stderr, "gawkbot mcp-team — start the team MCP server (used by agents, not humans)")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf mcp-team")
+		fmt.Fprintln(os.Stderr, "  gawkbot mcp-team")
 	case "workspace", "ws":
 		// Delegate to the workspace help printer so adding a new subcommand
 		// only touches workspace.go.
 		printWorkspaceHelp()
 		return
 	case "skills":
-		fmt.Fprintln(os.Stderr, "wuphf skills — publish/install team skills against public hubs")
+		fmt.Fprintln(os.Stderr, "gawkbot skills — publish/install team skills against public hubs")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf skills publish <slug-or-path> --to <hub>     Open a PR with this skill")
-		fmt.Fprintln(os.Stderr, "  wuphf skills install <name> --from <hub>           Pull a skill into your wiki")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills publish <slug-or-path> --to <hub>     Open a PR with this skill")
+		fmt.Fprintln(os.Stderr, "  gawkbot skills install <name> --from <hub>           Pull a skill into your wiki")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Hubs: anthropics, lobehub, github:owner/repo[@branch]")
 	case "task":
 		printTaskHelp()
 		return
 	case "upgrade":
-		fmt.Fprintln(os.Stderr, "wuphf upgrade — check npm for a newer wuphf and show the changelog")
+		fmt.Fprintln(os.Stderr, "gawkbot upgrade — check npm for a newer gawkbot and show the changelog")
 		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Compares the running build against the latest published `wuphf` on npm.")
+		fmt.Fprintln(os.Stderr, "Compares the running build against the latest published `gawkbot` on npm.")
 		fmt.Fprintln(os.Stderr, "When behind, prints the upgrade command and a conventional-commit-grouped")
 		fmt.Fprintln(os.Stderr, "changelog from the GitHub compare API.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf upgrade           Print human-readable comparison + changelog")
-		fmt.Fprintln(os.Stderr, "  wuphf upgrade --json    Emit the comparison as JSON for scripting")
+		fmt.Fprintln(os.Stderr, "  gawkbot upgrade           Print human-readable comparison + changelog")
+		fmt.Fprintln(os.Stderr, "  gawkbot upgrade --json    Emit the comparison as JSON for scripting")
 	default:
-		fmt.Fprintf(os.Stderr, "wuphf: unknown subcommand %q — run `wuphf --help` for the list.\n", sub)
+		fmt.Fprintf(os.Stderr, "wuphf: unknown subcommand %q — run `gawkbot --help` for the list.\n", sub)
 	}
 }
 
@@ -174,7 +174,7 @@ func printVisibleFlags(w *os.File) {
 // initWorkspaces wires the workspaces package into the CLI factory, the
 // broker's cross-broker URL resolver, and runs the migration to the
 // symmetric multi-workspace layout. Idempotent — safe to call on every
-// `wuphf` invocation, including subcommands that never touch workspaces.
+// `gawkbot` invocation, including subcommands that never touch workspaces.
 func initWorkspaces() {
 	orchestratorFactory = func() (workspaceOrchestrator, error) {
 		return cliOrchestratorAdapter{}, nil
@@ -254,12 +254,12 @@ func main() {
 	// invocation. The flag sets WUPHF_RUNTIME_HOME so every WUPHF state path
 	// (config.RuntimeHomeDir() callers) lands in that workspace's tree
 	// without flipping registry.cli_current. Persistent change is via
-	// `wuphf workspace switch`.
+	// `gawkbot workspace switch`.
 	workspaceOverride := flag.String("workspace", "", "Use a specific workspace for this command only (does not change cli_current)")
 	helpAll := flag.Bool("help-all", false, "Show all flags including internal ones")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "WUPHF v%s — the terminal office Ryan Howard always wanted.\n\n", buildinfo.Current().Version)
+		fmt.Fprintf(os.Stderr, "gawkbot v%s — the terminal office Ryan Howard always wanted.\n\n", buildinfo.Current().Version)
 		fmt.Fprintf(os.Stderr, "Usage:\n")
 		fmt.Fprintf(os.Stderr, "  %s              Launch multi-agent team (web UI on :%d)\n", appName, *webPort)
 		fmt.Fprintf(os.Stderr, "  %s --legacy-tui  Launch with legacy tmux TUI instead\n", appName)
@@ -270,7 +270,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s log          Show what your agents actually did (task receipts)\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s share        Invite one team member over a private network\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s memory migrate --from {nex,gbrain}  Port legacy memory into the team wiki\n", appName)
-		fmt.Fprintf(os.Stderr, "  %s workspace ...  Manage multiple isolated WUPHF workspaces\n", appName)
+		fmt.Fprintf(os.Stderr, "  %s workspace ...  Manage multiple isolated gawkbot workspaces\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s skills publish <slug-or-path> --to <hub>    Publish a team skill to a public hub\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s skills install <name> --from <hub>  Pull a public skill into the team wiki\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s --cmd <cmd>  Run a command non-interactively\n", appName)
@@ -287,7 +287,7 @@ func main() {
 	})
 
 	if *helpAll {
-		fmt.Fprintf(os.Stderr, "WUPHF v%s — all flags (including internal):\n\n", buildinfo.Current().Version)
+		fmt.Fprintf(os.Stderr, "gawkbot v%s — all flags (including internal):\n\n", buildinfo.Current().Version)
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
@@ -366,7 +366,7 @@ func main() {
 		sub := args[0]
 		wantsHelp := subcommandWantsHelp(args[1:])
 		// isFamilyHelp additionally catches the bare word "help" (for
-		// example `wuphf skills help`); dash-prefixed help flags are covered
+		// example `gawkbot skills help`); dash-prefixed help flags are covered
 		// by subcommandWantsHelp above.
 		if sub == "skills" && len(args) > 1 && isFamilyHelp(args[1]) {
 			wantsHelp = true
@@ -390,13 +390,13 @@ func main() {
 	// invocations skip the filesystem migration entirely.
 	initWorkspaces()
 
-	// Channel view mode (launched by wuphf team in tmux)
+	// Channel view mode (launched by gawkbot team in tmux)
 	if *channelView {
 		runChannelView(*threadsCollapsed, channelui.ResolveInitialOfficeApp(*channelApp), strings.TrimSpace(*channelApp) != "")
 		return
 	}
 
-	// Warn if another wuphf binary is on PATH and may shadow this one. Interactive
+	// Warn if another gawkbot binary is on PATH and may shadow this one. Interactive
 	// only — scripted and stdio-subprocess entrypoints keep their output clean.
 	firstSub := ""
 	if len(args) > 0 {
@@ -430,7 +430,7 @@ func main() {
 				os.Exit(1)
 			}
 			printWipeResult("Shredded", res)
-			fmt.Println("Next `wuphf` launch will reopen onboarding. Michael would be proud.")
+			fmt.Println("Next `gawkbot` launch will reopen onboarding. Michael would be proud.")
 			return
 		case "init":
 			dispatch("/init", *apiKeyFlag, *format)
@@ -488,7 +488,7 @@ func main() {
 
 	// No startup upgrade notice here: the npm shim (npm/bin/wuphf.js, PR
 	// #273) already prints a one-line stderr hint pointing at
-	// `npm install -g wuphf@latest` before exec'ing the binary, and
+	// `npm install -g gawkbot@latest` before exec'ing the binary, and
 	// transparently downloads & runs a newer release when one exists. The
 	// in-app web banner is the additive surface for that flow; the shim
 	// owns the CLI surface.
@@ -506,7 +506,7 @@ func main() {
 	runWeb(args, selectedBlueprint, *unsafeMode, *webPort, *opusCEO, *collabMode, *noOpen)
 }
 
-// upgradeJSONOutput is the wire shape emitted by `wuphf upgrade --json`.
+// upgradeJSONOutput is the wire shape emitted by `gawkbot upgrade --json`.
 // Embeds upgradecheck.Result so adding a field there flows through, plus an
 // explicit Error field that is populated when the upstream call failed.
 // Extracted as a function (and as a top-level shape) so the JSON contract
@@ -528,7 +528,7 @@ func upgradeJSONOutput(res upgradecheck.Result, err error) struct {
 func runUpgradeCheck(args []string) {
 	// Use a real flag.FlagSet so `--json=true`, `--help`, and unknown flags
 	// behave consistently with the rest of the CLI (the previous
-	// hand-rolled loop silently accepted `wuphf upgrade junk` and ignored
+	// hand-rolled loop silently accepted `gawkbot upgrade junk` and ignored
 	// `--json=true`).
 	// ContinueOnError so we get to handle the error here — under
 	// ExitOnError the Parse call would call os.Exit itself and the
@@ -546,7 +546,7 @@ func runUpgradeCheck(args []string) {
 		os.Exit(2)
 	}
 
-	// Always do a fresh fetch — the user typed `wuphf upgrade` because they
+	// Always do a fresh fetch — the user typed `gawkbot upgrade` because they
 	// want ground truth. Each upstream call gets its own deadline so a slow
 	// npm response doesn't eat the GitHub-compare budget and trigger a
 	// misleading "could not fetch changelog" warning.
@@ -556,14 +556,14 @@ func runUpgradeCheck(args []string) {
 
 	// JSON output: emit the full Result (including IsDevBuild and an
 	// `error` field for scripted callers) and exit non-zero on failure
-	// so `wuphf upgrade --json | jq …` distinguishes "no upgrade" from
+	// so `gawkbot upgrade --json | jq …` distinguishes "no upgrade" from
 	// "couldn't reach npm". Dev builds are exempt — they don't depend on
 	// npm reachability, so a network blip shouldn't trip exit-code-aware
 	// pipelines on contributor machines.
 	if *jsonOut {
 		_ = json.NewEncoder(os.Stdout).Encode(upgradeJSONOutput(res, err))
 		// Exit non-zero when we couldn't actually compare — distinguishes
-		// "no upgrade" from "couldn't reach npm" for `wuphf upgrade --json | jq …`
+		// "no upgrade" from "couldn't reach npm" for `gawkbot upgrade --json | jq …`
 		// pipelines. Dev builds are exempt: they don't depend on npm
 		// reachability so a network blip on a contributor box shouldn't
 		// trip exit-code-aware scripts.
@@ -668,7 +668,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 		return
 	}
 
-	fmt.Println("Team launched. Welcome to The WUPHF Office. Attaching...")
+	fmt.Println("Team launched. Welcome to The gawkbot Office. Attaching...")
 	fmt.Println()
 	fmt.Println("  Ctrl+B arrow     switch between panes")
 	fmt.Println("  Ctrl+B { or }    swap panes left/right")
@@ -682,7 +682,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 		// Keep the process alive to maintain the broker.
 		fmt.Fprintf(os.Stderr, "Could not attach to tmux (not a terminal?). The office is running without you — like when Michael went to New York.\n")
 		fmt.Fprintf(os.Stderr, "Team is running in background. Attach manually:\n")
-		fmt.Fprintf(os.Stderr, "  tmux -L wuphf attach -t wuphf-team\n")
+		fmt.Fprintf(os.Stderr, "  tmux -L gawkbot attach -t wuphf-team\n")
 		fmt.Fprintf(os.Stderr, "Broker running on %s\n", l.BrokerBaseURL())
 		fmt.Fprintf(os.Stderr, "Press Ctrl+C to stop.\n")
 		// Block forever — broker + notification loop stay alive
@@ -841,7 +841,7 @@ func isPiped() bool {
 // This split exists because os.Stdin reads as a non-character-device on
 // Windows whenever the binary is spawned via SSH, scheduled tasks, or
 // PowerShell Start-Process — even when no data is piped in. Treating those
-// closed/empty pipes as "non-interactive command stream" causes wuphf to
+// closed/empty pipes as "non-interactive command stream" causes gawkbot to
 // exit silently on every fresh launch, which is the Windows-launch bug PR
 // #380 fixes.
 func consumePipedStdin(r io.Reader, dispatch func(line string)) (handled bool, err error) {
@@ -855,7 +855,7 @@ func consumePipedStdin(r io.Reader, dispatch func(line string)) (handled bool, e
 	scanner.Buffer(make([]byte, 0, 64*1024), maxLineBytes)
 	for scanner.Scan() {
 		// Skip blank/whitespace-only lines without setting handled. Otherwise
-		// `printf "\n" | wuphf` would dispatch the empty string (which fails
+		// `printf "\n" | gawkbot` would dispatch the empty string (which fails
 		// with a useless error) AND mark the input as handled — preventing
 		// the fall-through to the web UI launch. A pipe that contains only
 		// whitespace is morally equivalent to an empty pipe.
@@ -877,7 +877,7 @@ func consumePipedStdin(r io.Reader, dispatch func(line string)) (handled bool, e
 // copy by convention — if you update one, update the other so CLI and UI
 // promises match.
 const shredSummary = `This will:
-  • Stop the running WUPHF session
+  • Stop the running gawkbot session
   • Delete your team, company identity, office task receipts, workflows
   • Delete logs, sessions, provider state, calendar, and local wiki memory
   • Wipe broker runtime state
@@ -905,7 +905,7 @@ func confirmDestructive(rest []string, verb, summary string) bool {
 	return strings.TrimSpace(line) == verb
 }
 
-// stopRunningSession stops any running tmux or web-mode WUPHF session.
+// stopRunningSession stops any running tmux or web-mode gawkbot session.
 // Safe to call when nothing is running — Kill is a no-op in that case.
 // Tolerates NewLauncher failing (e.g. invalid blueprint) because we don't
 // want a broken config to block the user from cleaning up.

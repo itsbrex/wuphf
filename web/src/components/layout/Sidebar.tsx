@@ -95,9 +95,9 @@ export function Sidebar() {
               className="sidebar-logo"
               onClick={() => router.navigate({ to: "/" })}
               title="Home"
-              aria-label="WUPHF — go to home"
+              aria-label="gawkbot — go to home"
             >
-              WUPHF
+              gawkbot
             </button>
             <TeamMemberBadge />
             <div className="sidebar-header-actions">

@@ -145,7 +145,7 @@ func (m channelModel) handleTelegramConnectDoneMsg(msg telegramConnectDoneMsg) (
 		m.notice = "Telegram connect failed: " + msg.err.Error()
 		return m, nil
 	}
-	m.notice = fmt.Sprintf("Connected \"%s\" as #%s. Restart WUPHF to activate the Telegram bridge.", msg.groupTitle, msg.channelSlug)
+	m.notice = fmt.Sprintf("Connected \"%s\" as #%s. Restart gawkbot to activate the Telegram bridge.", msg.groupTitle, msg.channelSlug)
 	m.activeChannel = msg.channelSlug
 	m.activeApp = channelui.OfficeAppMessages
 	m.messages = nil

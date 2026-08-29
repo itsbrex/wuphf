@@ -3,7 +3,7 @@ version: 2
 builds:
   - id: wuphf
     main: ./cmd/wuphf
-    binary: wuphf
+    binary: gawkbot
     goos:
       - darwin
       - linux
@@ -30,7 +30,7 @@ archives:
     format_overrides:
       - goos: windows
         formats: [zip]
-    name_template: "wuphf_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "gawkbot_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
   name_template: checksums.txt

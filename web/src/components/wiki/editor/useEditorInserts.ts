@@ -2,7 +2,7 @@
  * Insert-action state machine for the Tiptap wiki editor.
  *
  * Owns the active dialog (citation / fact / decision / related / mention
- * picker) plus the markdown-splice helpers the WUPHF block inserts use:
+ * picker) plus the markdown-splice helpers the gawkbot block inserts use:
  *
  *   - BLOCK inserts (fact, decision, related, citation definition) cannot be
  *     reliably inserted as live ProseMirror nodes from a fenced markdown

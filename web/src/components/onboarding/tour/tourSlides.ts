@@ -43,7 +43,7 @@ export const OFFICE_TOUR_SLIDE_IDS: OfficeTourSlideId[] = [
  * Per-slide copy. `eyebrow` is the small caps kicker above the headline
  * (the intro slide has none). `caption` is the short instructional line under
  * the body that tells the user what the slide's visual is showing them; not
- * every slide needs one. All strings are WUPHF voice: no em-dashes, no
+ * every slide needs one. All strings are gawkbot voice: no em-dashes, no
  * contractions, Oxford comma. Verbatim from spec section 6.
  */
 export const OFFICE_TOUR_COPY: Record<

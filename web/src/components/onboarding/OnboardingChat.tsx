@@ -98,7 +98,7 @@ export function OnboardingChat() {
         data-phase={phase ?? "loading"}
       >
         <header className="onboarding-chat-header">
-          <span className="onboarding-chat-brand">WUPHF</span>
+          <span className="onboarding-chat-brand">gawkbot</span>
           <span className="onboarding-chat-phase">{phaseLabel(phase)}</span>
         </header>
 

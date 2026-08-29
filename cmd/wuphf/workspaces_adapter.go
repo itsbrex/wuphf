@@ -337,7 +337,7 @@ func translateDoctorReport(rep workspaces.DoctorReport) DoctorReport {
 			Kind:      DoctorIssueOrphanTree,
 			Subject:   p,
 			Detail:    "directory exists in ~/.wuphf-spaces but is not registered",
-			FixAction: "remove the directory or `wuphf workspace restore` if it is recoverable",
+			FixAction: "remove the directory or `gawkbot workspace restore` if it is recoverable",
 			FixID:     fmt.Sprintf("orphan_tree:%s", p),
 		})
 	}

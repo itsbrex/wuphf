@@ -49,7 +49,7 @@ type legacyState struct {
 	Budget    *legacyBudget   `json:"budget"`
 }
 
-// WUPHF broker state types (output format, mirrors internal/team unexported structs)
+// gawkbot broker state types (output format, mirrors internal/team unexported structs)
 
 type importedMember struct {
 	Slug      string `json:"slug"`
@@ -147,7 +147,7 @@ func runImport(args []string) {
 	if strings.ToLower(strings.TrimSpace(*fromPath)) == "legacy" {
 		source = "external orchestrator"
 	}
-	fmt.Printf("Imported %d agents, %d tasks from %s. Run wuphf to launch.\n", agentCount, taskCount, source)
+	fmt.Printf("Imported %d agents, %d tasks from %s. Run gawkbot to launch.\n", agentCount, taskCount, source)
 }
 
 // importFromLegacyDB connects to external orchestrator's embedded Postgres and reads
@@ -167,7 +167,7 @@ func importFromLegacyDB(portOverride int) (importedBrokerState, int, int, error)
 
 	// External orchestrator runs an embedded Postgres on localhost with the
 	// default `postgres:postgres` creds — not configurable, not a secret.
-	// Only reached by `wuphf import --from legacy` against a user's local
+	// Only reached by `gawkbot import --from legacy` against a user's local
 	// orchestrator instance. No production code path uses this.
 	// secretlint-disable-next-line @secretlint/secretlint-rule-database-connection-string
 	connStr := fmt.Sprintf("postgres://postgres:postgres@localhost:%d/postgres?sslmode=disable", port)
@@ -393,7 +393,7 @@ func resolveSourcePath(path string) (string, error) {
 	return "", fmt.Errorf("directory %s does not contain state.json or export.json", path)
 }
 
-// convertToWUPHF transforms external orchestrator JSON state into WUPHF broker state.
+// convertToWUPHF transforms external orchestrator JSON state into gawkbot broker state.
 func convertToWUPHF(pc legacyState) (importedBrokerState, int, int) {
 	now := time.Now().UTC().Format(time.RFC3339)
 

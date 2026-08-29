@@ -1,7 +1,7 @@
 /**
  * StepMeet — wizard step 01, "Meet WUPHF."
  *
- * Sets the metaphor: WUPHF is an office, and a team of agents lives in it. The
+ * Sets the metaphor: gawkbot is an office, and a team of agents lives in it. The
  * visual is a mock office coming online, so the first thing the user sees is
  * their (mock) office coming to life.
  *
@@ -20,7 +20,7 @@
  * dormant unless a PostHog project key is configured.
  *
  * The stage visual is a rendered Remotion clip (web/public/media/onboarding/
- * meet-office.gif): a "wuphf · office" window where the founding team comes
+ * meet-office.gif): a "gawkbot · office" window where the founding team comes
  * online one agent at a time, each with a presence dot. It is a self-contained
  * product window, so it reads correctly on every onboarding page theme.
  *
@@ -188,7 +188,7 @@ export function StepMeet({
             src="/media/onboarding/meet-office.gif"
             width={868}
             height={620}
-            alt="A WUPHF office coming online: the Chief of Staff who runs the office, @revops who keeps the CRM clean, and @analyst who watches the funnel, each turning to an online presence as they arrive."
+            alt="A gawkbot office coming online: the Chief of Staff who runs the office, @revops who keeps the CRM clean, and @analyst who watches the funnel, each turning to an online presence as they arrive."
             loading="lazy"
             decoding="async"
           />

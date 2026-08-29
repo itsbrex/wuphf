@@ -40,7 +40,7 @@ func killTeamSession() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	// Kill tmux session (kills all agent processes in all panes/windows)
-	_ = exec.CommandContext(ctx, "tmux", "-L", "wuphf", "kill-session", "-t", "wuphf-team").Run()
+	_ = exec.CommandContext(ctx, "tmux", "-L", "gawkbot", "kill-session", "-t", "wuphf-team").Run()
 	// Ping the broker to verify it's still reachable (best-effort).
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, brokerURL("/health"), nil)
 	if err != nil {
@@ -88,15 +88,15 @@ func runChannelView(threadsCollapsed bool, initialApp channelui.OfficeApp, skipS
 
 func reportChannelCrash(details string) {
 	_ = channelui.AppendChannelCrashLog(details)
-	fmt.Fprintln(os.Stderr, "WUPHF channel crashed.")
+	fmt.Fprintln(os.Stderr, "gawkbot channel crashed.")
 	fmt.Fprintln(os.Stderr, "Log:", channelui.ChannelCrashLogPath())
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "The rest of the team is still running.")
 	if strings.TrimSpace(os.Getenv("WUPHF_HEADLESS_PROVIDER")) != "" {
-		fmt.Fprintln(os.Stderr, "Restart WUPHF when ready to reconnect to the headless office runtime.")
+		fmt.Fprintln(os.Stderr, "Restart gawkbot when ready to reconnect to the headless office runtime.")
 	} else {
-		fmt.Fprintln(os.Stderr, "Use `tmux -L wuphf attach -t wuphf-team` to inspect panes,")
-		fmt.Fprintln(os.Stderr, "then restart WUPHF when ready.")
+		fmt.Fprintln(os.Stderr, "Use `tmux -L gawkbot attach -t wuphf-team` to inspect panes,")
+		fmt.Fprintln(os.Stderr, "then restart gawkbot when ready.")
 	}
 	select {}
 }

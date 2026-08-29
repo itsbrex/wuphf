@@ -13,7 +13,7 @@
  * the wizard finishes and the broker has seeded the team via
  * POST /onboarding/complete.
  *
- * All copy is WUPHF voice: no em-dashes, no contractions, Oxford comma, dry
+ * All copy is gawkbot voice: no em-dashes, no contractions, Oxford comma, dry
  * Office-show humor where it fits. Keep it in one reviewable place so changing
  * a headline means editing this file, not hunting through JSX.
  */
@@ -149,7 +149,7 @@ export interface OnboardingWizardStepProps {
 }
 
 /**
- * The prefilled first-issue example. RevOps framing: WUPHF operates on the
+ * The prefilled first-issue example. RevOps framing: gawkbot operates on the
  * user's CRM, it is not a CRM itself. This is the same example the office tour
  * finish handoff used, kept verbatim so the two surfaces stay in lockstep.
  */
@@ -159,7 +159,7 @@ export const ONBOARDING_FIRST_ISSUE_EXAMPLE =
 /**
  * Per-step copy. `eyebrow` is the small-caps kicker above the headline,
  * `headline` is the serif title, `body` is the supporting paragraph. All
- * strings are WUPHF voice. Verbatim source of truth for the step screens.
+ * strings are gawkbot voice. Verbatim source of truth for the step screens.
  */
 export const ONBOARDING_WIZARD_COPY: Record<
   OnboardingWizardStepId,
@@ -172,7 +172,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
   meet: {
     eyebrow: "WELCOME TO THE OFFICE",
     headline: "Meet WUPHF.",
-    body: "WUPHF is an office of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your office assemble itself on the right.",
+    body: "gawkbot is an office of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your office assemble itself on the right.",
   },
   wiki: {
     eyebrow: "YOUR KNOWLEDGE BASE",
@@ -200,7 +200,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
  * Email-capture copy. The email is optional and never gates advancing: it is a
  * "keep in touch" ask, not a signup wall. The consent line is the verbatim
  * promise we make about how the address is used, so it lives here as the single
- * source of truth. WUPHF voice: no contractions, no em-dashes, Oxford comma.
+ * source of truth. gawkbot voice: no contractions, no em-dashes, Oxford comma.
  */
 export const ONBOARDING_EMAIL_COPY = {
   /** Field label on the welcome (meet) step. */
@@ -208,7 +208,7 @@ export const ONBOARDING_EMAIL_COPY = {
   /** Placeholder for the email input. */
   placeholder: "you@company.com",
   /** Hint under the field. Sets the expectation before anyone types. */
-  hint: "Optional. We use it to keep you posted on WUPHF, and nothing else.",
+  hint: "Optional. We use it to keep you posted on gawkbot, and nothing else.",
   /**
    * Non-blocking warning shown under the field when the value is non-empty but
    * not a valid address. The field never gates advancing, so this nudges rather
@@ -229,7 +229,7 @@ export const ONBOARDING_EMAIL_COPY = {
  * mirrored in the README.
  */
 export const ONBOARDING_ANALYTICS_CONSENT_COPY = {
-  heading: "Help improve WUPHF",
+  heading: "Help improve gawkbot",
   note: "Both are optional, on by default, and easy to change anytime in Settings. Analytics never collects your content, and recordings mask everything you type.",
   telemetryLabel:
     "Share anonymous product analytics. Counts and shapes of what you do, never the content.",
@@ -244,7 +244,7 @@ export const ONBOARDING_ANALYTICS_CONSENT_COPY = {
  * then keyword), so this section recommends the key, presents the alternatives
  * in that same order, and reflects the resulting state. It is always optional:
  * keyword search works with zero setup, so onboarding is never blocked here.
- * WUPHF voice: no contractions, no em-dashes, Oxford comma. Single source of
+ * gawkbot voice: no contractions, no em-dashes, Oxford comma. Single source of
  * truth; the section component reads only from here.
  */
 export const ONBOARDING_EMBEDDING_COPY = {
@@ -301,7 +301,7 @@ export const ONBOARDING_EMBEDDING_COPY = {
   },
 } as const;
 
-/** UI chrome labels for the wizard host. WUPHF voice, no contractions. */
+/** UI chrome labels for the wizard host. gawkbot voice, no contractions. */
 export const ONBOARDING_WIZARD_LABELS = {
   /** Accessible label for the wizard dialog surface. */
   dialog: "Set up your office",

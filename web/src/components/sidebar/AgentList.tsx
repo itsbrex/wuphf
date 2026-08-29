@@ -1,4 +1,5 @@
 import { useMemo, useRef } from "react";
+import { AVATAR_MODE } from "../../lib/avatarMode";
 
 import type { OfficeMember } from "../../api/client";
 import { useAgentEventPeek } from "../../hooks/useAgentEventPeek";
@@ -106,11 +107,18 @@ function SidebarAgentRow({
             className="pixel-avatar-sidebar"
             working={working}
           />
-          <HarnessBadge
-            kind={harness}
-            size={10}
-            className="harness-badge-on-avatar"
-          />
+          {/* The harness badge is dropped in blob mode. On the old character
+              sprite it sat over the body; a blob has no body to spare, so it
+              lands on the mark itself and competes with the one status signal
+              that has to survive at 24px -- the working dot. In sprite mode it
+              behaves exactly as before. */}
+          {AVATAR_MODE !== "blob" && (
+            <HarnessBadge
+              kind={harness}
+              size={10}
+              className="harness-badge-on-avatar"
+            />
+          )}
           {/* Top-right of the avatar carries exactly ONE dot, and which one
               depends on the more important fact being true.
 

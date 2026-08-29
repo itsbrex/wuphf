@@ -56,7 +56,7 @@ function createTurndown(): TurndownService {
   service.use(gfm);
 
   // Turndown escapes every `[`/`]` to `\[`/`\]` so stray brackets can't be
-  // misread as links. That would mangle two WUPHF shapes we deliberately keep
+  // misread as links. That would mangle two gawkbot shapes we deliberately keep
   // as literal text: GFM-style footnote citations (`[^1]`, `[^1]: …`) and
   // Obsidian callout markers (`[!note]`). Unescape just those token shapes
   // after the default escape so genuine bracket ambiguity is still handled.

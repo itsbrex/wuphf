@@ -24,7 +24,7 @@ import (
 //   Phase 3: CRASH — PM bumps CEO, coffee spills, bell rings
 //   Phase 4: CEO grumpy face, coffee stain visible
 //   Phase 5: CEO forces a fake smile for the "camera"
-//   Phase 6: WUPHF title card
+//   Phase 6: gawkbot title card
 //   Phase 7: Transition to channel view
 
 const (

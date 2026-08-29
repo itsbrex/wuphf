@@ -299,7 +299,7 @@ func (m onboardingModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// stepSetup AND the placeholder is still the active error.
 		if m.step == stepSetup && m.err == "Checking for a local LLM runtime…" {
 			if msg.kind != "" {
-				m.err = fmt.Sprintf("Detected %s running on %s. Exit with Ctrl+C and re-run: `wuphf --provider %s`. Or paste an Anthropic key below.", msg.kind, msg.addr, msg.kind)
+				m.err = fmt.Sprintf("Detected %s running on %s. Exit with Ctrl+C and re-run: `gawkbot --provider %s`. Or paste an Anthropic key below.", msg.kind, msg.addr, msg.kind)
 			} else {
 				m.err = "Paste an Anthropic API key (https://console.anthropic.com/settings/keys), or install Claude Code (https://claude.com/claude-code) and rerun — no key needed."
 			}
@@ -542,7 +542,7 @@ func (m onboardingModel) viewWelcome(w, h int) string {
 	var lines []string
 
 	lines = append(lines, "")
-	lines = append(lines, accentStyle.Render("  WUPHF — Let's set up your office"))
+	lines = append(lines, accentStyle.Render("  gawkbot — Let's set up your office"))
 	lines = append(lines, mutedStyle.Render("  The cast is ready. We just need a few details."))
 	lines = append(lines, "")
 	lines = append(lines, labelStyle.Render("  Company or project name"))
@@ -734,7 +734,7 @@ func allRequiredPrereqsOk(prereqs []prereqResult) bool {
 // These URLs intentionally duplicate the unexported defaultXxxBaseURL
 // constants in internal/provider/{ollama,hermes_agent,openclaw_http,mlx_lm,exo}.go.
 // Importing the provider package for a single string per runtime would balloon
-// the cold-start dependency graph for `wuphf` first-run, which has to feel
+// the cold-start dependency graph for `gawkbot` first-run, which has to feel
 // snappy on a fresh `npx` install. The provider defaults change rarely (last
 // touched when the providers were added); if they do change, update both call
 // sites.

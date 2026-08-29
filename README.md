@@ -1,4 +1,4 @@
-# WUPHF (pronounced "woof")
+# gawkbot
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/gjSySC3PzV)
 [![License: Sustainable Use License](https://img.shields.io/badge/license-Sustainable%20Use%20License-A87B4F)](LICENSE)
@@ -6,23 +6,22 @@
 
 <p align="left">
   <a href="https://news.ycombinator.com/item?id=47899844">
-    <img src="website/hn-badge.svg" alt="WUPHF — Hacker News Life of Product Week's #1" width="223" height="48" />
+    <img src="website/hn-badge.svg" alt="gawkbot — Hacker News Life of Product Week's #1" width="223" height="48" />
   </a>
 </p>
 
 ### Build a microapp for every manual workflow.
 
-WUPHF lets anyone turn their manual workflows into microapps across 1200+
+gawkbot lets anyone turn their manual workflows into microapps across 1200+
 integrations in minutes. Describe the job in one sentence — or demo it once on
 a call — and your AI builds the agent that runs it: its own screen, its own
 schedule, its own tools, with a human approval gate on everything it sends.
 Runs local, on your machine, on your account.
 
-> *"WUPHF. When you type it in, it contacts someone via phone, text, email, IM,
-> Facebook, Twitter, and then... WUPHF."*
-> — Ryan Howard, Season 7
+> **grok** *(verb)* — to understand something profoundly and intuitively.
+> **gawk** *(verb)* — to stare openly and stupidly.
 
-Unlike the original WUPHF.com, this one ships work on Mondays.
+It is named after the second one.
 
 ## Get Started
 
@@ -31,7 +30,7 @@ by default, or [Codex CLI](https://github.com/openai/codex) / [Opencode](https:/
 The first-run screen verifies your runtime before anything else happens.
 
 ```bash
-npx wuphf
+npx gawkbot
 ```
 
 That's it. The browser opens, you verify your runtime, name your office, and
@@ -40,16 +39,16 @@ hand off your first workflow — you land on your first agent being built, live.
 Prefer a global install?
 
 ```bash
-npm install -g wuphf && wuphf
+npm install -g gawkbot && gawkbot
 ```
 
 Building from source (requires Go and Bun):
 
 ```bash
 git clone https://github.com/najmuzzaman-mohammad/wuphf.git
-cd wuphf
+cd gawkbot
 cd web && bun install && bun run build && cd ..
-go build -o wuphf ./cmd/wuphf
+go build -o gawkbot ./cmd/wuphf
 ./wuphf
 ```
 
@@ -72,7 +71,7 @@ Every agent ships with all six. Not a chatbot in a trench coat.
 | **Approval gate** | Reads are free. Writes are held until you tap approve. Then it runs 24x7. |
 
 If your workflow names a system that is not connected yet ("audit our
-HubSpot"), WUPHF asks before building — build against live workspace data
+HubSpot"), gawkbot asks before building — build against live workspace data
 now, or hold while you connect. It never silently re-scopes your job.
 
 ## Setup prompt (for AI agents)
@@ -81,7 +80,7 @@ Paste this into Claude Code, Codex, or Cursor and let your agent drive the insta
 
 ```text
 Set up https://github.com/najmuzzaman-mohammad/wuphf for me. Read `README.md`
-first, then run `npx wuphf` — the web UI opens at http://localhost:7891.
+first, then run `npx gawkbot` — the web UI opens at http://localhost:7891.
 
 Walk the onboarding: verify the runtime, name the office, and start the first
 workflow. Confirm you land on an agent being built (a live build feed beside a
@@ -109,7 +108,7 @@ For custom OpenAI-compatible endpoints (LiteLLM, local proxies, Ollama):
 ```bash
 WUPHF_OLLAMA_BASE_URL="http://127.0.0.1:20128/v1" \
 WUPHF_OLLAMA_MODEL="openai/gpt-5.4-mini" \
-wuphf --provider ollama --no-open
+gawkbot --provider ollama --no-open
 ```
 
 `--provider opencode` shells out to the `opencode` CLI binary; MLX-LM and
@@ -126,7 +125,7 @@ models, and auth are overridable via `WUPHF_HERMES_AGENT_*` /
 
 ## Memory: the company brain
 
-WUPHF ships with built-in memory — no backend choice, no API key. Your
+gawkbot ships with built-in memory — no backend choice, no API key. Your
 workspace state lives in local files you can `cat`: agent knowledge, run
 transcripts, and the company brain under `~/.wuphf/`. Knowledge pages are
 synthesized with citations back to their sources, so you can check the
@@ -135,11 +134,11 @@ receipts on anything an agent claims.
 ## Other Commands
 
 ```bash
-wuphf init                    # First-time setup
-wuphf share                   # Invite one team member over Tailscale/WireGuard
-wuphf shred                   # Delete workspace state and reopen onboarding
-wuphf workspace list          # Run multiple isolated workspaces side by side
-wuphf workspace switch <name> # Flip the active workspace
+gawkbot init                    # First-time setup
+gawkbot share                   # Invite one team member over Tailscale/WireGuard
+gawkbot shred                   # Delete workspace state and reopen onboarding
+gawkbot workspace list          # Run multiple isolated workspaces side by side
+gawkbot workspace switch <name> # Flip the active workspace
 ```
 
 ## Share With a Team Member
@@ -150,7 +149,7 @@ Two ways to invite a teammate, both from the CLI:
 the invite never leaves the network:
 
 ```bash
-wuphf share
+gawkbot share
 ```
 
 **Public tunnel — no shared network needed.** The broker can spin up a
@@ -162,7 +161,7 @@ button for this is being resurfaced in the operator shell — until then the
 endpoint is the path.
 
 For the full walkthrough, see
-[Share WUPHF With a Team Member](docs/tutorials/share-with-team-member.md).
+[Share gawkbot With a Team Member](docs/tutorials/share-with-team-member.md).
 
 ## External Actions
 
@@ -178,7 +177,7 @@ Either way, the approval gate holds every external write until you approve it.
 
 ## Privacy & Telemetry
 
-WUPHF can send anonymous product analytics and session recordings (with typed
+gawkbot can send anonymous product analytics and session recordings (with typed
 text masked) to help us improve it. This is **optional**, controlled by you, and
 **off unless a PostHog key is configured** — a stock source build and every fork
 ship with no key, so they never phone home.
@@ -195,10 +194,10 @@ reversible at any time:
 
 No autocapture, no cookies (localStorage only). Self-hosted operators can
 point at their own PostHog (`WUPHF_POSTHOG_KEY` / `WUPHF_POSTHOG_HOST`) or
-leave the key unset to keep WUPHF fully dormant. Full taxonomy and policy:
+leave the key unset to keep gawkbot fully dormant. Full taxonomy and policy:
 [docs/specs/product-analytics.md](docs/specs/product-analytics.md).
 
-## Why WUPHF
+## Why gawkbot
 
 | | |
 |---|---|
@@ -256,7 +255,7 @@ Season 7. Ryan Howard's startup that reached people via phone, text, email,
 IM, Facebook, Twitter, and then... WUPHF. Michael Scott invested $10,000.
 Ryan burned through it. The site went offline.
 
-The joke still fits. Except this WUPHF ships.
+The joke still fits. Except this gawkbot ships.
 
 > *"I invested ten thousand dollars in WUPHF. Just need one good quarter."*
 > — Michael Scott

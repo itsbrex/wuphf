@@ -31,7 +31,7 @@ const ARTIFACT_DETAIL: richApi.RichArtifactDetail = {
     id: "ra_0123456789abcdef",
     kind: "notebook_html",
     title: "Product strategy map",
-    summary: "A richer artifact for reviewing the WUPHF rollout.",
+    summary: "A richer artifact for reviewing the gawkbot rollout.",
     trustLevel: "draft",
     representation: "html",
     htmlPath: "wiki/visual-artifacts/ra_0123456789abcdef.html",
@@ -88,7 +88,7 @@ describe("<MessageBubble> rich artifact references", () => {
     expect(card.tagName.toLowerCase()).toBe("button");
     expect(card).toHaveTextContent("Product strategy map");
     expect(card).toHaveTextContent(
-      "A richer artifact for reviewing the WUPHF rollout.",
+      "A richer artifact for reviewing the gawkbot rollout.",
     );
     expect(card).toHaveTextContent("Open article →");
     expect(richApi.fetchRichArtifact).toHaveBeenCalledWith(

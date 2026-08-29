@@ -1,7 +1,7 @@
 /**
  * InlineCommand — a mono "terminal" row with a copy button. Used by the
  * guided provider setup so every step that carries a shell command renders a
- * one-click-copy affordance, in WUPHF tokens.
+ * one-click-copy affordance, in gawkbot tokens.
  *
  * Copy plumbing matches PrePickScreen's #932 copy-sign-in path:
  * navigator.clipboard.writeText resolves only in secure contexts, so the

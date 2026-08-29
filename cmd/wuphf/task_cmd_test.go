@@ -128,8 +128,8 @@ func TestPrintSpecRendersAllSections(t *testing.T) {
 // with no args or an explicit help flag.
 func TestRunTaskCmdHelp(t *testing.T) {
 	out := captureStderr(t, func() { runTaskCmd([]string{"--help"}) })
-	if !strings.Contains(out, "wuphf task") || !strings.Contains(out, "start") {
-		t.Errorf("expected help text mentioning wuphf task and start; got:\n%s", out)
+	if !strings.Contains(out, "gawkbot task") || !strings.Contains(out, "start") {
+		t.Errorf("expected help text mentioning gawkbot task and start; got:\n%s", out)
 	}
 }
 

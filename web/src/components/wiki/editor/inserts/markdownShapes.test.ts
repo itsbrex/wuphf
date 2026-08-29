@@ -90,12 +90,12 @@ describe("buildCitation", () => {
   it("returns inline reference plus block definition", () => {
     const built = buildCitation({
       id: "1",
-      title: "WUPHF launch",
+      title: "gawkbot launch",
       url: "https://example.com/launch",
     });
     expect(built.reference).toBe("[^1]");
     expect(built.definition).toBe(
-      "[^1]: WUPHF launch - https://example.com/launch\n",
+      "[^1]: gawkbot launch - https://example.com/launch\n",
     );
   });
 

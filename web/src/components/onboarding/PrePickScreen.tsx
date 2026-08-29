@@ -713,7 +713,7 @@ export function PrePickScreen({ onComplete }: PrePickScreenProps) {
         <div className="pre-pick-split">
           <div className="pre-pick-left">
             <div className="pre-pick-hero">
-              <div className="pre-pick-eyebrow">WUPHF</div>
+              <div className="pre-pick-eyebrow">gawkbot</div>
               <h1 className="pre-pick-headline">Pick a default runtime.</h1>
               <p className="pre-pick-subhead">
                 New agents run on this engine. You can change it any time in

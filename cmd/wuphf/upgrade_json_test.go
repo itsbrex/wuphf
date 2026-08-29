@@ -8,7 +8,7 @@ import (
 	"github.com/nex-crm/wuphf/internal/upgradecheck"
 )
 
-// TestUpgradeJSONOutput locks the wire shape that `wuphf upgrade --json`
+// TestUpgradeJSONOutput locks the wire shape that `gawkbot upgrade --json`
 // emits. Catches:
 //   - A future addition of an `Error` field to upgradecheck.Result that
 //     would silently collide with our own Error field on the embedded
@@ -22,7 +22,7 @@ func TestUpgradeJSONOutput(t *testing.T) {
 		UpgradeAvailable: true,
 		IsDevBuild:       false,
 		CompareURL:       "https://github.com/nex-crm/wuphf/compare/v0.79.10...v0.79.15",
-		UpgradeCommand:   "npm install -g wuphf@latest",
+		UpgradeCommand:   "npm install -g gawkbot@latest",
 	}
 
 	// Successful Check → no Error field in the JSON.

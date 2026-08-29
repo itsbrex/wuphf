@@ -205,7 +205,7 @@ var channelSlashCommands = []tui.SlashCommand{
 	{Name: "focus", Description: "Delegation mode — Chief of Staff routes, specialists execute (that's how it was always meant to work)", Category: "session"},
 	{Name: "reset", Description: "Reset channel and agents", Category: "session"},
 	{Name: "reset-dm", Description: "Clear direct messages with an agent", Category: "session"},
-	{Name: "quit", Description: "Exit WUPHF — Michael would make a speech first", Category: "session"},
+	{Name: "quit", Description: "Exit gawkbot — Michael would make a speech first", Category: "session"},
 }
 
 // oneOnOneBlacklist lists command names blocked in 1:1 mode.
@@ -287,9 +287,9 @@ type channelIntegrationSpec struct {
 
 var channelIntegrationSpecs = []channelIntegrationSpec{
 	{Label: "Gmail", Value: "gmail", Type: "email", Provider: "google", Description: "Connect Google email"},
-	{Label: "Google Calendar", Value: "google-calendar", Type: "calendar", Provider: "google", Description: "Connect Google Calendar and the WUPHF Meeting Bot"},
+	{Label: "Google Calendar", Value: "google-calendar", Type: "calendar", Provider: "google", Description: "Connect Google Calendar and the gawkbot Meeting Bot"},
 	{Label: "Outlook", Value: "outlook", Type: "email", Provider: "microsoft", Description: "Connect Microsoft email"},
-	{Label: "Outlook Calendar", Value: "outlook-calendar", Type: "calendar", Provider: "microsoft", Description: "Connect Outlook Calendar and the WUPHF Meeting Bot"},
+	{Label: "Outlook Calendar", Value: "outlook-calendar", Type: "calendar", Provider: "microsoft", Description: "Connect Outlook Calendar and the gawkbot Meeting Bot"},
 	{Label: "Slack", Value: "slack", Type: "messaging", Provider: "slack", Description: "Connect Slack workspace messaging"},
 	{Label: "Salesforce", Value: "salesforce", Type: "crm", Provider: "salesforce", Description: "Connect Salesforce CRM"},
 	{Label: "HubSpot", Value: "hubspot", Type: "crm", Provider: "hubspot", Description: "Connect HubSpot CRM"},
@@ -435,7 +435,7 @@ func newChannelModelWithApp(threadsCollapsed bool, initialApp channelui.OfficeAp
 			m.notice = "Running without an external memory backend for this session."
 		}
 	} else if memoryStatus.SelectedKind == config.MemoryBackendNex && memoryStatus.ActiveKind == config.MemoryBackendNone && strings.TrimSpace(config.ResolveAPIKey("")) == "" {
-		m.notice = "No WUPHF API key configured. Starting setup..."
+		m.notice = "No gawkbot API key configured. Starting setup..."
 		m.initFlow, _ = m.initFlow.Start()
 	} else if memoryStatus.SelectedKind == config.MemoryBackendGBrain && strings.TrimSpace(config.ResolveOpenAIAPIKey()) == "" && strings.TrimSpace(config.ResolveAnthropicAPIKey()) == "" {
 		m.notice = "No OpenAI or Anthropic API key configured for GBrain. Starting setup..."
@@ -857,11 +857,11 @@ func (m channelModel) buildAgentPickerOptions() []tui.PickerOption {
 }
 
 func (m channelModel) buildOneOnOneModePickerOptions() []tui.PickerOption {
-	enableDescription := "Restart WUPHF in direct mode with one selected agent and kill the rest of the Claude sessions"
+	enableDescription := "Restart gawkbot in direct mode with one selected agent and kill the rest of the Claude sessions"
 	if m.isOneOnOne() {
 		enableDescription = "Pick a different single agent for this direct session"
 	}
-	disableDescription := "Restart WUPHF with the full office team"
+	disableDescription := "Restart gawkbot with the full office team"
 	if !m.isOneOnOne() {
 		disableDescription = "Already using the full office team"
 	}

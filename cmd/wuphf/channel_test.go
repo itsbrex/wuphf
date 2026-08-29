@@ -226,7 +226,7 @@ func TestChannelViewUsesOfficeHeaderAndComposer(t *testing.T) {
 	m.height = 30
 
 	view := stripANSI(m.View())
-	if !strings.Contains(view, "The WUPHF Office") || !strings.Contains(view, "Message #general") {
+	if !strings.Contains(view, "The gawkbot Office") || !strings.Contains(view, "Message #general") {
 		t.Fatalf("expected office chrome, got %q", view)
 	}
 }
@@ -244,7 +244,7 @@ func TestChannelViewUsesOneOnOneChrome(t *testing.T) {
 	if !strings.Contains(view, "1:1 with Chief of Staff") {
 		t.Fatalf("expected 1o1 header, got %q", view)
 	}
-	if strings.Contains(view, "The WUPHF Office") || strings.Contains(view, "Message #general") {
+	if strings.Contains(view, "The gawkbot Office") || strings.Contains(view, "Message #general") {
 		t.Fatalf("expected office chrome to be hidden in 1o1 mode, got %q", view)
 	}
 }
@@ -455,7 +455,7 @@ func TestProviderSelectionSavesCodexAndRequestsRestart(t *testing.T) {
 	if done.posting {
 		t.Fatal("expected provider selection to clear posting state after completion")
 	}
-	if !strings.Contains(done.notice, "Claude teammate panes were stopped.") || !strings.Contains(done.notice, "Restart WUPHF to launch the headless Codex office runtime.") {
+	if !strings.Contains(done.notice, "Claude teammate panes were stopped.") || !strings.Contains(done.notice, "Restart gawkbot to launch the headless Codex office runtime.") {
 		t.Fatalf("expected codex restart notice, got %q", done.notice)
 	}
 
@@ -1535,7 +1535,7 @@ func TestChannelDoctorDoneShowsDoctorCard(t *testing.T) {
 			Label:    "Nex API key",
 			Severity: channelui.DoctorWarn,
 			Detail:   "Missing WUPHF/Nex API key.",
-			NextStep: "Run /init and paste your WUPHF API key.",
+			NextStep: "Run /init and paste your gawkbot API key.",
 		}},
 	}})
 	got := next.(channelModel)
@@ -2586,7 +2586,7 @@ func TestChannelResetDoneImmediatelyRehydratesDirectMode(t *testing.T) {
 	if !strings.Contains(view, "Direct session reset. Agent pane reloaded in place.") {
 		t.Fatalf("expected direct-session empty state, got %q", view)
 	}
-	if strings.Contains(view, "Welcome to The WUPHF Office.") {
+	if strings.Contains(view, "Welcome to The gawkbot Office.") {
 		t.Fatalf("expected office welcome to disappear in direct mode, got %q", view)
 	}
 }

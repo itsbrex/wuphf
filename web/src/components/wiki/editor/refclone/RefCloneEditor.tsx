@@ -11,7 +11,7 @@ import {
 } from "./stores/editor-context";
 
 /**
- * RefCloneEditor — WUPHF host wrapper around the ported reference KB editor.
+ * RefCloneEditor — gawkbot host wrapper around the ported reference KB editor.
  *
  * It mounts {@link RefcloneEditorProvider} (which bridges these props into the
  * editor's Zustand store shims) around the ported {@link KBEditor}, all inside a
@@ -94,7 +94,7 @@ export default function RefCloneEditor({
       ? path.slice(0, path.lastIndexOf("/"))
       : HOST_EDITOR_PATH;
   // Dark palette: the reference editor reads its dark tokens from a `dark`
-  // ancestor/own class. WUPHF drives theming via `data-theme` on the document;
+  // ancestor/own class. gawkbot drives theming via `data-theme` on the document;
   // mirror that here so the editor matches the host's light/dark surface.
   const theme = useAppStore((s) => s.theme);
   const isDark = theme !== "nex";
@@ -104,7 +104,7 @@ export default function RefCloneEditor({
     [catalog, resolver],
   );
 
-  // Upload via WUPHF's multipart endpoint, then resolve to a servable URL.
+  // Upload via gawkbot's multipart endpoint, then resolve to a servable URL.
   const uploadFile = useCallback(
     async (file: File): Promise<string | null> => {
       try {

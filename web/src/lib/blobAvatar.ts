@@ -223,3 +223,26 @@ export function drawBlobAvatar(
     ctx.clearRect(x, y, w, h);
   }
 }
+
+/**
+ * Canvas-level entry point, mirroring drawPixelAvatar's contract.
+ *
+ * The backing buffer is the GRID, not the display size, and CSS scales it up.
+ * That is what keeps the mark crisp: the browser upscales 16x16 with
+ * `image-rendering: pixelated` (see .pixel-avatar), so the pixels stay square
+ * at any size instead of the canvas antialiasing them at draw time.
+ */
+export function drawBlobAvatarCanvas(
+  canvas: HTMLCanvasElement,
+  slug: string,
+  size: number,
+  options: DrawBlobOptions = {},
+): void {
+  canvas.width = BLOB_GRID;
+  canvas.height = BLOB_GRID;
+  canvas.style.width = `${size}px`;
+  canvas.style.height = `${size}px`;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  drawBlobAvatar(ctx, slug, BLOB_GRID, options);
+}

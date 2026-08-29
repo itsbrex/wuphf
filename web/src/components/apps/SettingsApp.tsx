@@ -601,7 +601,7 @@ function LocalLLMsSection({ cfg, save }: SectionProps) {
     <div>
       <h2 style={styles.sectionTitle}>Local LLMs</h2>
       <p style={styles.sectionDesc}>
-        Run wuphf agents through a model on your own machine — no cloud key
+        Run gawkbot agents through a model on your own machine — no cloud key
         required. Status indicators detect what's installed and what's
         responding; install commands are copy-paste only (we never run shell
         commands for you).
@@ -820,7 +820,7 @@ function KeysSection({ cfg, save }: SectionProps) {
       <h2 style={styles.sectionTitle}>API Keys</h2>
       <p style={styles.sectionDesc}>
         Authentication credentials for external services. Keys are stored in
-        your local config file and never transmitted to WUPHF servers. Enter a
+        your local config file and never transmitted to gawkbot servers. Enter a
         new value to update, or leave blank to keep the current key.
       </p>
 
@@ -1056,7 +1056,7 @@ function FlagsSection() {
     <div>
       <h2 style={styles.sectionTitle}>CLI Flags</h2>
       <p style={styles.sectionDesc}>
-        All flags available when launching wuphf from the terminal. These are
+        All flags available when launching gawkbot from the terminal. These are
         runtime-only and not persisted in the config file.
       </p>
 

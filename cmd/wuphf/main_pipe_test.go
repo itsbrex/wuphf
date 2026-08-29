@@ -10,7 +10,7 @@ import (
 
 // Empty stdin pipe (no data, immediate EOF) MUST report handled=false so the
 // caller falls through to the normal interactive launch. This is the
-// regression vector for the Windows-launch bug — wuphf was exiting silently
+// regression vector for the Windows-launch bug — gawkbot was exiting silently
 // because isPiped() was true and the dispatch loop drained zero lines.
 //
 // On Windows, every spawn path that doesn't allocate a real console
@@ -35,7 +35,7 @@ func TestConsumePipedStdin_EmptyPipe_NotHandled(t *testing.T) {
 
 // Real piped command stream still short-circuits the interactive launch.
 // This is the original purpose of the piped-stdin path; the fix must not
-// regress the `echo "/foo" | wuphf` use case.
+// regress the `echo "/foo" | gawkbot` use case.
 func TestConsumePipedStdin_LinesPresent_Handled(t *testing.T) {
 	var dispatched []string
 	handled, err := consumePipedStdin(strings.NewReader("hello\nworld\n"), func(line string) {
@@ -53,7 +53,7 @@ func TestConsumePipedStdin_LinesPresent_Handled(t *testing.T) {
 	}
 }
 
-// A single line without a trailing newline (common for one-shot `wuphf
+// A single line without a trailing newline (common for one-shot `gawkbot
 // --cmd`-like uses) still counts as "handled" — bufio.Scanner returns
 // it on EOF.
 func TestConsumePipedStdin_SingleLineNoTrailingNewline_Handled(t *testing.T) {
@@ -73,7 +73,7 @@ func TestConsumePipedStdin_SingleLineNoTrailingNewline_Handled(t *testing.T) {
 }
 
 // Whitespace-only lines must NOT mark the pipe as handled — otherwise
-// `printf "\n" | wuphf` falls into the dispatch path with an empty command,
+// `printf "\n" | gawkbot` falls into the dispatch path with an empty command,
 // which exits with a useless error. The fix is to treat a whitespace-only
 // pipe the same as an empty pipe and fall through to the web UI launch.
 func TestConsumePipedStdin_BlankLineOnly_NotHandled(t *testing.T) {

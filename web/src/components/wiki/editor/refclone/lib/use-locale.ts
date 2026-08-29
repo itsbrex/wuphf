@@ -41,7 +41,7 @@ function readServerDir(): Direction {
  *
  * The reference editor's `useLocale` returns a `t(key)` translator wired to
  * i18next with bundled `editor:`, `editorExtras:`, `linkPopover:`, etc.
- * namespaces. WUPHF has no i18n graph, so this derives a readable English
+ * namespaces. gawkbot has no i18n graph, so this derives a readable English
  * label from the key's final segment — e.g. `t("editor:toolbar.bold")` →
  * "Bold", `t("editorExtras:editWithAi")` → "Edit With Ai". This keeps every
  * `t(...)` call site in the ported files byte-for-byte verbatim while still

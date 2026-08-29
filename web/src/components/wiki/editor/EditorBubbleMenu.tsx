@@ -1,7 +1,7 @@
 /**
  * Selection bubble menu for the Tiptap wiki editor.
  *
- * Built for WUPHF's stack — `@tiptap/react/menus` BubbleMenu, design-token
+ * Built for gawkbot's stack — `@tiptap/react/menus` BubbleMenu, design-token
  * CSS classes (no Tailwind / shadcn / oklch), and lucide-free text-glyph
  * buttons so the editor pulls in no icon dependency. Appears on a non-empty
  * text selection.

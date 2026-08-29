@@ -1,7 +1,7 @@
 /**
  * SlideIntro — tour slide 1, "This is your office."
  *
- * Sets the metaphor: WUPHF is an office, and a team of agents lives in it.
+ * Sets the metaphor: gawkbot is an office, and a team of agents lives in it.
  * The visual is the `TourMockupSidebar` materializing piece by piece — the
  * workspace label, then the channels, then the agents staggering in — so the
  * very first thing the founder sees is their (mock) office assembling itself.

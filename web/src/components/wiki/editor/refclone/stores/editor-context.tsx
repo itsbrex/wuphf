@@ -23,7 +23,7 @@ import { bindTreeStore, type TreeStoreBridge } from "./tree-store";
 
 /**
  * The contract the RefcloneEditor wrapper (built in the Integrate phase) must
- * satisfy. Everything the ported editor needs that WUPHF owns flows through
+ * satisfy. Everything the ported editor needs that gawkbot owns flows through
  * this single context: content + persistence, the page tree + navigation,
  * upload, and wiki-link resolution.
  *
@@ -61,7 +61,7 @@ export interface RefcloneEditorContextValue {
   /**
    * Upload a pasted/dropped/picked file for the open page and return a
    * servable URL to embed, or null on failure. The wrapper wires this to
-   * WUPHF's POST /wiki/upload (uploadWikiFile) + wikiFileUrl.
+   * gawkbot's POST /wiki/upload (uploadWikiFile) + wikiFileUrl.
    */
   uploadFile: (file: File) => Promise<string | null>;
 
@@ -75,7 +75,7 @@ export interface RefcloneEditorContextValue {
 
   /**
    * Build a servable URL for a repo-root-relative asset path (e.g. a gallery
-   * thumbnail in the folder index). The wrapper wires this to WUPHF's
+   * thumbnail in the folder index). The wrapper wires this to gawkbot's
    * wikiFileUrl. Optional — when omitted the raw path is used as-is.
    */
   resolveAssetUrl?: (path: string) => string;
@@ -104,7 +104,7 @@ export function useRefcloneEditorContext(): RefcloneEditorContextValue {
 }
 
 /**
- * Provider that bridges WUPHF props into the ported editor's Zustand store
+ * Provider that bridges gawkbot props into the ported editor's Zustand store
  * shims AND exposes the upload + wiki-link resolver via context. Mount this
  * once around the ported `KBEditor`.
  */

@@ -9,7 +9,7 @@ import type { ConfigSnapshot, LocalProviderStatus } from "../../../api/client";
 // where to look.
 //
 //   - external-agents: Gateways that import existing agents into the team
-//     (OpenClaw, Hermes). The agent's runtime is gateway-managed; WUPHF
+//     (OpenClaw, Hermes). The agent's runtime is gateway-managed; gawkbot
 //     speaks to the gateway's transport rather than dispatching directly.
 //
 //   - channels: Inbound messaging streams that become channels in the

@@ -913,7 +913,7 @@ function useTunnelControls(isHost: boolean) {
     confirm({
       title: "Start a public tunnel?",
       message:
-        "This opens a Cloudflare Quick Tunnel that publishes your WUPHF web UI on the public internet so a teammate can join from any browser.",
+        "This opens a Cloudflare Quick Tunnel that publishes your gawkbot web UI on the public internet so a teammate can join from any browser.",
       details: (
         <ul>
           <li>

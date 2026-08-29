@@ -113,3 +113,36 @@ describe("pickIdleCopy", () => {
     ).toBe("watching tests");
   });
 });
+
+describe("built-in roles all have their own copy", () => {
+  // The bug this pins: every built-in role fell through to GENERALIST_COPY,
+  // and rotateIndex is derived from idleMs alone, so the WHOLE ROSTER showed
+  // the same line at the same moment. A sidebar where six agents are all
+  // "looking at memes" reads as broken, not as charming.
+  const ROSTER: readonly { slug: string; role: string }[] = [
+    { slug: "ceo", role: "Chief of Staff" },
+    { slug: "librarian", role: "Librarian" },
+    { slug: "app-builder", role: "App Builder" },
+    { slug: "planner", role: "Planner" },
+    { slug: "executor", role: "Executor" },
+    { slug: "reviewer", role: "Reviewer" },
+  ];
+
+  it("gives every built-in role a line that is not the generalist fallback", () => {
+    for (const m of ROSTER) {
+      const copy = pickIdleCopy({ slug: m.slug, role: m.role, idleMs: 0 });
+      expect(copy, `${m.role} fell through to the generalist table`).not.toBe(
+        "looking at memes",
+      );
+    }
+  });
+
+  it("does not show the same line for every agent at the same moment", () => {
+    // The actual user-visible symptom, asserted directly rather than via the
+    // lookup that causes it.
+    const seen = ROSTER.map((m) =>
+      pickIdleCopy({ slug: m.slug, role: m.role, idleMs: 0 }),
+    );
+    expect(new Set(seen).size).toBeGreaterThan(1);
+  });
+});

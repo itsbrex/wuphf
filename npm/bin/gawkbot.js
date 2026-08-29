@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 "use strict";
 
-// Thin shim that spawns the native wuphf binary.
+// Thin shim that spawns the native gawkbot binary.
 //
 // Two responsibilities beyond a plain `spawn`:
 //
@@ -29,7 +29,7 @@ const { spawn } = require("node:child_process");
 const { downloadBinary, packageVersion } = require("../scripts/download-binary");
 const { getLatestVersion, compareVersions, ensureCacheDir } = require("../scripts/version-check");
 
-const binaryName = process.platform === "win32" ? "wuphf.exe" : "wuphf";
+const binaryName = process.platform === "win32" ? "gawkbot.exe" : "gawkbot";
 const installedBinary = path.join(__dirname, binaryName);
 
 function cachedBinaryPath(version) {
@@ -41,7 +41,7 @@ function cachedBinaryPath(version) {
     ".wuphf",
     "cache",
     "binaries",
-    `wuphf-${version}${suffix}`,
+    `gawkbot-${version}${suffix}`,
   );
 }
 
@@ -78,17 +78,17 @@ async function ensureBinary() {
       });
     } catch (err) {
       process.stderr.write(
-        `wuphf: self-heal download of v${latestVersion} failed: ${err.message}\n` +
-          `wuphf: running installed v${installedVersion}. ` +
-          `Run \`npm install -g wuphf@latest\` to upgrade.\n`,
+        `gawkbot: self-heal download of v${latestVersion} failed: ${err.message}\n` +
+          `gawkbot: running installed v${installedVersion}. ` +
+          `Run \`npm install -g gawkbot@latest\` to upgrade.\n`,
       );
       return installed;
     }
   }
 
   process.stderr.write(
-    `wuphf: serving cached v${latestVersion} (installed is v${installedVersion}). ` +
-      `Run \`npm install -g wuphf@latest\` to upgrade permanently, ` +
+    `gawkbot: serving cached v${latestVersion} (installed is v${installedVersion}). ` +
+      `Run \`npm install -g gawkbot@latest\` to upgrade permanently, ` +
       `or set WUPHF_SKIP_VERSION_CHECK=1 to disable this check.\n`,
   );
   return cachedPath;
@@ -106,7 +106,7 @@ function run(resolvedPath) {
     }
   });
   child.on("error", (err) => {
-    process.stderr.write(`wuphf: failed to launch binary: ${err.message}\n`);
+    process.stderr.write(`gawkbot: failed to launch binary: ${err.message}\n`);
     process.exit(1);
   });
 }
@@ -114,6 +114,6 @@ function run(resolvedPath) {
 ensureBinary()
   .then(run)
   .catch((err) => {
-    process.stderr.write(`wuphf: ${err.message}\n`);
+    process.stderr.write(`gawkbot: ${err.message}\n`);
     process.exit(1);
   });

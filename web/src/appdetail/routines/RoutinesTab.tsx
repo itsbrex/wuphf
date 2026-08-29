@@ -436,7 +436,7 @@ export function RoutinesTab({
       ) : null}
       {unavailable ? (
         <p className="opr-scoped-note">
-          Routines are unavailable right now — the Wuphf runtime could not be
+          Routines are unavailable right now — the gawkbot runtime could not be
           reached. They will appear once the workspace reconnects.
         </p>
       ) : routines.length === 0 ? (

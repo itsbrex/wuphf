@@ -1,6 +1,6 @@
 package main
 
-// Tests for `wuphf workspace ...`. Coverage target per Lane D charter: 90%
+// Tests for `gawkbot workspace ...`. Coverage target per Lane D charter: 90%
 // across every subcommand path including --json, --force, --permanent,
 // --from-scratch, --open, and --dry-run.
 //
@@ -315,7 +315,7 @@ func TestRenderList_TrashTable_WithEntries(t *testing.T) {
 	if !strings.Contains(out, "demo-1714305600") {
 		t.Fatal("expected trash ID in output")
 	}
-	if !strings.Contains(out, "Restore with `wuphf workspace restore") {
+	if !strings.Contains(out, "Restore with `gawkbot workspace restore") {
 		t.Fatal("expected restore hint")
 	}
 	// Newest first: scratch (later timestamp) should appear before demo
@@ -864,7 +864,7 @@ func TestList_ErrorIsSurfaced(t *testing.T) {
 
 // TestList_ErrorIsSurfaced_ViaRunWorkspaceDispatch confirms the same wiring
 // when the error path is reached via the top-level `runWorkspace` dispatcher
-// (mirrors how the user actually invokes `wuphf workspace list`). Catches a
+// (mirrors how the user actually invokes `gawkbot workspace list`). Catches a
 // dispatch regression that bypasses runWorkspaceList.
 func TestList_ErrorIsSurfaced_ViaRunWorkspaceDispatch(t *testing.T) {
 	fake := newFakeOrchestrator(t)

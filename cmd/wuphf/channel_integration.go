@@ -50,7 +50,7 @@ func connectIntegration(spec channelIntegrationSpec) tea.Cmd {
 	return func() tea.Msg {
 		apiKey := config.ResolveAPIKey("")
 		if apiKey == "" {
-			return channelIntegrationDoneMsg{err: errors.New("run /init first to configure your WUPHF API key")}
+			return channelIntegrationDoneMsg{err: errors.New("run /init first to configure your gawkbot API key")}
 		}
 		client := api.NewClient(apiKey)
 		result, err := api.Post[map[string]any](client,
@@ -355,7 +355,7 @@ func connectTelegramGroup(token string, group team.TelegramGroup) tea.Cmd {
 		// Send confirmation message to the Telegram group
 		if group.ChatID != 0 {
 			_ = team.SendTelegramMessage(token, group.ChatID,
-				"Connected to WUPHF Office. Messages here will be visible to the team.")
+				"Connected to gawkbot Office. Messages here will be visible to the team.")
 		}
 
 		// Clear broker state so next restart picks up the manifest with surfaces

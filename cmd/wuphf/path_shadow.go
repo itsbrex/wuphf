@@ -8,7 +8,7 @@ import (
 	"runtime"
 )
 
-// detectPathShadows returns other wuphf executables on pathEnv that would
+// detectPathShadows returns other gawkbot executables on pathEnv that would
 // actually shadow selfExec — i.e. earlier in PATH order than the running
 // binary, since shell resolution picks the first match. Candidates that come
 // AFTER self in PATH cannot shadow it; warning about those was the U-05
@@ -23,7 +23,7 @@ import (
 // binary is correctly ignored). Candidates that resolve to a sibling file in
 // the same directory as the running binary are ignored too — this is the npm
 // install layout, where the PATH entry symlinks at `wuphf.js` (a launcher) but
-// the native binary is `wuphf` in the same node_modules/wuphf/bin dir. They
+// the native binary is `gawkbot` in the same node_modules/wuphf/bin dir. They
 // are one install, not a shadow.
 //
 // Extracted for tests — os.Executable() and os.Getenv() are injected by the
@@ -37,7 +37,7 @@ func detectPathShadows(selfExec, pathEnv string) []string {
 		selfReal = selfExec
 	}
 	selfRealDir := filepath.Dir(selfReal)
-	exe := "wuphf"
+	exe := "gawkbot"
 	if runtime.GOOS == "windows" {
 		exe = "wuphf.exe"
 	}
@@ -69,7 +69,7 @@ func detectPathShadows(selfExec, pathEnv string) []string {
 			continue
 		}
 		// Sibling file in the running binary's own directory — same install,
-		// not a shadow. Covers the npm layout (wuphf + wuphf.js in the same
+		// not a shadow. Covers the npm layout (gawkbot + wuphf.js in the same
 		// node_modules bin dir).
 		if filepath.Dir(real) == selfRealDir {
 			seen[real] = true
@@ -79,7 +79,7 @@ func detectPathShadows(selfExec, pathEnv string) []string {
 		earlier = append(earlier, cand)
 	}
 	// If self isn't on PATH at all, the user invoked it by explicit path and a
-	// shell `wuphf` call elsewhere is a known different binary — not a surprise
+	// shell `gawkbot` call elsewhere is a known different binary — not a surprise
 	// shadow worth warning about every boot.
 	if !selfOnPath {
 		return nil
@@ -87,7 +87,7 @@ func detectPathShadows(selfExec, pathEnv string) []string {
 	return earlier
 }
 
-// warnPathShadow writes a one-time warning to w when other wuphf executables
+// warnPathShadow writes a one-time warning to w when other gawkbot executables
 // are on PATH besides the currently running binary. The classic trap: a
 // hand-built copy in ~/.local/bin silently shadows a fresh npm install, so
 // upgrades appear not to take effect.
@@ -100,12 +100,12 @@ func warnPathShadow(w io.Writer) {
 	if len(shadows) == 0 {
 		return
 	}
-	_, _ = fmt.Fprintln(w, "wuphf: warning: other wuphf binaries are on PATH and may shadow this one:")
+	_, _ = fmt.Fprintln(w, "wuphf: warning: other gawkbot binaries are on PATH and may shadow this one:")
 	for _, s := range shadows {
 		_, _ = fmt.Fprintf(w, "  %s\n", s)
 	}
 	_, _ = fmt.Fprintf(w, "  running: %s\n", self)
-	_, _ = fmt.Fprintln(w, "  If `which wuphf` picks a different path, upgrades to this binary will have no effect until the other copy is removed.")
+	_, _ = fmt.Fprintln(w, "  If `which gawkbot` picks a different path, upgrades to this binary will have no effect until the other copy is removed.")
 }
 
 // shouldWarnShadow gates the warning so it fires only on interactive launches.

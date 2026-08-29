@@ -6,7 +6,7 @@
  * lands back in a visible channel.
  *
  * The stage visual is a rendered Remotion clip (web/public/media/onboarding/
- * work-ships.gif): a "wuphf · #revops" window where the issue is filed and the
+ * work-ships.gif): a "gawkbot · #revops" window where the issue is filed and the
  * tasks fan out. The clip is a self-contained product window, so it reads
  * correctly on every onboarding page theme.
  *

@@ -61,9 +61,9 @@ func TestSplashRendersTitleInTitlePhase(t *testing.T) {
 	if got == "" {
 		t.Fatalf("expected splash title view")
 	}
-	// The title phase shows the WUPHF brand somewhere.
-	if !strings.Contains(strings.ToUpper(got), "WUPHF") {
-		t.Logf("title view did not include 'WUPHF' literal — may use ASCII art only: %q", got)
+	// The title phase shows the gawkbot brand somewhere.
+	if !strings.Contains(strings.ToUpper(got), "gawkbot") {
+		t.Logf("title view did not include 'gawkbot' literal — may use ASCII art only: %q", got)
 	}
 }
 

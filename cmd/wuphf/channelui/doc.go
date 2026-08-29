@@ -1,5 +1,5 @@
 // Package channelui hosts the pure rendering and data-projection layer
-// for the wuphf "channel" TUI surface — broker-shape data types, slug-
+// for the gawkbot "channel" TUI surface — broker-shape data types, slug-
 // to-display-name resolution, layout / wrap / time helpers, message
 // flatteners, mailbox / artifact / runtime / recovery / calendar
 // renderers, and the lipgloss-backed pill / card primitives. The Bubble

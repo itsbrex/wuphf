@@ -80,8 +80,8 @@ func isTransientQuickTunnelFailure(tail []string) bool {
 }
 
 // cloudflaredMissingMessage is the user-facing error when the binary is not
-// next to the wuphf executable AND not on PATH. The npm postinstall ships
-// cloudflared into the same directory as the wuphf binary so this path
+// next to the gawkbot executable AND not on PATH. The npm postinstall ships
+// cloudflared into the same directory as the gawkbot binary so this path
 // almost never fires for npm users; it shows up for `go install` users and
 // for npm users whose corp proxy blocked the github.com download. The
 // recovery hint covers both: reinstall from npm (refreshes the bundle), or
@@ -97,10 +97,10 @@ func cloudflaredMissingMessage() string {
 		manual = "  See https://github.com/cloudflare/cloudflared#installing-cloudflared"
 	}
 	return "cloudflared is not installed.\n\n" +
-		"WUPHF normally bundles cloudflared with the npm install. If you see this,\n" +
+		"gawkbot normally bundles cloudflared with the npm install. If you see this,\n" +
 		"either the bundle download was blocked (corp proxy / offline install) or\n" +
-		"you installed wuphf via `go install` and we did not stage it.\n\n" +
-		"Fix: reinstall wuphf with `npm install -g wuphf@latest`, or install\n" +
+		"you installed gawkbot via `go install` and we did not stage it.\n\n" +
+		"Fix: reinstall gawkbot with `npm install -g gawkbot@latest`, or install\n" +
 		"cloudflared manually:\n\n" +
 		manual + "\n\n" +
 		"Then click \"Start public tunnel\" again."
@@ -109,7 +109,7 @@ func cloudflaredMissingMessage() string {
 // findCloudflared returns the path to a usable cloudflared binary. Search
 // order is: bundled-next-to-wuphf, then PATH. The bundled lookup is first
 // because npm postinstall stages a SHA256-verified release into the same
-// directory as the wuphf binary, and a system-installed cloudflared on
+// directory as the gawkbot binary, and a system-installed cloudflared on
 // PATH may be older / unsigned / config-clobbered. Returns the empty
 // string + non-nil error when neither location resolves.
 func findCloudflared() (string, error) {
@@ -118,7 +118,7 @@ func findCloudflared() (string, error) {
 		binaryName = "cloudflared.exe"
 	}
 	if exe, err := os.Executable(); err == nil {
-		// Resolve symlinks (e.g. brew links wuphf to opt/wuphf/bin/wuphf
+		// Resolve symlinks (e.g. brew links gawkbot to opt/wuphf/bin/wuphf
 		// from a Cellar path) so the sibling lookup hits the real install
 		// dir, not the link tree.
 		if real, errEval := filepath.EvalSymlinks(exe); errEval == nil {

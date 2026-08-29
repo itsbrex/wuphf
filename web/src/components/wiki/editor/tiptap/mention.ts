@@ -14,7 +14,7 @@
  * pure config factory so it can be unit-tested without mounting React.
  *
  * The trigger + suggestion mechanics are standard Tiptap mention behaviour;
- * the insert target (a WUPHF wikilink mark) is ours.
+ * the insert target (a gawkbot wikilink mark) is ours.
  */
 
 import type { Node as TiptapNode } from "@tiptap/core";

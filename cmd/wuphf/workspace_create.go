@@ -1,6 +1,6 @@
 package main
 
-// `wuphf workspace create <name>` — allocate ports, spawn broker, register.
+// `gawkbot workspace create <name>` — allocate ports, spawn broker, register.
 //
 // Validation lives in the orchestrator (it owns the reserved-name list and
 // the slug regex). The CLI does a *cheap* shape check up front so users get
@@ -30,12 +30,12 @@ func runWorkspaceCreate(args []string) {
 	inheritFrom := fs.String("inherit-from", "", "Source workspace for inherited fields (default: cli_current)")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace create — spawn a new workspace")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace create — spawn a new workspace")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace create <name>")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace create --blueprint=founding-team demo-launch")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace create --from-scratch scratchpad")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace create <name>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace create --blueprint=founding-team demo-launch")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace create --from-scratch scratchpad")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Slug rules: lowercase letters, digits, hyphens. Must start with a letter. Max 31 chars.")
 	}
@@ -93,5 +93,5 @@ func runWorkspaceCreate(args []string) {
 
 	_, _ = fmt.Fprintf(os.Stdout, "Ready (broker :%d, web :%d)\n", ws.BrokerPort, ws.WebPort)
 	_, _ = fmt.Fprintf(os.Stdout, "Open: http://localhost:%d/\n", ws.WebPort)
-	_, _ = fmt.Fprintf(os.Stdout, "Switch CLI default with: wuphf workspace switch %s\n", ws.Name)
+	_, _ = fmt.Fprintf(os.Stdout, "Switch CLI default with: gawkbot workspace switch %s\n", ws.Name)
 }

@@ -2,7 +2,7 @@
  * Format an agent slug for display.
  *
  * Short role abbreviations (ceo, pm, cro, cmo, seo, api, ux — up to 3 chars)
- * render UPPERCASE: matches how the WUPHF app treats short agent identifiers.
+ * render UPPERCASE: matches how the gawkbot app treats short agent identifiers.
  *
  * Longer slugs (operator, planner, builder, reviewer, eng-1) render Title Case:
  * "Operator", "Planner", "Eng-1".

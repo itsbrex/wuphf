@@ -18,7 +18,7 @@ describe("upgrade api client", () => {
       latest: "0.84.0",
       upgrade_available: true,
       is_dev_build: false,
-      upgrade_command: "npm install -g wuphf@latest",
+      upgrade_command: "npm install -g gawkbot@latest",
     };
     const getSpy = vi.spyOn(client, "get").mockResolvedValue(response);
 
@@ -54,7 +54,7 @@ describe("upgrade api client", () => {
     const response: api.UpgradeRunResult = {
       ok: true,
       install_method: "global",
-      command: "npm install -g wuphf@latest",
+      command: "npm install -g gawkbot@latest",
     };
     const postSpy = vi
       .spyOn(client, "postWithTimeout")

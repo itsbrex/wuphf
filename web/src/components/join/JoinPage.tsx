@@ -164,10 +164,10 @@ export function JoinPage({ token, onAccepted }: JoinPageProps) {
   return (
     <JoinShell>
       <p className="join-eyebrow">Team member invite</p>
-      <h1 className="join-heading">Join this WUPHF office</h1>
+      <h1 className="join-heading">Join this gawkbot office</h1>
       <p className="join-copy">
         Pick the name your teammate should see in messages, requests, and office
-        activity. WUPHF will not share the host's broker token with this browser
+        activity. gawkbot will not share the host's broker token with this browser
         session.
       </p>
 

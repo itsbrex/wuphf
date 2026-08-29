@@ -116,7 +116,7 @@ describe("<TiptapWikiEditor>", () => {
 
     const menu = await screen.findByTestId("wk-slash-menu");
     expect(menu).toBeInTheDocument();
-    // Basic blocks and WUPHF inserts both surface.
+    // Basic blocks and gawkbot inserts both surface.
     expect(screen.getByTestId("wk-slash-basic-h1")).toBeInTheDocument();
     expect(screen.getByTestId("wk-slash-action-citation")).toBeInTheDocument();
   });

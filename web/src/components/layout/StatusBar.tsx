@@ -139,19 +139,19 @@ export function StatusBar() {
     const latest = formatVersion(upgradeCheck?.latest, "");
     switch (versionStatus.kind) {
       case "ok":
-        return `wuphf ${versionLabel} — up to date`;
+        return `gawkbot ${versionLabel} — up to date`;
       case "outdated":
         return latest
-          ? `wuphf ${versionLabel} — update available (${latest})`
-          : `wuphf ${versionLabel} — update available`;
+          ? `gawkbot ${versionLabel} — update available (${latest})`
+          : `gawkbot ${versionLabel} — update available`;
       case "dev":
-        return `wuphf ${versionLabel} — dev build`;
+        return `gawkbot ${versionLabel} — dev build`;
       case "error":
-        return `wuphf ${versionLabel} — version check failed`;
+        return `gawkbot ${versionLabel} — version check failed`;
       case "loading":
-        return `wuphf ${versionLabel} — checking for updates…`;
+        return `gawkbot ${versionLabel} — checking for updates…`;
       default:
-        return `wuphf ${versionLabel}`;
+        return `gawkbot ${versionLabel}`;
     }
   })();
 

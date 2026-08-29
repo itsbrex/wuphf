@@ -452,7 +452,7 @@ function approvalPair(): { claim: ApprovalClaim; scope: ApprovalScope } {
 
 function registrationOptions(): WebAuthnCreationOptionsJson {
   return {
-    rp: { id: "localhost", name: "WUPHF" },
+    rp: { id: "localhost", name: "gawkbot" },
     user: {
       id: "AQID",
       name: "approver",

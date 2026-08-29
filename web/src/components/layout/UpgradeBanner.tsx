@@ -78,7 +78,7 @@ export function UpgradeBanner() {
   // label so users with a local install never see the global command
   // promised when they're actually about to get a project-scoped one.
   const [installCommand, setInstallCommand] = useState<string>(
-    "npm install -g wuphf@latest",
+    "npm install -g gawkbot@latest",
   );
   // silentUpTo: the "high water mark" version the user has muted up to. A
   // new release re-surfaces the banner only when there's a notable commit
@@ -596,8 +596,8 @@ function UpgradeRunOutcome({
   const [showOutput, setShowOutput] = useState(false);
   if (result.ok) {
     // The button only reloads the browser page — it does NOT restart
-    // the wuphf service. The user has to do that themselves (Ctrl+C in
-    // their terminal, then `wuphf` again). Promise only what the click
+    // the gawkbot service. The user has to do that themselves (Ctrl+C in
+    // their terminal, then `gawkbot` again). Promise only what the click
     // actually does so the success state doesn't lie about behavior.
     return (
       <div className="upgrade-banner-outcome upgrade-banner-outcome--ok">

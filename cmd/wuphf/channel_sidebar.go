@@ -66,8 +66,8 @@ func renderSidebar(channels []channelui.ChannelInfo, members []channelui.Member,
 
 	var lines []string
 	lines = append(lines, "")
-	lines = append(lines, channelui.SidebarPlainRow(workspaceStyle.Render("WUPHF"), width))
-	lines = append(lines, channelui.SidebarPlainRow(workspaceMetaStyle.Render("The WUPHF Office"), width))
+	lines = append(lines, channelui.SidebarPlainRow(workspaceStyle.Render("gawkbot"), width))
+	lines = append(lines, channelui.SidebarPlainRow(workspaceMetaStyle.Render("The gawkbot Office"), width))
 	lines = append(lines, channelui.SidebarPlainRow(workspaceSummaryStyle.Render(summaryLine), width))
 	lines = append(lines, channelui.SidebarPlainRow(workspaceMetaStyle.Render("Ctrl+G channels · Ctrl+O apps · d DM agent"), width))
 	lines = append(lines, channelui.SidebarPlainRow(workspaceHintStyle.Render(hintLine), width))

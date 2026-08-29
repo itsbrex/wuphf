@@ -129,7 +129,7 @@ async function interpretJoinResponse(
       ok: false,
       code: "unknown",
       message:
-        "WUPHF accepted the invite but the response was unreadable. Reload — you may already be in.",
+        "gawkbot accepted the invite but the response was unreadable. Reload — you may already be in.",
     };
   }
 
@@ -149,6 +149,6 @@ async function interpretJoinResponse(
   return {
     ok: false,
     code: "unknown",
-    message: `WUPHF returned an unexpected response (${response.status}). Ask the host for a new invite.`,
+    message: `gawkbot returned an unexpected response (${response.status}). Ask the host for a new invite.`,
   };
 }

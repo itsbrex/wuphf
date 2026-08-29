@@ -6,7 +6,7 @@
  *   • `AgentDetail`  (/agents/$agentSlug) — the per-agent config page,
  *                                           reusing AgentProfilePanel.
  *
- * Agents are first-class in WUPHF, but they are NOT chat surfaces. The
+ * Agents are first-class in gawkbot, but they are NOT chat surfaces. The
  * pure task-scoped model reaches an agent through the tasks it owns (each
  * task has its own channel where the agent is a member); this tool is for
  * seeing the roster and configuring an agent's provider / role / skills.

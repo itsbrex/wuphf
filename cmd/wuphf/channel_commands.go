@@ -294,7 +294,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			return m, nil
 		}
 		if config.ResolveAPIKey("") == "" {
-			m.notice = "No WUPHF API key configured. Run /init — Ryan Howard skipped this step. Don't be Ryan."
+			m.notice = "No gawkbot API key configured. Run /init — Ryan Howard skipped this step. Don't be Ryan."
 			m.initFlow, _ = m.initFlow.Start()
 			return m, nil
 		}

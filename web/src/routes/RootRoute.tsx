@@ -223,7 +223,7 @@ class ErrorBoundary extends Component<
 
   componentDidCatch(error: Error, info: { componentStack?: string | null }) {
     // eslint-disable-next-line no-console
-    console.error("[WUPHF ErrorBoundary]", error, info);
+    console.error("[gawkbot ErrorBoundary]", error, info);
 
     // Auto-recover from stale lazy-chunk hashes after a FE rebuild.
     // The browser holds an old index.html that points at deleted hashed
@@ -742,7 +742,7 @@ function BrokerUnreachableScreen({ onRetry }: { onRetry: () => void }) {
       }}
     >
       <strong style={{ fontSize: 16, color: "var(--text)" }}>
-        WUPHF can&rsquo;t reach the office broker — retrying…
+        gawkbot can&rsquo;t reach the office broker — retrying…
       </strong>
       <span style={{ color: "var(--text-tertiary)" }}>
         The broker isn&rsquo;t answering. We retry automatically every few
@@ -969,7 +969,7 @@ export default function RootRoute() {
           // blank body or a misleading fresh-install screen.
           // eslint-disable-next-line no-console
           console.warn(
-            `[WUPHF boot] broker unreachable (attempt ${bootAttempt + 1})`,
+            `[gawkbot boot] broker unreachable (attempt ${bootAttempt + 1})`,
             err,
           );
           unreachable = true;

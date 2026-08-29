@@ -1,6 +1,6 @@
 package main
 
-// memory.go hosts the `wuphf memory` subcommand family. Today it owns
+// memory.go hosts the `gawkbot memory` subcommand family. Today it owns
 // one verb: `migrate`, which ports legacy Nex / GBrain memory into the
 // markdown wiki at ~/.wuphf/wiki/team/.
 //
@@ -25,7 +25,7 @@ import (
 	"github.com/nex-crm/wuphf/internal/team"
 )
 
-// runMemory dispatches `wuphf memory <verb>`. Called from main.go when
+// runMemory dispatches `gawkbot memory <verb>`. Called from main.go when
 // args[0] == "memory".
 func runMemory(args []string) {
 	if len(args) == 0 || subcommandWantsHelp(args) {
@@ -38,20 +38,20 @@ func runMemory(args []string) {
 	case "migrate":
 		runMemoryMigrate(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "wuphf memory: unknown verb %q — run `wuphf memory --help` for the list.\n", verb)
+		fmt.Fprintf(os.Stderr, "gawkbot memory: unknown verb %q — run `gawkbot memory --help` for the list.\n", verb)
 		os.Exit(1)
 	}
 }
 
 func printMemoryHelp() {
-	fmt.Fprintln(os.Stderr, "wuphf memory — manage the team wiki and legacy memory backends")
+	fmt.Fprintln(os.Stderr, "gawkbot memory — manage the team wiki and legacy memory backends")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Verbs:")
 	fmt.Fprintln(os.Stderr, "  migrate    Port Nex or GBrain content into ~/.wuphf/wiki/team/")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from nex [--dry-run] [--limit N]")
-	fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from gbrain [--dry-run] [--limit N]")
+	fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from nex [--dry-run] [--limit N]")
+	fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from gbrain [--dry-run] [--limit N]")
 }
 
 // runMemoryMigrate parses flags and orchestrates the migration. On any
@@ -63,10 +63,10 @@ func runMemoryMigrate(args []string) {
 	limit := fs.Int("limit", 0, "Cap the number of records imported (0 = unlimited)")
 	apiKeyFlag := fs.String("api-key", "", "API key for Nex authentication (overrides WUPHF_API_KEY)")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf memory migrate — import legacy memory into the team wiki")
+		fmt.Fprintln(os.Stderr, "gawkbot memory migrate — import legacy memory into the team wiki")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from {nex,gbrain} [--dry-run] [--limit N]")
+		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from {nex,gbrain} [--dry-run] [--limit N]")
 		fmt.Fprintln(os.Stderr, "")
 		fs.PrintDefaults()
 	}

@@ -315,7 +315,7 @@ export const POPULATED_PACKET: DecisionPacket = {
     {
       kind: "reviewer_timeout",
       message:
-        "Slot filled with skipped placeholder. Merge anyway, or rerequest with `wuphf task review task-2741 --rerequest sam`.",
+        "Slot filled with skipped placeholder. Merge anyway, or rerequest with `gawkbot task review task-2741 --rerequest sam`.",
       reviewerSlug: "sam",
       elapsed: "10m",
     },

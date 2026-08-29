@@ -1,7 +1,7 @@
 /**
  * The Office–themed loading verbs, in the spirit of the Claude Code spinner's
  * rotating gerunds ("Cogitating…", "Percolating…"). Kept short so they fit a
- * typing bubble, and on-brand with the WUPHF voice (honest, funny, The Office).
+ * typing bubble, and on-brand with the gawkbot voice (honest, funny, The Office).
  *
  * Microcopy follows the house style: no contractions, no em-dashes. They cycle
  * decoratively, so they are aria-hidden behind a stable status label.

@@ -67,7 +67,7 @@ export function buildTeachSeed(
   } else {
     lines.push(
       "",
-      "I just demonstrated it on this computer. Wuphf read the real screens " +
+      "I just demonstrated it on this computer. gawkbot read the real screens " +
         "while I worked — here is what was on them, in the order I used them:",
       "",
     );

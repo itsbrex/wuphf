@@ -1,6 +1,6 @@
 package main
 
-// `wuphf workspace list` — table or JSON view of registered workspaces.
+// `gawkbot workspace list` — table or JSON view of registered workspaces.
 //
 // Default output is a fixed-width human-readable table; `--json` emits a
 // stable JSON shape for automation; `--trash` switches to trashed-workspace
@@ -28,12 +28,12 @@ func runWorkspaceList(args []string) {
 	trash := fs.Bool("trash", false, "List trashed workspaces with their trash IDs")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace list — show workspaces")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace list — show workspaces")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace list              Human-readable table")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace list --json       Stable JSON for scripts")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace list --trash      Trashed workspaces with restore IDs")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace list              Human-readable table")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace list --json       Stable JSON for scripts")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace list --trash      Trashed workspaces with restore IDs")
 	}
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {
@@ -97,7 +97,7 @@ func renderList(w io.Writer, res ListResult, jsonOut, trashOnly bool) error {
 // because workspace names are slug-validated to ≤31 chars.
 func renderWorkspaceTable(w io.Writer, workspaces []Workspace) error {
 	if len(workspaces) == 0 {
-		_, err := fmt.Fprintln(w, "No workspaces yet. Run `wuphf workspace create <name>` to start one.")
+		_, err := fmt.Fprintln(w, "No workspaces yet. Run `gawkbot workspace create <name>` to start one.")
 		return err
 	}
 	// Sort by name for stable output. Active/CLI-current marker is rendered
@@ -138,7 +138,7 @@ func renderWorkspaceTable(w io.Writer, workspaces []Workspace) error {
 	if _, err := fmt.Fprintln(w, ""); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintln(w, "* = active CLI workspace. Switch with `wuphf workspace switch <name>`."); err != nil {
+	if _, err := fmt.Fprintln(w, "* = active CLI workspace. Switch with `gawkbot workspace switch <name>`."); err != nil {
 		return err
 	}
 	return nil
@@ -181,7 +181,7 @@ func renderTrashTable(w io.Writer, trash []TrashEntry) error {
 	if _, err := fmt.Fprintln(w, ""); err != nil {
 		return err
 	}
-	if _, err := fmt.Fprintln(w, "Restore with `wuphf workspace restore <trash-id>` (allocates a fresh port pair)."); err != nil {
+	if _, err := fmt.Fprintln(w, "Restore with `gawkbot workspace restore <trash-id>` (allocates a fresh port pair)."); err != nil {
 		return err
 	}
 	return nil

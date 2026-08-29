@@ -1,5 +1,5 @@
 /**
- * Tiptap extension set for the WUPHF wiki editor.
+ * Tiptap extension set for the gawkbot wiki editor.
  *
  * A pure config module — no JSX, no React. `buildWikiEditorExtensions` returns
  * the static core set (StarterKit + nodes/marks the editor always needs). The
@@ -9,7 +9,7 @@
  *
  * The language set, math config, and StarterKit overrides are tuned for the
  * wiki editor, while the WikiLink mark and the design-token styling are
- * WUPHF's own.
+ * gawkbot's own.
  */
 
 import { MathExtension } from "@aarkue/tiptap-math-extension";
@@ -54,7 +54,7 @@ const DEFAULT_PLACEHOLDER = "Start writing, or press '/' for commands…";
 /**
  * Curated language set. `typescript` covers TSX (highlight.js registers `tsx`
  * as an alias) and `xml` covers HTML. The fenced `fact` / `decision` blocks
- * the WUPHF inserts emit are unknown languages — lowlight renders them as
+ * the gawkbot inserts emit are unknown languages — lowlight renders them as
  * plain text, which is the intended fallback.
  */
 function buildLowlight() {

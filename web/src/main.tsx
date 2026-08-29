@@ -115,5 +115,5 @@ try {
   showFatalError("React failed to mount", `${message}\n\n${stack}`);
   window.__wuphfBootDone?.();
   // eslint-disable-next-line no-console
-  console.error("[WUPHF boot]", err);
+  console.error("[gawkbot boot]", err);
 }

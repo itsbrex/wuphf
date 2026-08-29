@@ -148,7 +148,7 @@ describe("AppDetail", () => {
     expect(getByRole("button", { name: /^ask agent$/i })).toBeTruthy();
     // Floating bubble (aria-label "Ask AI about <app>").
     expect(
-      getByRole("button", { name: /ask wuphf about open tasks/i }),
+      getByRole("button", { name: /ask gawkbot about open tasks/i }),
     ).toBeTruthy();
   });
 
@@ -231,7 +231,7 @@ describe("AppDetail", () => {
     // Drawer closed: only the floating bubble exists, no chat yet.
     expect(queryByTestId("ask-ai-chat")).toBeNull();
     fireEvent.click(
-      getByRole("button", { name: /ask wuphf about open tasks/i }),
+      getByRole("button", { name: /ask gawkbot about open tasks/i }),
     );
     // Drawer open: the tools chat is mounted inside the docked panel.
     expect(getByTestId("ask-ai-chat").textContent).toContain(
@@ -248,7 +248,7 @@ describe("AppDetail", () => {
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     fireEvent.click(
-      getByRole("button", { name: /ask wuphf about open tasks/i }),
+      getByRole("button", { name: /ask gawkbot about open tasks/i }),
     );
     // The panel takes focus on open (overlay keyboard grammar, as CallModal).
     const panel = container.querySelector(".opr-ask-panel");
@@ -259,7 +259,7 @@ describe("AppDetail", () => {
     expect(queryByTestId("ask-ai-chat")).toBeNull();
     // The floating bubble is back.
     expect(
-      getByRole("button", { name: /ask wuphf about open tasks/i }),
+      getByRole("button", { name: /ask gawkbot about open tasks/i }),
     ).toBeTruthy();
   });
 
@@ -272,7 +272,7 @@ describe("AppDetail", () => {
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
     fireEvent.click(
-      getByRole("button", { name: /ask wuphf about open tasks/i }),
+      getByRole("button", { name: /ask gawkbot about open tasks/i }),
     );
     // Escape from the composer input (e.g. cancelling IME composition or an
     // autocomplete) must NOT unmount the chat and discard the draft.

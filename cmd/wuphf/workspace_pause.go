@@ -1,6 +1,6 @@
 package main
 
-// `wuphf workspace pause <name>` — drain & stop a workspace's broker.
+// `gawkbot workspace pause <name>` — drain & stop a workspace's broker.
 //
 // Default path: graceful Drain() with a 90s wall-clock timeout. The
 // orchestrator owns the actual draining logic (Launcher.Drain across headless
@@ -20,12 +20,12 @@ func runWorkspacePause(args []string) {
 	force := fs.Bool("force", false, "Skip graceful drain — SIGTERM, then SIGKILL after 5s")
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace pause — stop a running workspace")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace pause — stop a running workspace")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace pause [--force] <name>")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace pause <name>            Graceful drain, 90s timeout")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace pause --force <name>    Skip drain; SIGKILL after 5s")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace pause [--force] <name>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace pause <name>            Graceful drain, 90s timeout")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace pause --force <name>    Skip drain; SIGKILL after 5s")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Pause stops the broker and halts agent dispatch. The workspace's state stays")
 		fmt.Fprintln(os.Stderr, "intact on disk; resume restarts cleanly. While paused, no LLM tokens burn.")
@@ -63,5 +63,5 @@ func runWorkspacePause(args []string) {
 		printError("pause %q: %v", name, err)
 	}
 
-	_, _ = fmt.Fprintf(os.Stdout, "Paused %q. Resume with: wuphf workspace resume %s\n", name, name)
+	_, _ = fmt.Fprintf(os.Stdout, "Paused %q. Resume with: gawkbot workspace resume %s\n", name, name)
 }

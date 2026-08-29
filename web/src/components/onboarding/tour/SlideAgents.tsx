@@ -11,7 +11,7 @@
  *
  * Copy for the eyebrow/headline/body comes from `OFFICE_TOUR_COPY.agents`; the
  * callout instructions live here because they are slide-internal teaching
- * scaffolding, not headline copy. All callout text follows WUPHF voice (no
+ * scaffolding, not headline copy. All callout text follows gawkbot voice (no
  * contractions, no em-dashes, Oxford comma).
  *
  * Entrance is transform/opacity only, keyed off `data-active`, reduced-motion

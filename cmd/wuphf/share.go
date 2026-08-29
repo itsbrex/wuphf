@@ -70,7 +70,7 @@ type webShareController struct {
 	// controller's first start(). When non-nil and the broker has registered
 	// a ShareTransport, start() routes invite creation through the adapter so
 	// admit + revoke + invite-create all flow through the same surface. When
-	// nil (e.g. the standalone `wuphf share` subcommand has no in-process
+	// nil (e.g. the standalone `gawkbot share` subcommand has no in-process
 	// broker), start() falls back to the legacy HTTP path.
 	broker *team.Broker
 }
@@ -317,7 +317,7 @@ func runShare(args []string) {
 		os.Exit(2)
 	}
 	if opts.stop {
-		fmt.Fprintln(os.Stderr, "error: `wuphf share --stop` is not active because share runs in the foreground. Press Ctrl+C in the share terminal.")
+		fmt.Fprintln(os.Stderr, "error: `gawkbot share --stop` is not active because share runs in the foreground. Press Ctrl+C in the share terminal.")
 		os.Exit(1)
 	}
 	if err := runShareServer(opts); err != nil {
@@ -354,7 +354,7 @@ func runShareServer(opts shareOptions) error {
 	if opts.jsonOut {
 		_ = json.NewEncoder(os.Stdout).Encode(out)
 	} else {
-		fmt.Println("WUPHF share")
+		fmt.Println("gawkbot share")
 		fmt.Printf("Private network: %s %s\n", iface, bind.String())
 		if opts.unsafeLAN {
 			fmt.Println("Public bind: blocked; LAN override enabled")
@@ -379,7 +379,7 @@ func readBrokerToken() (string, error) {
 	path := brokeraddr.ResolveTokenFile()
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return "", fmt.Errorf("WUPHF broker is not running. Start it with `wuphf`, then run `wuphf share`")
+		return "", fmt.Errorf("gawkbot broker is not running. Start it with `gawkbot`, then run `gawkbot share`")
 	}
 	token := strings.TrimSpace(string(data))
 	if token == "" {
@@ -457,10 +457,10 @@ func resolveShareBind(opts shareOptions) (net.IP, string, error) {
 		}
 	}
 	if want == "tailscale" {
-		return nil, "", fmt.Errorf("no private network interface found\n\nWUPHF only shares over a private network by default.\nFix: start Tailscale, then run `wuphf share` again.\nOverride: `wuphf share --bind 100.x.y.z`")
+		return nil, "", fmt.Errorf("no private network interface found\n\nWUPHF only shares over a private network by default.\nFix: start Tailscale, then run `gawkbot share` again.\nOverride: `gawkbot share --bind 100.x.y.z`")
 	}
 	if want == "wireguard" {
-		return nil, "", fmt.Errorf("no WireGuard interface found\n\nFix: start WireGuard, then run `wuphf share --bind wireguard` again")
+		return nil, "", fmt.Errorf("no WireGuard interface found\n\nFix: start WireGuard, then run `gawkbot share --bind wireguard` again")
 	}
 	return nil, "", fmt.Errorf("no usable private interface found")
 }
@@ -471,7 +471,7 @@ func interfaceLooksLikeWireGuard(name string) bool {
 
 func validateShareIP(ip net.IP, opts shareOptions) error {
 	if ip == nil || ip.IsLoopback() || ip.IsUnspecified() {
-		return fmt.Errorf("refusing to expose WUPHF on %s", ip)
+		return fmt.Errorf("refusing to expose gawkbot on %s", ip)
 	}
 	if isTailscaleIP(ip) || isPrivateIP(ip) && opts.unsafeLAN || opts.unsafePublicBind {
 		return nil
@@ -479,7 +479,7 @@ func validateShareIP(ip net.IP, opts shareOptions) error {
 	if isPrivateIP(ip) {
 		return fmt.Errorf("refusing LAN address %s without --unsafe-lan", ip)
 	}
-	return fmt.Errorf("refusing to expose WUPHF on a public interface\n\nDetected: %s\nFix: use a Tailscale/WireGuard address or keep WUPHF local.\nUnsafe local-LAN escape hatch: `wuphf share --unsafe-lan`", ip)
+	return fmt.Errorf("refusing to expose gawkbot on a public interface\n\nDetected: %s\nFix: use a Tailscale/WireGuard address or keep gawkbot local.\nUnsafe local-LAN escape hatch: `gawkbot share --unsafe-lan`", ip)
 }
 
 func ipFromAddr(addr net.Addr) net.IP {
@@ -511,7 +511,7 @@ func isPrivateIP(ip net.IP) bool {
 // call to the broker on the joiner's behalf — the broker accepts based on
 // the invite token in the body, not a bearer token, so no broker token is
 // needed here). OnJoin is the host-side join notification (printed on the
-// wuphf share terminal). JoinGate and RateLimiter are tunnel-only
+// gawkbot share terminal). JoinGate and RateLimiter are tunnel-only
 // hardening; both nil in network-share mode preserves Phase 1 behaviour
 // byte-for-byte.
 type shareHandlerConfig struct {
@@ -663,18 +663,18 @@ func handleShareJoinSubmit(w http.ResponseWriter, r *http.Request, brokerURL, to
 		"device":       r.UserAgent(),
 	})
 	if err != nil {
-		writeShareJoinError(w, http.StatusInternalServerError, "invalid_request", "WUPHF could not encode your invite submission.")
+		writeShareJoinError(w, http.StatusInternalServerError, "invalid_request", "gawkbot could not encode your invite submission.")
 		return
 	}
 	req, err := http.NewRequestWithContext(r.Context(), http.MethodPost, brokerURL+"/humans/invites/accept", bytes.NewReader(payload))
 	if err != nil {
-		writeShareJoinError(w, http.StatusBadGateway, "broker_unreachable", "WUPHF is not reachable from this invite. Ask the host to restart sharing.")
+		writeShareJoinError(w, http.StatusBadGateway, "broker_unreachable", "gawkbot is not reachable from this invite. Ask the host to restart sharing.")
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := shareHTTPClient.Do(req)
 	if err != nil {
-		writeShareJoinError(w, http.StatusBadGateway, "broker_unreachable", "WUPHF is not reachable from this invite. Ask the host to restart sharing.")
+		writeShareJoinError(w, http.StatusBadGateway, "broker_unreachable", "gawkbot is not reachable from this invite. Ask the host to restart sharing.")
 		return
 	}
 	defer resp.Body.Close()
@@ -683,7 +683,7 @@ func handleShareJoinSubmit(w http.ResponseWriter, r *http.Request, brokerURL, to
 		case resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone:
 			writeShareJoinError(w, http.StatusGone, "invite_expired_or_used", "This invite is no longer valid. Ask the host for a new team-member invite.")
 		case resp.StatusCode >= 500:
-			writeShareJoinError(w, http.StatusBadGateway, "broker_failed", "WUPHF could not accept this invite right now. Ask the host to retry sharing.")
+			writeShareJoinError(w, http.StatusBadGateway, "broker_failed", "gawkbot could not accept this invite right now. Ask the host to retry sharing.")
 		default:
 			writeShareJoinError(w, resp.StatusCode, "invite_invalid", "This invite could not be accepted. Ask the host for a fresh team-member invite.")
 		}

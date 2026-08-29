@@ -4,10 +4,10 @@ package main
 //
 // Subcommands (all dispatched from main.go's `task` switch arm):
 //
-//   - `wuphf task start [intent]`      — prompt-driven intake → ready → running
-//   - `wuphf task list [--filter=<f>]` — print inbox grouped by LifecycleState
-//   - `wuphf task review <id>`         — open the Decision Packet view in the browser
-//   - `wuphf task block <id> --on <pr-or-task-id>` — set blocked
+//   - `gawkbot task start [intent]`      — prompt-driven intake → ready → running
+//   - `gawkbot task list [--filter=<f>]` — print inbox grouped by LifecycleState
+//   - `gawkbot task review <id>`         — open the Decision Packet view in the browser
+//   - `gawkbot task block <id> --on <pr-or-task-id>` — set blocked
 //
 // The implementation talks to the broker via its existing HTTP API
 // (/tasks/inbox, /tasks/{id}, /tasks/{id}/block) and uses raw stdin
@@ -18,7 +18,7 @@ package main
 // running locally — it calls Broker.StartIntake in-process via a small
 // helper that boots a transient broker only when no live one is
 // reachable. For v1 the simpler contract is: the user must have
-// `wuphf` running (the broker), and the CLI POSTs intent to a future
+// `gawkbot` running (the broker), and the CLI POSTs intent to a future
 // /tasks/intake endpoint. For minimal scope, v1 ships in-process
 // intake against a Broker borrowed via the package-level handle.
 //
@@ -44,7 +44,7 @@ import (
 	"github.com/nex-crm/wuphf/internal/team"
 )
 
-// runTaskCmd dispatches `wuphf task <verb> [args]`.
+// runTaskCmd dispatches `gawkbot task <verb> [args]`.
 func runTaskCmd(args []string) {
 	if len(args) == 0 || subcommandWantsHelp(args) {
 		printTaskHelp()
@@ -61,25 +61,25 @@ func runTaskCmd(args []string) {
 	case "block":
 		runTaskBlock(rest)
 	default:
-		fmt.Fprintf(os.Stderr, "wuphf task: unknown verb %q\n", verb)
+		fmt.Fprintf(os.Stderr, "gawkbot task: unknown verb %q\n", verb)
 		printTaskHelp()
 		os.Exit(2)
 	}
 }
 
 func printTaskHelp() {
-	fmt.Fprintln(os.Stderr, "wuphf task — drive the multi-agent control loop")
+	fmt.Fprintln(os.Stderr, "gawkbot task — drive the multi-agent control loop")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  wuphf task start [intent]                Walk an intent through intake → ready → running")
-	fmt.Fprintln(os.Stderr, "  wuphf task list [--filter=<filter>]      List tasks grouped by lifecycle state")
-	fmt.Fprintln(os.Stderr, "  wuphf task review <id>                   Open the Decision Packet view in your browser")
-	fmt.Fprintln(os.Stderr, "  wuphf task block <id> --on <ref>         Mark task blocked on a PR or task")
+	fmt.Fprintln(os.Stderr, "  gawkbot task start [intent]                Walk an intent through intake → ready → running")
+	fmt.Fprintln(os.Stderr, "  gawkbot task list [--filter=<filter>]      List tasks grouped by lifecycle state")
+	fmt.Fprintln(os.Stderr, "  gawkbot task review <id>                   Open the Decision Packet view in your browser")
+	fmt.Fprintln(os.Stderr, "  gawkbot task block <id> --on <ref>         Mark task blocked on a PR or task")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Filters: needs_decision (default), running, blocked, merged_today, all.")
 }
 
-// runTaskStart implements `wuphf task start [intent]`. v1 talks to the
+// runTaskStart implements `gawkbot task start [intent]`. v1 talks to the
 // broker via an in-process call after dialing the local broker over
 // HTTP to confirm one is running; without a running broker the CLI
 // surfaces a clear error rather than starting a one-shot.
@@ -87,11 +87,11 @@ func runTaskStart(args []string) {
 	fs := flag.NewFlagSet("task start", flag.ExitOnError)
 	autoAssign := fs.String("auto-assign", "", "Override Spec.AutoAssign (skip the countdown)")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf task start — drive an intent through intake")
+		fmt.Fprintln(os.Stderr, "gawkbot task start — drive an intent through intake")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf task start \"fix the cache invalidation bug\"")
-		fmt.Fprintln(os.Stderr, "  wuphf task start                       # reads the intent from stdin")
+		fmt.Fprintln(os.Stderr, "  gawkbot task start \"fix the cache invalidation bug\"")
+		fmt.Fprintln(os.Stderr, "  gawkbot task start                       # reads the intent from stdin")
 	}
 	_ = fs.Parse(args)
 	intent := strings.TrimSpace(strings.Join(fs.Args(), " "))
@@ -252,19 +252,19 @@ func printSpec(spec team.Spec) {
 	fmt.Println("--------------------------------------")
 }
 
-// runTaskList implements `wuphf task list`. Calls GET /tasks/inbox,
+// runTaskList implements `gawkbot task list`. Calls GET /tasks/inbox,
 // groups by LifecycleState, prints to stdout.
 func runTaskList(args []string) {
 	fs := flag.NewFlagSet("task list", flag.ExitOnError)
 	filter := fs.String("filter", "all", "Inbox filter (needs_decision/running/blocked/merged_today/all)")
 	jsonOut := fs.Bool("json", false, "Print the raw inbox payload as JSON")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf task list — print the inbox grouped by lifecycle state")
+		fmt.Fprintln(os.Stderr, "gawkbot task list — print the inbox grouped by lifecycle state")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf task list                            All tasks across all states")
-		fmt.Fprintln(os.Stderr, "  wuphf task list --filter=needs_decision    Only the inbox-headline filter")
-		fmt.Fprintln(os.Stderr, "  wuphf task list --json                     Emit the raw broker payload")
+		fmt.Fprintln(os.Stderr, "  gawkbot task list                            All tasks across all states")
+		fmt.Fprintln(os.Stderr, "  gawkbot task list --filter=needs_decision    Only the inbox-headline filter")
+		fmt.Fprintln(os.Stderr, "  gawkbot task list --json                     Emit the raw broker payload")
 	}
 	_ = fs.Parse(args)
 	url := brokerURL("/tasks/inbox?filter=" + *filter)
@@ -277,7 +277,7 @@ func runTaskList(args []string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "task list: %v\n", err)
-		fmt.Fprintln(os.Stderr, "  (is the broker running? try `wuphf` first)")
+		fmt.Fprintln(os.Stderr, "  (is the broker running? try `gawkbot` first)")
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
@@ -390,17 +390,17 @@ func openBrowser(ctx context.Context, url string) error {
 	return cmd.Start()
 }
 
-// runTaskBlock implements `wuphf task block <id> --on <ref>`. POSTs
+// runTaskBlock implements `gawkbot task block <id> --on <ref>`. POSTs
 // to /tasks/{id}/block on the running broker.
 func runTaskBlock(args []string) {
 	fs := flag.NewFlagSet("task block", flag.ExitOnError)
 	on := fs.String("on", "", "PR or task ID this task is blocked on (required)")
 	reason := fs.String("reason", "", "Optional human-readable reason")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf task block — mark a task blocked on a PR or task")
+		fmt.Fprintln(os.Stderr, "gawkbot task block — mark a task blocked on a PR or task")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf task block <id> --on <pr-or-task-id> [--reason \"text\"]")
+		fmt.Fprintln(os.Stderr, "  gawkbot task block <id> --on <pr-or-task-id> [--reason \"text\"]")
 	}
 	_ = fs.Parse(args)
 	if fs.NArg() == 0 {
@@ -431,7 +431,7 @@ func runTaskBlock(args []string) {
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "task block: %v\n", err)
-		fmt.Fprintln(os.Stderr, "  (is the broker running? try `wuphf` first)")
+		fmt.Fprintln(os.Stderr, "  (is the broker running? try `gawkbot` first)")
 		os.Exit(1)
 	}
 	defer resp.Body.Close()

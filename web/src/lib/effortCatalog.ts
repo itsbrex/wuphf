@@ -48,7 +48,7 @@ function titleCase(level: string): string {
 // empty array for runtimes that do not thread effort at dispatch.
 //
 // opencode is intentionally treated as effort-less even though it can proxy a
-// claude or gpt model: its WUPHF runner does not pass an effort flag, so an
+// claude or gpt model: its gawkbot runner does not pass an effort flag, so an
 // effort here would be a no-op. Revisit if the opencode runner gains effort.
 export function effortLevelsForKind(kind: LLMRuntimeKind | ""): string[] {
   if (kind === "claude-code") return [...CLAUDE_EFFORT_LEVELS];

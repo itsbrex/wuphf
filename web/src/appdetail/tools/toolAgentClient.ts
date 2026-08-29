@@ -168,7 +168,7 @@ export async function callToolViaAgent(
     return {
       status: "error",
       detail:
-        "Wuphf could not be reached to run this, so nothing happened. Give it a moment and try again.",
+        "gawkbot could not be reached to run this, so nothing happened. Give it a moment and try again.",
       actions: [],
     };
   }

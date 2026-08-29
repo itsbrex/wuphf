@@ -41,6 +41,45 @@ const SLUG_OVERRIDES: Record<string, readonly string[]> = {
  * "Engineer", " engineer ", and "Dev" all hit the same table.
  */
 const ROLE_TABLES: Record<string, readonly string[]> = {
+  // The six built-in roles. Before these existed every one of them fell
+  // through to GENERALIST_COPY, and because rotateIndex is derived from
+  // idleMs alone, all six showed the SAME line at the same moment -- a
+  // sidebar where the entire staff was "looking at memes".
+  //
+  // Voice: placid, literal, faintly unhelpful. The joke is that watching IS
+  // the job, so idle copy is the one place it can be said plainly.
+  lead: [
+    "reading over shoulders",
+    "waiting to be asked",
+    "watching the board",
+    "deciding who to bother",
+  ],
+  librarian: [
+    "filing something",
+    "re-reading the wiki",
+    "looking for a contradiction",
+    "tidying a page nobody opened",
+  ],
+  "app-builder": [
+    "staring at a blank canvas",
+    "considering a button",
+    "waiting for a workflow",
+  ],
+  planner: [
+    "breaking it into steps",
+    "staring at the backlog",
+    "sequencing something",
+  ],
+  executor: [
+    "waiting for the green light",
+    "warming up",
+    "watching the queue",
+  ],
+  reviewer: [
+    "looking for the flaw",
+    "re-reading it once more",
+    "waiting for a diff",
+  ],
   engineer: [
     "watching tests",
     "reviewing the diff",
@@ -93,6 +132,17 @@ const ROLE_ALIASES: Record<string, string> = {
   platform: "devops",
   marketing: "marketing",
   growth: "marketing",
+  // The built-ins, keyed off what the roster actually stores.
+  lead: "lead",
+  "chief of staff": "lead",
+  "chief-of-staff": "lead",
+  ceo: "lead",
+  librarian: "librarian",
+  "app builder": "app-builder",
+  "app-builder": "app-builder",
+  planner: "planner",
+  executor: "executor",
+  reviewer: "reviewer",
 };
 
 /**

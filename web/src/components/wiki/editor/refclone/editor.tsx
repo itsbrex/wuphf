@@ -201,7 +201,7 @@ export function KBEditor() {
           const slug = href.replace("#page:", "");
           const { nodes, selectPage, expandPath } = useTreeStore.getState();
           const activePath = useEditorStore.getState().currentPath;
-          // Prefer the host-injected resolver (WUPHF catalog-based); fall
+          // Prefer the host-injected resolver (gawkbot catalog-based); fall
           // back to the built-in tree slug lookup when absent.
           const targetPath =
             resolveWikiLinkRef.current?.(slug) ??

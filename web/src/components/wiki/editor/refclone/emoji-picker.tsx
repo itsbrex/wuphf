@@ -11,8 +11,8 @@ interface Props {
 /**
  * Resolve the active light/dark theme for emoji-mart.
  *
- * The reference app reads this from a `useTheme()` provider that WUPHF does
- * not have. WUPHF themes drive a `data-theme` attribute + a `.dark` class on
+ * The reference app reads this from a `useTheme()` provider that gawkbot does
+ * not have. gawkbot themes drive a `data-theme` attribute + a `.dark` class on
  * the document element (see RootRoute), so we detect dark mode from the live
  * DOM instead of dragging in a theme context the host doesn't expose.
  */

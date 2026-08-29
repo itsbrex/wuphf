@@ -1,9 +1,9 @@
 package main
 
-// `wuphf workspace restore <trash-id>` — bring a shredded workspace back.
+// `gawkbot workspace restore <trash-id>` — bring a shredded workspace back.
 //
 // The trash ID is the directory name under `~/.wuphf-spaces/.backups/` —
-// `<name>-<unix-timestamp>`. Users get this from `wuphf workspace list --trash`.
+// `<name>-<unix-timestamp>`. Users get this from `gawkbot workspace list --trash`.
 // The orchestrator reconstructs a fresh wuphfHome from the categorized backup
 // (wiki/skills/chats/context) and allocates a FRESH port pair (the original
 // ports may have been recycled). Restore fails if a workspace with the
@@ -21,12 +21,12 @@ func runWorkspaceRestore(args []string) {
 	fs := flag.NewFlagSet("workspace restore", flag.ContinueOnError)
 	fs.SetOutput(os.Stderr)
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf workspace restore — bring a trashed workspace back")
+		fmt.Fprintln(os.Stderr, "gawkbot workspace restore — bring a trashed workspace back")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf workspace restore <trash-id>")
+		fmt.Fprintln(os.Stderr, "  gawkbot workspace restore <trash-id>")
 		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Find trash IDs with `wuphf workspace list --trash`. Restore allocates a fresh")
+		fmt.Fprintln(os.Stderr, "Find trash IDs with `gawkbot workspace list --trash`. Restore allocates a fresh")
 		fmt.Fprintln(os.Stderr, "port pair (original ports may have been reused). If the original name is taken,")
 		fmt.Fprintln(os.Stderr, "the restored workspace gets a numeric suffix.")
 	}
@@ -60,5 +60,5 @@ func runWorkspaceRestore(args []string) {
 
 	_, _ = fmt.Fprintf(os.Stdout, "Restored as %q (broker :%d, web :%d)\n", ws.Name, ws.BrokerPort, ws.WebPort)
 	_, _ = fmt.Fprintf(os.Stdout, "Open: http://localhost:%d/\n", ws.WebPort)
-	_, _ = fmt.Fprintf(os.Stdout, "Switch CLI default with: wuphf workspace switch %s\n", ws.Name)
+	_, _ = fmt.Fprintf(os.Stdout, "Switch CLI default with: gawkbot workspace switch %s\n", ws.Name)
 }

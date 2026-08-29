@@ -121,7 +121,7 @@ function textToWikilinks(
 
 /**
  * Rewrite `[[slug]]` / `[[slug|Display]]` inside text nodes into link nodes
- * carrying the WUPHF wikilink data-attributes. Mirrors the preview's
+ * carrying the gawkbot wikilink data-attributes. Mirrors the preview's
  * `wikiLinkRemarkPlugin`, but the resolver is optional here — when omitted no
  * link is flagged broken.
  */

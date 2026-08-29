@@ -13,7 +13,7 @@
  *     only re-seeded when it differs, so normal typing never self-resets.
  *
  * Surfaces mounted here: the bubble menu (text selection), the slash menu
- * (`/`), the `@`-mention picker, the WUPHF insert dialogs (citation / fact /
+ * (`/`), the `@`-mention picker, the gawkbot insert dialogs (citation / fact /
  * decision / related / wiki-link / agent-mention pickers), and the link /
  * image popovers.
  */
@@ -416,7 +416,7 @@ export default function TiptapWikiEditor({
   );
 }
 
-/** Route a WUPHF slash action to its dialog or the mention picker. */
+/** Route a gawkbot slash action to its dialog or the mention picker. */
 function dispatchSlashAction(
   action: SlashAction,
   handlers: {

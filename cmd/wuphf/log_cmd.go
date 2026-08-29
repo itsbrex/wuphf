@@ -16,23 +16,23 @@ import (
 //
 // Usage:
 //
-//	wuphf log              — list the 20 most recent tasks
-//	wuphf log <taskID>     — dump the full JSONL for a single task as pretty lines
-//	wuphf log --agent eng  — list recent tasks for a specific agent
-//	wuphf log --limit 50   — override the default list size
+//	gawkbot log              — list the 20 most recent tasks
+//	gawkbot log <taskID>     — dump the full JSONL for a single task as pretty lines
+//	gawkbot log --agent eng  — list recent tasks for a specific agent
+//	gawkbot log --limit 50   — override the default list size
 func runLogCmd(args []string) {
 	fs := flag.NewFlagSet("log", flag.ExitOnError)
 	agentFilter := fs.String("agent", "", "Filter the list by agent slug (e.g. eng, ceo)")
 	limit := fs.Int("limit", 20, "Maximum number of tasks to list")
 	jsonOut := fs.Bool("json", false, "Emit raw JSON instead of the pretty table")
 	fs.Usage = func() {
-		fmt.Fprintln(os.Stderr, "wuphf log — show agent task receipts")
+		fmt.Fprintln(os.Stderr, "gawkbot log — show agent task receipts")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf log                 List recent tasks across all agents")
-		fmt.Fprintln(os.Stderr, "  wuphf log <taskID>        Dump one task's full tool-call history")
-		fmt.Fprintln(os.Stderr, "  wuphf log --agent eng     Filter the list to one agent")
-		fmt.Fprintln(os.Stderr, "  wuphf log --limit 50      Override default list size")
+		fmt.Fprintln(os.Stderr, "  gawkbot log                 List recent tasks across all agents")
+		fmt.Fprintln(os.Stderr, "  gawkbot log <taskID>        Dump one task's full tool-call history")
+		fmt.Fprintln(os.Stderr, "  gawkbot log --agent eng     Filter the list to one agent")
+		fmt.Fprintln(os.Stderr, "  gawkbot log --limit 50      Override default list size")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Reads from ~/.wuphf/office/tasks/{taskID}/output.log.")
 	}
@@ -98,7 +98,7 @@ func printTaskList(tasks []agent.TaskLogSummary, root string) {
 		fmt.Printf("%-20s  %-8s  %6d  %-16s  %s\n", t.TaskID, t.AgentSlug, t.ToolCallCount, last, flag)
 	}
 	fmt.Println("")
-	fmt.Println("Dig into one with: wuphf log <taskID>")
+	fmt.Println("Dig into one with: gawkbot log <taskID>")
 }
 
 func printTaskEntries(taskID string, entries []agent.TaskLogEntry) {

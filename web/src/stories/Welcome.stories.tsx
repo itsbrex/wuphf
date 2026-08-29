@@ -29,7 +29,7 @@ export const Intro: StoryObj = {
           letterSpacing: "-0.02em",
         }}
       >
-        Wuphf Design System
+        gawkbot Design System
       </h1>
       <p
         style={{
@@ -39,7 +39,7 @@ export const Intro: StoryObj = {
           marginBottom: 28,
         }}
       >
-        Tokens, atoms, molecules, organisms, and patterns for the Wuphf web app
+        Tokens, atoms, molecules, organisms, and patterns for the gawkbot web app
         — a context graph platform for AI agents.
       </p>
 

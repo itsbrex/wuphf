@@ -254,7 +254,7 @@ export function AppToolsChat({
   // A rejection must never wedge the chat (working stuck, composer disabled):
   // tell the operator, keep the composer usable.
   function reportAgentError() {
-    const body = "Something went wrong talking to Wuphf — try again.";
+    const body = "Something went wrong talking to gawkbot — try again.";
     setItems((prev) => [
       ...prev,
       { kind: "text", id: nextId(), from: "nex", body },
@@ -602,7 +602,7 @@ export function AppToolsChat({
             <div
               className="opr-act-working"
               role="status"
-              aria-label="Wuphf is working"
+              aria-label="gawkbot is working"
             >
               <span className="opr-work-dots" aria-hidden={true}>
                 <span />
@@ -619,7 +619,7 @@ export function AppToolsChat({
         <div className="opr-composer">
           <input
             className="opr-composer-input"
-            aria-label="Describe a task for Wuphf to build a tool for"
+            aria-label="Describe a task for gawkbot to build a tool for"
             placeholder="Describe a task… or “run the weekly summary”"
             value={draft}
             disabled={working !== null || pending !== null}

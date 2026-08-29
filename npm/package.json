@@ -1,12 +1,12 @@
 {
-  "name": "wuphf",
+  "name": "gawkbot",
   "version": "0.0.0",
-  "description": "Slack for AI employees with a shared brain. A collaborative office where AI employees run your work 24x7.",
+  "description": "gawkbot \u2014 your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.",
   "bin": {
-    "wuphf": "bin/wuphf.js"
+    "gawkbot": "bin/gawkbot.js"
   },
   "files": [
-    "bin/wuphf.js",
+    "bin/gawkbot.js",
     "scripts/cloudflared.json",
     "scripts/download-binary.js",
     "scripts/download-cloudflared.js",
@@ -33,11 +33,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nex-crm/wuphf.git"
+    "url": "git+https://github.com/najmuzzaman-mohammad/gawkbot.git"
   },
-  "homepage": "https://wuphf.team",
+  "homepage": "https://gawk.bot",
   "bugs": {
-    "url": "https://github.com/nex-crm/wuphf/issues"
+    "url": "https://github.com/najmuzzaman-mohammad/gawkbot/issues"
   },
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [

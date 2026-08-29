@@ -53,7 +53,7 @@ export function getUpgradeChangelog(from: string, to: string) {
   return get<UpgradeChangelogResponse>("/upgrade-changelog", { from, to });
 }
 
-// runUpgrade triggers `npm install [-g] wuphf@latest` on the host that the
+// runUpgrade triggers `npm install [-g] gawkbot@latest` on the host that the
 // broker is running on. The 130s timeout is just above the broker-side
 // upgradeRunTimeout (120s) so the client gives the server enough room to
 // surface its own deadline error instead of failing first with a generic
