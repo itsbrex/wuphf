@@ -162,7 +162,7 @@ func TestToolRegistry_Validate_RequiredOnly(t *testing.T) {
 
 func builtinTool(t *testing.T, name string) agent.AgentTool {
 	t.Helper()
-	for _, tool := range agent.CreateBuiltinTools(nil) {
+	for _, tool := range agent.CreateBuiltinTools() {
 		if tool.Name == name {
 			return tool
 		}
@@ -181,7 +181,7 @@ func decodeToolResult(t *testing.T, raw string) map[string]any {
 }
 
 func TestBuiltinToolsIncludeLocalToolset(t *testing.T) {
-	tools := agent.CreateBuiltinTools(nil)
+	tools := agent.CreateBuiltinTools()
 	names := make(map[string]bool, len(tools))
 	for _, tool := range tools {
 		names[tool.Name] = true

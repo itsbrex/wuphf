@@ -19,7 +19,6 @@ type brokerHealthResponse struct {
 	MemoryBackend       string `json:"memory_backend"`
 	MemoryBackendActive string `json:"memory_backend_active"`
 	MemoryBackendReady  bool   `json:"memory_backend_ready"`
-	NexConnected        bool   `json:"nex_connected"`
 }
 
 func cmdDoctor(ctx *SlashContext, _ string) error {
@@ -39,7 +38,6 @@ func cmdDoctor(ctx *SlashContext, _ string) error {
 		fmt.Sprintf("Focus mode: %t", health.FocusMode),
 		"Memory: " + firstNonEmpty(health.MemoryBackendActive, health.MemoryBackend),
 		fmt.Sprintf("Memory ready: %t", health.MemoryBackendReady),
-		fmt.Sprintf("Nex connected: %t", health.NexConnected),
 	}
 	ctx.AddMessage("system", strings.Join(lines, "\n"))
 	return nil

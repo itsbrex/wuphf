@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,94 +15,12 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/nex-crm/wuphf/cmd/wuphf/channelui"
-	"github.com/nex-crm/wuphf/internal/api"
 	"github.com/nex-crm/wuphf/internal/company"
 	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/openclaw"
 	"github.com/nex-crm/wuphf/internal/team"
 	"github.com/nex-crm/wuphf/internal/tui"
 )
-
-func channelIntegrationOptions() []tui.PickerOption {
-	options := make([]tui.PickerOption, 0, len(channelIntegrationSpecs))
-	for _, spec := range channelIntegrationSpecs {
-		options = append(options, tui.PickerOption{
-			Label:       spec.Label,
-			Value:       spec.Value,
-			Description: spec.Description,
-		})
-	}
-	return options
-}
-
-func findChannelIntegration(value string) (channelIntegrationSpec, bool) {
-	for _, spec := range channelIntegrationSpecs {
-		if spec.Value == value {
-			return spec, true
-		}
-	}
-	return channelIntegrationSpec{}, false
-}
-
-func connectIntegration(spec channelIntegrationSpec) tea.Cmd {
-	return func() tea.Msg {
-		apiKey := config.ResolveAPIKey("")
-		if apiKey == "" {
-			return channelIntegrationDoneMsg{err: errors.New("run /init first to configure your gawkbot API key")}
-		}
-		client := api.NewClient(apiKey)
-		result, err := api.Post[map[string]any](client,
-			fmt.Sprintf("/v1/integrations/%s/%s/connect", spec.Type, spec.Provider),
-			nil,
-			30*time.Second,
-		)
-		if err != nil {
-			return channelIntegrationDoneMsg{err: err}
-		}
-
-		authURL := channelui.MapString(result, "auth_url")
-		if authURL != "" {
-			_ = channelui.OpenBrowserURL(authURL)
-		}
-		connectID := channelui.MapString(result, "connect_id")
-		if connectID == "" {
-			return channelIntegrationDoneMsg{label: spec.Label, url: authURL}
-		}
-
-		deadline := time.Now().Add(5 * time.Minute)
-		for time.Now().Before(deadline) {
-			time.Sleep(3 * time.Second)
-			statusResp, err := api.Get[map[string]any](client,
-				fmt.Sprintf("/v1/integrations/connect/%s/status", connectID),
-				15*time.Second,
-			)
-			if err != nil {
-				var authErr *api.AuthError
-				if errors.As(err, &authErr) {
-					return channelIntegrationDoneMsg{err: err}
-				}
-				continue
-			}
-			status := strings.ToLower(channelui.MapString(statusResp, "status"))
-			switch status {
-			case "connected", "complete", "completed", "active":
-				return channelIntegrationDoneMsg{label: spec.Label, url: authURL}
-			case "failed", "error":
-				reason := channelui.MapString(statusResp, "error")
-				if reason == "" {
-					reason = status
-				}
-				return channelIntegrationDoneMsg{err: fmt.Errorf("%s connection failed: %s", spec.Label, reason)}
-			}
-		}
-
-		if authURL != "" {
-			return channelIntegrationDoneMsg{err: fmt.Errorf("%s connection timed out. Finish OAuth at %s", spec.Label, authURL)}
-		}
-		return channelIntegrationDoneMsg{err: fmt.Errorf("%s connection timed out", spec.Label)}
-	}
-}
 
 func (m *channelModel) startTelegramConnect() tea.Cmd {
 	token := os.Getenv("WUPHF_TELEGRAM_BOT_TOKEN")

@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-
-	"github.com/nex-crm/wuphf/internal/api"
-	"github.com/nex-crm/wuphf/internal/config"
 )
 
 // ManagedAgent wraps an AgentLoop with its config and current state snapshot.
@@ -34,9 +31,7 @@ type AgentService struct {
 	toolRegistry     *ToolRegistry
 	sessionStore     *SessionStore
 	queues           *MessageQueues
-	gossipLayer      *GossipLayer
 	credTracker      *CredibilityTracker
-	client           *api.Client
 	streamFnResolver StreamFnResolver
 	escalator        Escalator
 	listeners        []func()
@@ -62,23 +57,13 @@ func WithQueues(q *MessageQueues) AgentServiceOption {
 	return func(s *AgentService) { s.queues = q }
 }
 
-// WithClient sets the API client.
-func WithClient(c *api.Client) AgentServiceOption {
-	return func(s *AgentService) { s.client = c }
-}
-
-// WithGossipLayer sets the gossip layer.
-func WithGossipLayer(g *GossipLayer) AgentServiceOption {
-	return func(s *AgentService) { s.gossipLayer = g }
-}
-
 // WithCredibilityTracker sets the credibility tracker.
 func WithCredibilityTracker(ct *CredibilityTracker) AgentServiceOption {
 	return func(s *AgentService) { s.credTracker = ct }
 }
 
 // WithStreamFnResolver sets the function that resolves a StreamFn per agent slug.
-// This is the integration point for provider selection (nex-ask, claude-code, gemini).
+// This is the integration point for provider selection (claude-code, codex, gemini).
 func WithStreamFnResolver(r StreamFnResolver) AgentServiceOption {
 	return func(s *AgentService) { s.streamFnResolver = r }
 }
@@ -107,7 +92,7 @@ func (s *AgentService) AttachEscalator(fn Escalator) {
 // defaultStreamFnResolver returns a StreamFn that emits a configuration error.
 // This is used when no real provider resolver is wired in — it tells the user
 // to run /init so a provider gets configured.
-func defaultStreamFnResolver(client *api.Client) StreamFnResolver {
+func defaultStreamFnResolver() StreamFnResolver {
 	return func(agentSlug string) StreamFn {
 		return func(msgs []Message, tools []AgentTool) <-chan StreamChunk {
 			ch := make(chan StreamChunk, 1)
@@ -124,8 +109,8 @@ func defaultStreamFnResolver(client *api.Client) StreamFnResolver {
 }
 
 // NewAgentService creates an AgentService with sensible defaults.
-// Defaults: creates an API client with the resolved API key, creates a ToolRegistry
-// with builtin tools, etc. Options override defaults.
+// Defaults: creates a ToolRegistry with the local builtin tools, a session
+// store, and message queues. Options override defaults.
 func NewAgentService(opts ...AgentServiceOption) *AgentService {
 	s := &AgentService{
 		agents:     make(map[string]*ManagedAgent),
@@ -137,16 +122,10 @@ func NewAgentService(opts ...AgentServiceOption) *AgentService {
 	}
 
 	// Defaults.
-	if s.client == nil {
-		apiKey := config.ResolveAPIKey("")
-		s.client = api.NewClient(apiKey)
-	}
 	if s.toolRegistry == nil {
 		s.toolRegistry = NewToolRegistry()
-		if !config.ResolveNoNex() {
-			for _, tool := range CreateBuiltinTools(s.client) {
-				s.toolRegistry.Register(tool)
-			}
+		for _, tool := range CreateBuiltinTools() {
+			s.toolRegistry.Register(tool)
 		}
 	}
 	if s.sessionStore == nil {
@@ -159,7 +138,7 @@ func NewAgentService(opts ...AgentServiceOption) *AgentService {
 		s.queues = NewMessageQueues()
 	}
 	if s.streamFnResolver == nil {
-		s.streamFnResolver = defaultStreamFnResolver(s.client)
+		s.streamFnResolver = defaultStreamFnResolver()
 	}
 
 	return s
@@ -178,7 +157,7 @@ func (s *AgentService) Create(cfg AgentConfig) (*ManagedAgent, error) {
 	cfg = agentConfigSnapshot(cfg)
 	streamFn := s.streamFnResolver(cfg.Slug)
 
-	loop := NewAgentLoop(cfg, s.toolRegistry, s.sessionStore, s.queues, streamFn, s.gossipLayer, s.credTracker)
+	loop := NewAgentLoop(cfg, s.toolRegistry, s.sessionStore, s.queues, streamFn, s.credTracker)
 
 	ma := &ManagedAgent{
 		Config: cfg,

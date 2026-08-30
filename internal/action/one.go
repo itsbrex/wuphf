@@ -65,10 +65,10 @@ func NewOneCLIFromEnv() *OneCLI {
 
 func (o *OneCLI) Name() string { return "one" }
 
+// Configured reports whether the One CLI is invokable. One talks to its own
+// service with its own credentials, so availability of the binary is the whole
+// question.
 func (o *OneCLI) Configured() bool {
-	if config.ResolveNoNex() {
-		return false
-	}
 	if lookPathExists(o.Bin) {
 		return true
 	}
@@ -618,9 +618,6 @@ func (o *OneCLI) runJSONLines(ctx context.Context, args []string) ([]json.RawMes
 }
 
 func (o *OneCLI) run(ctx context.Context, args []string) ([]byte, error) {
-	if err := o.ensureConfigured(); err != nil {
-		return nil, err
-	}
 	workDir := o.commandWorkDir(args)
 	if err := os.MkdirAll(workDir, 0o700); err != nil {
 		return nil, err
@@ -674,13 +671,6 @@ func oneCLIUsesFlowWorkspace(args []string) bool {
 		return false
 	}
 	return strings.EqualFold(strings.TrimSpace(args[0]), "flow")
-}
-
-func (o *OneCLI) ensureConfigured() error {
-	if config.ResolveNoNex() {
-		return errors.New("nex is disabled for this session (--no-nex); Nex-managed integrations are unavailable")
-	}
-	return nil
 }
 
 func (o *OneCLI) hasEnvPrefix(prefix string) bool {

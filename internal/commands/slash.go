@@ -1,6 +1,6 @@
 package commands
 
-// RegisterAllCommands populates r with the full set of nex slash commands.
+// RegisterAllCommands populates r with the full set of slash commands.
 //
 // WebSupported flags are set against the web composer's current handler set
 // (web/src/components/messages/Composer.tsx). Flip WebSupported on a command
@@ -9,24 +9,15 @@ package commands
 // broker_commands.go / GET /commands.
 func RegisterAllCommands(r *Registry) {
 	// AI
-	r.Register(SlashCommand{Name: "ask", Description: "Ask the team lead", WebSupported: true, Execute: cmdAsk})
-	r.Register(SlashCommand{Name: "lookup", Description: "Cited answer from the team wiki", WebSupported: true, Execute: cmdLookup})
-	r.Register(SlashCommand{Name: "search", Description: "Search messages + KB", WebSupported: true, Execute: cmdSearch})
-	r.Register(SlashCommand{Name: "remember", Description: "Store a fact in memory", WebSupported: true, Execute: cmdRemember})
+	r.Register(SlashCommand{Name: "ask", Description: "Ask the team lead", WebSupported: true})
+	r.Register(SlashCommand{Name: "lookup", Description: "Cited answer from the team wiki", WebSupported: true})
+	r.Register(SlashCommand{Name: "search", Description: "Search messages + KB", WebSupported: true})
+	r.Register(SlashCommand{Name: "remember", Description: "Store a fact in memory", WebSupported: true})
 	r.Register(SlashCommand{Name: "youtube-pack", Description: "Generate YouTube content packages", Execute: cmdYouTubePack})
 
-	// Data
-	r.Register(SlashCommand{Name: "object", Description: "Object commands (list/get/create/update/delete)", Execute: cmdObject})
-	r.Register(SlashCommand{Name: "record", Description: "Record commands (list/get/create/upsert/update/delete/timeline)", Execute: cmdRecord})
-	r.Register(SlashCommand{Name: "note", Description: "Note commands (list/get/create/update/delete)", Execute: cmdNote})
-	r.Register(SlashCommand{Name: "task", Description: "Task actions (claim/release/complete/block/approve)", WebSupported: true, Execute: cmdTask})
-	r.Register(SlashCommand{Name: "list", Description: "List commands (list/get/create/delete/records/add-member)", Execute: cmdList})
-	r.Register(SlashCommand{Name: "rel", Description: "Relationship commands (list-defs/create-def/create/delete)", Execute: cmdRel})
-	r.Register(SlashCommand{Name: "attribute", Description: "Attribute commands (create/update/delete)", Execute: cmdAttribute})
+	r.Register(SlashCommand{Name: "task", Description: "Task actions (claim/release/complete/block/approve)", WebSupported: true})
 
 	// Views
-	r.Register(SlashCommand{Name: "graph", Description: "View context graph", Execute: cmdGraph})
-	r.Register(SlashCommand{Name: "insights", Description: "View insights", Execute: cmdInsights})
 	r.Register(SlashCommand{Name: "calendar", Description: "View schedule", WebSupported: true, Execute: cmdCalendar})
 	r.Register(SlashCommand{Name: "chat", Description: "Switch to chat view"})
 	r.Register(SlashCommand{Name: "messages", Description: "Show the main office feed"})

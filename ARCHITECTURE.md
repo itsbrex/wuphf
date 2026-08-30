@@ -6,7 +6,7 @@ How WUPHF works under the hood, anchored to files you can open. One page. Read i
 
 ```
           ┌──────────────┐         ┌──────────────┐
- human ──▶│   Web UI /   │────────▶│    Broker    │◀── Nex / Telegram / Composio
+ human ──▶│   Web UI /   │────────▶│    Broker    │◀── Composio / Telegram / Slack
           │  TUI / 1:1   │         │  (pub/sub +  │    (optional integrations)
           └──────────────┘◀────────│    queue)    │
                                    └──────┬───────┘
@@ -36,7 +36,7 @@ How WUPHF works under the hood, anchored to files you can open. One page. Read i
 | `internal/teammcp/` | The per-agent MCP tool surface. DM mode loads ~4 tools; office mode loads more |
 | `internal/agent/packs.go` | The team compositions (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) — packs can also pre-seed default skills |
 | `web/index.html` | The office UI — channels, composer, live streams |
-| `mcp/` | MCP servers WUPHF ships for Nex context, human-in-the-loop approvals, etc. |
+| `mcp/` | MCP servers WUPHF ships for human-in-the-loop approvals, etc. |
 
 ## Three load-bearing choices
 
@@ -63,7 +63,6 @@ needs to do the work well, and token spend is no longer a constraint.
 
 ## Optional integrations
 
-- **Nex** (`internal/action/nex_client.go` + external `nex-mcp` binary): context graph, notifications, email/CRM context. Opt out with `--no-nex`.
 - **Telegram** (`internal/team/telegram.go`): bidirectional bridge via `/connect`.
 - **Composio** (`--action provider`): lets agents take real-world actions (send email, update CRM).
 - **OpenClaw** (`internal/team/openclaw.go` + `internal/openclaw/` WS client): bridge users' existing OpenClaw agents into the office. Connect via `/connect openclaw`.
@@ -80,5 +79,5 @@ These integrations are load-time optional. Core WUPHF is just `broker + launcher
 
 ## Next stops
 
-- [`FORKING.md`](FORKING.md) — how to cut Nex, swap branding, add packs.
+- [`FORKING.md`](FORKING.md) — how to swap branding and add packs.
 - `scripts/benchmark.sh` — run the 9× benchmark yourself. Full methodology is inline in the script comments.

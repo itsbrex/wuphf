@@ -860,7 +860,6 @@ func shareProxyPathAllowed(path string) bool {
 		"/upgrade",
 		"/reset",
 		"/config",
-		"/nex/register",
 		"/image-providers",
 		"/notebook/",
 		"/humans/invites",

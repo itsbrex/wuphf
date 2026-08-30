@@ -108,11 +108,6 @@ type channelInitDoneMsg struct {
 	err    error
 	notice string
 }
-type channelIntegrationDoneMsg struct {
-	label string
-	url   string
-	err   error
-}
 type telegramDiscoverMsg struct {
 	botName string
 	groups  []team.TelegramGroup
@@ -244,7 +239,6 @@ const (
 	channelPickerInitBlueprint   channelPickerMode = "init_blueprint"
 	channelPickerInitPack        channelPickerMode = "init_pack" // legacy alias
 	channelPickerProvider        channelPickerMode = "provider"
-	channelPickerIntegrations    channelPickerMode = "integrations"
 	channelPickerRequests        channelPickerMode = "requests"
 	channelPickerTasks           channelPickerMode = "tasks"
 	channelPickerTaskAction      channelPickerMode = "task_action"
@@ -276,25 +270,6 @@ const (
 	quickJumpChannels quickJumpTarget = "channels"
 	quickJumpApps     quickJumpTarget = "apps"
 )
-
-type channelIntegrationSpec struct {
-	Label       string
-	Value       string
-	Type        string
-	Provider    string
-	Description string
-}
-
-var channelIntegrationSpecs = []channelIntegrationSpec{
-	{Label: "Gmail", Value: "gmail", Type: "email", Provider: "google", Description: "Connect Google email"},
-	{Label: "Google Calendar", Value: "google-calendar", Type: "calendar", Provider: "google", Description: "Connect Google Calendar and the gawkbot Meeting Bot"},
-	{Label: "Outlook", Value: "outlook", Type: "email", Provider: "microsoft", Description: "Connect Microsoft email"},
-	{Label: "Outlook Calendar", Value: "outlook-calendar", Type: "calendar", Provider: "microsoft", Description: "Connect Outlook Calendar and the gawkbot Meeting Bot"},
-	{Label: "Slack", Value: "slack", Type: "messaging", Provider: "slack", Description: "Connect Slack workspace messaging"},
-	{Label: "Salesforce", Value: "salesforce", Type: "crm", Provider: "salesforce", Description: "Connect Salesforce CRM"},
-	{Label: "HubSpot", Value: "hubspot", Type: "crm", Provider: "hubspot", Description: "Connect HubSpot CRM"},
-	{Label: "Attio", Value: "attio", Type: "crm", Provider: "attio", Description: "Connect Attio CRM"},
-}
 
 // focusArea identifies which panel currently owns keyboard input.
 type focusArea int
@@ -429,14 +404,7 @@ func newChannelModelWithApp(threadsCollapsed bool, initialApp channelui.OfficeAp
 	}
 	memoryStatus := team.ResolveMemoryBackendStatus()
 	if memoryStatus.SelectedKind == config.MemoryBackendNone {
-		if config.ResolveNoNex() {
-			m.notice = "Running in office-only mode. Nex tools are disabled for this session."
-		} else {
-			m.notice = "Running without an external memory backend for this session."
-		}
-	} else if memoryStatus.SelectedKind == config.MemoryBackendNex && memoryStatus.ActiveKind == config.MemoryBackendNone && strings.TrimSpace(config.ResolveAPIKey("")) == "" {
-		m.notice = "No gawkbot API key configured. Starting setup..."
-		m.initFlow, _ = m.initFlow.Start()
+		m.notice = "Running without an external memory backend for this session."
 	} else if memoryStatus.SelectedKind == config.MemoryBackendGBrain && strings.TrimSpace(config.ResolveOpenAIAPIKey()) == "" && strings.TrimSpace(config.ResolveAnthropicAPIKey()) == "" {
 		m.notice = "No OpenAI or Anthropic API key configured for GBrain. Starting setup..."
 		m.initFlow, _ = m.initFlow.Start()
@@ -576,9 +544,6 @@ func (m channelModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case channelInitDoneMsg:
 		return m.handleChannelInitDoneMsg(msg)
-
-	case channelIntegrationDoneMsg:
-		return m.handleChannelIntegrationDoneMsg(msg)
 
 	case channelDoctorDoneMsg:
 		return m.handleChannelDoctorDoneMsg(msg)

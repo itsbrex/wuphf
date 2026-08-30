@@ -17,7 +17,7 @@ func withTempConfigHome(t *testing.T, f func()) {
 
 func TestConfigSetActionProviderPersists(t *testing.T) {
 	withTempConfigHome(t, func() {
-		result := Dispatch("/config set action_provider composio", "", "text", 0)
+		result := Dispatch("/config set action_provider composio", "text", 0)
 		if result.ExitCode != 0 {
 			t.Fatalf("expected success, got exit=%d err=%q output=%q", result.ExitCode, result.Error, result.Output)
 		}
@@ -40,7 +40,7 @@ func TestConfigSetActionProviderPersists(t *testing.T) {
 
 func TestConfigSetBlueprintPersists(t *testing.T) {
 	withTempConfigHome(t, func() {
-		result := Dispatch("/config set blueprint niche-crm", "", "text", 0)
+		result := Dispatch("/config set blueprint niche-crm", "text", 0)
 		if result.ExitCode != 0 {
 			t.Fatalf("expected success, got exit=%d err=%q output=%q", result.ExitCode, result.Error, result.Output)
 		}
@@ -67,7 +67,7 @@ func TestConfigShowIncludesResolvedActionProvider(t *testing.T) {
 			t.Fatalf("save config: %v", err)
 		}
 
-		result := Dispatch("/config show", "", "text", 0)
+		result := Dispatch("/config show", "text", 0)
 		if result.ExitCode != 0 {
 			t.Fatalf("expected success, got exit=%d err=%q output=%q", result.ExitCode, result.Error, result.Output)
 		}

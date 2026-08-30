@@ -58,7 +58,7 @@ func newTestLoop(t *testing.T, streamFn StreamFn) (*AgentLoop, string) {
 		Personality: "You are a test agent.",
 	}
 
-	loop := NewAgentLoop(config, tools, sessions, queues, streamFn, nil, nil)
+	loop := NewAgentLoop(config, tools, sessions, queues, streamFn, nil)
 	return loop, dir
 }
 
@@ -392,7 +392,7 @@ func TestToolCallCycle(t *testing.T) {
 	}
 
 	streamFn := mockToolCallStreamFn("echo", map[string]any{"text": "hi"})
-	loop := NewAgentLoop(config, tools, sessions, queues, streamFn, nil, nil)
+	loop := NewAgentLoop(config, tools, sessions, queues, streamFn, nil)
 
 	var toolCalls []string
 	loop.On(EventToolCall, func(args ...any) {
@@ -513,7 +513,7 @@ func TestToolCallCycleWritesTaskOutputLog(t *testing.T) {
 		Slug:  "logger",
 		Name:  "Logger",
 		Tools: []string{"echo"},
-	}, tools, sessions, queues, mockToolCallStreamFn("echo", map[string]any{"text": "hi"}), nil, nil)
+	}, tools, sessions, queues, mockToolCallStreamFn("echo", map[string]any{"text": "hi"}), nil)
 
 	queues.FollowUp("logger", "call echo")
 	loop.Start()
@@ -627,7 +627,7 @@ func TestCredibilityRecordOnDone(t *testing.T) {
 		Personality: "You test credibility.",
 	}
 
-	loop := NewAgentLoop(config, tools, sessions, queues, mockStreamFn("ok"), nil, tracker)
+	loop := NewAgentLoop(config, tools, sessions, queues, mockStreamFn("ok"), tracker)
 	queues.FollowUp("cred-agent", "task")
 	loop.Start()
 

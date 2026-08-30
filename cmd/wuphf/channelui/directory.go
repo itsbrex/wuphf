@@ -83,7 +83,7 @@ func DisplayName(slug string) string {
 	case "cro":
 		return "CRO"
 	case "nex":
-		return "Nex"
+		return "Automation"
 	case "you":
 		return "You"
 	default:
@@ -117,7 +117,7 @@ func RoleLabel(slug string) string {
 	case "cro":
 		return "revenue"
 	case "nex":
-		return "context graph"
+		return "automation"
 	case "you":
 		return "human"
 	default:

@@ -5,10 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/nex-crm/wuphf/internal/agent"
-	"github.com/nex-crm/wuphf/internal/api"
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
@@ -22,24 +20,27 @@ type CommandResult struct {
 
 // DispatchWithService is like Dispatch but accepts an AgentService for commands
 // that need access to running agents (e.g. /agents, /agent).
-// DispatchWithService is like Dispatch but accepts an AgentService for commands
-// that need access to running agents (e.g. /agents, /agent).
-func DispatchWithService(input string, apiKey string, format string, timeout int, agentSvc *agent.AgentService) CommandResult {
-	return dispatchInternal(input, apiKey, format, timeout, agentSvc)
+func DispatchWithService(input string, format string, timeout int, agentSvc *agent.AgentService) CommandResult {
+	return dispatchInternal(input, format, timeout, agentSvc)
 }
 
 // Dispatch parses input and runs the matching command non-interactively.
 // format is "text" or "json"; timeout is in milliseconds (0 = default).
-func Dispatch(input string, apiKey string, format string, timeout int) CommandResult {
-	return dispatchInternal(input, apiKey, format, timeout, nil)
+func Dispatch(input string, format string, timeout int) CommandResult {
+	return dispatchInternal(input, format, timeout, nil)
 }
 
-func dispatchInternal(input string, apiKey string, format string, timeout int, agentSvc *agent.AgentService) CommandResult {
+func dispatchInternal(input string, format string, timeout int, agentSvc *agent.AgentService) CommandResult {
 	name, args, isSlash := ParseSlashInput(input)
 	if !isSlash {
-		// Treat plain text as /ask
-		name = "ask"
-		args = input
+		// Plain prose has no non-interactive handler: conversation belongs to
+		// the running office, not to a one-shot CLI invocation. Say so rather
+		// than routing it somewhere that will not answer.
+		return CommandResult{
+			Output:   "Plain text is not a command. Launch the office and talk to the team there, or pass a slash command (see /help).",
+			ExitCode: 1,
+			Error:    "not a command",
+		}
 	}
 
 	r := NewRegistry()
@@ -61,17 +62,12 @@ func dispatchInternal(input string, apiKey string, format string, timeout int, a
 	}
 
 	cfg, _ := config.Load()
-	client := api.NewClient(apiKey)
-	if timeout > 0 {
-		client.Timeout = time.Duration(timeout) * time.Millisecond
-	}
 
 	var output strings.Builder
 	var execErr error
 
 	ctx := &SlashContext{
 		AgentService: agentSvc,
-		APIClient:    client,
 		Config:       &cfg,
 		AddMessage: func(role, content string) {
 			output.WriteString(content)

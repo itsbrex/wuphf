@@ -86,7 +86,7 @@ type Migrator struct {
 func NewMigrator(writer WikiWriter) *Migrator {
 	return &Migrator{
 		writer: writer,
-		now:    NexNow,
+		now:    MigrationNow,
 		Stdout: os.Stdout,
 		Stderr: os.Stderr,
 	}

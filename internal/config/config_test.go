@@ -26,7 +26,7 @@ func TestLoadMissingFileReturnsEmpty(t *testing.T) {
 		if err != nil {
 			t.Fatalf("expected no error for missing file, got: %v", err)
 		}
-		if cfg.APIKey != "" || cfg.Email != "" {
+		if cfg.Email != "" || cfg.WorkspaceID != "" {
 			t.Fatalf("expected empty config, got: %+v", cfg)
 		}
 	})
@@ -99,7 +99,6 @@ func TestResolvePostHogKeyFallsBackToBareEnv(t *testing.T) {
 func TestRoundtrip(t *testing.T) {
 	withTempConfig(t, func(_ string) {
 		in := Config{
-			APIKey:             "test-key",
 			MemoryBackend:      MemoryBackendGBrain,
 			Email:              "user@example.com",
 			WorkspaceID:        "ws-123",
@@ -159,7 +158,7 @@ func TestActiveBlueprintFallsBackToPack(t *testing.T) {
 
 func TestSaveCreatesParentDirs(t *testing.T) {
 	withTempConfig(t, func(dir string) {
-		if err := Save(Config{APIKey: "k"}); err != nil {
+		if err := Save(Config{Email: "e@e.com"}); err != nil {
 			t.Fatalf("Save failed: %v", err)
 		}
 		path := filepath.Join(dir, ".wuphf", "config.json")
@@ -171,7 +170,7 @@ func TestSaveCreatesParentDirs(t *testing.T) {
 
 func TestSaveWritesValidJSON(t *testing.T) {
 	withTempConfig(t, func(dir string) {
-		if err := Save(Config{APIKey: "k", Email: "e@e.com"}); err != nil {
+		if err := Save(Config{Email: "e@e.com"}); err != nil {
 			t.Fatalf("Save: %v", err)
 		}
 		raw, _ := os.ReadFile(filepath.Join(dir, ".wuphf", "config.json"))
@@ -179,43 +178,12 @@ func TestSaveWritesValidJSON(t *testing.T) {
 		if err := json.Unmarshal(raw, &m); err != nil {
 			t.Fatalf("invalid JSON: %v\n%s", err, raw)
 		}
-		if m["api_key"] != "k" {
-			t.Fatalf("unexpected api_key: %v", m["api_key"])
+		if m["email"] != "e@e.com" {
+			t.Fatalf("unexpected email: %v", m["email"])
 		}
 	})
 }
 
-func TestResolveAPIKeyFlag(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_API_KEY", "env-key")
-		if got := ResolveAPIKey("flag-key"); got != "flag-key" {
-			t.Fatalf("flag should win, got: %s", got)
-		}
-	})
-}
-
-func TestResolveAPIKeyEnv(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_API_KEY", "env-key")
-		if got := ResolveAPIKey(""); got != "env-key" {
-			t.Fatalf("env should win over config, got: %s", got)
-		}
-	})
-}
-
-func TestResolveAPIKeyConfigFile(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_API_KEY", "")
-		_ = Save(Config{APIKey: "file-key"})
-		if got := ResolveAPIKey(""); got != "file-key" {
-			t.Fatalf("config file fallback failed, got: %s", got)
-		}
-	})
-}
-
-// setGBrainOllamaEmbedder overrides the ollama-embedder probe seam so the
-// implicit-default resolution is deterministic regardless of whether the host
-// running the suite has ollama installed with an embedding model pulled.
 func setGBrainOllamaEmbedder(t *testing.T, available bool) {
 	t.Helper()
 	prev := gbrainOllamaEmbedderAvailable
@@ -255,7 +223,6 @@ func TestResolveMemoryBackendDefaultsToMarkdownWhenGBrainNotReady(t *testing.T) 
 	// without gbrain must still boot on the git-native markdown wiki. This is
 	// the graceful-fallback half of the gbrain-default flip.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		clearGBrainReadiness(t)
 		if got := ResolveMemoryBackend(""); got != MemoryBackendMarkdown {
@@ -264,24 +231,10 @@ func TestResolveMemoryBackendDefaultsToMarkdownWhenGBrainNotReady(t *testing.T) 
 	})
 }
 
-func TestResolveMemoryBackendDefaultsToMarkdownWhenNoNexAndGBrainNotReady(t *testing.T) {
-	// --no-nex says "don't reach for Nex." With gbrain unavailable, markdown
-	// is a valid and strictly better default than silent 'none'.
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "1")
-		t.Setenv("WUPHF_MEMORY_BACKEND", "")
-		clearGBrainReadiness(t)
-		if got := ResolveMemoryBackend(""); got != MemoryBackendMarkdown {
-			t.Fatalf("expected --no-nex default to resolve to markdown, got %q", got)
-		}
-	})
-}
-
 func TestResolveMemoryBackendDefaultsToGBrainWhenReady(t *testing.T) {
 	// gbrain is the strong default: with the binary installed and a provider
 	// key configured, an empty config resolves to gbrain rather than markdown.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		t.Setenv("WUPHF_OPENAI_API_KEY", "sk-test-openai")
 		t.Setenv("WUPHF_ANTHROPIC_API_KEY", "")
@@ -299,7 +252,6 @@ func TestResolveMemoryBackendExplicitCommandMissingDoesNotFallBack(t *testing.T)
 	// explicit command usually re-homes the brain, and the PATH binary points
 	// at the user-global one. Not installed → markdown default.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		t.Setenv("WUPHF_OPENAI_API_KEY", "sk-test-openai")
 		t.Setenv("WUPHF_ANTHROPIC_API_KEY", "")
@@ -318,7 +270,6 @@ func TestResolveMemoryBackendDefaultsToMarkdownWhenGBrainInstalledButNoEmbedder(
 	// keyword-only gbrain is ~equivalent to markdown, so the default falls back
 	// to markdown rather than selecting a backend that adds nothing.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		t.Setenv("WUPHF_OPENAI_API_KEY", "")
 		t.Setenv("OPENAI_API_KEY", "")
@@ -337,7 +288,6 @@ func TestResolveMemoryBackendDefaultsToMarkdownWhenAnthropicOnly(t *testing.T) {
 	// embeddings API. Without OpenAI or a local ollama embedder, the implicit
 	// default stays on the markdown wiki.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		t.Setenv("WUPHF_OPENAI_API_KEY", "")
 		t.Setenv("OPENAI_API_KEY", "")
@@ -355,7 +305,6 @@ func TestResolveMemoryBackendDefaultsToGBrainWithLocalOllamaEmbedder(t *testing.
 	// is pulled: gbrain can do semantic retrieval entirely on-device, so it is
 	// the strong default even without an OpenAI key.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", "")
 		t.Setenv("WUPHF_OPENAI_API_KEY", "")
 		t.Setenv("OPENAI_API_KEY", "")
@@ -373,43 +322,11 @@ func TestResolveMemoryBackendExplicitMarkdownOverridesGBrainDefault(t *testing.T
 	// An explicit selection bypasses the gbrain-ready probe entirely, even
 	// when gbrain would otherwise be the default.
 	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "")
 		t.Setenv("WUPHF_MEMORY_BACKEND", MemoryBackendMarkdown)
 		t.Setenv("WUPHF_OPENAI_API_KEY", "sk-test-openai")
 		fakeGBrainOnPath(t)
 		if got := ResolveMemoryBackend(""); got != MemoryBackendMarkdown {
 			t.Fatalf("expected explicit markdown to win over gbrain default, got %q", got)
-		}
-	})
-}
-
-func TestResolveMemoryBackendAllowsGBrainUnderNoNex(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "1")
-		t.Setenv("WUPHF_MEMORY_BACKEND", MemoryBackendGBrain)
-		if got := ResolveMemoryBackend(""); got != MemoryBackendGBrain {
-			t.Fatalf("expected explicit gbrain to survive no-nex, got %q", got)
-		}
-	})
-}
-
-func TestResolveMemoryBackendForcesNexToNoneUnderNoNex(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "1")
-		t.Setenv("WUPHF_MEMORY_BACKEND", MemoryBackendNex)
-		if got := ResolveMemoryBackend(""); got != MemoryBackendNone {
-			t.Fatalf("expected nex to resolve to none under no-nex, got %q", got)
-		}
-	})
-}
-
-func TestResolveOneSecretDisabledWhenNoNex(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		t.Setenv("WUPHF_NO_NEX", "1")
-		t.Setenv("WUPHF_ONE_SECRET", "env-secret")
-		_ = Save(Config{OneAPIKey: "file-secret"})
-		if got := ResolveOneSecret(); got != "" {
-			t.Fatalf("expected no One secret when Nex is disabled, got %q", got)
 		}
 	})
 }
@@ -430,7 +347,7 @@ func TestOneSetupSummaryManagedPending(t *testing.T) {
 	withTempConfig(t, func(_ string) {
 		_ = Save(Config{Email: "ops@example.com"})
 		got := OneSetupSummary()
-		if got != "managed by Nex via One (ops@example.com), provisioning pending" {
+		if got != "handled by One (ops@example.com), credential pending" {
 			t.Fatalf("unexpected setup summary %q", got)
 		}
 	})
@@ -874,97 +791,6 @@ func TestResolveTimeoutFallback(t *testing.T) {
 	})
 }
 
-func TestPersistRegistration(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		data := map[string]interface{}{
-			"api_key":        "reg-key",
-			"email":          "reg@example.com",
-			"workspace_id":   "ws-456",
-			"workspace_slug": "reg-ws",
-		}
-		if err := PersistRegistration(data); err != nil {
-			t.Fatalf("PersistRegistration: %v", err)
-		}
-		cfg, _ := Load()
-		if cfg.APIKey != "reg-key" {
-			t.Errorf("api_key: got %q, want %q", cfg.APIKey, "reg-key")
-		}
-		if cfg.Email != "reg@example.com" {
-			t.Errorf("email: got %q", cfg.Email)
-		}
-		if cfg.WorkspaceID != "ws-456" {
-			t.Errorf("workspace_id: got %q", cfg.WorkspaceID)
-		}
-		if cfg.WorkspaceSlug != "reg-ws" {
-			t.Errorf("workspace_slug: got %q", cfg.WorkspaceSlug)
-		}
-	})
-}
-
-func TestPersistRegistrationNumericWorkspaceID(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		data := map[string]interface{}{
-			"workspace_id": float64(12345),
-		}
-		if err := PersistRegistration(data); err != nil {
-			t.Fatalf("PersistRegistration: %v", err)
-		}
-		cfg, _ := Load()
-		if cfg.WorkspaceID != "12345" {
-			t.Errorf("numeric workspace_id: got %q, want %q", cfg.WorkspaceID, "12345")
-		}
-	})
-}
-
-func TestPersistRegistrationMerges(t *testing.T) {
-	withTempConfig(t, func(_ string) {
-		_ = Save(Config{APIKey: "existing-key", DefaultFormat: "json"})
-		if err := PersistRegistration(map[string]interface{}{"email": "new@example.com"}); err != nil {
-			t.Fatalf("PersistRegistration: %v", err)
-		}
-		cfg, _ := Load()
-		if cfg.APIKey != "existing-key" {
-			t.Errorf("existing api_key should be preserved, got %q", cfg.APIKey)
-		}
-		if cfg.DefaultFormat != "json" {
-			t.Errorf("existing default_format should be preserved, got %q", cfg.DefaultFormat)
-		}
-		if cfg.Email != "new@example.com" {
-			t.Errorf("email should be set, got %q", cfg.Email)
-		}
-	})
-}
-
-func TestBaseURLDevURLEnv(t *testing.T) {
-	t.Setenv("WUPHF_DEV_URL", "http://localhost:4000")
-	if got := BaseURL(); got != "http://localhost:4000" {
-		t.Fatalf("expected localhost, got: %s", got)
-	}
-}
-
-func TestBaseURLDefault(t *testing.T) {
-	t.Setenv("WUPHF_DEV_URL", "")
-	withTempConfig(t, func(_ string) {
-		if got := BaseURL(); got != "https://app.nex.ai" {
-			t.Fatalf("expected production URL, got: %s", got)
-		}
-	})
-}
-
-func TestAPIBase(t *testing.T) {
-	t.Setenv("WUPHF_DEV_URL", "")
-	withTempConfig(t, func(_ string) {
-		want := "https://app.nex.ai/api/developers"
-		if got := APIBase(); got != want {
-			t.Fatalf("APIBase: got %q, want %q", got, want)
-		}
-	})
-}
-
-// RegisterURL used to point at the legacy HTTP registration endpoint.
-// Registration now shells out via internal/nex.Register (nex-cli), so the
-// URL builder is gone. The test is removed along with it.
-
 func TestOpenclawConfigRoundTrip(t *testing.T) {
 	withTempConfig(t, func(_ string) {
 		want := Config{
@@ -1007,4 +833,31 @@ func TestResolveOpenclawTokenAcceptsGatewayEnv(t *testing.T) {
 			t.Fatalf("expected gateway-token, got %q", got)
 		}
 	})
+}
+
+// TestResolveMemoryBackendDegradesRetiredNexBackend pins the persisted-state
+// half of the Nex removal: a config.json still carrying `memory_backend: "nex"`
+// is on real users' disks. Loading it must land on a working backend, not error
+// and not leave the office with no memory at all.
+func TestResolveMemoryBackendDegradesRetiredNexBackend(t *testing.T) {
+	withTempConfig(t, func(_ string) {
+		t.Setenv("WUPHF_MEMORY_BACKEND", "")
+		clearGBrainReadiness(t)
+		if err := Save(Config{MemoryBackend: "nex"}); err != nil {
+			t.Fatalf("save config: %v", err)
+		}
+		got := ResolveMemoryBackend("")
+		if got != MemoryBackendMarkdown {
+			t.Fatalf("retired nex backend should degrade to the markdown default, got %q", got)
+		}
+	})
+}
+
+// TestNormalizeMemoryBackendRejectsRetiredNex documents that "nex" is no longer
+// a selectable backend: it normalizes away like any unknown value, which is what
+// makes the degradation above fall through to the implicit default.
+func TestNormalizeMemoryBackendRejectsRetiredNex(t *testing.T) {
+	if got := NormalizeMemoryBackend("nex"); got != "" {
+		t.Fatalf("NormalizeMemoryBackend(\"nex\") = %q, want \"\"", got)
+	}
 }

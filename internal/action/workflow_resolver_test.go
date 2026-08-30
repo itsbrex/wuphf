@@ -237,7 +237,18 @@ func TestResolverMapsNonIntegrationSteps(t *testing.T) {
 	if b, _ := r.Resolve(ctx, plan, PlanStep{ID: "t", Kind: "trigger"}); !b.Skip {
 		t.Fatal("trigger should be skipped")
 	}
-	if b, _ := r.Resolve(ctx, plan, PlanStep{ID: "s", Kind: "ai", Title: "Score the fit"}); b.Type != "nex_ask" || b.QueryTemplate == "" {
-		t.Fatalf("ai step should become nex_ask, got %#v", b)
+	// An "ai" step with no integration has no runnable step type left: the ask
+	// service it used to bind to is gone. The bind must FAIL rather than emit a
+	// narration template, which would put a label where downstream steps expect
+	// an answer.
+	b, err := r.Resolve(ctx, plan, PlanStep{ID: "s", Kind: "ai", Title: "Score the fit"})
+	if err == nil {
+		t.Fatalf("ai step with no integration should fail the bind, got %#v", b)
+	}
+	if !strings.Contains(err.Error(), "s") || !strings.Contains(err.Error(), "AI judgment") {
+		t.Fatalf("bind error should name the step and the missing capability, got: %v", err)
+	}
+	if b.Type != "" {
+		t.Fatalf("a failed bind must not return a usable step, got %#v", b)
 	}
 }

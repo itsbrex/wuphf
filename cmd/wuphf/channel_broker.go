@@ -17,7 +17,6 @@ import (
 	"github.com/nex-crm/wuphf/cmd/wuphf/channelui"
 	"github.com/nex-crm/wuphf/internal/brokeraddr"
 	"github.com/nex-crm/wuphf/internal/config"
-	"github.com/nex-crm/wuphf/internal/setup"
 	"github.com/nex-crm/wuphf/internal/team"
 	"github.com/nex-crm/wuphf/internal/tui"
 )
@@ -951,10 +950,7 @@ func switchFocusMode(enabled bool) tea.Cmd {
 
 func applyTeamSetup() tea.Cmd {
 	return func() tea.Msg {
-		notice, err := setup.InstallLatestCLI(context.Background())
-		if err != nil {
-			return channelInitDoneMsg{err: err}
-		}
+		notice := "Setup saved."
 		cfg, _ := config.Load()
 		if current := strings.TrimSpace(os.Getenv("WUPHF_HEADLESS_PROVIDER")); current != "" {
 			return channelInitDoneMsg{notice: notice + " Setup saved. Restart gawkbot to reload the " + current + " office runtime with the new configuration."}

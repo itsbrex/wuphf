@@ -140,12 +140,8 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			return m, nil
 		case contextPicker:
 			m.picker.SetActive(false)
-			if m.pickerMode == channelPickerIntegrations {
-				m.notice = "Integration canceled."
-			} else {
-				m.initFlow = tui.NewInitFlow()
-				m.notice = "Setup canceled. Come back when you're ready. That's what she said."
-			}
+			m.initFlow = tui.NewInitFlow()
+			m.notice = "Setup canceled. Come back when you're ready. That's what she said."
 			m.pickerMode = channelPickerNone
 			return m, nil
 		case contextAutocomplete, contextMention:
@@ -218,11 +214,6 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 	if m.picker.IsActive() {
 		var cmd tea.Cmd
 		m.picker, cmd = m.picker.Update(msg)
-		return m, cmd
-	}
-	if m.initFlow.IsActive() && m.initFlow.Phase() == tui.InitAPIKey {
-		var cmd tea.Cmd
-		m.initFlow, cmd = m.initFlow.Update(msg)
 		return m, cmd
 	}
 	if m.autocomplete.IsVisible() {

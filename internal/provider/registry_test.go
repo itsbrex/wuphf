@@ -47,7 +47,7 @@ func TestRegistry_FakeKindRoutesEverywhere(t *testing.T) {
 	t.Setenv("WUPHF_LLM_PROVIDER", fakeKind)
 
 	// Path 1: streaming resolver.
-	fn := provider.DefaultStreamFnResolver(nil, nil)("agent-slug")
+	fn := provider.DefaultStreamFnResolver(nil)("agent-slug")
 	if fn == nil {
 		t.Fatal("resolver returned nil StreamFn for registered fake kind")
 	}
@@ -181,7 +181,7 @@ func TestStreamFnResolver_PerAgentKindOverridesInstallWide(t *testing.T) {
 		return "" // empty → fall back to install-wide
 	}
 
-	resolver := provider.DefaultStreamFnResolver(nil, kindResolver)
+	resolver := provider.DefaultStreamFnResolver(kindResolver)
 
 	// Agent with a per-agent binding routes to agentKind, not installKind.
 	for range resolver("agent-on-per-agent-binding")(nil, nil) {

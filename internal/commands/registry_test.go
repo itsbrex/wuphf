@@ -71,8 +71,7 @@ func TestRegisterAllCommands(t *testing.T) {
 
 	expected := []string{
 		"ask", "search", "remember", "youtube-pack",
-		"object", "record", "note", "task", "list", "rel", "attribute",
-		"agent", "agents", "graph", "insights", "calendar", "chat",
+		"task", "agent", "agents", "calendar", "chat",
 		"messages", "inbox", "outbox", "rewind", "insert", "switcher",
 		"switch", "channels", "channel", "queue", "artifacts",
 		"config", "detect", "doctor", "integrate", "init", "provider",
@@ -82,6 +81,15 @@ func TestRegisterAllCommands(t *testing.T) {
 	for _, name := range expected {
 		if _, ok := r.Get(name); !ok {
 			t.Errorf("expected command %q to be registered", name)
+		}
+	}
+
+	// The context-graph command surface was backed by a hosted API this build
+	// no longer talks to. Registering the names again without a backend would
+	// hand users commands that silently do nothing.
+	for _, name := range []string{"object", "record", "note", "list", "rel", "attribute", "graph", "insights"} {
+		if _, ok := r.Get(name); ok {
+			t.Errorf("retired context-graph command %q must not be registered", name)
 		}
 	}
 }
@@ -161,21 +169,21 @@ func TestCmdAgentsNoService(t *testing.T) {
 }
 
 func TestDispatchQuit(t *testing.T) {
-	result := Dispatch("/quit", "", "text", 0)
+	result := Dispatch("/quit", "text", 0)
 	if result.ExitCode != 0 {
 		t.Errorf("expected exit code 0, got %d", result.ExitCode)
 	}
 }
 
 func TestDispatchUnknown(t *testing.T) {
-	result := Dispatch("/nonexistent", "", "text", 0)
+	result := Dispatch("/nonexistent", "text", 0)
 	if result.ExitCode != 1 {
 		t.Errorf("expected exit code 1, got %d", result.ExitCode)
 	}
 }
 
 func TestDispatchHelp(t *testing.T) {
-	result := Dispatch("/help", "", "text", 0)
+	result := Dispatch("/help", "text", 0)
 	if result.ExitCode != 0 {
 		t.Errorf("expected exit code 0, got %d", result.ExitCode)
 	}
@@ -185,7 +193,7 @@ func TestDispatchHelp(t *testing.T) {
 }
 
 func TestDispatchJSON(t *testing.T) {
-	result := Dispatch("/help", "", "json", 0)
+	result := Dispatch("/help", "json", 0)
 	if result.ExitCode != 0 {
 		t.Errorf("expected exit code 0, got %d", result.ExitCode)
 	}
@@ -194,10 +202,12 @@ func TestDispatchJSON(t *testing.T) {
 	}
 }
 
-func TestDispatchInitInstallsLatestCLI(t *testing.T) {
+// TestDispatchInitSavesDefaultsWithoutInstallingAnything: `/init` used to
+// globally `npm install -g` a hosted vendor's CLI as a side effect. It now only
+// saves setup defaults — an install would be a surprising, unrequested mutation
+// of the user's machine.
+func TestDispatchInitSavesDefaultsWithoutInstallingAnything(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_API_KEY", "")
-	t.Setenv("NEX_API_KEY", "")
 
 	dir := t.TempDir()
 	logFile := filepath.Join(dir, "args.log")
@@ -207,17 +217,18 @@ func TestDispatchInitInstallsLatestCLI(t *testing.T) {
 		t.Fatalf("write fake npm: %v", err)
 	}
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	t.Setenv("WUPHF_CLI_INSTALL_BIN", "npm")
-	t.Setenv("WUPHF_CLI_PACKAGE", "@example/wuphf")
 
-	result := Dispatch("/init", "", "text", 0)
+	result := Dispatch("/init", "text", 0)
 	if result.ExitCode != 0 {
 		t.Fatalf("expected exit code 0, got %d (%s)", result.ExitCode, result.Error)
 	}
-	if !strings.Contains(result.Output, "Latest @example/wuphf CLI installed from npm.") {
-		t.Fatalf("expected install notice, got %q", result.Output)
-	}
 	if !strings.Contains(result.Output, "Setup defaults saved.") {
 		t.Fatalf("expected setup defaults notice, got %q", result.Output)
+	}
+	if _, err := os.Stat(logFile); err == nil {
+		t.Fatal("/init must not shell out to npm")
+	}
+	if strings.Contains(result.Output, "installed from npm") {
+		t.Fatalf("/init must not claim an install, got %q", result.Output)
 	}
 }

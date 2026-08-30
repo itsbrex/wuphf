@@ -1,8 +1,8 @@
 package main
 
 // memory.go hosts the `gawkbot memory` subcommand family. Today it owns
-// one verb: `migrate`, which ports legacy Nex / GBrain memory into the
-// markdown wiki at ~/.wuphf/wiki/team/.
+// one verb: `migrate`, which ports legacy GBrain memory into the markdown
+// wiki at ~/.wuphf/wiki/team/.
 //
 // Why a separate file
 // ===================
@@ -19,8 +19,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/nex-crm/wuphf/internal/api"
-	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/migration"
 	"github.com/nex-crm/wuphf/internal/team"
 )
@@ -47,10 +45,9 @@ func printMemoryHelp() {
 	fmt.Fprintln(os.Stderr, "gawkbot memory — manage the team wiki and legacy memory backends")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Verbs:")
-	fmt.Fprintln(os.Stderr, "  migrate    Port Nex or GBrain content into ~/.wuphf/wiki/team/")
+	fmt.Fprintln(os.Stderr, "  migrate    Port GBrain content into ~/.wuphf/wiki/team/")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
-	fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from nex [--dry-run] [--limit N]")
 	fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from gbrain [--dry-run] [--limit N]")
 }
 
@@ -58,15 +55,14 @@ func printMemoryHelp() {
 // fatal error it writes to stderr and exits non-zero.
 func runMemoryMigrate(args []string) {
 	fs := flag.NewFlagSet("memory migrate", flag.ContinueOnError)
-	from := fs.String("from", "", "Source backend: nex or gbrain")
+	from := fs.String("from", "", "Source backend: gbrain")
 	dryRun := fs.Bool("dry-run", false, "Print the plan without committing")
 	limit := fs.Int("limit", 0, "Cap the number of records imported (0 = unlimited)")
-	apiKeyFlag := fs.String("api-key", "", "API key for Nex authentication (overrides WUPHF_API_KEY)")
 	fs.Usage = func() {
 		fmt.Fprintln(os.Stderr, "gawkbot memory migrate — import legacy memory into the team wiki")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from {nex,gbrain} [--dry-run] [--limit N]")
+		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from gbrain [--dry-run] [--limit N]")
 		fmt.Fprintln(os.Stderr, "")
 		fs.PrintDefaults()
 	}
@@ -80,7 +76,7 @@ func runMemoryMigrate(args []string) {
 		os.Exit(2)
 	}
 
-	adapter, err := buildAdapter(source, strings.TrimSpace(*apiKeyFlag))
+	adapter, err := buildAdapter(source)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -117,25 +113,21 @@ func runMemoryMigrate(args []string) {
 }
 
 // buildAdapter returns the concrete adapter for a source flag value.
-func buildAdapter(source, apiKeyOverride string) (migration.Adapter, error) {
+//
+// The retired "nex" source is named explicitly so an operator running the
+// documented old command gets a straight answer instead of a generic
+// "unsupported value".
+func buildAdapter(source string) (migration.Adapter, error) {
 	switch source {
 	case "nex":
-		key := apiKeyOverride
-		if key == "" {
-			key = strings.TrimSpace(config.ResolveAPIKey(""))
-		}
-		if key == "" {
-			return nil, fmt.Errorf("nex adapter requires an API key (set WUPHF_API_KEY or pass --api-key)")
-		}
-		client := api.NewClient(key)
-		return migration.NewNexAdapter(client), nil
+		return nil, fmt.Errorf("the nex memory source has been removed; there is nothing left to migrate from")
 	case "gbrain":
 		if !migration.GBrainReady() {
 			return nil, fmt.Errorf("gbrain binary not found on PATH; install GBrain before migrating")
 		}
 		return migration.NewGBrainAdapter(), nil
 	default:
-		return nil, fmt.Errorf("unsupported --from value %q (expected nex or gbrain)", source)
+		return nil, fmt.Errorf("unsupported --from value %q (expected gbrain)", source)
 	}
 }
 

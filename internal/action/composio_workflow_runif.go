@@ -12,7 +12,7 @@ import (
 // outputs); when it is false the step is skipped, with no AI in the loop. This
 // is the deterministic half of "deterministic unless AI needs to decide": a
 // threshold like `steps.score.result.fit >= 80` stays a plain number compare,
-// while genuine judgment lives in nex_ask steps.
+// with no model in the loop.
 //
 // The grammar is intentionally tiny and closed — `<operand> <op> <operand>`,
 // where an operand is a scope path, a number, a quoted string, or a boolean —

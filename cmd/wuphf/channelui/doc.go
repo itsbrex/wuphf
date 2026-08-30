@@ -199,10 +199,10 @@
 //     dispatch for left/right/home/end/word motions, with a recognized
 //     bool so callers can fall through unrecognized keys).
 //   - message_filters.go   — message-walking filters and selectors:
-//     FilterInsightMessages (automation / nex senders for the insight
+//     FilterInsightMessages (automation senders for the insight
 //     side panels), LatestHumanFacingMessage (newest human_*-kind
 //     pointer or nil), CountUniqueAgents (distinct senders excluding
-//     "you" / "nex" / kind=="automation").
+//     "you" / automation senders).
 //   - misc_helpers.go      — small pure helpers:
 //     AppendUniqueMessages (dedup-by-trimmed-ID merge, returns the
 //     added count), PopupActionIndex (parses the numeric token of a

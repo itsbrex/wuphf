@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/nex-crm/wuphf/internal/agent"
-	"github.com/nex-crm/wuphf/internal/api"
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
@@ -34,7 +33,6 @@ type SlashCommand struct {
 // SlashContext provides services and UI callbacks to command implementations.
 type SlashContext struct {
 	AgentService *agent.AgentService
-	APIClient    *api.Client
 	Config       *config.Config
 	AddMessage   func(role, content string)
 	SetLoading   func(bool)

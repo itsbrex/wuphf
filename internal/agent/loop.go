@@ -47,18 +47,16 @@ type AgentLoop struct {
 	sessions           *SessionStore
 	queues             *MessageQueues
 	streamFn           StreamFn
-	gossipLayer        *GossipLayer
 	credibilityTracker *CredibilityTracker
 
-	running           bool
-	paused            bool
-	eventHandlers     map[EventName][]EventHandler
-	pendingToolCall   *ToolCall
-	cancelFunc        context.CancelFunc
-	taskHadError      bool
-	collectedInsights []string
-	taskLogRoot       string
-	lastCompactionAt  int
+	running          bool
+	paused           bool
+	eventHandlers    map[EventName][]EventHandler
+	pendingToolCall  *ToolCall
+	cancelFunc       context.CancelFunc
+	taskHadError     bool
+	taskLogRoot      string
+	lastCompactionAt int
 
 	// Stuck detection and retry cap.
 	lastPhase       AgentPhase
@@ -73,14 +71,13 @@ type AgentLoop struct {
 }
 
 // NewAgentLoop creates a new agent loop with the given dependencies.
-// gossipLayer and credibilityTracker may be nil.
+// credibilityTracker may be nil.
 func NewAgentLoop(
 	config AgentConfig,
 	tools *ToolRegistry,
 	sessions *SessionStore,
 	queues *MessageQueues,
 	streamFn StreamFn,
-	gossipLayer *GossipLayer,
 	credibilityTracker *CredibilityTracker,
 ) *AgentLoop {
 	return &AgentLoop{
@@ -92,7 +89,6 @@ func NewAgentLoop(
 		sessions:           sessions,
 		queues:             queues,
 		streamFn:           streamFn,
-		gossipLayer:        gossipLayer,
 		credibilityTracker: credibilityTracker,
 		eventHandlers:      make(map[EventName][]EventHandler),
 		taskLogRoot:        defaultTaskLogRoot(),
@@ -202,13 +198,6 @@ func (l *AgentLoop) Resume() {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.paused = false
-}
-
-// AddInsight records an insight to be published via gossip when the task completes.
-func (l *AgentLoop) AddInsight(insight string) {
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	l.collectedInsights = append(l.collectedInsights, insight)
 }
 
 // Tick advances the state machine by one step. Called by the service's tick loop.
@@ -375,7 +364,6 @@ func (l *AgentLoop) setPhaseForTest(phase AgentPhase) {
 func (l *AgentLoop) buildContext() error {
 	l.setPhase(PhaseBuildContext)
 	l.taskHadError = false
-	l.collectedInsights = nil
 
 	slug := l.state.Config.Slug
 
@@ -441,52 +429,9 @@ func (l *AgentLoop) buildContext() error {
 		})
 	}
 
-	// Inject gossip insights if gossip layer is available.
-	if l.gossipLayer != nil {
-		l.injectGossipInsights()
-	}
-
 	l.emit(EventThinking, l.progressNote(PhaseBuildContext))
 
 	return nil
-}
-
-// injectGossipInsights queries gossip and injects scored insights into the session.
-func (l *AgentLoop) injectGossipInsights() {
-	slug := l.state.Config.Slug
-	// Use the first expertise topic for gossip queries.
-	topic := slug
-	if len(l.state.Config.Expertise) > 0 {
-		topic = l.state.Config.Expertise[0]
-	}
-
-	insights, err := l.gossipLayer.Query(slug, topic)
-	if err != nil {
-		return // Gossip errors are non-fatal.
-	}
-
-	for _, insight := range insights {
-		var srcCred *float64
-		if l.credibilityTracker != nil && insight.Source != "" {
-			c := l.credibilityTracker.GetCredibility(insight.Source)
-			srcCred = &c
-		}
-
-		score := ScoreInsight(insight, "", srcCred)
-		switch score.Decision {
-		case "adopt":
-			l.appendSession(SessionEntry{
-				Type:    "system",
-				Content: fmt.Sprintf("[GOSSIP:ADOPTED] (from %s, score=%.2f) %s", insight.Source, score.Total, insight.Content),
-			})
-		case "test":
-			l.appendSession(SessionEntry{
-				Type:    "system",
-				Content: fmt.Sprintf("[GOSSIP:TEST] (from %s, score=%.2f) %s", insight.Source, score.Total, insight.Content),
-			})
-		}
-		// "reject" is silently dropped.
-	}
 }
 
 // streamLLM streams output from the LLM and processes chunks.
@@ -694,12 +639,6 @@ func (l *AgentLoop) executeTool() error {
 			},
 		})
 
-		// Collect gossip_publish insights.
-		if tc.ToolName == "nex_gossip_publish" {
-			if insight, ok := tc.Params["insight"].(string); ok {
-				l.collectedInsights = append(l.collectedInsights, insight)
-			}
-		}
 	}
 	l.logToolExecution(*tc)
 
@@ -715,16 +654,6 @@ func (l *AgentLoop) handleDone() error {
 	if l.queues.HasMessages(slug) {
 		l.setPhase(PhaseIdle)
 		return nil
-	}
-
-	// Publish collected insights via gossip.
-	if l.gossipLayer != nil && len(l.collectedInsights) > 0 {
-		for _, insight := range l.collectedInsights {
-			if _, err := l.gossipLayer.Publish(slug, insight, ""); err != nil {
-				log.Printf("agent loop: gossip publish (slug=%s): %v", slug, err)
-			}
-		}
-		l.collectedInsights = nil
 	}
 
 	// Record outcome in credibility tracker.
@@ -832,33 +761,16 @@ func (l *AgentLoop) prepareEntriesForStreaming(entries []SessionEntry) []Session
 	}
 
 	l.lastCompactionAt = len(entries)
-	l.emit(EventThinking, "Context nearing capacity; archived older context into an Office Insight.")
-	l.rememberOfficeInsight(summary)
+	// Describe only what actually happened. The older turns are folded into
+	// the summary entry above; there is no separate insight store to archive
+	// them into, and claiming one would be a false status line.
+	l.emit(EventThinking, "Context nearing capacity; folded older context into a summary.")
 
 	compacted := make([]SessionEntry, 0, len(prefix)+1+len(recent))
 	compacted = append(compacted, prefix...)
 	compacted = append(compacted, summaryEntry)
 	compacted = append(compacted, recent...)
 	return compacted
-}
-
-func (l *AgentLoop) rememberOfficeInsight(summary string) {
-	tool, ok := l.tools.Get("nex_remember")
-	if !ok {
-		return
-	}
-
-	content := strings.TrimSpace(summary)
-	if content == "" {
-		return
-	}
-
-	go func() {
-		_, _ = tool.Execute(map[string]any{
-			"content": content,
-			"tags":    []string{"office-insight", "compaction"},
-		}, context.Background(), func(string) {})
-	}()
 }
 
 func (l *AgentLoop) logToolExecution(call ToolCall) {

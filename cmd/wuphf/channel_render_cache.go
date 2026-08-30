@@ -194,7 +194,6 @@ func hashSidebarState(channels []channelui.ChannelInfo, members []channelui.Memb
 	h.addInt(workspace.BlockingCount)
 	h.addInt(workspace.IsolatedCount)
 	h.addInt(workspace.UnreadCount)
-	h.addBool(workspace.NoNex)
 	h.add(workspace.Memory.SelectedKind, workspace.Memory.SelectedLabel, workspace.Memory.ActiveKind, workspace.Memory.ActiveLabel, workspace.Memory.Detail, workspace.Memory.NextStep)
 	h.add(string(workspace.Readiness.Level), workspace.Readiness.Headline, workspace.Readiness.Detail, workspace.Readiness.NextStep)
 	if workspace.NeedsYou != nil {

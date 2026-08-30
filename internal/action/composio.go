@@ -106,8 +106,12 @@ func (c *ComposioREST) applyAuthHeaders(h http.Header) {
 
 func (c *ComposioREST) Name() string { return "composio" }
 
+// Configured reports whether this client can talk to Composio: usable
+// credentials plus a user identity to namespace connected accounts under.
+// Composio authenticates directly against its own REST API, so nothing outside
+// those two facts may gate it.
 func (c *ComposioREST) Configured() bool {
-	return !config.ResolveNoNex() && c.hasAuth() && strings.TrimSpace(c.UserID) != ""
+	return c.hasAuth() && strings.TrimSpace(c.UserID) != ""
 }
 
 func (c *ComposioREST) Supports(cap Capability) bool {
@@ -378,11 +382,11 @@ func (c *ComposioREST) Guide(_ context.Context, topic string) (GuideResult, erro
 			"Use connected account IDs returned by team_action_connections as the connection_key. If a workflow omits connection_key and there is exactly one active connection for that platform, WUPHF auto-resolves it.",
 			"Trigger registration is supported through the existing relay compatibility tools with one event filter per trigger.",
 			"Workflow creation and execution are WUPHF-native: save a workflow definition in WUPHF, then WUPHF executes external steps through Composio.",
-			`Supported WUPHF workflow step types: "action", "template", "nex_ask", and "nex_insights".`,
-			"Every workflow step also exposes a generic .result value: action=result response object, template=result text, nex_ask=result answer text, nex_insights=result compact insight summary text.",
-			"Use a template step to compress large action output into concise text before handing it to nex_ask or another action.",
-			"Keep workflow compose prompts compact. For digest/report flows, default to about 10 recent emails and 5 recent insights unless the human explicitly asks for more.",
-			"Do not dump raw JSON from .response or .insights into nex_ask when a compact .result summary will do.",
+			`Supported WUPHF workflow step types: "action", "template", and "browser".`,
+			"Every workflow step also exposes a generic .result value: action=result response object, template=result text, browser=result outcome text.",
+			"Use a template step to compress large action output into concise text before handing it to another action.",
+			"Keep workflows compact. For digest/report flows, default to about 10 recent items unless the human explicitly asks for more.",
+			"Do not dump raw JSON from .response into an action parameter when a compact .result summary will do.",
 		},
 		"workflow_examples": []map[string]any{{
 			"version": composioWorkflowVersion,
@@ -390,8 +394,6 @@ func (c *ComposioREST) Guide(_ context.Context, topic string) (GuideResult, erro
 				"connection_key":  "ca_...",
 				"recipient_email": config.ResolveComposioUserID(),
 				"subject":         "Daily digest",
-				"window_hours":    24,
-				"insight_limit":   5,
 			},
 			"steps": []map[string]any{
 				{
@@ -406,20 +408,9 @@ func (c *ComposioREST) Guide(_ context.Context, topic string) (GuideResult, erro
 					},
 				},
 				{
-					"id":             "recent_insights",
-					"type":           "nex_insights",
-					"lookback_hours": "{{ .inputs.window_hours }}",
-					"insight_limit":  "{{ .inputs.insight_limit }}",
-				},
-				{
 					"id":       "email_summary",
 					"type":     "template",
 					"template": "Email highlights from the last 24 hours:\n{{- range $m := .steps.fetch_emails.result.data.messages }}\n- {{ $m.sender }} | {{ $m.subject }} | {{ $m.preview.body }}\n{{- end }}",
-				},
-				{
-					"id":             "compose_digest",
-					"type":           "nex_ask",
-					"query_template": "Draft a digest with Why This Matters and What To Do Next sections.\n\n{{ .steps.email_summary.result }}\n\n{{ .steps.recent_insights.result }}",
 				},
 				{
 					"id":             "send_email",
@@ -430,7 +421,7 @@ func (c *ComposioREST) Guide(_ context.Context, topic string) (GuideResult, erro
 					"data": map[string]any{
 						"recipient_email": "{{ .inputs.recipient_email }}",
 						"subject":         "{{ .inputs.subject }}",
-						"body":            "{{ .steps.compose_digest.result }}",
+						"body":            "{{ .steps.email_summary.result }}",
 					},
 				},
 			},

@@ -41,7 +41,7 @@ type Plan struct {
 // BoundStep is the resolver's verdict for one plan step: the Composio mechanics
 // to execute it. Only the fields relevant to Type need to be set.
 type BoundStep struct {
-	// Type is the composio step type: action|template|nex_ask|nex_insights.
+	// Type is the composio step type: action|template|browser.
 	Type string
 	// Skip drops the step from the runnable workflow entirely (e.g. a pure UI
 	// trigger marker with no executable counterpart). Distinct from run_if, which

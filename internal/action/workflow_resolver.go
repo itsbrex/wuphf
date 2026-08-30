@@ -55,7 +55,7 @@ func (r *ComposioActionResolver) Resolve(ctx context.Context, plan Plan, step Pl
 		return BoundStep{Skip: true}, nil
 	}
 	if kind == "browser" {
-		// No integration for this step → Nex drives the browser. The sub-goal
+		// No integration for this step → drive the browser instead. The sub-goal
 		// rides in the template; the broker's browser-step executor runs it via
 		// cua (there is no Composio action to bind).
 		goal := strings.TrimSpace(step.Detail)
@@ -67,10 +67,16 @@ func (r *ComposioActionResolver) Resolve(ctx context.Context, plan Plan, step Pl
 
 	integration := strings.TrimSpace(step.Integration)
 	if integration == "" {
-		// No external system: judgment becomes an AI nex_ask step; everything else
-		// is a narration template (decision/branch gating rides on action run_if).
+		// No external system and no runnable AI step type: a judgment step used
+		// to bind to a hosted ask service that is gone. Fail the bind here
+		// rather than emitting a narration template in its place — a template
+		// would put a label where downstream steps expect an answer, which is a
+		// wrong result dressed up as a working workflow.
 		if kind == "ai" || kind == "decision" {
-			return BoundStep{Type: "nex_ask", QueryTemplate: stepQuery(step)}, nil
+			return BoundStep{}, fmt.Errorf(
+				"step %q needs AI judgment but has no integration, and there is no runnable AI step type in this build: "+
+					"give the step an integration, or restate it as a deterministic step gated by run_if",
+				strings.TrimSpace(step.ID))
 		}
 		return BoundStep{Type: "template", Template: stepLabel(step)}, nil
 	}

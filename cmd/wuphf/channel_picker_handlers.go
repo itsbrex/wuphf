@@ -28,17 +28,6 @@ import (
 
 func (m channelModel) handlePickerSelectMsg(msg tui.PickerSelectMsg) (channelModel, tea.Cmd) {
 	switch m.pickerMode {
-	case channelPickerIntegrations:
-		spec, ok := findChannelIntegration(msg.Value)
-		m.picker.SetActive(false)
-		m.pickerMode = channelPickerNone
-		if !ok {
-			m.notice = "Unknown integration selection."
-			return m, nil
-		}
-		m.posting = true
-		m.notice = fmt.Sprintf("Opening %s OAuth flow in your browser...", spec.Label)
-		return m, connectIntegration(spec)
 	case channelPickerChannels:
 		m.picker.SetActive(false)
 		m.pickerMode = channelPickerNone

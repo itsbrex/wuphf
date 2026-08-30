@@ -1390,27 +1390,6 @@ func TestInitCommandStartsSetupFlow(t *testing.T) {
 	}
 }
 
-func TestNewChannelModelAutoStartsInitWithoutAPIKey(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_API_KEY", "")
-	// Pin the Nex backend explicitly — this test is asserting Nex-specific
-	// behaviour ("no API key → init flow fires to ask for one"). Since the
-	// shipping default is now markdown (no API key needed), the init flow
-	// would not auto-start without this pin.
-	t.Setenv("WUPHF_MEMORY_BACKEND", config.MemoryBackendNex)
-	defer os.Setenv("HOME", origHome)
-
-	m := newChannelModel(false)
-
-	if !m.initFlow.IsActive() && m.initFlow.Phase() != "api_key" {
-		t.Fatalf("expected init flow to auto-start without API key, got phase %q", m.initFlow.Phase())
-	}
-	if !strings.Contains(m.notice, "Starting setup") {
-		t.Fatalf("expected setup notice, got %q", m.notice)
-	}
-}
-
 func TestNewChannelModelAutoStartsInitForGBrainWithoutProviderKey(t *testing.T) {
 	origHome := os.Getenv("HOME")
 	t.Setenv("HOME", t.TempDir())
@@ -1421,7 +1400,7 @@ func TestNewChannelModelAutoStartsInitForGBrainWithoutProviderKey(t *testing.T) 
 
 	m := newChannelModel(false)
 
-	if !m.initFlow.IsActive() && m.initFlow.Phase() != tui.InitAPIKey {
+	if !m.initFlow.IsActive() && m.initFlow.Phase() != tui.InitProviderChoice {
 		t.Fatalf("expected init flow to auto-start for missing gbrain credentials, got phase %q", m.initFlow.Phase())
 	}
 	if !strings.Contains(m.notice, "GBrain") || !strings.Contains(m.notice, "Starting setup") {
@@ -1451,8 +1430,8 @@ func TestInitCommandRunsForGBrainBackend(t *testing.T) {
 	if cmd == nil && got.initFlow.Phase() == tui.InitIdle {
 		t.Fatalf("expected /init to activate setup, got phase %q", got.initFlow.Phase())
 	}
-	if got.initFlow.Phase() != tui.InitAPIKey {
-		t.Fatalf("expected gbrain setup to ask for a provider key, got %q", got.initFlow.Phase())
+	if got.initFlow.Phase() != tui.InitProviderChoice {
+		t.Fatalf("expected gbrain setup to start at the provider choice, got %q", got.initFlow.Phase())
 	}
 }
 
@@ -1830,25 +1809,24 @@ func TestThreadComposerRecallRestoresDraft(t *testing.T) {
 	}
 }
 
-func TestIntegrateCommandOpensPicker(t *testing.T) {
+// TestIntegrateCommandPointsAtWebUI: the TUI's /integrate used to drive a
+// hosted OAuth flow that no longer exists. It must not open a picker it cannot
+// complete — it points at the Composio-backed Integrations app instead.
+func TestIntegrateCommandPointsAtWebUI(t *testing.T) {
 	t.Skip("skipped: pre-existing CI environment issue")
 	m := newChannelModel(false)
 	m.notice = ""
-	t.Setenv("WUPHF_API_KEY", "test-key")
 	m.input = []rune("/integrate")
 	m.inputPos = len(m.input)
 
 	next, _ := m.Update(tea.KeyMsg{Type: tea.KeyEnter})
 	got := next.(channelModel)
 
-	if !got.picker.IsActive() {
-		t.Fatal("expected integration picker to be active")
+	if got.picker.IsActive() {
+		t.Fatal("expected no integration picker: the TUI cannot finish an integration connect")
 	}
-	if got.pickerMode != channelPickerIntegrations {
-		t.Fatalf("expected integration picker mode, got %q", got.pickerMode)
-	}
-	if !strings.Contains(got.notice, "Choose an integration") {
-		t.Fatalf("expected integration notice, got %q", got.notice)
+	if !strings.Contains(got.notice, "Integrations app") {
+		t.Fatalf("expected a pointer to the Integrations app, got %q", got.notice)
 	}
 }
 
@@ -2919,6 +2897,5 @@ func TestMain(m *testing.M) {
 	tmp, _ := os.MkdirTemp("", "wuphf-test-*")
 	os.Setenv("HOME", tmp)
 	os.Setenv("WUPHF_API_KEY", "test-key")
-	os.Unsetenv("WUPHF_NO_NEX")
 	os.Exit(m.Run())
 }

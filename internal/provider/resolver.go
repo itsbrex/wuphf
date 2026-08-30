@@ -2,7 +2,6 @@ package provider
 
 import (
 	"github.com/nex-crm/wuphf/internal/agent"
-	"github.com/nex-crm/wuphf/internal/api"
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
@@ -32,8 +31,7 @@ type ProviderKindResolver func(agentSlug string) string
 // The install-wide LLMProvider is intentionally a default-for-new-agents
 // only — changing it never replays through existing agents' bindings. To
 // change an existing agent's runtime, edit it through the AgentProfilePanel.
-func DefaultStreamFnResolver(client *api.Client, kindResolver ProviderKindResolver) agent.StreamFnResolver {
-	// TODO: thread client into provider-specific StreamFn factories (see issue #186).
+func DefaultStreamFnResolver(kindResolver ProviderKindResolver) agent.StreamFnResolver {
 	return func(agentSlug string) agent.StreamFn {
 		var kind string
 		if kindResolver != nil {

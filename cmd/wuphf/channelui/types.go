@@ -197,7 +197,7 @@ type Task struct {
 }
 
 // TaskMemoryWorkflow is the task-level context harness state returned by the
-// broker. It stays backend-neutral so markdown, Nex, and GBrain citations can
+// broker. It stays backend-neutral so markdown and GBrain citations can
 // share one terminal projection.
 type TaskMemoryWorkflow struct {
 	Required          bool                         `json:"required"`

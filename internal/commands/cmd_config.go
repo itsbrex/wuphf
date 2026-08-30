@@ -40,7 +40,6 @@ func configShow(ctx *SlashContext) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	masked := maskKey(cfg.APIKey)
 	workspace := cfg.WorkspaceSlug
 	if workspace == "" {
 		workspace = cfg.WorkspaceID
@@ -66,7 +65,6 @@ func configShow(ctx *SlashContext) error {
 		blueprint = "(not set)"
 	}
 
-	baseURL := config.BaseURL()
 	actionProvider := config.ResolveActionProvider()
 	if actionProvider == "" {
 		actionProvider = "auto"
@@ -74,7 +72,6 @@ func configShow(ctx *SlashContext) error {
 
 	var sb strings.Builder
 	sb.WriteString("Configuration:\n")
-	sb.WriteString(fmt.Sprintf("  API Key:   %s\n", masked))
 	sb.WriteString(fmt.Sprintf("  Integrations: %s\n", config.OneSetupSummary()))
 	sb.WriteString(fmt.Sprintf("  Action provider: %s\n", actionProvider))
 	sb.WriteString(fmt.Sprintf("  Workspace: %s\n", workspace))
@@ -88,7 +85,6 @@ func configShow(ctx *SlashContext) error {
 	if legacy := strings.TrimSpace(cfg.Pack); legacy != "" && legacy != blueprint {
 		sb.WriteString(fmt.Sprintf("  Legacy pack: %s\n", legacy))
 	}
-	sb.WriteString(fmt.Sprintf("  Base URL:  %s", baseURL))
 	ctx.AddMessage("system", sb.String())
 	return nil
 }
@@ -110,8 +106,6 @@ func configSet(ctx *SlashContext, key, value string) error {
 	}
 
 	switch key {
-	case "api_key":
-		cfg.APIKey = value
 	case "composio_api_key":
 		cfg.ComposioAPIKey = value
 	case "action_provider":
@@ -123,7 +117,7 @@ func configSet(ctx *SlashContext, key, value string) error {
 	case "memory_backend":
 		normalized := config.NormalizeMemoryBackend(value)
 		if normalized == "" {
-			ctx.AddMessage("system", "Unsupported memory backend. Valid values: nex, gbrain, none")
+			ctx.AddMessage("system", "Unsupported memory backend. Valid values: gbrain, markdown, none")
 			return nil
 		}
 		cfg.MemoryBackend = normalized
@@ -141,8 +135,6 @@ func configSet(ctx *SlashContext, key, value string) error {
 		cfg.SetActiveBlueprint(value)
 	case "team_lead_slug":
 		cfg.TeamLeadSlug = value
-	case "dev_url":
-		cfg.DevURL = value
 	case "default_format":
 		cfg.DefaultFormat = value
 	case "company_name":
@@ -157,7 +149,7 @@ func configSet(ctx *SlashContext, key, value string) error {
 		cfg.CompanyPriority = value
 	default:
 		ctx.AddMessage("system", "Unknown config key: "+key+
-			"\nValid keys: api_key, composio_api_key, action_provider, workspace_id, workspace_slug, memory_backend, llm_provider, gemini_api_key, anthropic_api_key, openai_api_key, minimax_api_key, blueprint, template, operation_template, pack (legacy alias), team_lead_slug, dev_url, default_format, company_name, company_description, company_goals, company_size, company_priority")
+			"\nValid keys: composio_api_key, action_provider, workspace_id, workspace_slug, memory_backend, llm_provider, gemini_api_key, anthropic_api_key, openai_api_key, minimax_api_key, blueprint, template, operation_template, pack (legacy alias), team_lead_slug, default_format, company_name, company_description, company_goals, company_size, company_priority")
 		return nil
 	}
 

@@ -50,8 +50,8 @@ func printSubcommandHelp(sub string) {
 	case "init":
 		fmt.Fprintln(os.Stderr, "gawkbot init — first-time setup")
 		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Installs the latest Nex CLI from npm and saves your default provider")
-		fmt.Fprintln(os.Stderr, "and pack so future `gawkbot` invocations just work.")
+		fmt.Fprintln(os.Stderr, "Saves your default provider and pack so future `gawkbot`")
+		fmt.Fprintln(os.Stderr, "invocations just work.")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
 		fmt.Fprintln(os.Stderr, "  gawkbot init")
@@ -81,7 +81,6 @@ func printSubcommandHelp(sub string) {
 		fmt.Fprintln(os.Stderr, "gawkbot memory — manage the team wiki and legacy memory backends")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
-		fmt.Fprintln(os.Stderr, "  wuphf memory migrate --from nex           Import Nex memory into ~/.wuphf/wiki/team/")
 		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from gbrain        Import GBrain pages into the wiki")
 		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from <backend> --dry-run  Preview without committing")
 		fmt.Fprintln(os.Stderr, "  gawkbot memory migrate --from <backend> --limit N  Cap the number imported")
@@ -229,7 +228,6 @@ func wireBrokerWorkspaces(l *team.Launcher, extra ...func(*team.Broker)) {
 func main() {
 	cmd := flag.String("cmd", "", "Run a command non-interactively")
 	format := flag.String("format", "text", "Output format (text, json)")
-	apiKeyFlag := flag.String("api-key", "", "API key for authentication")
 	showVersion := flag.Bool("version", false, "Print version and exit")
 	blueprintFlag := flag.String("blueprint", "", "Operation blueprint ID for this run")
 	packFlag := flag.String("pack", "", "Operation blueprint ID (legacy pack alias supported)")
@@ -245,8 +243,13 @@ func main() {
 	flag.BoolVar(&tuiMode, "tui", false, "Deprecated alias for --legacy-tui")
 	webPort := flag.Int("web-port", 7891, "Port for the web UI (default 7891)")
 	brokerPort := flag.Int("broker-port", 0, "Port for the local broker (default 7890)")
-	noNex := flag.Bool("no-nex", false, "Disable Nex completely for this run")
-	memoryBackend := flag.String("memory-backend", "", "Memory backend for organizational context (nex, gbrain, none)")
+	// Accepted and ignored. The integration it used to disable is gone, so the
+	// flag suppresses nothing — but launchers and scripts still pass it, and
+	// Go's flag package hard-errors on an unknown flag, which would turn a
+	// stale invocation into a failed start. Parsed, marked deprecated in help,
+	// never read.
+	_ = flag.Bool("no-nex", false, "Deprecated: accepted and ignored (internal)")
+	memoryBackend := flag.String("memory-backend", "", "Memory backend for organizational context (gbrain, markdown, none)")
 	opusCEO := flag.Bool("opus-ceo", false, "Upgrade Chief of Staff agent from Sonnet to Opus")
 	collabMode := flag.Bool("collab", false, "Start in collaborative mode (all agents see all messages)")
 	noOpen := flag.Bool("no-open", false, "Don't open browser automatically on launch")
@@ -269,7 +272,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  %s import --from legacy  Import from a running external orchestrator (auto-detect)\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s log          Show what your agents actually did (task receipts)\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s share        Invite one team member over a private network\n", appName)
-		fmt.Fprintf(os.Stderr, "  %s memory migrate --from {nex,gbrain}  Port legacy memory into the team wiki\n", appName)
+		fmt.Fprintf(os.Stderr, "  %s memory migrate --from gbrain  Port legacy memory into the team wiki\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s workspace ...  Manage multiple isolated gawkbot workspaces\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s skills publish <slug-or-path> --to <hub>    Publish a team skill to a public hub\n", appName)
 		fmt.Fprintf(os.Stderr, "  %s skills install <name> --from <hub>  Pull a public skill into the team wiki\n", appName)
@@ -292,9 +295,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *noNex {
-		_ = os.Setenv("WUPHF_NO_NEX", "1")
-	}
 	if *brokerPort > 0 {
 		_ = os.Setenv("WUPHF_BROKER_PORT", fmt.Sprintf("%d", *brokerPort))
 	}
@@ -310,7 +310,7 @@ func main() {
 	if backend := strings.TrimSpace(*memoryBackend); backend != "" {
 		normalized := config.NormalizeMemoryBackend(backend)
 		if normalized == "" {
-			fmt.Fprintf(os.Stderr, "error: unsupported memory backend %q (expected nex, gbrain, or none)\n", backend)
+			fmt.Fprintf(os.Stderr, "error: unsupported memory backend %q (expected gbrain, markdown, or none)\n", backend)
 			os.Exit(1)
 		}
 		_ = os.Setenv("WUPHF_MEMORY_BACKEND", normalized)
@@ -433,7 +433,7 @@ func main() {
 			fmt.Println("Next `gawkbot` launch will reopen onboarding. Michael would be proud.")
 			return
 		case "init":
-			dispatch("/init", *apiKeyFlag, *format)
+			dispatch("/init", *format)
 			return
 		case "upgrade":
 			runUpgradeCheck(args[1:])
@@ -463,14 +463,14 @@ func main() {
 
 	// Non-interactive: --cmd flag
 	if *cmd != "" {
-		dispatch(*cmd, *apiKeyFlag, *format)
+		dispatch(*cmd, *format)
 		return
 	}
 
 	// Non-interactive: piped stdin
 	if isPiped() {
 		handled, err := consumePipedStdin(os.Stdin, func(line string) {
-			dispatch(line, *apiKeyFlag, *format)
+			dispatch(line, *format)
 		})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error reading stdin: %v\n", err)
@@ -785,34 +785,10 @@ func fromScratchRuntimeHome() string {
 	return dir
 }
 
-func dispatch(cmd string, apiKeyFlag string, format string) {
-	if config.ResolveMemoryBackend("") != config.MemoryBackendNex {
-		fmt.Fprintf(os.Stderr, "Non-interactive backend commands currently require the Nex memory backend. Selected backend: %s.\n", config.MemoryBackendLabel(config.ResolveMemoryBackend("")))
-		os.Exit(1)
-	}
-	if isSetupCommand(cmd) {
-		result := commands.Dispatch(cmd, "", format, 0)
-		if result.Error != "" {
-			fmt.Fprintf(os.Stderr, "error: %s\n", result.Error)
-			os.Exit(1)
-		}
-		if result.Output != "" {
-			fmt.Println(result.Output)
-		}
-		return
-	}
-	apiKey := config.ResolveAPIKey(apiKeyFlag)
-	if apiKey == "" {
-		fmt.Fprintf(os.Stderr, "No API key found. Set WUPHF_API_KEY, or run `%s` and type /init.\n", appName)
-		os.Exit(2)
-	}
-
-	result := commands.Dispatch(cmd, apiKey, format, 0)
+func dispatch(cmd string, format string) {
+	result := commands.Dispatch(cmd, format, 0)
 	if result.Error != "" {
 		fmt.Fprintf(os.Stderr, "error: %s\n", result.Error)
-		if strings.Contains(result.Error, "401") || strings.Contains(result.Error, "auth") {
-			os.Exit(2)
-		}
 		os.Exit(1)
 	}
 	if result.Output != "" {

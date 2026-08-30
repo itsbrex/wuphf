@@ -236,12 +236,10 @@ func startWuphf(binary string) (*wuphfProcess, string, error) {
 		"--web-port", strconv.Itoa(webPort),
 		"--broker-port", strconv.Itoa(brokerPort),
 		"--no-open",
-		"--no-nex",
 	}
 	cmd := exec.CommandContext(ctx, binary, args...)
 	tokenFile := filepath.Join(os.TempDir(), fmt.Sprintf("wuphf-bench-token-%d", brokerPort))
 	cmd.Env = append(os.Environ(),
-		"WUPHF_NO_NEX=1",
 		"WUPHF_RUNTIME_HOME="+runtimeHome,
 		"WUPHF_BROKER_PORT="+strconv.Itoa(brokerPort),
 		"WUPHF_BROKER_TOKEN_FILE="+tokenFile,

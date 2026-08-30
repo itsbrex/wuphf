@@ -30,7 +30,6 @@ func (m channelModel) currentWorkspaceUIState() channelui.WorkspaceUIState {
 		AwaySummary:     awaySummary,
 		Focus:           channelui.TrimRecoverySentence(snapshot.Recovery.Focus),
 		Memory:          team.ResolveMemoryBackendStatus(),
-		NoNex:           config.ResolveNoNex(),
 	}
 
 	for _, req := range snapshot.Requests {

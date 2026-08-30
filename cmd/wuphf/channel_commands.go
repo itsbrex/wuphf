@@ -8,7 +8,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	"github.com/nex-crm/wuphf/cmd/wuphf/channelui"
-	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/team"
 	"github.com/nex-crm/wuphf/internal/tui"
 	"github.com/nex-crm/wuphf/internal/workspace"
@@ -284,24 +283,11 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		return m, createDMChannel(slug)
 	case trimmed == "/integrate":
 		clearCurrent()
-		memoryStatus := team.ResolveMemoryBackendStatus()
-		if memoryStatus.SelectedKind != config.MemoryBackendNex {
-			m.notice = "Managed integrations are Nex-only right now. Select the Nex memory backend to use /integrate."
-			return m, nil
-		}
-		if config.ResolveNoNex() {
-			m.notice = "Nex is disabled (--no-nex), so managed integrations are unavailable for this run."
-			return m, nil
-		}
-		if config.ResolveAPIKey("") == "" {
-			m.notice = "No gawkbot API key configured. Run /init. Until then the team can only watch."
-			m.initFlow, _ = m.initFlow.Start()
-			return m, nil
-		}
-		m.picker = tui.NewPicker("Choose Integration", channelIntegrationOptions())
-		m.picker.SetActive(true)
-		m.pickerMode = channelPickerIntegrations
-		m.notice = "Choose an integration to connect. Each one gives the team something new to look at."
+		// Integrations are Composio-backed and connected from the web UI's
+		// Integrations app, which owns the OAuth handoff. There is no TUI
+		// equivalent, so point at the real surface rather than opening a
+		// picker that cannot finish the job.
+		m.notice = "Connect integrations from the Integrations app in the web UI."
 		return m, nil
 	case trimmed == "/doctor":
 		clearCurrent()
@@ -413,7 +399,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		clearCurrent()
 		m.activeApp = channelui.OfficeAppPolicies
 		m.syncSidebarCursorToActive()
-		m.notice = "Viewing Nex and office insights."
+		m.notice = "Viewing office insights."
 		return m, pollOfficeLedger()
 	case trimmed == "/calendar" || trimmed == "/queue":
 		clearCurrent()

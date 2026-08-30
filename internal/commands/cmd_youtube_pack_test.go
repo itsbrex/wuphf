@@ -20,7 +20,7 @@ func TestDispatchYouTubePackSingleTopicWritesRunManifest(t *testing.T) {
 	defer func() { youtubePackGenerator = restore }()
 
 	outDir := t.TempDir()
-	result := Dispatch("/youtube-pack --topic 'topic one' --channel 'Founders' --audience 'Operators' --voice 'Crisp' --out '"+outDir+"'", "", "text", 0)
+	result := Dispatch("/youtube-pack --topic 'topic one' --channel 'Founders' --audience 'Operators' --voice 'Crisp' --out '"+outDir+"'", "text", 0)
 	if result.ExitCode != 0 {
 		t.Fatalf("expected success, got exit=%d error=%q output=%q", result.ExitCode, result.Error, result.Output)
 	}
@@ -88,7 +88,7 @@ func TestDispatchYouTubePackPartialFailureFromInputFile(t *testing.T) {
 		t.Fatalf("write input file: %v", err)
 	}
 
-	result := Dispatch("/youtube-pack --input '"+inputPath+"' --out '"+tmp+"'", "", "text", 0)
+	result := Dispatch("/youtube-pack --input '"+inputPath+"' --out '"+tmp+"'", "text", 0)
 	if result.ExitCode != 1 {
 		t.Fatalf("expected partial failure exit code 1, got %d output=%q error=%q", result.ExitCode, result.Output, result.Error)
 	}
