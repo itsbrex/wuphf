@@ -14,7 +14,7 @@ import (
 var ErrEnvelopeHeld = errors.New("packer: delegation held — envelope field failed egress redaction")
 
 // BrainHandle is the office/tenant brain seam. OSS self-hosted: a singleton
-// adapter over the broker. Nex cloud: one per tenant. The packer never touches
+// adapter over the broker. The packer never touches
 // global state directly. Every retrieval method is TASK-SCOPED — the packer
 // never drives a free, intent-text query, so foreign-tainted intent cannot reach
 // retrieval.

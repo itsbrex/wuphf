@@ -105,10 +105,6 @@ redirects generic URLs to `dm:ceo:onboarding`.
 
 ## Settings — Integrations
 
-After onboarding, connect Nex in **Settings → Integrations → Nex**.
-Enter your email, click **Connect Nex**. The broker calls `/nex/register`
-which runs `nex-cli setup <email>`. If nex-cli is not installed, a link
-to `nex.ai/register` appears instead.
-
-Once you have your Nex API key, paste it in **Settings → API Keys →
-Nex API Key**.
+After onboarding, connect integrations in **Settings → Integrations**.
+Integrations are Composio-backed: sign in with Composio, or paste a
+Composio API key in **Settings → API Keys → Composio**.

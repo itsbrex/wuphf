@@ -110,6 +110,10 @@ func main() {
 		// One desktop instance per machine: a second launch focuses the running
 		// window instead of spawning a competing process.
 		SingleInstanceLock: &options.SingleInstanceLock{
+			// UniqueId is an IDENTIFIER, not copy: macOS keys preferences, permissions,
+			// and the single-instance lock on it, so changing it makes every existing
+			// install read as a brand-new app. It keeps the historical value; rebrand
+			// it only as a deliberate migration, not as part of a reference sweep.
 			UniqueId: "ai.nex.wuphf.desktop",
 			OnSecondInstanceLaunch: func(_ options.SecondInstanceData) {
 				if appCtx != nil {

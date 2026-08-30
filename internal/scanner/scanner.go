@@ -5,7 +5,7 @@ package scanner
 // and the on-disk manifest (scanner_manifest.go) into a single API the
 // HTTP handler wires up.
 //
-// Port of nex-cli's ts/src/lib/file-scanner.ts, adapted for WUPHF:
+// File scanner for WUPHF:
 //
 //   - Symlinks are NOT followed (eng-review v1.1 divergence).
 //   - Extension allowlist defaults to prose formats, overridable via env.

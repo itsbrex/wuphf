@@ -347,7 +347,7 @@ Walk through these by hand after any change that touches wiki code:
 ### Backend switch (IRON regression)
 
 - [ ] Launch with `--memory-backend markdown` — MCP subprocess has `team_wiki_*` tools only
-- [ ] Launch with `--memory-backend nex` — MCP subprocess has legacy `team_memory_*` tools only
+- [ ] Launch with `--memory-backend gbrain` — MCP subprocess has legacy `team_memory_*` tools only
 - [ ] Launch with `--memory-backend none` — no shared memory tools
 - [ ] Two tool sets never coexist on the same subprocess
 

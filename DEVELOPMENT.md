@@ -87,7 +87,7 @@ The same install step is also wired into setup:
 
 ## Environments
 
-The WUPHF runtime reads `WUPHF_BASE_URL` from the environment, falling back to `https://app.nex.ai` in production.
+The WUPHF runtime reads `WUPHF_BASE_URL` from the environment.
 
 | Environment | `WUPHF_BASE_URL` |
 |-------------|----------------|

@@ -4,7 +4,7 @@ package scanner
 // level overview.
 //
 // Key divergences from the TypeScript source:
-//   - Symlinks are never followed (file or directory). nex-cli inherits
+//   - Symlinks are never followed (file or directory). Callers inherit
 //     Node's readdirSync which does follow; that is unsafe for WUPHF where
 //     scan roots are arbitrary user directories and a symlink to /etc
 //     could land secrets in the wiki.
@@ -17,7 +17,7 @@ import (
 )
 
 // SkipDirs mirrors walk-dir.ts SKIP_DIRS exactly. Kept in sync by
-// convention; change only with a parallel update in nex-cli.
+// convention.
 var SkipDirs = map[string]struct{}{
 	"node_modules": {},
 	".git":         {},
@@ -34,7 +34,7 @@ var SkipDirs = map[string]struct{}{
 	".nyc_output":  {},
 }
 
-// maxScanDepth caps recursive descent. Matches the nex-cli default.
+// maxScanDepth caps recursive descent.
 const maxScanDepth = 20
 
 // WalkOptions drive WalkDir.

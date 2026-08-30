@@ -325,7 +325,7 @@ reader, not a boxed widget.
   fills the content height.
 - **Warm + theme-aware:** the editor's vendored token names map to the host
   `--wk-*` tokens (paper surface, warm ink, gold/olive accent), so it follows the
-  active app theme (Nex Light / Dark / Noir Gold) with no editor-local overrides.
+  active app theme (Light / Dark / Noir Gold) with no editor-local overrides.
 - **Prose = reader:** body renders in the serif face (matches the article body);
   UI chrome stays sans, code stays mono — true WYSIWYG.
 - **Menus:** slash / bubble / link / mention popovers are warm paper cards with a

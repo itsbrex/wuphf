@@ -15,35 +15,19 @@ git checkout v0.0.2.0   # or the latest tag: git describe --tags --abbrev=0
 git checkout -b your-fork
 ```
 
-## 1. Run it without Nex (read-only, no vendor coupling)
+## 1. No vendor coupling to remove
 
-WUPHF ships with optional Nex context graph integration. If you want a clean, vendor-free baseline:
+Earlier versions shipped an optional hosted context-graph integration and a
+`--no-nex` flag to switch it off. That integration is gone: nothing in this
+runtime calls a first-party hosted service, so a fresh fork is already
+vendor-free with no edits and no flags.
 
-```bash
-./wuphf --no-nex
-```
+`--no-nex` is still accepted so existing scripts and launchers keep starting,
+but it suppresses nothing.
 
-That's the whole fix. The `--no-nex` flag skips all Nex wiring at startup. No code edits needed.
-
-If you want Nex gone from your fork entirely, there are four integration points to remove:
-
-```bash
-# 1. Delete the Nex MCP server (if present)
-rm -f mcp/nex*
-
-# 2. Delete the Nex API client
-rm internal/action/nex_client.go
-
-# 3. Remove the nex-mcp lookPath blocks (2 places)
-#    internal/team/launcher.go      ~ line 3069  (search: nex-mcp)
-#    internal/team/headless_codex.go ~ line 555   (search: nex-mcp)
-
-# 4. Remove nex types from launcher context
-#    internal/team/launcher.go ~ line 55   (nexFeedItemContentItem)
-#    internal/team/launcher.go ~ line 1489 (selectImportantInsights / nexInsight)
-```
-
-Then in `cmd/wuphf/main.go`: delete the `--no-nex` flag and the import blocks that reference `nex`. The `ResolveNoNex()` calls in `cmd/wuphf/channel.go` and `internal/config/config.go` can be deleted or replaced with a constant `true`.
+Third-party integrations that remain are opt-in and use your own credentials:
+Composio (`COMPOSIO_API_KEY`), Telegram, Slack, and OpenClaw. None of them are
+required to run the office.
 
 ## 2. Strip the Office branding
 

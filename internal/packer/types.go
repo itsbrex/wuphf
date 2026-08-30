@@ -8,7 +8,7 @@
 // The package depends only on internal/scanner and the standard library. The
 // brain, the delivery transport, the snapshot validator, and the audit sink are
 // all interfaces (the cloud-portability seams), so the same core runs in the OSS
-// self-hosted broker and in the Nex cloud multi-tenant host without a fork.
+// self-hosted broker and in a multi-tenant host without a fork.
 package packer
 
 // --- Trust, identity, data handling ---
