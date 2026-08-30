@@ -69,6 +69,11 @@ var errGBrainStoreType = errors.New("wiki_index_gbrain: fact store is not a *gbr
 type gbrainFactStore struct {
 	client  *gbrain.Client
 	writeMu sync.Mutex
+
+	// knownEntities memoises entity slugs already materialised as pages, so a
+	// bulk reconcile does not pay a get_page per link endpoint per fact. Guarded
+	// by writeMu, which every write path already holds.
+	knownEntities map[string]bool
 }
 
 // NewGBrainFactStore constructs a FactStore over a gbrain MCP client.
@@ -81,7 +86,7 @@ func NewGBrainFactStore(ctx context.Context, opts ...gbrain.Option) (FactStore, 
 	if err := client.Connect(ctx); err != nil {
 		return nil, fmt.Errorf("wiki_index_gbrain: connect: %w", err)
 	}
-	return &gbrainFactStore{client: client}, nil
+	return &gbrainFactStore{client: client, knownEntities: map[string]bool{}}, nil
 }
 
 // isNotFound reports whether an error is gbrain's "page does not exist" signal.
@@ -126,6 +131,43 @@ func (s *gbrainFactStore) putPage(ctx context.Context, slug, content string) err
 	return nil
 }
 
+// ensureEntityPage materialises a stub page for an entity slug if none exists.
+//
+// gbrain's add_link REJECTS an edge whose endpoint page is missing
+// ("addLink failed: page ... not found"). Facts routinely reference entities
+// the reconcile loop has not written yet — a triplet object naming a project,
+// or a subject seen in an artifact before its own article exists — so without
+// this every such link fails and the typed graph walks return nothing. That
+// failure mode is what made multi_hop retrieval collapse: the walks were inert
+// while BM25 quietly carried the whole result.
+//
+// The stub is deliberately minimal. A later UpsertEntity overwrites it with the
+// real record; this only guarantees the link endpoint exists.
+//
+// Callers must hold writeMu.
+func (s *gbrainFactStore) ensureEntityPage(ctx context.Context, slug string) error {
+	slug = strings.TrimSpace(slug)
+	if slug == "" {
+		return nil
+	}
+	if s.knownEntities[slug] {
+		return nil
+	}
+	full := entitySlug(slug)
+	if _, ok, err := s.getPage(ctx, full); err != nil {
+		return err
+	} else if ok {
+		s.knownEntities[slug] = true
+		return nil
+	}
+	fm := map[string]string{"type": "concept", "wuphf_slug": slug}
+	if err := s.putPage(ctx, full, buildPageContent(fm, slug)); err != nil {
+		return err
+	}
+	s.knownEntities[slug] = true
+	return nil
+}
+
 // UpsertFact writes the fact page and reconciles its graph edges.
 func (s *gbrainFactStore) UpsertFact(ctx context.Context, f TypedFact) error {
 	if strings.TrimSpace(f.ID) == "" {
@@ -160,6 +202,9 @@ func (s *gbrainFactStore) UpsertFact(ctx context.Context, f TypedFact) error {
 
 	// Ownership edge: entity -> fact. Serves ListFactsForEntity.
 	if slug := strings.TrimSpace(f.EntitySlug); slug != "" {
+		if err := s.ensureEntityPage(ctx, slug); err != nil {
+			return err
+		}
 		if err := s.client.AddLink(ctx, entitySlug(slug), factSlug(f.ID), gbrainLinkFact, gbrainLinkSource, ""); err != nil {
 			return err
 		}
@@ -178,17 +223,26 @@ func (s *gbrainFactStore) UpsertFact(ctx context.Context, f TypedFact) error {
 	// A triplet whose subject differs from EntitySlug must still be reachable
 	// from the subject entity.
 	if subj != "" && subj != strings.TrimSpace(f.EntitySlug) {
+		if err := s.ensureEntityPage(ctx, subj); err != nil {
+			return err
+		}
 		if err := s.client.AddLink(ctx, entitySlug(subj), factSlug(f.ID), gbrainLinkFact, gbrainLinkSource, ""); err != nil {
 			return err
 		}
 	}
 	// Fact -> object under the predicate. This is what makes
 	// ListFactsByPredicateObject a single directed traversal.
+	if err := s.ensureEntityPage(ctx, obj); err != nil {
+		return err
+	}
 	if err := s.client.AddLink(ctx, factSlug(f.ID), entitySlug(obj), pred, gbrainLinkSource, ""); err != nil {
 		return err
 	}
 	// Subject -> object under the predicate: the entity graph proper.
 	if subj != "" {
+		if err := s.ensureEntityPage(ctx, subj); err != nil {
+			return err
+		}
 		if err := s.client.AddLink(ctx, entitySlug(subj), entitySlug(obj), pred, gbrainLinkSource, ""); err != nil {
 			return err
 		}
@@ -223,7 +277,11 @@ func (s *gbrainFactStore) UpsertEntity(ctx context.Context, e IndexEntity) error
 	if body == "" {
 		body = e.Slug
 	}
-	return s.putPage(ctx, entitySlug(e.Slug), buildPageContent(fm, body))
+	if err := s.putPage(ctx, entitySlug(e.Slug), buildPageContent(fm, body)); err != nil {
+		return err
+	}
+	s.knownEntities[e.Slug] = true
+	return nil
 }
 
 // UpsertEdge records a typed edge. Timestamp and source SHA ride in the link's
@@ -237,6 +295,12 @@ func (s *gbrainFactStore) UpsertEdge(ctx context.Context, e IndexEdge) error {
 	}
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
+	if err := s.ensureEntityPage(ctx, subj); err != nil {
+		return err
+	}
+	if err := s.ensureEntityPage(ctx, obj); err != nil {
+		return err
+	}
 	return s.client.AddLink(ctx, entitySlug(subj), entitySlug(obj), pred, gbrainLinkSource, edgeContext(e))
 }
 
@@ -250,6 +314,12 @@ func (s *gbrainFactStore) UpsertRedirect(ctx context.Context, r Redirect) error 
 	defer s.writeMu.Unlock()
 	payload, err := json.Marshal(r)
 	if err != nil {
+		return err
+	}
+	if err := s.ensureEntityPage(ctx, from); err != nil {
+		return err
+	}
+	if err := s.ensureEntityPage(ctx, to); err != nil {
 		return err
 	}
 	return s.client.AddLink(ctx, entitySlug(from), entitySlug(to),
@@ -552,24 +622,54 @@ func (s *gbrainFactStore) CountFacts(ctx context.Context) (int, error) {
 	return len(metas), nil
 }
 
-// allPageMetas walks list_pages to completion for a slug prefix.
+// gbrainListPageCap is the server-side row cap gbrain applies to list_pages
+// (100 on 0.42.58.0) regardless of the limit requested.
+const gbrainListPageCap = 100
+
+// errCorpusExceedsListCap reports that a full scan cannot be completed.
+var errCorpusExceedsListCap = errors.New(
+	"wiki_index_gbrain: corpus exceeds gbrain's list_pages cap and cannot be enumerated")
+
+// allPageMetas lists pages for a slug prefix.
+//
+// THIS CANNOT PAGINATE, and that is a hard limit of the upstream API, not a
+// shortcut taken here. gbrain's list_pages caps at gbrainListPageCap rows and
+// its `offset` argument is ACCEPTED AND SILENTLY DROPPED — core/operations.ts
+// calls engine.listPages({type, updated_after, limit, ...scope}) with no offset
+// parameter at all. Verified on 0.42.58.0: offset=0 and offset=2 return
+// byte-identical rows.
+//
+// So there are exactly three possible behaviours, and two of them are bugs:
+//
+//  1. stop when a batch is short  → SILENT TRUNCATION at 100 rows. Every full
+//     scan returns a wrong answer that looks like a right one. This is what the
+//     first implementation did, and it made CountFacts report 100 for a
+//     120-fact corpus.
+//  2. loop until an empty batch    → INFINITE LOOP, because offset is ignored
+//     and every request returns the same first page.
+//  3. fail loudly above the cap    → what this does.
+//
+// Callers that scan the whole corpus (ListAllFacts, CountFacts,
+// IterateEntities, both canonical hashes) therefore return an error rather than
+// a truncated result once the corpus outgrows the cap. A wrong hash or a short
+// fact list would corrupt reconcile decisions silently; an error stops them.
+//
+// Fixing this properly needs either a cursor built on `updated_after` (ties on
+// equal timestamps make that lossy) or an upstream offset/cursor parameter.
 func (s *gbrainFactStore) allPageMetas(ctx context.Context, prefix, pageType string) ([]gbrain.PageMeta, error) {
-	var out []gbrain.PageMeta
-	for offset := 0; ; offset += gbrainListPageSize {
-		batch, err := s.client.ListPagesFiltered(ctx, gbrain.ListPageOptions{
-			Type:       pageType,
-			SlugPrefix: prefix,
-			Limit:      gbrainListPageSize,
-			Offset:     offset,
-		})
-		if err != nil {
-			return nil, err
-		}
-		out = append(out, batch...)
-		if len(batch) < gbrainListPageSize {
-			return out, nil
-		}
+	kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+		Type:       pageType,
+		SlugPrefix: prefix,
+		Limit:      gbrainListPageSize,
+	})
+	if err != nil {
+		return nil, err
 	}
+	if raw >= gbrainListPageCap {
+		return nil, fmt.Errorf("%w (prefix %q: got %d rows, the cap): full scans are unavailable on this corpus size",
+			errCorpusExceedsListCap, prefix, raw)
+	}
+	return kept, nil
 }
 
 // ResolveRedirect follows a redirect link, if one exists.

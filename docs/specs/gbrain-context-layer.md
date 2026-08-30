@@ -149,6 +149,42 @@ needed on the write path.
 For the WUPHF context layer this wipe is cheap: the brain is a derived index and
 the git markdown repo is the substrate, so the extractor repopulates it.
 
+## Benchmark result: the swap is a REGRESSION
+
+`bench/slice-1` (500 artifacts, 475 facts, 50 queries), same corpus and scoring
+for both backends via the new `--backend` flag. gbrain ran with embeddings fully
+populated (484/484 chunks), so its vector arm was active.
+
+| Metric | SQLite + bleve | gbrain | Delta |
+|---|---|---|---|
+| Ship gate (recall@20 pass rate) | **100%** | **60%** | RED |
+| Micro-recall | 99.73% | 84.88% | -14.9pp |
+| nDCG@10 | 0.8091 | 0.4250 | **-47%** |
+| MRR | 0.8023 | 0.5117 | -36% |
+| recall@10 | 0.8450 | 0.4555 | -46% |
+| Retrieval p50 | 0.09 ms | 264 ms | **~2900x slower** |
+| Retrieval p95 | 0.52 ms | 557 ms | ~1070x slower |
+
+Per class, gbrain: multi_hop 10% pass (was 100%), status 60%, relationship 80%.
+
+NOTE: this run predates the `ensureEntityPage` fix, so the typed graph walks
+were inert and BM25 carried the results alone. A re-run is required before the
+numbers are final. The latency gap is structural and will not move: it is an
+MCP round-trip plus one `get_page` per hit, against an in-process index.
+
+## Hard blocker: full scans cannot paginate
+
+gbrain's `list_pages` caps at 100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
+(`core/operations.ts` calls `engine.listPages({type, updated_after, limit,
+...scope})` — no offset parameter exists). Verified: offset=0 and offset=2
+return byte-identical rows.
+
+So `ListAllFacts`, `CountFacts`, `IterateEntities`, and both canonical hashes
+cannot enumerate a corpus above 100 rows. They now return
+`errCorpusExceedsListCap` rather than a truncated result, because a short fact
+list or a wrong hash would corrupt reconcile decisions silently. Fixing this
+needs an `updated_after` cursor (lossy on tied timestamps) or upstream support.
+
 ## Not done
 
 - **No benchmark run.** `bench/slice-1/` and the CI gate

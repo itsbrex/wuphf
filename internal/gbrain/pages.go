@@ -189,6 +189,58 @@ func (c *Client) ListPagesFiltered(ctx context.Context, opts ListPageOptions) ([
 	return pages, nil
 }
 
+// ListPageBatch is ListPagesFiltered plus the RAW row count gbrain returned
+// before the client-side prefix filter.
+//
+// Callers paginating a full scan need the raw count: gbrain caps list_pages
+// server-side regardless of the requested limit, so "fewer rows than asked for"
+// does not mean end-of-pages, and the prefix filter can shrink a batch further.
+// Advancing the offset by the raw count and stopping only on a raw count of
+// zero is the only correct termination.
+func (c *Client) ListPageBatch(ctx context.Context, opts ListPageOptions) (kept []PageMeta, raw int, err error) {
+	args := map[string]any{}
+	if opts.Limit > 0 {
+		args["limit"] = opts.Limit
+	}
+	if opts.Offset > 0 {
+		args["offset"] = opts.Offset
+	}
+	if t := strings.TrimSpace(opts.Type); t != "" {
+		args["type"] = t
+	}
+	if tag := strings.TrimSpace(opts.Tag); tag != "" {
+		args["tag"] = tag
+	}
+	if p := strings.TrimSpace(opts.SlugPrefix); p != "" {
+		args["slug_prefix"] = p
+	}
+	if opts.IncludeDeleted {
+		args["include_deleted"] = true
+	}
+	out, err := c.CallTool(ctx, toolListPages, args)
+	if err != nil {
+		return nil, 0, err
+	}
+	if isEmptyResult(out) {
+		return nil, 0, nil
+	}
+	var pages []PageMeta
+	if err := decodeJSON(out, &pages); err != nil {
+		return nil, 0, fmt.Errorf("decode gbrain list_pages: %w", err)
+	}
+	raw = len(pages)
+	if prefix := strings.TrimSpace(opts.SlugPrefix); prefix != "" {
+		filtered := pages[:0]
+		for _, p := range pages {
+			if strings.HasPrefix(p.Slug, prefix) {
+				filtered = append(filtered, p)
+			}
+		}
+		pages = filtered
+	}
+	return pages, raw, nil
+}
+
 // isEmptyResult reports whether a tool result carries no rows. gbrain signals
 // absence with an empty body or a JSON null rather than an error.
 func isEmptyResult(raw string) bool {

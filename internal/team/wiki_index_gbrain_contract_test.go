@@ -29,6 +29,8 @@ package team
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -376,5 +378,80 @@ func TestGBrainFactStore_ResurrectsDeletedFact(t *testing.T) {
 	}
 	if got.Text != fact.Text {
 		t.Errorf("Text = %q, want %q", got.Text, fact.Text)
+	}
+}
+
+// TestGBrainFactStore_LinksWithoutPreexistingEntities is a regression test for
+// the failure that made the slice-1 multi_hop class collapse to 10%.
+//
+// gbrain's add_link REJECTS an edge whose endpoint page does not exist. The
+// reconcile loop routinely writes a fact before the entity it references has
+// its own page, so without ensureEntityPage every such link failed and the
+// typed graph walks silently returned nothing — BM25 carried the results and
+// the typed half of the design was inert.
+//
+// This test writes a fact with NO prior UpsertEntity calls and asserts the
+// typed walk still resolves.
+func TestGBrainFactStore_LinksWithoutPreexistingEntities(t *testing.T) {
+	store := newGBrainTestStore(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	// Deliberately no UpsertEntity: the endpoints do not exist yet.
+	fact := seedTriplet("f-noent", "wendy-vale", "champions", "project:orbit-launch")
+	if err := store.UpsertFact(ctx, fact); err != nil {
+		t.Fatalf("UpsertFact without pre-existing entities: %v", err)
+	}
+
+	facts, err := store.ListFactsByPredicateObject(ctx, "champions", "project:orbit-launch")
+	if err != nil {
+		t.Fatalf("ListFactsByPredicateObject: %v", err)
+	}
+	if len(facts) != 1 || facts[0].ID != "f-noent" {
+		t.Fatalf("typed walk returned %v, want [f-noent]; link endpoints were not materialised", factIDs(facts))
+	}
+
+	owned, err := store.ListFactsForEntity(ctx, "wendy-vale")
+	if err != nil {
+		t.Fatalf("ListFactsForEntity: %v", err)
+	}
+	if len(owned) != 1 || owned[0].ID != "f-noent" {
+		t.Fatalf("ownership walk returned %v, want [f-noent]", factIDs(owned))
+	}
+}
+
+// TestGBrainFactStore_FullScanExceedsListCap pins the documented limit: a
+// corpus larger than gbrain's list_pages cap cannot be enumerated, and the
+// store must say so rather than return a truncated result.
+//
+// gbrain caps list_pages at 100 rows and silently drops the `offset` argument
+// (verified: offset=0 and offset=2 return identical rows), so pagination is
+// impossible through this API. Silent truncation would corrupt reconcile
+// decisions — CountFacts reported 100 for a 120-fact corpus before this — so
+// full scans fail loudly instead.
+//
+// Writes 120 facts, so it is slow. Skipped in short mode.
+func TestGBrainFactStore_FullScanExceedsListCap(t *testing.T) {
+	if testing.Short() {
+		t.Skip("writes 120 facts; skipped in short mode")
+	}
+	store := newGBrainTestStore(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+
+	const total = 120 // > gbrain's 100-row list_pages cap
+	for i := 0; i < total; i++ {
+		f := seedTriplet(fmt.Sprintf("f-cap-%03d", i), "cap-person", "role_at", "company:cap-co")
+		if err := store.UpsertFact(ctx, f); err != nil {
+			t.Fatalf("UpsertFact %d: %v", i, err)
+		}
+	}
+
+	// Must be an explicit error, never a plausible-looking short answer.
+	if n, err := store.CountFacts(ctx); !errors.Is(err, errCorpusExceedsListCap) {
+		t.Errorf("CountFacts = (%d, %v), want errCorpusExceedsListCap; a truncated count corrupts reconcile", n, err)
+	}
+	if all, err := store.ListAllFacts(ctx); !errors.Is(err, errCorpusExceedsListCap) {
+		t.Errorf("ListAllFacts returned %d facts and err %v, want errCorpusExceedsListCap", len(all), err)
 	}
 }

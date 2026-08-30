@@ -35,6 +35,7 @@ func main() {
 		iters   = flag.Int("iterations", 3, "retrieval iterations per query (median reported)")
 		gate    = flag.Float64("gate", 0.85, "pass-rate threshold to exit 0")
 		outPath = flag.String("out", "", "write full text report to this path")
+		backend = flag.String("backend", "sqlite", "index backend under test: sqlite|gbrain")
 	)
 	flag.Parse()
 
@@ -43,6 +44,7 @@ func main() {
 	cfg.Iterations = *iters
 	cfg.Gate = *gate
 	cfg.Out = os.Stdout
+	cfg.Backend = *backend
 
 	cfg.CorpusPath = *corpus
 	cfg.QueriesPath = *queries

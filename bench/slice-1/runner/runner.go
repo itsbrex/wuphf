@@ -160,7 +160,18 @@ type Config struct {
 	Gate float64
 	// Out controls human-readable progress output. Nil silences progress.
 	Out io.Writer
+	// Backend selects the index implementation under test. "" or "sqlite"
+	// uses the SQLite + bleve pairing (the historical baseline); "gbrain"
+	// uses the gbrain-backed store. Both run against the same corpus and the
+	// same scoring, so the two runs are directly comparable.
+	Backend string
 }
+
+// Bench backend identifiers.
+const (
+	BackendSQLite = "sqlite"
+	BackendGBrain = "gbrain"
+)
 
 // Defaults returns the canonical runtime knobs for the Week 0 bench.
 func Defaults() Config {
@@ -346,11 +357,28 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 	_, _ = fmt.Fprintf(out, "materialised %d facts across %d artifacts into %s\n",
 		factCount, len(arts), tempRoot)
 
+	// Declared outside the switch: the footprint measurement below reads it,
+	// and it stays empty for gbrain (whose storage lives in the brain, not in
+	// a temp dir, so a local file-size probe is meaningless there).
 	indexDir := filepath.Join(tempRoot, ".index")
-	idx, err := team.NewPersistentWikiIndex(tempRoot, indexDir)
-	if err != nil {
-		return nil, nil, fmt.Errorf("new index: %w", err)
+
+	var idx *team.WikiIndex
+	switch cfg.Backend {
+	case BackendGBrain:
+		// The gbrain store writes into whatever brain GBRAIN_HOME points at,
+		// and the reconcile below is destructive within the wuphf namespaces.
+		// Point this at a scratch brain, never a personal one.
+		idx, err = team.NewGBrainIndex(ctx, tempRoot)
+		if err != nil {
+			return nil, nil, fmt.Errorf("new gbrain index: %w", err)
+		}
+	default:
+		idx, err = team.NewPersistentWikiIndex(tempRoot, indexDir)
+		if err != nil {
+			return nil, nil, fmt.Errorf("new index: %w", err)
+		}
 	}
+	_, _ = fmt.Fprintf(out, "backend: %s\n", backendLabel(cfg.Backend))
 	defer func() { _ = idx.Close() }()
 
 	t0 := time.Now()
@@ -508,9 +536,12 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 	agg.RetrievalP95Ms = percentile(allLatencyMs, 0.95)
 	agg.ClassifyP95Micros = percentileInt(allClassifyMicros, 0.95)
 
-	// Index footprint.
-	agg.IndexBytesSQLite = fileSize(filepath.Join(indexDir, "wiki.sqlite"))
-	agg.IndexBytesBleve = dirSize(filepath.Join(indexDir, "bleve"))
+	// Index footprint. Only meaningful for the SQLite + bleve pairing; the
+	// gbrain store keeps its data in the brain, so both stay zero there.
+	if cfg.Backend != BackendGBrain {
+		agg.IndexBytesSQLite = fileSize(filepath.Join(indexDir, "wiki.sqlite"))
+		agg.IndexBytesBleve = dirSize(filepath.Join(indexDir, "bleve"))
+	}
 
 	return agg, results, nil
 }
@@ -710,4 +741,12 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n-1] + "…"
+}
+
+// backendLabel renders the configured backend for the report header.
+func backendLabel(backend string) string {
+	if backend == BackendGBrain {
+		return BackendGBrain
+	}
+	return BackendSQLite
 }
