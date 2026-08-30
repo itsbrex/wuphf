@@ -407,8 +407,8 @@ export function StepTeam({
             <PackDrawer id="pack-drawer-scratch" open={open}>
               <div className="onboarding-pack-team onboarding-pack-team--inline">
                 <p className="onboarding-pack-team-hint">
-                  Starting from scratch. gawkbot will stand up a CEO and a small
-                  founding team. Add a custom agent below, or grow the team
+                  Starting from scratch. gawkbot will stand up a Chief of Staff and a
+                  small founding team. Add a custom agent below, or grow the team
                   later from the office.
                 </p>
               </div>

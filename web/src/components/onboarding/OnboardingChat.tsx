@@ -106,7 +106,7 @@ export function OnboardingChat() {
           <div className="onboarding-chat-stream">
             {messages.length === 0 ? (
               <p className="onboarding-chat-stream-empty">
-                CEO is opening the office…
+                Chief of Staff is opening the office…
               </p>
             ) : (
               messages.map((msg) => (
@@ -125,7 +125,7 @@ export function OnboardingChat() {
                 user knows the wizard is mid-transition rather than stuck. */}
             {!pendingSuggestion && (
               <p className="onboarding-chat-hint">
-                Hang tight — the CEO is composing the next step.
+                Hang tight — the Chief of Staff is composing the next step.
               </p>
             )}
           </div>

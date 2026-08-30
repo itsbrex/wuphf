@@ -304,17 +304,17 @@ export function TaskComposer() {
                 {/* The roster may still be loading; keep the default lead
                     selectable so the select never falls back to Auto. */}
                 {members.some((m) => m.slug === leadSlug) ? null : (
-                  <option value={leadSlug}>CEO</option>
+                  <option value={leadSlug}>Chief of Staff</option>
                 )}
                 {members.map((m) => (
                   <option key={m.slug} value={m.slug}>
                     {m.name || m.slug}
                   </option>
                 ))}
-                {/* Auto stays an explicit opt-in: the CEO picks the best
+                {/* Auto stays an explicit opt-in: the Chief of Staff picks the best
                     specialist. It is no longer the default — an ownerless
                     first task read as "parked" to new users. */}
-                <option value={AUTO_OWNER}>Auto — CEO picks</option>
+                <option value={AUTO_OWNER}>Auto — Chief of Staff picks</option>
               </select>
             </label>
 

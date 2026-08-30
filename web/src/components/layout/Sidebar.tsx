@@ -129,7 +129,7 @@ export function Sidebar() {
           </div>
 
           <div className="sidebar-scroll">
-            {/* The agent roster rail — CEO + specialists with avatars, live
+            {/* The agent roster rail — Chief of Staff + specialists with avatars, live
                 activity pills, and the peek affordance. Clicking a row opens
                 that agent's subspace (/agents/$slug), so any agent is reachable
                 at any time. Collapsible + persisted via the app store, exactly
@@ -171,7 +171,7 @@ export function Sidebar() {
             <AppList />
 
             {/* Phase 2 onboarding preview overlay — shows staged channels/agents
-                forming as the user answers CEO questions. Hidden once onboarded. */}
+                forming as the user answers Chief of Staff questions. Hidden once onboarded. */}
             <SidebarPreviewOverlay />
           </div>
           {/* WorkspaceSummary intentionally not rendered here — the stats

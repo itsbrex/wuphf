@@ -110,7 +110,6 @@ export function AppDataTab({ appId }: AppDataTabProps) {
     return (
       <EmptyState
         glyph="▦"
-        portraitSlug={appId}
         title="No data yet"
         hint="Nothing saved yet. After its first run, everything this app records lands here as tables you own: browse every row, export any table as CSV or JSON. No BI ticket required."
       />

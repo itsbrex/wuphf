@@ -108,3 +108,6 @@ wuphf-dev
 /orchestrator/
 /spikes/
 runner/__pycache__/
+
+# Local test-instance logs (see gawkbot-testdrive.log)
+gawkbot-testdrive.log

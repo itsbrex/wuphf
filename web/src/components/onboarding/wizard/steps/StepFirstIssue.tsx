@@ -156,7 +156,7 @@ export function StepFirstIssue({
               <PixelAvatar slug="ceo" size={24} />
             </span>
             <span className="onboarding-handoff-who">
-              <span className="onboarding-handoff-name">CEO</span>
+              <span className="onboarding-handoff-name">Chief of Staff</span>
               <span className="onboarding-handoff-handle">@ceo</span>
             </span>
             <span className="onboarding-handoff-route">Direct message</span>

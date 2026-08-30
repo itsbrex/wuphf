@@ -702,7 +702,7 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
               className="issue-doc-staffing-note"
               data-testid="issue-staffing-note"
             >
-              Staffing — CEO is picking the owner
+              Staffing — Chief of Staff is picking the owner
             </span>
           ) : null}
           {/* Owner and lifecycle actions stay LIVE for a task with no
