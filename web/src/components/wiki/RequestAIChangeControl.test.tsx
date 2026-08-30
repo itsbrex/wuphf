@@ -6,7 +6,7 @@ import type { Task } from "../../api/tasks";
 import * as tasksApi from "../../api/tasks";
 import RequestAIChangeControl, {
   buildWikiChangeTask,
-  LIBRARIAN_SLUG,
+  WIKI_CHANGE_OWNER_SLUG,
 } from "./RequestAIChangeControl";
 
 const ARTICLE_TITLE = "Acme Corp";
@@ -17,14 +17,14 @@ function mkTask(id: string): Task {
 }
 
 describe("buildWikiChangeTask", () => {
-  it("composes the librarian task with the instruction + path + related-items line", () => {
+  it("composes the wiki-change task with the instruction + path + related-items line", () => {
     const task = buildWikiChangeTask(
       ARTICLE_TITLE,
       ARTICLE_PATH,
       "Refresh the pricing table.",
     );
     expect(task.title).toBe("Update wiki article: Acme Corp");
-    expect(task.assignee).toBe(LIBRARIAN_SLUG);
+    expect(task.assignee).toBe(WIKI_CHANGE_OWNER_SLUG);
     expect(task.details).toContain("Refresh the pricing table.");
     expect(task.details).toContain(ARTICLE_PATH);
     expect(task.details).toContain(
@@ -61,7 +61,7 @@ describe("<RequestAIChangeControl>", () => {
     expect(createSpy).not.toHaveBeenCalled();
   });
 
-  it("creates the librarian task and confirms with a link to it", async () => {
+  it("creates the Chief of Staff task and confirms with a link to it", async () => {
     const createSpy = vi
       .spyOn(tasksApi, "createTasks")
       .mockResolvedValue({ tasks: [mkTask("WIKI-9")] });
@@ -83,16 +83,16 @@ describe("<RequestAIChangeControl>", () => {
       [
         {
           title: "Update wiki article: Acme Corp",
-          assignee: LIBRARIAN_SLUG,
+          assignee: WIKI_CHANGE_OWNER_SLUG,
           details:
             "Add the new renewal terms from the June call.\n\n" +
             `Wiki article: ${ARTICLE_PATH}\n` +
             "Also update related items (linked articles, the index) that this change affects.",
         },
       ],
-      // The librarian's DM, not the retired shared room: the task is assigned
-      // to Pam, so Pam's conversation is where it belongs.
-      { channel: "human__librarian", createdBy: "human" },
+      // The Chief of Staff's DM: the owner's conversation is where the task
+      // belongs. It was the Librarian's DM until that agent stopped seeding.
+      { channel: "ceo__human", createdBy: "human" },
     );
     const link = screen.getByRole("link", { name: /Open task WIKI-9/ });
     expect(link).toHaveAttribute("href", "#/tasks/WIKI-9");

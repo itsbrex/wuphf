@@ -7,15 +7,21 @@ import { useFocusTrap } from "./editor/inserts/useFocusTrap";
 /**
  * RequestAIChangeControl — the article-toolbar "Request changes via AI"
  * affordance. Opens a small modal with one instruction field; submitting
- * creates a task owned by the librarian (Pam) to update the article AND
+ * creates a task owned by the Chief of Staff to update the article AND
  * the related items the change affects, then confirms with a link to the
  * created task. Existing wk- tokens only; markup mirrors the article
  * delete control so the parallel wiki-shell restyle can move both at once.
+ *
+ * The owner used to be the Librarian ("Pam"), an agent retired as a default:
+ * on a fresh office that slug has no member and no DM, so the task would be
+ * born owned by nobody, addressed to a channel that cannot be created. The
+ * Chief of Staff is the one agent every office is guaranteed to have, and
+ * wiki contribution is a system skill it carries like any agent.
  */
 
-export const LIBRARIAN_SLUG = "librarian";
+export const WIKI_CHANGE_OWNER_SLUG = "ceo";
 
-/** Builds the librarian task payload for a wiki AI-change request. */
+/** Builds the wiki AI-change task payload, owned by the Chief of Staff. */
 export function buildWikiChangeTask(
   title: string,
   path: string,
@@ -23,7 +29,7 @@ export function buildWikiChangeTask(
 ): { title: string; assignee: string; details: string } {
   return {
     title: `Update wiki article: ${title}`,
-    assignee: LIBRARIAN_SLUG,
+    assignee: WIKI_CHANGE_OWNER_SLUG,
     details:
       `${instruction.trim()}\n\nWiki article: ${path}\n` +
       "Also update related items (linked articles, the index) that this change affects.",
@@ -56,19 +62,19 @@ export default function RequestAIChangeControl({
     if (pending) return;
     const trimmed = instruction.trim();
     if (!trimmed) {
-      setError("Say what should change — Pam needs the instruction.");
+      setError("Say what should change. The agent needs the instruction.");
       return;
     }
     setPending(true);
     setError(null);
     try {
-      // The Librarian is the assignee (buildWikiChangeTask), so its DM is the
-      // task's home. This was "general", which no longer exists — the request
-      // died with "channel not found" before Pam ever saw it.
+      // The owner's DM is the task's home. This was "general" (died with
+      // "channel not found" when the shared room was retired), then the
+      // Librarian's DM (died the same way once that agent stopped seeding).
       const res = await createTasks(
         [buildWikiChangeTask(title, path, trimmed)],
         {
-          channel: directChannelSlug(LIBRARIAN_SLUG),
+          channel: directChannelSlug(WIKI_CHANGE_OWNER_SLUG),
           createdBy: "human",
         },
       );
@@ -163,7 +169,7 @@ function RequestAIChangeModal({
         {createdTaskId ? (
           <>
             <p className="wk-editor-help" data-testid="wk-ai-change-confirm">
-              Task created — Pam the librarian will update “{title}” and the
+              Task created — the Chief of Staff will update “{title}” and the
               related items this change affects.{" "}
               <a href={`#/tasks/${encodeURIComponent(createdTaskId)}`}>
                 Open task {createdTaskId}
