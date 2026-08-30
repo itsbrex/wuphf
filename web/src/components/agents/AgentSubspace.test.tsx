@@ -288,4 +288,28 @@ describe("<AgentSubspace>", () => {
     render(wrap(<AgentSubspace agent={baseAgent} tab="chat" />));
     expect(screen.getByTestId("avatar-planner")).toBeInTheDocument();
   });
+
+  // "Teach a workflow" lives in the persistent shell header, so it is present
+  // for every agent and on every tab rather than only where a tab happens to
+  // be mounted. It is an action, not a section, so it is not a seventh tab.
+  it("offers Teach a workflow from the shell header on every tab", () => {
+    for (const t of AGENT_TABS) {
+      const { unmount } = render(
+        wrap(<AgentSubspace agent={baseAgent} tab={t.id} />),
+      );
+      expect(screen.getByTestId("teach-workflow-btn")).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it("opens the screenshare flow from the header button, closed until clicked", async () => {
+    const user = userEvent.setup();
+    render(wrap(<AgentSubspace agent={baseAgent} tab="chat" />));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId("teach-workflow-btn"));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Teach Planner a workflow")).toBeInTheDocument();
+  });
 });

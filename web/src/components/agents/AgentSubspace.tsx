@@ -2,12 +2,20 @@
  * AgentSubspace — tabbed per-agent view with 6 tabs:
  *   Chat · Tasks · Skills · Policies · Live Stream · Config
  *
- * The shell header (avatar + editable name + role + status + current-task chip)
- * is persistent across all tabs. Tab content is mounted/unmounted on switch;
- * the active tab uses stable keys to prevent unnecessary remounts.
+ * The shell header (avatar + editable name + role + status + current-task chip
+ * + "Teach a workflow") is persistent across all tabs. Tab content is
+ * mounted/unmounted on switch; the active tab uses stable keys to prevent
+ * unnecessary remounts.
+ *
+ * "Teach a workflow" lives in the header rather than in a seventh tab because
+ * it is an action, not a section: it opens a screenshare, runs once, and hands
+ * the result to the Chat tab. Being in the header also makes it reachable from
+ * every tab and, since this header is the one per-agent surface, from every
+ * agent without exception.
  */
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Eye } from "iconoir-react";
 
 import type { OfficeMember } from "../../api/client";
 import { useDefaultHarness } from "../../hooks/useConfig";
@@ -16,6 +24,7 @@ import { router } from "../../lib/router";
 import { HarnessBadge } from "../ui/HarnessBadge";
 import { PixelAvatar } from "../ui/PixelAvatar";
 import { EditableName } from "./AgentProfilePanel";
+import { TeachWorkflowModal } from "./TeachWorkflowModal";
 import { ChatTab } from "./tabs/ChatTab";
 import { ConfigTab } from "./tabs/ConfigTab";
 import { LiveStreamTab } from "./tabs/LiveStreamTab";
@@ -74,9 +83,10 @@ function resolveTab(raw: string): AgentTab {
 
 interface ShellHeaderProps {
   agent: OfficeMember;
+  onTeachWorkflow: () => void;
 }
 
-function ShellHeader({ agent }: ShellHeaderProps) {
+function ShellHeader({ agent, onTeachWorkflow }: ShellHeaderProps) {
   const defaultHarness = useDefaultHarness();
   const harness = resolveHarness(agent.provider, defaultHarness);
   const statusClass = agent.status === "active" ? "active pulse" : "lurking";
@@ -124,6 +134,18 @@ function ShellHeader({ agent }: ShellHeaderProps) {
             ) : null}
           </div>
         </div>
+
+        {/* Show it once. It will do it from now on. */}
+        <button
+          type="button"
+          className="btn agent-subspace-teach-btn"
+          onClick={onTeachWorkflow}
+          data-testid="teach-workflow-btn"
+          title={`Show ${agent.name || agent.slug} a workflow on a screenshare`}
+        >
+          <Eye width={14} height={14} aria-hidden="true" />
+          Teach a workflow
+        </button>
       </div>
     </div>
   );
@@ -261,6 +283,7 @@ function TabContent({ agent, tab }: { agent: OfficeMember; tab: AgentTab }) {
 
 export function AgentSubspace({ agent, tab }: AgentSubspaceProps) {
   const activeTab = resolveTab(tab);
+  const [teaching, setTeaching] = useState(false);
 
   return (
     <div
@@ -268,9 +291,23 @@ export function AgentSubspace({ agent, tab }: AgentSubspaceProps) {
       data-testid="agent-subspace"
       data-agent-slug={agent.slug}
     >
-      <ShellHeader agent={agent} />
+      <ShellHeader agent={agent} onTeachWorkflow={() => setTeaching(true)} />
       <TabBar agentSlug={agent.slug} activeTab={activeTab} />
       <TabContent agent={agent} tab={activeTab} />
+      <TeachWorkflowModal
+        agentSlug={agent.slug}
+        agentName={agent.name}
+        open={teaching}
+        onClose={() => setTeaching(false)}
+        // The taught workflow lands as a message in the agent's DM, so send the
+        // operator to the tab where the agent's answer will appear.
+        onSent={() => {
+          void router.navigate({
+            to: "/agents/$agentSlug/$tab",
+            params: { agentSlug: agent.slug, tab: "chat" },
+          });
+        }}
+      />
     </div>
   );
 }
