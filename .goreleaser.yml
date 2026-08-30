@@ -77,5 +77,11 @@ changelog:
 
 release:
   github:
-    owner: nex-crm
-    name: wuphf
+    # The repo moved to the founder's personal org. GitHub redirects the old
+    # nex-crm/wuphf path with a 307, which goreleaser's asset uploader does
+    # not follow on POST — v0.236.1 built every gawkbot_* artifact and then
+    # failed to upload a single one. Release targets must name the real repo.
+    # (The nex-crm/wuphf strings in ldflags above are the Go MODULE PATH, an
+    # identifier, and stay.)
+    owner: najmuzzaman-mohammad
+    name: gawkbot
