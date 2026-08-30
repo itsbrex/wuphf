@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -149,5 +150,51 @@ func TestLegacyWorkspaceKeepsItsAgentsButDropsTheOfficeName(t *testing.T) {
 	}
 	if b.findChannelLocked("human__librarian") == nil {
 		t.Error("legacy librarian DM was dropped on load")
+	}
+}
+
+// The founder's onboarding spec, no-task branch: "if no task was kicked off,
+// the Chief of Staff should have a first prompt to introduce itself and the
+// features and ask for the person's goal to plan the first thing to do."
+//
+// The regression this pins: the old welcome was posted From "system" with
+// copy describing a six-agent office ("the team are online and ready ...
+// they'll claim work, argue, and ship"). Landing in a DM only works if
+// somebody is actually there, so the OUTCOME asserted is a message in the
+// lead's DM, from the lead, that asks for the goal.
+func TestSkipTaskOnboardingOpensWithTheChiefOfStaffIntro(t *testing.T) {
+	ensureOperationsFallbackFS(t)
+	b := newTestBroker(t)
+	if err := b.onboardingCompleteFn("", true, "niche-crm", nil, ""); err != nil {
+		t.Fatalf("onboardingCompleteFn: %v", err)
+	}
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	lead := officeLeadSlugFromMembers(b.members)
+	if lead == "" {
+		t.Fatal("no lead in the seeded roster")
+	}
+	var intro *channelMessage
+	for i := range b.messages {
+		if b.messages[i].From == lead {
+			intro = &b.messages[i]
+			break
+		}
+	}
+	if intro == nil {
+		t.Fatal("no message from the lead: the office opens silent, or the intro still speaks as \"system\"")
+	}
+	if !IsDMSlug(intro.Channel) {
+		t.Errorf("intro landed in %q, want the lead's DM", intro.Channel)
+	}
+	if !strings.Contains(intro.Content, "what are you trying to get done") {
+		t.Errorf("intro does not ask for the goal; content = %q", intro.Content)
+	}
+	for _, banned := range []string{"argue", "the team are online", "bystander"} {
+		if strings.Contains(strings.ToLower(intro.Content), banned) {
+			t.Errorf("intro still carries retired copy %q", banned)
+		}
 	}
 }

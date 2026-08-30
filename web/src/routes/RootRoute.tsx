@@ -690,12 +690,10 @@ function NotFoundSurface({ pathname }: { pathname: string }) {
       <span>
         No route matches <code>{pathname}</code>.
       </span>
-      <Link
-        to="/channels/$channelSlug"
-        params={{ channelSlug: "general" }}
-        style={{ color: "var(--text-secondary)" }}
-      >
-        Go to #general
+      {/* Home, not #general: the shared room is retired, so the old escape
+          hatch from "Page not found" led straight back to another one. */}
+      <Link to="/" style={{ color: "var(--text-secondary)" }}>
+        Go home
       </Link>
     </div>
   );
@@ -1035,7 +1033,23 @@ export default function RootRoute() {
       // via the branch below with the first issue already seeded into the CEO
       // DM composer (pendingComposerDraft, set inside the wizard hook).
       body = (
-        <OnboardingWizard onComplete={() => setOnboardingComplete(true)} />
+        <OnboardingWizard
+          onComplete={() => {
+            setOnboardingComplete(true);
+            // Land IN the Chief of Staff DM, not on the home route. Founder:
+            // "onboarding should throw you into a chat with Chief of Staff
+            // when you enter the office with the first task you had kicked
+            // off." The kickoff (or the intro message when no task was given)
+            // is already in that conversation, so the first paint is the chat
+            // it lives in rather than a dashboard the user must navigate away
+            // from.
+            void router.navigate({
+              to: "/agents/$agentSlug",
+              params: { agentSlug: "ceo" },
+              replace: true,
+            });
+          }}
+        />
       );
     } else {
       // Provider picker. No phase set yet — user hasn't picked a runtime.

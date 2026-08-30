@@ -400,44 +400,28 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 		return fmt.Errorf("onboarding: no conversation to post the kickoff into: %w", err)
 	}
 
-	// Lead-only warning: the wizard sent agents=[] (explicit empty = every
-	// toggle unchecked). The seed helper fell back to lead-only; surface
-	// that via a system message so the user knows the team is minimal. The
-	// built-in Librarian and App Builder are always present and don't count as
-	// specialists, so a roster of lead + Librarian + App Builder is still
-	// "lead only".
-	specialistMembers := 0
-	for i := range b.members {
-		if !isLibrarianSlug(b.members[i].Slug) && !isAppBuilderSlug(b.members[i].Slug) {
-			specialistMembers++
-		}
-	}
-	if selectedAgents != nil && len(selectedAgents) == 0 && specialistMembers == 1 {
-		b.counter++
-		b.appendMessageLocked(channelMessage{
-			ID:        fmt.Sprintf("msg-%d", b.counter),
-			From:      "system",
-			Channel:   leadHome,
-			Kind:      "system",
-			Content:   "Team seeded with lead only. Add specialists from Team settings.",
-			Timestamp: now,
-		})
-	}
+	// No lead-only warning any more. A roster of exactly the Chief of Staff
+	// is the intended default, not an anomaly to apologize for: specialists
+	// are created on demand. (The old warning also counted "specialists" by
+	// excluding the Librarian and App Builder, two agents that no longer
+	// seed.)
 
 	if skipTask {
-		// Without a seeded task, #general would otherwise be empty (or hold
-		// only the lead-only warning) and the office looks broken on first
-		// open. Post a system welcome so the channel always has an
-		// affordance for what to do next. No staged agent presence lines:
-		// the core loop wants a real first paint, not a fake-staffed one
-		// (core-loop R6 removed the demo_seed machinery).
+		// No task was kicked off, so the Chief of Staff opens the DM itself.
+		// Founder: "the Chief of Staff should have a first prompt to introduce
+		// itself and the features and ask for the person's goal to plan the
+		// first thing to do." It speaks as the agent (From: lead), not as
+		// "system": the point of landing in a DM is that somebody is there.
+		// No staged agent presence lines and no invented team: the roster is
+		// one agent and the message says only what the product actually does
+		// (core-loop R6 removed the demo_seed machinery; the honesty doctrine
+		// keeps it out).
 		b.counter++
 		b.appendMessageLocked(channelMessage{
 			ID:        fmt.Sprintf("msg-%d", b.counter),
-			From:      "system",
+			From:      lead,
 			Channel:   leadHome,
-			Kind:      "system",
-			Content:   welcomeMessageForMembers(b.members),
+			Content:   chiefOfStaffIntroMessage(b.members),
 			Timestamp: now,
 		})
 		// seedFromBlueprintLocked mutated b.members/channels/tasks above; we
@@ -499,13 +483,25 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 // welcomeMessageForMembers builds the system welcome posted to #general when
 // the user finishes onboarding without seeding a task. Names the lead so the
 // office feels staffed (not abstract) and points the user at the composer.
-func welcomeMessageForMembers(members []officeMember) string {
+// chiefOfStaffIntroMessage is the Chief of Staff's opening line in a fresh
+// office where no task was kicked off. It replaces welcomeMessageForMembers,
+// whose copy ("the team are online and ready ... they'll claim work, argue,
+// and ship") described a six-agent default office that no longer exists and
+// spoke as "system" about agents instead of letting the one agent present
+// speak.
+//
+// The copy promises only what the product does today: absorbing menial work,
+// microapps to manage outcomes, teach-by-screenshare, and the approval gate.
+// It closes by asking for the goal, which is the founder's spec: introduce
+// itself, cover the features, ask what the person wants so it can plan the
+// first thing.
+func chiefOfStaffIntroMessage(members []officeMember) string {
 	_, leadName := leadSlugAndName(members)
 	if leadName == "" {
-		leadName = "Your lead"
+		leadName = "your Chief of Staff"
 	}
 	return fmt.Sprintf(
-		"Welcome to your team. %s and the team are online and ready. Type a directive in the composer below — they'll claim work, argue, and ship.",
+		"I am %s. Hand me the boring part: I read the threads, chase the follow ups, and do the menial work, and when you want a screen to manage the outcome I build you a microapp for it. You can also show me a workflow once on a screenshare and I will handle it from then on. Anything that leaves this office waits for your approval first.\n\nSo, what are you trying to get done? Give me the goal and I will plan the first thing. If the work needs more agents, I will propose them as we go.",
 		leadName,
 	)
 }
