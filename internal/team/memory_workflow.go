@@ -28,7 +28,7 @@ const (
 )
 
 // ContextCitation is the backend-neutral citation shape used by the context
-// harness. It is intentionally broad enough for markdown, Nex, and GBrain
+// harness. It is intentionally broad enough for markdown and GBrain
 // sources without making any one backend canonical.
 type ContextCitation struct {
 	Backend     string   `json:"backend,omitempty"`
@@ -252,7 +252,7 @@ func researchTaskNeedsPriorContext(text string) bool {
 	return containsAnyTaskFragment(text,
 		"prior context", "previous context", "existing context", "org context",
 		"organizational context", "shared context", "context harness",
-		"memory", "notebook", "wiki", "gbrain", "nex",
+		"memory", "notebook", "wiki", "gbrain",
 		"past work", "previous work", "prior work", "history", "historical",
 		"lesson learned", "lessons learned", "playbook", "canonical",
 		"source of truth", "past decision", "prior decision", "previous decision",

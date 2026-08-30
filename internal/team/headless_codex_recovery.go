@@ -115,7 +115,19 @@ func (l *Launcher) taskHasExternalWorkflowEvidenceSince(task *teamTask, startedA
 	if l == nil || l.broker == nil || task == nil {
 		return false, false
 	}
-	channel := normalizeChannelSlug(task.Channel)
+	// bucketChannelKey, not normalizeChannelSlug: a task with no channel must
+	// match actions with no channel, NOT every action everywhere.
+	//
+	// The pairing below is `channel != "" && <mismatch> -> skip`. That guard is
+	// dead while normalizeChannelSlug launders "" into "general", so the filter
+	// always applies. The moment "" survives, the guard goes live and switches
+	// the channel filter OFF for a homeless task — widening the evidence scan
+	// to that owner's work in every channel, which can report executed=true
+	// from unrelated activity and suppress a recovery that should have fired.
+	// A filter that silently widens is worse than one that is wrong, so both
+	// sides use the same empty-preserving key and the comparison is
+	// unconditional.
+	channel := bucketChannelKey(task.Channel)
 	owner := strings.TrimSpace(task.Owner)
 	for _, action := range l.broker.Actions() {
 		kind := strings.ToLower(strings.TrimSpace(action.Kind))
@@ -128,7 +140,7 @@ func (l *Launcher) taskHasExternalWorkflowEvidenceSince(task *teamTask, startedA
 		default:
 			continue
 		}
-		if channel != "" && normalizeChannelSlug(action.Channel) != channel {
+		if bucketChannelKey(action.Channel) != channel {
 			continue
 		}
 		if owner != "" {

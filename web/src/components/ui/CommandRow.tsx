@@ -8,8 +8,8 @@ import { showNotice } from "./Toast";
  * It is copy-paste ONLY — wuphf deliberately never runs install/shell
  * commands on the user's behalf from Settings panels (see the Local LLMs
  * section copy: "install commands are copy-paste only"). Shared by the
- * Local LLMs panel and the Nex integration panel so that contract — and
- * the styling — stays in one place.
+ * Shared by the Settings panels that surface install commands, so that
+ * contract — and the styling — stays in one place.
  */
 export function CommandRow({ command }: { command: string }) {
   const [copied, setCopied] = useState(false);

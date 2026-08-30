@@ -271,7 +271,7 @@ export const Intro: StoryObj = {
         <Note>
           Theme switcher in the toolbar swaps <code>data-theme</code> and loads
           <code>/themes/&lt;id&gt;.css</code> — verify your component looks
-          right in all three themes (Nex Light, Nex Dark, Noir Gold).
+          right in all three themes (Light, Dark, Noir Gold).
         </Note>
         <Note>
           For store- or data-driven components, seed Zustand inside the story

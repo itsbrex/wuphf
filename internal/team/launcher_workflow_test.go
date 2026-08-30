@@ -94,15 +94,9 @@ func TestProcessDueWorkflowJobUsesComposioProvider(t *testing.T) {
 				},
 			},
 			{
-				"id":             "recent_insights",
-				"type":           "nex_insights",
-				"lookback_hours": "{{ .inputs.window_hours }}",
-				"insight_limit":  "{{ .inputs.insight_limit }}",
-			},
-			{
-				"id":             "compose_digest",
-				"type":           "nex_ask",
-				"query_template": "Build a digest email with Executive Summary, Why This Matters, What To Do Next, Email Highlights, and Relevant Nex Insights. Emails: {{ toJSON .steps.fetch_emails.response.data.messages }} Insights: {{ toJSON .steps.recent_insights.insights }}",
+				"id":       "compose_digest",
+				"type":     "template",
+				"template": "Executive Summary\n\nWhy This Matters\n\nEmails: {{ toJSON .steps.fetch_emails.response.data.messages }}",
 			},
 			{
 				"id":             "send_email",
@@ -113,7 +107,7 @@ func TestProcessDueWorkflowJobUsesComposioProvider(t *testing.T) {
 				"data": map[string]any{
 					"recipient_email": "{{ .inputs.recipient_email }}",
 					"subject":         "{{ .inputs.subject }}",
-					"body":            "{{ .steps.compose_digest.answer }}",
+					"body":            "{{ .steps.compose_digest.result }}",
 				},
 			},
 		},

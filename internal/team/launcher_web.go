@@ -2,31 +2,25 @@ package team
 
 // launcher_web.go owns the web-mode entry points (PLAN.md §C8): the
 // preflight check, the LaunchWeb path that boots the broker + web UI
-// without tmux, the optional Nex-onboarding offer, and the small
+// without tmux, and the small
 // browser-launch helpers used only by web mode. Splitting these off
 // keeps launcher.go focused on the tmux-mode orchestrator while letting
-// web-only imports (`net`, `golang.org/x/term`, `internal/setup`,
-// `internal/nex`, `internal/runtimebin` for the opencode lookup) sit in
+// web-only imports (`net`, `golang.org/x/term`, `internal/runtimebin`
+// for the opencode lookup) sit in
 // one file. No new types or behaviour changes — pure file split.
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 	"net"
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"time"
 
 	"golang.org/x/term"
 
-	"github.com/nex-crm/wuphf/internal/config"
-	"github.com/nex-crm/wuphf/internal/nex"
 	"github.com/nex-crm/wuphf/internal/runtimebin"
-	"github.com/nex-crm/wuphf/internal/setup"
 )
 
 // PreflightWeb checks only for claude (no tmux requirement for web mode).
@@ -67,11 +61,6 @@ func (l *Launcher) PreflightWeb() error {
 
 // LaunchWeb starts the broker, web UI server, and background agents without tmux.
 func (l *Launcher) LaunchWeb(webPort int) error {
-	// Offer to wire Nex when the user hasn't opted out and nex-cli isn't yet
-	// installed. `nex setup` handles detection and wiring for us — we just
-	// surface the prompt.
-	l.maybeOfferNex()
-
 	mcpConfig, err := l.ensureMCPConfig()
 	if err != nil {
 		return fmt.Errorf("prepare mcp config: %w", err)
@@ -162,7 +151,6 @@ func (l *Launcher) LaunchWeb(webPort int) error {
 	go l.notifyAgentsLoop()
 	go l.notifyTaskActionsLoop()
 	go l.notifyOfficeChangesLoop()
-	go l.pollNexNotificationsLoop()
 	go l.watchdogSchedulerLoop()
 	if l.paneBackedAgents {
 		go l.primeVisibleAgents()
@@ -199,69 +187,6 @@ func (l *Launcher) LaunchWeb(webPort int) error {
 	// Broker, web UI, and background goroutines own the process lifetime;
 	// Ctrl+C (default SIGINT) is the only exit path.
 	select {}
-}
-
-// maybeOfferNex offers to wire up Nex for memory/context when nex-cli
-// isn't already installed. Prints an explicit "skipping Nex" line when
-// stdin isn't a TTY (npx, pipes, CI, containers) — fmt.Scanln returns
-// empty in that case, which the prompt would have silently accepted as
-// "yes" and tried to install. Users can rerun `nex setup` later or set
-// WUPHF_NO_NEX=1 to suppress the offer.
-func (l *Launcher) maybeOfferNex() {
-	if config.ResolveNoNex() || nex.IsInstalled() {
-		return
-	}
-	if !stdinIsTTY() {
-		fmt.Println()
-		fmt.Println("  Skipping Nex (no interactive terminal). Run `nex setup` later to add memory.")
-		fmt.Println()
-		return
-	}
-	fmt.Println()
-	fmt.Print("  Connect Nex for memory and context? [Y/n] ")
-	var answer string
-	if _, err := fmt.Scanln(&answer); err != nil {
-		// fmt.Scanln has two distinct error shapes here:
-		//   - io.EOF: stdin was closed underneath us. By the time we
-		//     reach this branch stdinIsTTY() already returned true, so
-		//     EOF means the user explicitly hit Ctrl-D rather than
-		//     answering. Treat as a deliberate skip.
-		//   - any other error (most commonly "unexpected newline" from
-		//     a bare Enter): the prompt label says [Y/n], so capital-Y
-		//     is the visible default. Accept Enter as "yes" so the UX
-		//     contract matches the prompt.
-		if errors.Is(err, io.EOF) {
-			fmt.Println("  Skipping Nex. Agents will work without organizational memory.")
-			fmt.Println()
-			return
-		}
-		answer = ""
-	}
-	answer = strings.TrimSpace(strings.ToLower(answer))
-	if answer != "" && answer != "y" && answer != "yes" {
-		fmt.Println("  Skipping Nex. Agents will work without organizational memory.")
-		fmt.Println()
-		return
-	}
-	fmt.Println()
-	fmt.Println("  Nex CLI not found. Installing...")
-	if _, installErr := setup.InstallLatestCLI(context.Background()); installErr != nil {
-		fmt.Printf("  Could not install: %v\n", installErr)
-		fmt.Println("  Continuing without Nex.")
-	}
-	if nexBin := nex.BinaryPath(); nexBin != "" {
-		cmd := exec.CommandContext(context.Background(), nexBin, "setup")
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			fmt.Printf("  Setup did not complete: %v\n", err)
-			fmt.Println("  Continuing without Nex.")
-		} else {
-			fmt.Println("  Nex connected.")
-		}
-	}
-	fmt.Println()
 }
 
 // waitForWebReady polls addr until a TCP dial succeeds or the timeout

@@ -99,16 +99,21 @@ func (b *Broker) raisePlanApprovalInterviewLocked(taskID, actor, plan string) st
 		}
 	}
 
-	channel := normalizeChannelSlug(task.Channel)
-	if channel == "" {
-		channel = "general"
-	}
 	from := strings.TrimSpace(actor)
 	if from == "" {
 		from = strings.TrimSpace(task.Owner)
 	}
 	if from == "" {
 		from = "office"
+	}
+	// The task's channel, else the owner's DM, else the asker's. This card is
+	// BLOCKING: the agent stalls until it is answered, so filing it into the
+	// retired "general" hangs the plan on an approval the human never sees.
+	channel := normalizeChannelSlug(task.Channel)
+	if strings.TrimSpace(task.Channel) == "" {
+		if home, err := b.homeChannelForWriterLocked(from, task.Owner, from); err == nil {
+			channel = home
+		}
 	}
 
 	title := strings.TrimSpace(task.Title)

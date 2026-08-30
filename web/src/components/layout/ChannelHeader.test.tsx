@@ -36,17 +36,17 @@ afterEach(() => {
 });
 
 describe("<ChannelHeader>", () => {
-  it("opens the theme switcher and switches to Nex Dark", () => {
+  it("opens the theme switcher and switches to Dark", () => {
     useAppStore.setState({ theme: "nex" });
 
     renderHeader();
 
     const trigger = screen.getByRole("button", {
-      name: /Theme: Nex Light\. Open theme switcher\./,
+      name: /Theme: Light\. Open theme switcher\./,
     });
     fireEvent.click(trigger);
 
-    const dark = screen.getByRole("menuitemradio", { name: /Nex Dark/ });
+    const dark = screen.getByRole("menuitemradio", { name: /Dark/ });
     fireEvent.click(dark);
 
     expect(useAppStore.getState().theme).toBe("nex-dark");
@@ -77,7 +77,7 @@ describe("<ChannelHeader>", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Theme: Nex Light\. Open theme switcher\./,
+        name: /Theme: Light\. Open theme switcher\./,
       }),
     );
     expect(screen.getByRole("menu")).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe("<ChannelHeader>", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Theme: Nex Light\. Open theme switcher\./,
+        name: /Theme: Light\. Open theme switcher\./,
       }),
     );
     expect(screen.getByRole("menu")).toBeInTheDocument();
@@ -109,14 +109,14 @@ describe("<ChannelHeader>", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: /Theme: Nex Light\. Open theme switcher\./,
+        name: /Theme: Light\. Open theme switcher\./,
       }),
     );
 
     const menu = screen.getByRole("menu");
     const items = screen.getAllByRole("menuitemradio");
 
-    // Menu opens with focus on the active item (Nex Light — index 1, after
+    // Menu opens with focus on the active item (Light — index 1, after
     // the Shell default that now leads the registry).
     expect(document.activeElement).toBe(items[1]);
 

@@ -769,7 +769,16 @@ export function TaskDocument({ taskId, initialDocument }: TaskDocumentProps) {
                 )}
               </main>
             }
-            right={<AppBuildPreview taskTitle={doc.title} taskId={taskId} />}
+            right={
+              // The channel is the app binding: an app-build task lives in its
+              // app's own edit channel, which is how the preview finds the app
+              // even when the registered name drifted from the task title.
+              <AppBuildPreview
+                taskTitle={doc.title}
+                taskId={taskId}
+                taskChannel={doc.channel}
+              />
+            }
           />
         </div>
       ) : (

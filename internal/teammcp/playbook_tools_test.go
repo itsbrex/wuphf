@@ -12,7 +12,6 @@ func TestPlaybookToolsRegisteredOnlyInMarkdownBackend(t *testing.T) {
 		mustHave bool
 	}{
 		{"markdown", true},
-		{"nex", false},
 		{"gbrain", false},
 		{"none", false},
 	}

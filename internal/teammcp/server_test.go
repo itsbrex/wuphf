@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -338,12 +335,24 @@ func TestHandleTeamMemberCreateTriggersReconfigure(t *testing.T) {
 	}
 }
 
-func TestHandleTeamChannelCreateTriggersReconfigure(t *testing.T) {
+// TestHandleTeamChannelCreateIsRefusedAndDoesNotReconfigure is the INVERSION
+// of "create triggers reconfigure".
+//
+// Named channels are retired: conversations happen in a DM with one agent, and
+// the broker answers POST /channels with 409. So the team_channel tool cannot
+// mint a room any more, and the two things this pins are what must follow from
+// that. The agent is told WHY, in the retirement's own words rather than a bare
+// failure — and reconfigureOfficeSession does NOT fire, because respawning
+// every interactive pane after a create that created nothing is churn charged
+// to the user for no change.
+//
+// Inverted rather than deleted: an unconditional reconfigure on a failed tool
+// call is a real regression shape, and this is where it would show up.
+func TestHandleTeamChannelCreateIsRefusedAndDoesNotReconfigure(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	// This test exercises the create mechanics (broker POST + reconfigure), not
-	// the human-approval gate (which has its own tests in channel_approval_test.go).
-	// WUPHF_UNSAFE=1 is the intended bypass so the create proceeds without a human
-	// answering the approval card.
+	// WUPHF_UNSAFE=1 bypasses the human-approval gate (covered by its own tests
+	// in channel_approval_test.go) so the call reaches the broker and the
+	// refusal below is the RETIREMENT, not the approval card.
 	t.Setenv("WUPHF_UNSAFE", "1")
 	ctx := context.Background()
 	b := newTestBroker(t)
@@ -364,51 +373,31 @@ func TestHandleTeamChannelCreateTriggersReconfigure(t *testing.T) {
 	}
 	defer func() { reconfigureOfficeSessionFn = prev }()
 
-	if _, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{
+	result, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{
 		Action:      "create",
 		Channel:     "launch",
 		Name:        "launch",
 		Description: "Launch execution channel",
 		Members:     []string{"pm", "fe"},
 		MySlug:      "ceo",
-	}); err != nil {
+	})
+	if err != nil {
 		t.Fatalf("handleTeamChannel: %v", err)
 	}
-	if called != 1 {
-		t.Fatalf("expected one reconfigure call, got %d", called)
+	if result == nil || !result.IsError {
+		t.Fatalf("expected a tool error while named channels are retired, got %+v", result)
 	}
-
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/channels", b.Addr()), nil)
-	req.Header.Set("Authorization", "Bearer "+b.Token())
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("fetch channels: %v", err)
+	if got := textFromResult(t, result); !strings.Contains(got, "named channels are retired") {
+		t.Fatalf("the refusal must say why and what to do instead, got %q", got)
 	}
-	defer resp.Body.Close()
-
-	var result struct {
-		Channels []struct {
-			Slug        string   `json:"slug"`
-			Description string   `json:"description"`
-			Members     []string `json:"members"`
-		} `json:"channels"`
+	if called != 0 {
+		t.Fatalf("a refused create reconfigured the office %d time(s); nothing changed", called)
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode channels: %v", err)
-	}
-
-	found := false
-	for _, ch := range result.Channels {
-		if ch.Slug == "launch" {
-			found = true
-			if ch.Description != "Launch execution channel" {
-				t.Fatalf("expected description to persist, got %+v", ch)
-			}
-			break
-		}
-	}
-	if !found {
-		t.Fatal("expected created channel to persist")
+	// Nothing was created. Checked against broker state rather than GET
+	// /channels: that listing now withholds ordinary named rooms, so it would
+	// answer "no launch channel" whether or not one exists.
+	if team.HasChannelForTest(b, "launch") {
+		t.Fatal("a refused create still minted the channel")
 	}
 }
 
@@ -442,24 +431,15 @@ func TestHandleTeamChannelCreateRequiresExplicitSlug(t *testing.T) {
 		t.Fatalf("expected explicit slug message, got %q", got)
 	}
 
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("http://%s/channels", b.Addr()), nil)
-	req.Header.Set("Authorization", "Bearer "+b.Token())
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("fetch channels: %v", err)
+	// And it created nothing. This used to read GET /channels and assert the
+	// fixture's "general" was still the only room; that listing now withholds
+	// ordinary named rooms, so it answers [] regardless and would have passed
+	// even if a channel HAD been minted. Ask broker state instead.
+	if team.HasChannelForTest(b, "launch") {
+		t.Fatal("a slug-less create minted a channel anyway")
 	}
-	defer resp.Body.Close()
-
-	var channelsResult struct {
-		Channels []struct {
-			Slug string `json:"slug"`
-		} `json:"channels"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&channelsResult); err != nil {
-		t.Fatalf("decode channels: %v", err)
-	}
-	if len(channelsResult.Channels) != 1 || channelsResult.Channels[0].Slug != "general" {
-		t.Fatalf("expected only general channel to remain, got %+v", channelsResult.Channels)
+	if !team.HasChannelForTest(b, "general") {
+		t.Fatal("the fixture room was disturbed by a refused create")
 	}
 }
 
@@ -568,186 +548,6 @@ func TestHandleTeamMemoryWriteHintsPromotionForDurableNote(t *testing.T) {
 	}
 }
 
-func TestHandleTeamMemoryQueryAutoIncludesSharedNexMemory(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_MEMORY_BACKEND", "nex")
-	t.Setenv("WUPHF_API_KEY", "nex-test-key")
-	t.Setenv("WUPHF_NO_NEX", "")
-
-	var askedQuery string
-	apiServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/developers/v1/context/ask":
-			askedQuery = r.URL.Path
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"answer":"Shared launch history from Nex."}`))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer apiServer.Close()
-	t.Setenv("WUPHF_DEV_URL", apiServer.URL)
-
-	binDir := t.TempDir()
-	nexMCP := filepath.Join(binDir, "nex-mcp")
-	if err := os.WriteFile(nexMCP, []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatalf("create fake nex-mcp: %v", err)
-	}
-	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-
-	b := newTestBroker(t)
-	if err := b.StartOnPort(0); err != nil {
-		t.Fatalf("start broker: %v", err)
-	}
-	defer b.Stop()
-
-	t.Setenv("WUPHF_TEAM_BROKER_URL", "http://"+b.Addr())
-	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
-
-	if _, _, err := handleTeamMemoryWrite(context.Background(), nil, TeamMemoryWriteArgs{
-		Key:        "launch-brief",
-		Title:      "Launch brief",
-		Content:    "Private note for the PM.",
-		Visibility: "private",
-		MySlug:     "pm",
-	}); err != nil {
-		t.Fatalf("handleTeamMemoryWrite: %v", err)
-	}
-
-	result, _, err := handleTeamMemoryQuery(context.Background(), nil, TeamMemoryQueryArgs{
-		Query:  "launch",
-		Scope:  "auto",
-		MySlug: "pm",
-	})
-	if err != nil {
-		t.Fatalf("handleTeamMemoryQuery: %v", err)
-	}
-	text := textFromResult(t, result)
-	if askedQuery == "" {
-		t.Fatal("expected shared Nex query to be called")
-	}
-	if !strings.Contains(text, "Private memory:") || !strings.Contains(text, "Shared memory:") || !strings.Contains(text, "Shared launch history from Nex.") {
-		t.Fatalf("expected both private and shared memory hits, got %q", text)
-	}
-}
-
-func TestHandleTeamMemoryPromoteWritesSharedNexMemory(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_MEMORY_BACKEND", "nex")
-	t.Setenv("WUPHF_API_KEY", "nex-test-key")
-	t.Setenv("WUPHF_NO_NEX", "")
-
-	var postedBody string
-	apiServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/developers/v1/context/text":
-			body := new(bytes.Buffer)
-			_, _ = body.ReadFrom(r.Body)
-			postedBody = body.String()
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"ok":true}`))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer apiServer.Close()
-	t.Setenv("WUPHF_DEV_URL", apiServer.URL)
-
-	binDir := t.TempDir()
-	nexMCP := filepath.Join(binDir, "nex-mcp")
-	if err := os.WriteFile(nexMCP, []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatalf("create fake nex-mcp: %v", err)
-	}
-	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-
-	b := newTestBroker(t)
-	if err := b.StartOnPort(0); err != nil {
-		t.Fatalf("start broker: %v", err)
-	}
-	defer b.Stop()
-
-	t.Setenv("WUPHF_TEAM_BROKER_URL", "http://"+b.Addr())
-	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
-
-	if _, _, err := handleTeamMemoryWrite(context.Background(), nil, TeamMemoryWriteArgs{
-		Key:        "launch-brief",
-		Title:      "Launch brief",
-		Content:    "Approved final launch positioning for Customer Alpha.",
-		Visibility: "private",
-		MySlug:     "pm",
-	}); err != nil {
-		t.Fatalf("handleTeamMemoryWrite: %v", err)
-	}
-
-	result, _, err := handleTeamMemoryPromote(context.Background(), nil, TeamMemoryPromoteArgs{
-		Key:    "launch-brief",
-		MySlug: "pm",
-	})
-	if err != nil {
-		t.Fatalf("handleTeamMemoryPromote: %v", err)
-	}
-	text := textFromResult(t, result)
-	if !strings.Contains(text, "Promoted private note launch-brief") {
-		t.Fatalf("expected promote confirmation, got %q", text)
-	}
-	if !strings.Contains(postedBody, "Launch brief") || !strings.Contains(postedBody, "Approved final launch positioning") {
-		t.Fatalf("expected promoted content in Nex write, got %q", postedBody)
-	}
-}
-
-func TestHandleTeamMemoryQuerySharedSuggestsRoutingHint(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_MEMORY_BACKEND", "nex")
-	t.Setenv("WUPHF_API_KEY", "nex-test-key")
-	t.Setenv("WUPHF_NO_NEX", "")
-
-	apiServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/developers/v1/context/ask":
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"answer":"Author: @pm\nApproved final launch positioning for Customer Alpha."}`))
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer apiServer.Close()
-	t.Setenv("WUPHF_DEV_URL", apiServer.URL)
-
-	binDir := t.TempDir()
-	nexMCP := filepath.Join(binDir, "nex-mcp")
-	if err := os.WriteFile(nexMCP, []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatalf("create fake nex-mcp: %v", err)
-	}
-	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-
-	b := newTestBroker(t)
-	if err := b.StartOnPort(0); err != nil {
-		t.Fatalf("start broker: %v", err)
-	}
-	defer b.Stop()
-
-	t.Setenv("WUPHF_TEAM_BROKER_URL", "http://"+b.Addr())
-	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
-	ctx := context.Background()
-	ensureBrokerMembers(t, ctx, "pm", "fe")
-
-	result, _, err := handleTeamMemoryQuery(ctx, nil, TeamMemoryQueryArgs{
-		Query:  "launch positioning",
-		Scope:  "shared",
-		MySlug: "fe",
-	})
-	if err != nil {
-		t.Fatalf("handleTeamMemoryQuery: %v", err)
-	}
-	text := textFromResult(t, result)
-	if !strings.Contains(text, "Shared Nex memory:") {
-		t.Fatalf("expected shared-memory section, got %q", text)
-	}
-	if !strings.Contains(text, "Routing hints:") || !strings.Contains(text, "@pm") {
-		t.Fatalf("expected routing hint toward @pm, got %q", text)
-	}
-}
-
 func TestHandleTeamPollOneOnOneHighlightsLatestHumanRequest(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("WUPHF_ONE_ON_ONE", "1")
@@ -762,10 +562,14 @@ func TestHandleTeamPollOneOnOneHighlightsLatestHumanRequest(t *testing.T) {
 	t.Setenv("WUPHF_TEAM_BROKER_URL", "http://"+b.Addr())
 	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
 
+	// The CEO's own DM, which is where a one-on-one conversation actually
+	// lives now. These used to seed "general" and rely on resolveChannel
+	// defaulting there; that default is retired.
+	ceoDM := team.DMSlugFor("ceo")
 	for _, msg := range []map[string]any{
-		{"channel": "general", "from": "you", "content": "Old unrelated ask."},
-		{"channel": "general", "from": "ceo", "content": "Acknowledged."},
-		{"channel": "general", "from": "you", "content": "Newest request wins."},
+		{"channel": ceoDM, "from": "you", "content": "Old unrelated ask."},
+		{"channel": ceoDM, "from": "ceo", "content": "Acknowledged."},
+		{"channel": ceoDM, "from": "you", "content": "Newest request wins."},
 	} {
 		if err := brokerPostJSON(context.Background(), "/messages", msg, nil); err != nil {
 			t.Fatalf("post message: %v", err)
@@ -1137,7 +941,6 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 
 func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_NO_NEX", "1")
 	ctx := context.Background()
 
 	b := newTestBroker(t)
@@ -1221,9 +1024,9 @@ func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 		"Current focus: Approve release from @ceo.",
 		"working_directory ",
 		"Runtime capabilities:",
-		// With --no-nex + no explicit memory-backend, we now fall through to
-		// the markdown wiki (no external deps) instead of silently running
-		// with no memory backend at all. The capability label follows the
+		// With no explicit memory-backend, we fall through to the markdown
+		// wiki (no external deps) instead of silently running with no memory
+		// backend at all. The capability label follows the
 		// active-backend naming convention (`<Backend> memory`) and the
 		// detail describes where the wiki lives.
 		"Markdown wiki memory [ready]: Markdown-backed team wiki at ~/.wuphf/wiki is configured.",
@@ -1355,16 +1158,16 @@ func TestHandleTeamBroadcastDefaultsToLatestTaggedChannelAndThread(t *testing.T)
 	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
 	ensureBrokerMembers(t, ctx, "pm", "fe")
 
-	if err := brokerPostJSON(ctx, "/channels", map[string]any{
-		"action":      "create",
-		"slug":        "launch",
-		"name":        "Launch",
-		"description": "Launch work",
-		"members":     []string{"fe", "pm"},
-		"created_by":  "ceo",
-	}, nil); err != nil {
-		t.Fatalf("create channel: %v", err)
-	}
+	// The launch room comes from the fixture as a BRIDGED room, not from POST
+	// /channels: named-channel create is retired and answers 409, a DM holds
+	// only two participants so the CEO could not tag @fe inside one, and a
+	// plain named room is withheld from GET /channels — which is the listing
+	// this tool's channel inference reads, so the room would exist and the
+	// routing would still resolve elsewhere. A bridged room is the shared
+	// surface that survives the retirement. What this test is about is
+	// unchanged: which room a reply defaults to when the agent was tagged in
+	// one.
+	team.SeedBridgedRoomForTest(b, "launch", "fe", "pm")
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": "launch",
 		"from":    "ceo",
@@ -1416,16 +1219,16 @@ func TestHandleTeamPollDefaultsToLatestTaggedChannel(t *testing.T) {
 	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
 	ensureBrokerMembers(t, ctx, "pm", "fe")
 
-	if err := brokerPostJSON(ctx, "/channels", map[string]any{
-		"action":      "create",
-		"slug":        "launch",
-		"name":        "Launch",
-		"description": "Launch work",
-		"members":     []string{"fe", "pm"},
-		"created_by":  "ceo",
-	}, nil); err != nil {
-		t.Fatalf("create channel: %v", err)
-	}
+	// The launch room comes from the fixture as a BRIDGED room, not from POST
+	// /channels: named-channel create is retired and answers 409, a DM holds
+	// only two participants so the CEO could not tag @fe inside one, and a
+	// plain named room is withheld from GET /channels — which is the listing
+	// this tool's channel inference reads, so the room would exist and the
+	// routing would still resolve elsewhere. A bridged room is the shared
+	// surface that survives the retirement. What this test is about is
+	// unchanged: which room a reply defaults to when the agent was tagged in
+	// one.
+	team.SeedBridgedRoomForTest(b, "launch", "fe", "pm")
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": "launch",
 		"from":    "ceo",
@@ -1462,16 +1265,16 @@ func TestHandleTeamTaskUsesTaskChannelWhenIDGiven(t *testing.T) {
 	t.Setenv("WUPHF_BROKER_TOKEN", b.Token())
 	ensureBrokerMembers(t, ctx, "pm", "fe")
 
-	if err := brokerPostJSON(ctx, "/channels", map[string]any{
-		"action":      "create",
-		"slug":        "launch",
-		"name":        "Launch",
-		"description": "Launch work",
-		"members":     []string{"fe", "pm"},
-		"created_by":  "ceo",
-	}, nil); err != nil {
-		t.Fatalf("create channel: %v", err)
-	}
+	// The launch room comes from the fixture as a BRIDGED room, not from POST
+	// /channels: named-channel create is retired and answers 409, a DM holds
+	// only two participants so the CEO could not tag @fe inside one, and a
+	// plain named room is withheld from GET /channels — which is the listing
+	// this tool's channel inference reads, so the room would exist and the
+	// routing would still resolve elsewhere. A bridged room is the shared
+	// surface that survives the retirement. What this test is about is
+	// unchanged: which room a reply defaults to when the agent was tagged in
+	// one.
+	team.SeedBridgedRoomForTest(b, "launch", "fe", "pm")
 
 	var created struct {
 		Task struct {
@@ -1521,8 +1324,9 @@ func TestHandleHumanMessageDefaultsToDirectReplyThreadInOneOnOneMode(t *testing.
 		t.Fatalf("set session mode: %v", err)
 	}
 
+	// The direct session's own DM, not the retired shared room.
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
-		"channel": "general",
+		"channel": team.DMSlugFor("pm"),
 		"from":    "you",
 		"content": "Can you send me the latest product answer?",
 	}, nil); err != nil {

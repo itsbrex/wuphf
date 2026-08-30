@@ -72,7 +72,7 @@ func adminDirectWikiWriteBypassEnabled() bool {
 
 // registerSharedMemoryTools registers the active shared-memory / wiki tool
 // set on the server. Markdown-backend installs expose notebook tools and
-// team_wiki_* tools; nex/gbrain installs expose the legacy team_memory_* tools;
+// team_wiki_* tools; gbrain installs expose the legacy team_memory_* tools;
 // `none` skips them entirely. team_wiki_write stays available for explicit
 // human delegation, but the handler verifies human_request against a recent
 // human-authored broker message so agent-authored scratch knowledge starts in
@@ -126,7 +126,7 @@ func registerSharedMemoryTools(server *mcp.Server) {
 	case config.MemoryBackendNone:
 		// Nothing — user explicitly disabled shared memory.
 	default:
-		// nex / gbrain (default): legacy tool set unchanged.
+		// gbrain (default): legacy tool set unchanged.
 		mcp.AddTool(server, readOnlyTool(
 			"team_memory_query",
 			"Query your private notes and, when configured, shared organizational memory. Results may suggest which teammate to ask for fresher working context.",

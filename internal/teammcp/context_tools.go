@@ -237,7 +237,7 @@ func handleContextLookup(ctx context.Context, _ *mcp.CallToolRequest, args Conte
 			result.Citations = append(result.Citations, citations...)
 			result.PartialErrors = append(result.PartialErrors, partials...)
 		}
-	case config.MemoryBackendNex, config.MemoryBackendGBrain:
+	case config.MemoryBackendGBrain:
 		if includeShared {
 			hits, err := contextQuerySharedMemory(lookupCtx, query, limit)
 			if err != nil {

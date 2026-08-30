@@ -173,8 +173,10 @@ func TestPostBridgeMessageRoutesToHost(t *testing.T) {
 	if msg.Binding.MemberSlug != "openclaw-host" {
 		t.Errorf("Binding.MemberSlug: got %q want %q", msg.Binding.MemberSlug, "openclaw-host")
 	}
-	if msg.Binding.ChannelSlug != "general" {
-		t.Errorf("Binding.ChannelSlug: got %q want %q", msg.Binding.ChannelSlug, "general")
+	// The bridged agent's own DM. This was "general" until the shared room was
+	// retired; a bridged reply addressed there is rejected outright.
+	if want := DMSlugFor("openclaw-host"); msg.Binding.ChannelSlug != want {
+		t.Errorf("Binding.ChannelSlug: got %q want %q", msg.Binding.ChannelSlug, want)
 	}
 
 	if delta := len(broker.AllMessages()) - beforeBroker; delta != 0 {

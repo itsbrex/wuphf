@@ -298,7 +298,7 @@ func (b *Broker) createOfficeMember(r *http.Request, slug string, body officeMem
 		b.mu.Unlock()
 		if member.Provider.Kind == provider.KindOpenclaw && bridge != nil && member.Provider.Openclaw != nil {
 			if err := bridge.DetachSession(r.Context(), slug, member.Provider.Openclaw.SessionKey); err != nil {
-				go bridge.postSystemMessage(fmt.Sprintf("agent %q create-conflict: detach warning: %v", slug, err))
+				go bridge.postSystemMessage(slug, fmt.Sprintf("agent %q create-conflict: detach warning: %v", slug, err))
 			}
 		}
 		return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusConflict, "member already exists")
@@ -452,7 +452,7 @@ func (b *Broker) updateOfficeMember(r *http.Request, slug string, body officeMem
 			// daemon-side session lingers (no sessions.end method); user
 			// can prune via the OpenClaw CLI if they care.
 			if err := bridge.DetachSession(r.Context(), slug, oldSessionKey); err != nil {
-				go bridge.postSystemMessage(fmt.Sprintf("agent %q provider-switch: detach warning: %v", slug, err))
+				go bridge.postSystemMessage(slug, fmt.Sprintf("agent %q provider-switch: detach warning: %v", slug, err))
 			}
 		}
 
@@ -467,7 +467,7 @@ func (b *Broker) updateOfficeMember(r *http.Request, slug string, body officeMem
 		b.mu.Unlock()
 		if providerChanged && newBinding.Kind == provider.KindOpenclaw && bridge != nil && newBinding.Openclaw != nil {
 			if err := bridge.DetachSession(r.Context(), slug, newBinding.Openclaw.SessionKey); err != nil {
-				go bridge.postSystemMessage(fmt.Sprintf("agent %q update-conflict: detach warning: %v", slug, err))
+				go bridge.postSystemMessage(slug, fmt.Sprintf("agent %q update-conflict: detach warning: %v", slug, err))
 			}
 		}
 		return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusNotFound, "member not found")
@@ -551,7 +551,7 @@ func (b *Broker) removeOfficeMember(r *http.Request, slug string) (officeMemberM
 	// OpenClaw CLI if they want to reclaim the slot.
 	if memberSnapshot.Provider.Kind == provider.KindOpenclaw && bridge != nil {
 		if err := bridge.DetachSlugAndUnsubscribe(r.Context(), memberSnapshot.Slug); err != nil {
-			go bridge.postSystemMessage(fmt.Sprintf("agent %q removed: detach warning: %v", memberSnapshot.Slug, err))
+			go bridge.postSystemMessage(memberSnapshot.Slug, fmt.Sprintf("agent %q removed: detach warning: %v", memberSnapshot.Slug, err))
 		}
 	}
 

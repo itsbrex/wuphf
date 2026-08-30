@@ -10,7 +10,7 @@ import { EmbeddingChoiceView } from "./EmbeddingChoice";
  * Stories for the wiki step's "Power semantic memory" section. The view is
  * presentational, so each state is driven purely by the `options` it receives.
  * A thin stateful harness keeps the key input interactive without mounting the
- * fetch/save container. Check each story in Nex Light, Nex Dark, and Noir Gold.
+ * fetch/save container. Check each story in Light, Dark, and Noir Gold.
  */
 
 const BASE: EmbeddingOptions = {

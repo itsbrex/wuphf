@@ -4,7 +4,6 @@
 // Architecture:
 //   - Each agent is a real Claude Code session in a tmux window
 //   - the office broker provides the shared channel (all agents see all messages)
-//   - Nex is an optional context layer, not a requirement
 //   - CEO has final decision authority; agents participate when relevant
 //   - Go TUI is the channel "observer" — displays the conversation
 package team
@@ -141,7 +140,7 @@ type Launcher struct {
 	// *Once fields below pair with each lazy sub-type pointer; see
 	// launcher_wiring.go for the sync.Once-guarded accessors.
 	// PLAN.md §C25 staff-review fix: Launch spawns goroutines (notify*Loop,
-	// watchdogSchedulerLoop, pollNexNotificationsLoop, ...) that all hit
+	// watchdogSchedulerLoop, ...) that all hit
 	// these accessors concurrently — without sync.Once two goroutines can
 	// both observe nil and write competing pointers.
 	targets     *officeTargeter
@@ -302,6 +301,6 @@ func NewLauncher(packSlug string) (*Launcher, error) {
 // getAgentName wrapper deleted by PLAN.md §6 sweep — callers use
 // l.targeter().NameFor(slug) directly.
 
-// Web-mode entry points (PreflightWeb, LaunchWeb, maybeOfferNex,
+// Web-mode entry points (PreflightWeb, LaunchWeb,
 // waitForWebReady, stdinIsTTY, openBrowser) live in launcher_web.go per
 // PLAN.md §C8.

@@ -436,7 +436,7 @@ Rules:
 - integration is a lowercase platform slug (e.g. "gmail", "slack") ONLY for a step that calls that external system, else "".
 - gated is true for any step that SENDS or WRITES to an external system.
 - Use ONLY the data sources and integrations the app actually has (listed below). Do NOT invent capabilities.
-- kind "browser" — for a step that must use an external system the app has NO integration for: set integration to "" and put the exact goal in "detail". Nex drives the browser to do it. Set gated true if it sends/writes.
+- kind "browser" — for a step that must use an external system the app has NO integration for: set integration to "" and put the exact goal in "detail". The browser runner drives it. Set gated true if it sends/writes.
 - Tailor the steps to THIS app's specific purpose. Keep it tight: 3 to 7 steps.`
 
 // authoredAppWorkflowPlan asks the model to design a workflow for THIS app from

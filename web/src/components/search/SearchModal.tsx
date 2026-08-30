@@ -532,7 +532,8 @@ function dispatchPaletteCommand(name: string, deps: CommandDeps) {
     case "/reset":
       post("/reset", {})
         .then(() => {
-          navigateToChannel("general");
+          // Home, not the retired #general.
+          void router.navigate({ to: "/" });
           showNotice("Office reset", "success");
         })
         .catch((e: Error) => showNotice(`Reset failed: ${e.message}`, "error"));

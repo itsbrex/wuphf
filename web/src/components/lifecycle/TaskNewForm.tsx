@@ -19,12 +19,15 @@ import {
 } from "../../lib/runtimeProviders";
 import type { PrereqResult } from "../onboarding/runtimes";
 
-const DEFAULT_CHANNEL = "general";
-
 export function TaskNewForm() {
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
-  const [channel, setChannel] = useState(DEFAULT_CHANNEL);
+  // Empty by default. This was seeded with "general" and offered as a
+  // free-text field, so the form's happy path filed every Issue into the
+  // shared room — a room that no longer exists, which turned the whole form
+  // into a 404. Left blank the broker routes the Issue to its ASSIGNEE's DM,
+  // which is the right home and needs no input from the human.
+  const [channel, setChannel] = useState("");
   const [assignee, setAssignee] = useState("");
   const [provider, setProvider] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -97,7 +100,9 @@ export function TaskNewForm() {
             provider: provider || undefined,
           },
         ],
-        { channel: channel.trim() || DEFAULT_CHANNEL, createdBy: "human" },
+        // Omit the channel unless the human typed one; createTasks drops the
+        // field when it is blank and the broker resolves the assignee's DM.
+        { channel: channel.trim(), createdBy: "human" },
       );
       const created = response.tasks?.[0];
       void queryClient.invalidateQueries({ queryKey: ["issues"] });
@@ -176,7 +181,7 @@ export function TaskNewForm() {
               type="text"
               value={channel}
               onChange={(e) => setChannel(e.target.value)}
-              placeholder="general"
+              placeholder="defaults to the assignee's DM"
               data-testid="issue-new-channel"
             />
           </div>

@@ -224,33 +224,6 @@ func TestResolveMemoryBackendStatusGBrainAnthropicOnlyIsNotSemantic(t *testing.T
 	}
 }
 
-func TestShouldPollNexNotificationsOnlyWhenNexIsActive(t *testing.T) {
-	t.Setenv("WUPHF_NO_NEX", "")
-	t.Setenv("WUPHF_API_KEY", "nex-test-key")
-	t.Setenv("WUPHF_MEMORY_BACKEND", config.MemoryBackendNex)
-
-	binDir := t.TempDir()
-	nexMCP := filepath.Join(binDir, "nex-mcp")
-	if err := os.WriteFile(nexMCP, []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatalf("create fake nex-mcp: %v", err)
-	}
-	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
-
-	if !shouldPollNexNotifications() {
-		t.Fatal("expected nex notification polling when nex backend is active")
-	}
-
-	t.Setenv("WUPHF_MEMORY_BACKEND", config.MemoryBackendGBrain)
-	t.Setenv("WUPHF_OPENAI_API_KEY", "sk-test-openai")
-	gbrainBin := filepath.Join(binDir, "gbrain")
-	if err := os.WriteFile(gbrainBin, []byte("#!/bin/sh\n"), 0o755); err != nil {
-		t.Fatalf("create fake gbrain: %v", err)
-	}
-	if shouldPollNexNotifications() {
-		t.Fatal("did not expect nex notification polling when gbrain is active")
-	}
-}
-
 func TestInferSharedMemoryOwnerFromGBrainSlug(t *testing.T) {
 	owner := inferSharedMemoryOwner("wuphf-shared--pm--launch-brief--20260416-120000", "")
 	if owner != "pm" {

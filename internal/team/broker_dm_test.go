@@ -132,7 +132,7 @@ func TestDMPartnerRefusesToGuessInAnAgentToAgentDM(t *testing.T) {
 // Not parallel: t.Setenv cannot be combined with t.Parallel.
 func TestAgentMCPServersTreatsCanonicalDMAsDMMode(t *testing.T) {
 	// The stale check here was strings.HasPrefix(channel, "dm-"), so every
-	// canonical DM silently got the full server set including nex.
+	// canonical DM silently got the full server set.
 	t.Setenv("WUPHF_CHANNEL", "human__pm")
 	got := agentMCPServers("pm")
 	if len(got) != 1 || got[0] != "wuphf-office" {
@@ -143,7 +143,7 @@ func TestAgentMCPServersTreatsCanonicalDMAsDMMode(t *testing.T) {
 func TestAgentMCPServersKeepsFullSetOutsideDMs(t *testing.T) {
 	t.Setenv("WUPHF_CHANNEL", "general")
 	got := agentMCPServers("pm")
-	if len(got) != 2 {
-		t.Fatalf("non-DM channel must keep the full server set; got %v", got)
+	if len(got) != len(ServerKeys()) {
+		t.Fatalf("non-DM channel must keep the full server set; got %v want %v", got, ServerKeys())
 	}
 }

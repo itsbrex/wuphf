@@ -153,7 +153,6 @@ func (l *Launcher) Launch() error {
 	if !l.isOneOnOne() {
 		go func() { defer recoverPanicTo("notifyTaskActionsLoop", ""); l.notifyTaskActionsLoop() }()
 		go func() { defer recoverPanicTo("notifyOfficeChangesLoop", ""); l.notifyOfficeChangesLoop() }()
-		go func() { defer recoverPanicTo("pollNexNotificationsLoop", ""); l.pollNexNotificationsLoop() }()
 		go func() { defer recoverPanicTo("watchdogSchedulerLoop", ""); l.watchdogSchedulerLoop() }()
 	}
 
@@ -202,7 +201,6 @@ func (l *Launcher) launchHeadlessCodex() error {
 	if !l.isOneOnOne() {
 		go l.notifyTaskActionsLoop()
 		go l.notifyOfficeChangesLoop()
-		go l.pollNexNotificationsLoop()
 		go l.watchdogSchedulerLoop()
 	}
 

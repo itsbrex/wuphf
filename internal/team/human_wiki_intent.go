@@ -1,7 +1,6 @@
 package team
 
 // human_wiki_intent.go is PR 2 of the notebook-wiki-promise design
-// (~/.gstack/projects/nex-crm-wuphf/najmuzzaman-main-design-20260505-131620-notebook-wiki-promise.md).
 //
 // It populates the team wiki immediately when a HUMAN posts a channel message
 // containing a remember-intent phrase ("remember this", "save to wiki", etc.).

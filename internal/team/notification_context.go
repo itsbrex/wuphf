@@ -575,9 +575,13 @@ func (b *notificationContextBuilder) BuildMessageWorkPacket(msg channelMessage, 
 // packet injected, recorded on the turn so the ledger (and the Activity
 // rail) can show the human what context the agent was handed (B4).
 func (b *notificationContextBuilder) BuildMessageWorkPacketWithContext(msg channelMessage, slug string) (string, []string) {
+	// This lands in the packet as "- Thread: #%s reply_to %s", i.e. it is the
+	// address the agent is told to answer at. A channel-less message used to
+	// render "#general", pointing the agent at the retired room; its own DM
+	// with the human is the conversation it is actually in.
 	channelSlug := normalizeChannelSlug(msg.Channel)
-	if channelSlug == "" {
-		channelSlug = "general"
+	if strings.TrimSpace(msg.Channel) == "" {
+		channelSlug = DMSlugFor(slug)
 	}
 	lines := []string{
 		"Work packet:",
@@ -722,9 +726,12 @@ func (b *notificationContextBuilder) BuildTaskExecutionPacket(slug string, actio
 // upstream-outcome, and journal blocks. Recorded on the headless turn and
 // stamped onto the task ledger entry when the turn settles.
 func (b *notificationContextBuilder) BuildTaskExecutionPacketWithContext(slug string, action officeActionLog, task teamTask, content string) (string, []string) {
+	// Same contract as BuildMessageWorkPacketWithContext: this is the address
+	// the agent is told to reply at, so a homeless task must resolve to the
+	// agent's DM rather than the retired shared room.
 	channelSlug := normalizeChannelSlug(task.Channel)
-	if channelSlug == "" {
-		channelSlug = "general"
+	if strings.TrimSpace(task.Channel) == "" {
+		channelSlug = DMSlugFor(slug)
 	}
 	lines := []string{
 		fmt.Sprintf("[Task update from @%s]", action.Actor),
@@ -1084,7 +1091,7 @@ func extractTaskFileTargets(text string) []string {
 }
 
 // humanizeNotificationType converts a snake_case kind into a Title Case
-// label for human display. Used by launcher_nex.go for nex notification
+// label for human display. Used for automation notification
 // rendering as well as the task-execution packet header.
 func humanizeNotificationType(kind string) string {
 	switch strings.TrimSpace(kind) {

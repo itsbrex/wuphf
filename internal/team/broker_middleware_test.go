@@ -176,7 +176,6 @@ func TestBrokerAuthRejectsUnauthenticated(t *testing.T) {
 		Provider            string `json:"provider"`
 		MemoryBackend       string `json:"memory_backend"`
 		MemoryBackendActive string `json:"memory_backend_active"`
-		NexConnected        bool   `json:"nex_connected"`
 		Build               struct {
 			Version        string `json:"version"`
 			BuildTimestamp string `json:"build_timestamp"`
@@ -201,9 +200,6 @@ func TestBrokerAuthRejectsUnauthenticated(t *testing.T) {
 	}
 	if health.MemoryBackendActive != config.MemoryBackendNone {
 		t.Fatalf("expected inactive gbrain backend without CLI installed, got %q", health.MemoryBackendActive)
-	}
-	if health.NexConnected {
-		t.Fatal("expected nex_connected=false when gbrain is selected")
 	}
 	wantBuild := buildinfo.Current()
 	if health.Build.Version != wantBuild.Version {

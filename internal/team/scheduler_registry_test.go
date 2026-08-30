@@ -72,8 +72,6 @@ func TestSchedulerSelfRegistersSystemCrons(t *testing.T) {
 	}
 
 	want := map[string]bool{
-		"nex-insights":      false,
-		"nex-notifications": false,
 		"one-relay-events":  false,
 		"request_follow_up": false,
 		"review-expiry":     false,
@@ -152,8 +150,6 @@ func TestPatchScheduler_RejectsBelowFloor(t *testing.T) {
 		below   int
 		atFloor int
 	}{
-		{slug: "nex-insights", below: 29, atFloor: 30},
-		{slug: "nex-notifications", below: 4, atFloor: 5},
 		{slug: "task_reminder", below: 4, atFloor: 5},
 		{slug: "task_recheck", below: 4, atFloor: 5},
 		{slug: "task_follow_up", below: 4, atFloor: 5},
@@ -209,25 +205,25 @@ func TestPatchScheduler_DisabledSkipsRun(t *testing.T) {
 	b, base := startSchedulerTestBroker(t)
 	defer b.Stop()
 
-	status, body := patchScheduler(t, b, base, "nex-insights", map[string]any{
+	status, body := patchScheduler(t, b, base, "review-expiry", map[string]any{
 		"enabled": false,
 	})
 	if status != http.StatusOK {
 		t.Fatalf("PATCH disable: status %d, body %s", status, body)
 	}
 
-	enabled, _ := b.SchedulerJobControl("nex-insights", 30*time.Minute)
+	enabled, _ := b.SchedulerJobControl("review-expiry", 30*time.Minute)
 	if enabled {
 		t.Error("Enabled stayed true after PATCH enabled=false")
 	}
 
 	// And re-enable round-trips.
-	if status, body := patchScheduler(t, b, base, "nex-insights", map[string]any{
+	if status, body := patchScheduler(t, b, base, "review-expiry", map[string]any{
 		"enabled": true,
 	}); status != http.StatusOK {
 		t.Fatalf("PATCH re-enable: status %d, body %s", status, body)
 	}
-	if enabled, _ := b.SchedulerJobControl("nex-insights", 30*time.Minute); !enabled {
+	if enabled, _ := b.SchedulerJobControl("review-expiry", 30*time.Minute); !enabled {
 		t.Error("Enabled didn't flip back to true")
 	}
 }
@@ -254,14 +250,14 @@ func TestSchedulerHeartbeatPreservesUserFields(t *testing.T) {
 	defer b.Stop()
 
 	// Operator state: interval override + LastRunStatus.
-	if status, _ := patchScheduler(t, b, base, "nex-insights", map[string]any{
+	if status, _ := patchScheduler(t, b, base, "review-expiry", map[string]any{
 		"interval_override": 60,
 	}); status != http.StatusOK {
 		t.Fatalf("PATCH override: status %d", status)
 	}
 	b.mu.Lock()
 	for i := range b.scheduler {
-		if b.scheduler[i].Slug == "nex-insights" {
+		if b.scheduler[i].Slug == "review-expiry" {
 			b.scheduler[i].LastRunStatus = "ok"
 		}
 	}
@@ -269,14 +265,14 @@ func TestSchedulerHeartbeatPreservesUserFields(t *testing.T) {
 
 	// Simulate a heartbeat: run-loop reports it's running with the env
 	// default interval. Heartbeat must NOT clobber the override / status.
-	b.updateSchedulerHeartbeat("nex-insights", "Nex insights", 30, /* default */
+	b.updateSchedulerHeartbeat("review-expiry", "Nex insights", 30, /* default */
 		time.Time{}, "running", "")
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	var job *schedulerJob
 	for i := range b.scheduler {
-		if b.scheduler[i].Slug == "nex-insights" {
+		if b.scheduler[i].Slug == "review-expiry" {
 			job = &b.scheduler[i]
 			break
 		}

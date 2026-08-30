@@ -90,8 +90,6 @@ func TestBuildCodexOfficeConfigOverridesIncludesOfficeMCPEnv(t *testing.T) {
 		headlessCodexLookPath = oldLookPath
 	}()
 
-	t.Setenv("WUPHF_NO_NEX", "1")
-
 	broker := newTestBroker(t)
 	if err := broker.SetSessionMode(SessionModeOneOnOne, "pm"); err != nil {
 		t.Fatalf("SetSessionMode: %v", err)
@@ -114,14 +112,16 @@ func TestBuildCodexOfficeConfigOverridesIncludesOfficeMCPEnv(t *testing.T) {
 	if !strings.Contains(joined, `mcp_servers.wuphf-office.args=["mcp-team"]`) {
 		t.Fatalf("expected WUPHF MCP args override, got %q", joined)
 	}
-	if !strings.Contains(joined, `mcp_servers.wuphf-office.env_vars=["WUPHF_AGENT_SLUG", "WUPHF_BROKER_TOKEN", "WUPHF_BROKER_BASE_URL", "WUPHF_NO_NEX", "WUPHF_ONE_ON_ONE", "WUPHF_ONE_ON_ONE_AGENT"]`) {
+	if !strings.Contains(joined, `mcp_servers.wuphf-office.env_vars=["WUPHF_AGENT_SLUG", "WUPHF_BROKER_TOKEN", "WUPHF_BROKER_BASE_URL", "WUPHF_ONE_ON_ONE", "WUPHF_ONE_ON_ONE_AGENT"]`) {
 		t.Fatalf("expected office env var forwarding, got %q", joined)
 	}
 	if strings.Contains(joined, broker.Token()) {
 		t.Fatalf("expected broker token value to stay out of args, got %q", joined)
 	}
+	// No knowledge-graph MCP server exists any more; the office server owns
+	// memory access. Pinned so a future change cannot quietly mount one back.
 	if strings.Contains(joined, `mcp_servers.nex.command=`) {
-		t.Fatalf("expected Nex MCP to stay disabled with WUPHF_NO_NEX, got %q", joined)
+		t.Fatalf("a retired nex MCP server must never be mounted, got %q", joined)
 	}
 }
 
@@ -134,8 +134,6 @@ func TestRunHeadlessCodexTurnUsesHeadlessOfficeRuntime(t *testing.T) {
 		switch file {
 		case "codex":
 			return "/usr/bin/codex", nil
-		case "nex-mcp":
-			return "/usr/bin/nex-mcp", nil
 		default:
 			return "", exec.ErrNotFound
 		}
@@ -160,7 +158,6 @@ func TestRunHeadlessCodexTurnUsesHeadlessOfficeRuntime(t *testing.T) {
 	// same tempdir post-Phase-0 migration (worktree_guard_test init pins a
 	// process-wide WUPHF_RUNTIME_HOME otherwise).
 	t.Setenv("WUPHF_RUNTIME_HOME", tmpHome)
-	t.Setenv("WUPHF_API_KEY", "nex-secret-key")
 	t.Setenv("WUPHF_OPENAI_API_KEY", "openai-secret-key")
 	t.Setenv("WUPHF_ONE_SECRET", "one-secret-value")
 	t.Setenv("WUPHF_ONE_IDENTITY", "founder@example.com")
@@ -197,11 +194,10 @@ func TestRunHeadlessCodexTurnUsesHeadlessOfficeRuntime(t *testing.T) {
 	if !strings.Contains(joinedArgs, `mcp_servers.wuphf-office.env_vars=["WUPHF_AGENT_SLUG", "WUPHF_BROKER_TOKEN", "WUPHF_BROKER_BASE_URL", "ONE_SECRET", "ONE_IDENTITY", "ONE_IDENTITY_TYPE"]`) {
 		t.Fatalf("expected office env var forwarding, got %#v", record.Args)
 	}
-	if !strings.Contains(joinedArgs, `mcp_servers.nex.command="/usr/bin/nex-mcp"`) {
-		t.Fatalf("expected nex MCP override, got %#v", record.Args)
-	}
-	if !strings.Contains(joinedArgs, `mcp_servers.nex.env_vars=["WUPHF_API_KEY", "NEX_API_KEY"]`) {
-		t.Fatalf("expected nex env var forwarding, got %#v", record.Args)
+	// Pinned negative: even with a nex-mcp binary on PATH, no knowledge-graph
+	// MCP server may be mounted. The office server owns memory access.
+	if strings.Contains(joinedArgs, "mcp_servers.nex.") {
+		t.Fatalf("a retired nex MCP server must never be mounted, got %#v", record.Args)
 	}
 	// V3-N5 isolation contract: a turn without a task worktree runs in the
 	// agent's scratch dir under the runtime home — NEVER the broker
@@ -241,8 +237,8 @@ func TestRunHeadlessCodexTurnUsesHeadlessOfficeRuntime(t *testing.T) {
 	if !containsEnvPrefix(record.Env, "WUPHF_BROKER_TOKEN=") {
 		t.Fatalf("expected broker token env, got %#v", record.Env)
 	}
-	if !containsEnv(record.Env, "WUPHF_API_KEY=nex-secret-key") || !containsEnv(record.Env, "NEX_API_KEY=nex-secret-key") {
-		t.Fatalf("expected nex API env, got %#v", record.Env)
+	if containsEnvPrefix(record.Env, "NEX_API_KEY=") {
+		t.Fatalf("a retired knowledge-graph API key must not be forwarded, got %#v", record.Env)
 	}
 	if !containsEnv(record.Env, "WUPHF_OPENAI_API_KEY=openai-secret-key") || !containsEnv(record.Env, "OPENAI_API_KEY=openai-secret-key") {
 		t.Fatalf("expected openai API env, got %#v", record.Env)
@@ -290,8 +286,6 @@ func TestRunHeadlessCodexTurnMetricsNoDataRace(t *testing.T) {
 		switch file {
 		case "codex":
 			return "/usr/bin/codex", nil
-		case "nex-mcp":
-			return "/usr/bin/nex-mcp", nil
 		default:
 			return "", exec.ErrNotFound
 		}

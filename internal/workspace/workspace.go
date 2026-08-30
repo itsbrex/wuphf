@@ -58,7 +58,7 @@ func ClearRuntime() (Result, error) {
 // parity with the previous implementation, additionally removes any env-
 // overridden onboarding state path (onboarding.StatePath) and company manifest
 // path (company.ManifestPath, which may resolve to WUPHF_COMPANY_FILE,
-// NEX_COMPANY_FILE, or a CWD-local wuphf.company.json) when those resolve
+// the legacy company-file env var, or a CWD-local wuphf.company.json) when those resolve
 // outside the wuphfHome tree.
 func Shred() (Result, error) {
 	home, err := wuphfHome()

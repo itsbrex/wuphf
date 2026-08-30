@@ -499,10 +499,10 @@ export function WorkspaceRail({
         const leaf = router.state.matches.at(-1);
         const onConversation = leaf?.routeId === channelRoute.id;
         if (!onConversation) {
-          void router.navigate({
-            to: "/channels/$channelSlug",
-            params: { channelSlug: "general" },
-          });
+          // Home, not #general. Re-focusing an already-active workspace used
+          // to drop the user into the shared room, which is retired — so the
+          // click landed on "Page not found".
+          void router.navigate({ to: "/" });
         }
         return;
       }

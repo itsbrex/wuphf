@@ -27,8 +27,13 @@ export function TypingIndicator({ channel }: { channel?: string } = {}) {
   // Prefer an explicit channel (the task-detail chat passes it, since
   // useCurrentRoute reports kind "task-detail" there, not "channel"). Fall back
   // to the channel route slug so the channel surface keeps working unchanged.
+  //
+  // null, never "general", when there is no channel at all: useChannelMembers
+  // treats null as "nothing to fetch" and stays idle, whereas "general" sent a
+  // GET /members for the retired room from every non-channel surface in the
+  // app — a request that can only ever come back empty.
   const currentChannel =
-    channel ?? (route.kind === "channel" ? route.channelSlug : "general");
+    channel ?? (route.kind === "channel" ? route.channelSlug : null);
   const { data: members = [] } = useOfficeMembers();
   const { data: channelMembers = [] } = useChannelMembers(currentChannel);
   const channelMemberSlugs = new Set(channelMembers.map((m) => m.slug));

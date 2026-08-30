@@ -224,7 +224,8 @@ func (l *Launcher) runHeadlessOpencodeTurn(ctx context.Context, slug string, not
 			if isOpencodeAuthError(detail) && l.broker != nil {
 				sysTarget := target
 				if strings.TrimSpace(sysTarget) == "" {
-					sysTarget = "general"
+					// The agent's own DM; see the codex runner for the rule.
+					sysTarget = DMSlugFor(slug)
 				}
 				l.broker.PostSystemMessage(sysTarget,
 					fmt.Sprintf("@%s hit an auth error talking to the model (%s). Configure your Opencode provider credentials and retry.", slug, truncate(detail, 180)),

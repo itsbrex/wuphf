@@ -1123,7 +1123,6 @@ func TestBrokerMuxAuthCoverage(t *testing.T) {
 		"/config",
 		"/status/local-providers",
 		"/image-providers",
-		"/nex/register",
 		"/v1/logs",
 		// events stream — inline auth in handler
 		"/events",

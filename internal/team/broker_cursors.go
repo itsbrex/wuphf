@@ -3,7 +3,7 @@ package team
 // Persistence cursors for incremental sync. Two cursors:
 //   - notificationSince: how far the broker has scanned for
 //     notification fan-out (so a restart doesn't replay every old
-//     message into nex)
+//     message into the office)
 //   - insightsSince: how far insight extraction has scanned
 //
 // Both are "high-water mark" timestamps — the SetXxx writers

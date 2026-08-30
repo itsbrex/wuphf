@@ -4,26 +4,27 @@ import (
 	"testing"
 )
 
-// TestLibrarianIsBuiltInDefaultMember: the Librarian (slug "librarian", name
-// "Pam the librarian", role "Librarian") is a built-in member of the default
-// roster.
-func TestLibrarianIsBuiltInDefaultMember(t *testing.T) {
+// TestLibrarianIsNotSeededIntoTheDefaultRoster is the INVERSION of the test
+// that used to live here ("the Librarian is a built-in member of the default
+// roster"). The founder retired the Librarian as a default agent: wiki
+// contribution is a system skill every agent carries, so a preinstalled
+// specialist who owns the wiki is an agent the product no longer defines.
+//
+// Inverted rather than deleted, because the failure mode is a REGRESSION, not
+// an absence: the first removal attempt edited the seed list and looked done
+// while ensureLibrarianMember quietly re-appended her on the next load. If any
+// seed path grows a librarian back, this fails.
+func TestLibrarianIsNotSeededIntoTheDefaultRoster(t *testing.T) {
 	members := defaultOfficeMembers()
-	var lib *officeMember
 	for i := range members {
 		if isLibrarianSlug(members[i].Slug) {
-			lib = &members[i]
-			break
+			t.Fatalf("librarian is back in defaultOfficeMembers: %+v", members)
 		}
 	}
-	if lib == nil {
-		t.Fatalf("librarian missing from defaultOfficeMembers: %+v", members)
-	}
-	if !lib.BuiltIn {
-		t.Errorf("librarian must be BuiltIn")
-	}
-	if lib.Name != librarianName || lib.Role != librarianRole {
-		t.Errorf("librarian persona = %q/%q, want %q/%q", lib.Name, lib.Role, librarianName, librarianRole)
+	// And the roster it is absent from is a real one, so the assertion above
+	// cannot pass by the seed returning nothing at all.
+	if len(members) == 0 {
+		t.Fatal("defaultOfficeMembers seeded nobody; the assertion above proves nothing")
 	}
 }
 

@@ -12,7 +12,6 @@ import (
 	"github.com/nex-crm/wuphf/internal/buildinfo"
 	"github.com/nex-crm/wuphf/internal/company"
 	"github.com/nex-crm/wuphf/internal/config"
-	"github.com/nex-crm/wuphf/internal/nex"
 )
 
 // HealthResponse is the stable JSON response served by GET /health.
@@ -26,7 +25,6 @@ type HealthResponse struct {
 	MemoryBackend       string         `json:"memory_backend"`
 	MemoryBackendActive string         `json:"memory_backend_active"`
 	MemoryBackendReady  bool           `json:"memory_backend_ready"`
-	NexConnected        bool           `json:"nex_connected"`
 	Build               buildinfo.Info `json:"build"`
 }
 
@@ -62,7 +60,6 @@ func (b *Broker) handleHealth(w http.ResponseWriter, r *http.Request) {
 		MemoryBackend:       memoryStatus.SelectedKind,
 		MemoryBackendActive: memoryStatus.ActiveKind,
 		MemoryBackendReady:  ready,
-		NexConnected:        memoryStatus.ActiveKind == config.MemoryBackendNex && nex.Connected(),
 		Build:               buildinfo.Current(),
 	})
 }

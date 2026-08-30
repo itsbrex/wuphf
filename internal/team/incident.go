@@ -60,9 +60,22 @@ func (b *Broker) ReportIncident(agentSlug, targetChannel, replyTo, detail string
 	if agentSlug == "" {
 		agentSlug = "agent"
 	}
+	// An incident with no named channel belongs in the reporting agent's own
+	// DM. It used to land in "general", so once the shared room was retired
+	// every channel-less incident — including the provider-auth banner the
+	// human has to act on — failed the lookup below with "channel not found"
+	// and was lost entirely.
 	channel := normalizeChannelSlug(targetChannel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(targetChannel) == "" {
+		// homeChannelForLocked, not DMSlugFor: it verifies the reporter is
+		// actually on the roster before minting a DM. agentSlug defaults to
+		// the placeholder "agent" just above, and DMSlugFor would happily
+		// build "agent__human" and create a conversation for a member that
+		// does not exist. On failure the channel stays empty and the lookup
+		// below reports "channel not found", which is the honest outcome.
+		if home, err := b.homeChannelForLocked(agentSlug); err == nil {
+			channel = home
+		}
 	}
 	if b.findChannelLocked(channel) == nil {
 		if IsDMSlug(channel) {
@@ -283,9 +296,22 @@ func (b *Broker) postSystemAuthErrorIncident(agentSlug, targetChannel, replyTo, 
 		agentSlug = "agent"
 	}
 
+	// An incident with no named channel belongs in the reporting agent's own
+	// DM. It used to land in "general", so once the shared room was retired
+	// every channel-less incident — including the provider-auth banner the
+	// human has to act on — failed the lookup below with "channel not found"
+	// and was lost entirely.
 	channel := normalizeChannelSlug(targetChannel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(targetChannel) == "" {
+		// homeChannelForLocked, not DMSlugFor: it verifies the reporter is
+		// actually on the roster before minting a DM. agentSlug defaults to
+		// the placeholder "agent" just above, and DMSlugFor would happily
+		// build "agent__human" and create a conversation for a member that
+		// does not exist. On failure the channel stays empty and the lookup
+		// below reports "channel not found", which is the honest outcome.
+		if home, err := b.homeChannelForLocked(agentSlug); err == nil {
+			channel = home
+		}
 	}
 	if b.findChannelLocked(channel) == nil {
 		if IsDMSlug(channel) {

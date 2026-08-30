@@ -336,22 +336,20 @@ func firstBlockingRequest(requests []humanInterview) *humanInterview {
 // firstBlockingRequestInChannel scopes the chat gate to one channel: a
 // blocking request parks NEW chat in ITS channel until answered, but must
 // not gag the human everywhere else (ICP-eval v3 fix family #2: one buried
-// card must never wedge the office). Requests with an empty channel are
-// treated as #general.
+// card must never wedge the office).
+//
+// Channel-less requests bucket under "" — their own bucket, not #general's.
+// Both sides used to be laundered to "general", which was self-consistent but
+// meant a request with no channel gated chat in the retired room, and a query
+// naming that room matched requests that had nothing to do with it. "" as its
+// own key keeps the grouping honest and mentions no room at all.
 func firstBlockingRequestInChannel(requests []humanInterview, channel string) *humanInterview {
-	channel = normalizeChannelSlug(channel)
-	if channel == "" {
-		channel = "general"
-	}
+	channel = bucketChannelKey(channel)
 	for i := range requests {
 		if !requestBlocksMessages(requests[i]) {
 			continue
 		}
-		reqChannel := normalizeChannelSlug(requests[i].Channel)
-		if reqChannel == "" {
-			reqChannel = "general"
-		}
-		if reqChannel == channel {
+		if reqChannel := bucketChannelKey(requests[i].Channel); reqChannel == channel {
 			req := requests[i]
 			return &req
 		}
@@ -494,13 +492,18 @@ func (b *Broker) raiseDefinitionGapInterviewLocked(task *teamTask, actor string)
 		}
 	}
 
-	channel := normalizeChannelSlug(task.Channel)
-	if channel == "" {
-		channel = "general"
-	}
 	from := strings.TrimSpace(actor)
 	if from == "" {
 		from = "office"
+	}
+	// The task's own channel, else the task OWNER's DM, else the asker's.
+	// This card is Blocking+Required: filed into the retired "general" it is
+	// invisible, and the agent waits on an answer the human was never shown.
+	channel := normalizeChannelSlug(task.Channel)
+	if strings.TrimSpace(task.Channel) == "" {
+		if home, err := b.homeChannelForWriterLocked(from, task.Owner, from); err == nil {
+			channel = home
+		}
 	}
 	var qb strings.Builder
 	fmt.Fprintf(&qb, "Before the team starts %q, a few details are missing:\n", strings.TrimSpace(task.Title))
@@ -575,9 +578,6 @@ func (b *Broker) handleGetRequests(w http.ResponseWriter, r *http.Request) {
 	// web UI's overlay/interview bar need the same cross-channel view to render
 	// what's actually blocking the human.
 	allChannels := scope == "all" || scope == "global"
-	if !allChannels && channel == "" {
-		channel = "general"
-	}
 	viewerSlug := strings.TrimSpace(r.URL.Query().Get("viewer_slug"))
 	includeResolved := strings.EqualFold(strings.TrimSpace(r.URL.Query().Get("include_resolved")), "true")
 	// id narrows the listing to one request. A by-id poll exists to observe a
@@ -589,19 +589,39 @@ func (b *Broker) handleGetRequests(w http.ResponseWriter, r *http.Request) {
 	if requestID != "" {
 		includeResolved = true
 	}
+	// A channel-scoped LISTING has to name a channel. This used to default to
+	// "general", so a caller that forgot the parameter got a confident, empty
+	// answer from a room that no longer exists — the Inbox rendering as "no
+	// requests" when there were plenty. Say what is missing instead.
+	//
+	// A by-ID read is exempt: `?id=` addresses one request directly, so the
+	// channel is not a filter it needs and demanding one would break the App
+	// approval poll, whose whole job is to follow a request_id it was handed.
+	// Latent until normalizeChannelSlug stops laundering "" into "general" —
+	// today `channel` is never empty here — but wrong either way.
+	if !allChannels && requestID == "" && channel == "" {
+		http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, pass an id, or pass scope=all to read across every channel you can see.`, http.StatusBadRequest)
+		return
+	}
 	b.mu.Lock()
 	if !allChannels && !b.canAccessChannelLocked(viewerSlug, channel) {
 		b.mu.Unlock()
 		http.Error(w, "channel access denied", http.StatusForbidden)
 		return
 	}
+	// A by-ID read is not channel-scoped, so it authorizes per-request like the
+	// cross-channel path instead of matching one channel. Without this a
+	// caller polling a request_id it was handed (the App approval poll) had to
+	// already know the request's channel to see it — and once
+	// normalizeChannelSlug stops laundering "", passing no channel matched
+	// nothing at all. Visibility is still enforced: every candidate goes
+	// through canAccessChannelLocked below, and the id filter further down can
+	// only narrow what this viewer may already see.
+	byID := requestID != "" && !allChannels && channel == ""
 	requests := make([]humanInterview, 0, len(b.requests))
 	for _, req := range b.requests {
-		reqChannel := normalizeChannelSlug(req.Channel)
-		if reqChannel == "" {
-			reqChannel = "general"
-		}
-		if allChannels {
+		reqChannel := bucketChannelKey(req.Channel)
+		if allChannels || byID {
 			if !b.canAccessChannelLocked(viewerSlug, reqChannel) {
 				continue
 			}
@@ -969,6 +989,11 @@ func (b *Broker) handlePostRequestAnswer(w http.ResponseWriter, r *http.Request)
 	// AFTER answerRequestFromActor releases b.mu because MutateTask locks
 	// internally (mirrors how the integration gate proceeds post-answer).
 	b.maybeSpawnAppBuilderTaskFromProposal(body.ID)
+	// Knowledge promotion hook: an approved promotion writes the SNAPSHOT the
+	// human was shown into the shared wiki. Same placement and reasoning as the
+	// App Builder hook above — after b.mu is released, because the write path
+	// takes its own locks.
+	b.maybePromoteKnowledgeFromApproval(body.ID, answerActor)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
@@ -1192,9 +1217,14 @@ func (b *Broker) postRequestRaisedChatMessageLocked(req *humanInterview) {
 	if !requestIsHumanInterview(*req) && !requestNeedsHumanDecision(*req) {
 		return
 	}
+	// The asking agent's DM. This message is also the THREAD ANCHOR the
+	// human's reply routes back through (req.ReplyTo below), so a dead room
+	// here breaks the answer path as well as the announcement.
 	channel := normalizeChannelSlug(req.Channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(req.Channel) == "" {
+		if home, err := b.homeChannelForLocked(req.From); err == nil {
+			channel = home
+		}
 	}
 	label := "request"
 	if requestIsHumanInterview(*req) {

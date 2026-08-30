@@ -142,6 +142,23 @@ func (b *Broker) homeChannelFor(actorSlug string) (string, error) {
 	return b.homeChannelForLocked(actorSlug)
 }
 
+// bucketChannelKey normalises a channel slug for GROUPING and COMPARISON —
+// deciding whether two records live in the same conversation — and maps the
+// absent channel to "" rather than to a room.
+//
+// It is deliberately not normalizeChannelSlug, whose empty case returns
+// "general". That laundering is invisible and self-consistent, which is exactly
+// what made it dangerous: every "same channel?" test in the tree silently
+// agreed that "no channel" meant the shared room, so channel-less records
+// gated, filtered, and deduped against a room that no longer exists. Records
+// with no channel are their own bucket. They are not in #general.
+func bucketChannelKey(slug string) string {
+	if raw := strings.TrimSpace(slug); raw != "" {
+		return normalizeChannelSlug(raw)
+	}
+	return ""
+}
+
 // homeChannelForWriter returns the home channel of the first candidate that
 // both resolves to a roster member AND that `writer` is allowed to post in.
 // ErrNoHomeChannel if none qualify.
@@ -167,10 +184,18 @@ func (b *Broker) homeChannelFor(actorSlug string) (string, error) {
 // treated as failures, so a caller can pass a field it is not sure is populated
 // without a nil-check dance.
 //
-// Takes b.mu, like homeChannelFor. Never returns a fallback slug.
+// Takes b.mu, like homeChannelFor. Never returns a fallback slug. Callers that
+// already hold the lock want homeChannelForWriterLocked.
 func (b *Broker) homeChannelForWriter(writer string, candidates ...string) (string, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	return b.homeChannelForWriterLocked(writer, candidates...)
+}
+
+// homeChannelForWriterLocked is homeChannelForWriter for callers already
+// holding b.mu. Same bare-name / Locked-suffix pairing as homeChannelFor and
+// findMemberLocked elsewhere in this package.
+func (b *Broker) homeChannelForWriterLocked(writer string, candidates ...string) (string, error) {
 	for _, actor := range candidates {
 		if strings.TrimSpace(actor) == "" {
 			continue

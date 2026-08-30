@@ -949,17 +949,28 @@ func TestHandleTeamActionWorkflowScheduleRunNowExecutesImmediately(t *testing.T)
 
 func TestSelectedActionProviderIncludesCapabilityGuidance(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// The legacy WUPHF_NO_NEX var is set deliberately: it must NOT disable the
+	// action surface. Selection may only fail for a real reason (no configured
+	// provider), and the message must point at that reason.
 	t.Setenv("WUPHF_NO_NEX", "1")
+	t.Setenv("WUPHF_CONFIG_PATH", filepath.Join(t.TempDir(), "config.json"))
+	for _, key := range []string{
+		"WUPHF_COMPOSIO_API_KEY", "COMPOSIO_API_KEY",
+		"WUPHF_COMPOSIO_USER_API_KEY", "WUPHF_COMPOSIO_ORG_ID",
+	} {
+		t.Setenv(key, "")
+	}
 
 	prev := externalActionProvider
 	externalActionProvider = nil
 	defer func() { externalActionProvider = prev }()
 
+	// Selection may legitimately succeed (a locally available action CLI) or
+	// fail (nothing configured). Either is fine. What must never happen is a
+	// failure blamed on the retired flag — that was the bug: a flag named for
+	// an unrelated integration silently disabled the whole action surface.
 	_, err := selectedActionProvider(action.CapabilityActionExecute)
-	if err == nil {
-		t.Fatal("expected provider selection to fail when Nex is disabled")
-	}
-	if !strings.Contains(err.Error(), "Restart without --no-nex") {
-		t.Fatalf("expected readiness next step in %q", err)
+	if err != nil && strings.Contains(strings.ToLower(err.Error()), "no-nex") {
+		t.Fatalf("provider selection must not blame the retired --no-nex flag, got %q", err)
 	}
 }

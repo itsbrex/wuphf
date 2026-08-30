@@ -20,7 +20,7 @@ import (
 // finishes the wizard. It seeds the team from the user's picked blueprint
 // (or synthesizes one if blueprintID is empty — the "from scratch" path),
 // honors the wizard's per-agent checkbox filter, and posts the kickoff
-// task to #general tagged to the blueprint's lead agent.
+// task to the lead's DM tagged to the blueprint's lead agent.
 //
 // Contract:
 //   - blueprintID is the curated blueprint the user selected. Empty means
@@ -36,8 +36,8 @@ import (
 // re-enters the wizard. The dedupe guard below (onboarding_origin by task
 // content) prevents double-posting on crash recovery.
 //
-// The DefaultManifest roster (ceo/planner/executor/reviewer) is NEVER
-// reached via this path. It remains only as a true-recovery fallback in
+// The DefaultManifest roster (the Chief of Staff alone) is NEVER reached
+// via this path. It remains only as a true-recovery fallback in
 // ensureDefaultOfficeMembersLocked for corrupted/zero-member state.
 func (b *Broker) onboardingCompleteFn(task string, skipTask bool, blueprintID string, selectedAgents []string, companyName string) error {
 	task = strings.TrimSpace(task)
@@ -600,6 +600,15 @@ func blankSlateOfficeMembersFromAgents(agents []operations.StarterAgent, leadSlu
 		role := strings.TrimSpace(agent.Role)
 		if role == "" {
 			role = name
+		}
+		// The lead's display name is owned by the code, not the blueprint.
+		// Blueprint files predating the rename still say "CEO", and the load
+		// reconciler only fixes that on the NEXT boot — so without this, the
+		// very first session (including the Chief of Staff's intro message,
+		// which interpolates the name) ran under the retired title.
+		if slug == "ceo" {
+			name = company.ChiefOfStaffName()
+			role = company.ChiefOfStaffRole()
 		}
 		members = append(members, officeMember{
 			Slug:         slug,

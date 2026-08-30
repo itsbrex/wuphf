@@ -152,21 +152,25 @@ func TestOperationBlueprintMatrixSeedsBrokerOffice(t *testing.T) {
 
 			b := newRawTestBroker(t)
 			members := b.OfficeMembers()
-			// Roster = the blueprint's starter agents PLUS the two always-present
-			// built-ins: the Librarian and the App Builder.
-			if len(members) != len(blueprint.Starter.Agents)+2 {
-				t.Fatalf("expected broker office roster to match starter agents + librarian + app-builder, got %d want %d", len(members), len(blueprint.Starter.Agents)+2)
+			// Roster = the blueprint's starter agents, EXACTLY.
+			//
+			// This used to allow two extras — the Librarian and the App Builder,
+			// "always-present built-ins" appended to every blueprint. Both are
+			// retired as defaults and nothing back-fills them, so a blueprint's
+			// roster is now what the blueprint says it is. Asserting the exact
+			// count is what catches a resurrected append: a >= check would not.
+			if len(members) != len(blueprint.Starter.Agents) {
+				t.Fatalf("expected broker office roster to match the blueprint's starter agents exactly, got %d want %d (%+v)", len(members), len(blueprint.Starter.Agents), members)
 			}
 
 			memberBySlug := make(map[string]officeMember, len(members))
 			for _, member := range members {
 				memberBySlug[member.Slug] = member
 			}
-			if _, ok := memberBySlug[LibrarianSlug]; !ok {
-				t.Fatalf("expected built-in librarian in office roster, got %+v", members)
-			}
-			if _, ok := memberBySlug[company.AppBuilderSlug]; !ok {
-				t.Fatalf("expected built-in app-builder in office roster, got %+v", members)
+			for _, retired := range []string{LibrarianSlug, company.AppBuilderSlug} {
+				if _, ok := memberBySlug[retired]; ok {
+					t.Fatalf("retired default %q was appended to the blueprint roster: %+v", retired, members)
+				}
 			}
 			for _, starter := range blueprint.Starter.Agents {
 				member, ok := memberBySlug[starter.Slug]

@@ -122,14 +122,20 @@ func TestNewBrokerSeedsDefaultOfficeRosterOnFreshState(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // isolate from ~/.wuphf company.json (e.g. RevOps pack)
 	b := newRawTestBroker(t)
 	members := b.OfficeMembers()
-	if len(members) < 2 {
-		t.Fatalf("expected default office roster on fresh state, got %d members", len(members))
+	// This used to demand two or more members, back when the default roster
+	// was the lead plus an App Builder, a Librarian, and a planner/executor/
+	// reviewer trio. Those five are retired as defaults, so the size assertion
+	// is now owned by broker_default_roster_test.go ("exactly [ceo]"). What
+	// this test still owns is the pair of properties below: the lead exists,
+	// and nobody on the roster is stranded without a way to be reached.
+	if len(members) == 0 {
+		t.Fatalf("expected a default office roster on fresh state, got 0 members")
 	}
 	b.mu.Lock()
 	ceo := b.findMemberLocked("ceo")
 	b.mu.Unlock()
-	if members[0].Slug != "ceo" && ceo == nil {
-		t.Fatalf("expected ceo to be present in default office roster")
+	if ceo == nil {
+		t.Fatalf("expected ceo to be present in default office roster, got %+v", members)
 	}
 	// This used to assert that #general existed and held the whole roster.
 	// With #general retired the equivalent property is that every agent on
@@ -379,29 +385,33 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 	createOfficeMemberForTest(t, base, b.Token(), "fe", "Frontend Engineer", "Frontend Engineer")
 	createOfficeMemberForTest(t, base, b.Token(), "cmo", "CMO", "CMO")
 
-	createBody, _ := json.Marshal(map[string]any{
-		"action":      "create",
-		"slug":        "launch",
-		"name":        "launch",
-		"description": "Launch planning and launch-readiness work.",
-		"members":     []string{"pm", "fe"},
-		"created_by":  "ceo",
+	// The room is a BRIDGED channel minted through createChannelLocked, not an
+	// ordinary named room posted to /channels.
+	//
+	// Two gates moved under this test. Named-channel create answers 409 at the
+	// HTTP boundary, and GET /channels withholds ordinary named rooms from the
+	// listing entirely. Bridged rooms are exempt from both — a Slack channel is
+	// how external messages arrive, so hiding it would strand every message
+	// that came in through it — which makes a bridged room the surviving
+	// surface where "description public, content private" still has to hold.
+	// That property is what this test is about, and it is unchanged.
+	b.mu.Lock()
+	_, cerr := b.createChannelLocked(channelCreateInput{
+		Slug:        "launch",
+		Name:        "launch",
+		Description: "Launch planning and launch-readiness work.",
+		Members:     []string{"pm", "fe"},
+		CreatedBy:   "ceo",
+		Surface:     &channelSurface{Provider: "slack", RemoteID: "C0LAUNCH", RemoteTitle: "launch"},
 	})
-	req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(createBody))
-	req.Header.Set("Authorization", "Bearer "+b.Token())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("create channel failed: %v", err)
-	}
-	resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200 creating channel, got %d", resp.StatusCode)
+	b.mu.Unlock()
+	if cerr != nil {
+		t.Fatalf("create channel failed: %d %s", cerr.Code, cerr.Msg)
 	}
 
-	req, _ = http.NewRequest(http.MethodGet, base+"/channels", nil)
+	req, _ := http.NewRequest(http.MethodGet, base+"/channels", nil)
 	req.Header.Set("Authorization", "Bearer "+b.Token())
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("get channels failed: %v", err)
 	}
@@ -456,94 +466,79 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 // shape: canAccessChannelLocked treats a small set of slugs ("system", "nex",
 // "you", "human") as universally trusted senders. A user-created channel
 // sharing one of those slugs would let every trusted-sender slug read + post
-// in it without an explicit Members entry. The reservedChannelSlugs guard at
-// the channel-create handler prevents that; this test pins the invariant.
+// in it without an explicit Members entry. "ceo", the Librarian and the App
+// Builder are reserved for a second reason — a channel that shadows an agent
+// slug breaks DM slug resolution and @-mention routing.
+//
+// This used to drive POST /channels. Named channels are retired, so that
+// handler now answers 409 before it ever reaches the guard, and the test
+// passed 409-for-400 without exercising anything. The guard itself did not
+// move: it lives in createChannelLocked, which is still reached by the Slack
+// bridge, the Telegram bridge, and the app-<id> edit thread. Those callers are
+// exactly who can still mint a channel, so they are who this now tests.
 func TestChannelCreateRejectsReservedSlugs(t *testing.T) {
 	b := newTestBroker(t)
-	if err := b.StartOnPort(0); err != nil {
-		t.Fatalf("failed to start broker: %v", err)
-	}
-	defer b.Stop()
+	b.mu.Lock()
+	defer b.mu.Unlock()
 
-	base := fmt.Sprintf("http://%s", b.Addr())
-
-	for _, reserved := range []string{"system", "nex", "you", "human", "ceo"} {
-		t.Run(reserved, func(t *testing.T) {
-			body, _ := json.Marshal(map[string]any{
-				"action":     "create",
-				"slug":       reserved,
-				"name":       reserved,
-				"created_by": "ceo",
-			})
-			req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(body))
-			req.Header.Set("Authorization", "Bearer "+b.Token())
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("create %s: %v", reserved, err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusBadRequest {
-				t.Fatalf("create %s: expected 400, got %d", reserved, resp.StatusCode)
-			}
+	for _, reserved := range []string{"system", "nex", "you", "human", "ceo", LibrarianSlug, appBuilderSlug} {
+		ch, cerr := b.createChannelLocked(channelCreateInput{
+			Slug:      reserved,
+			Name:      reserved,
+			CreatedBy: "ceo",
 		})
+		if cerr == nil {
+			t.Fatalf("create %q: expected a refusal, got channel %+v", reserved, ch)
+		}
+		if cerr.Code != http.StatusBadRequest {
+			t.Fatalf("create %q: expected 400, got %d (%s)", reserved, cerr.Code, cerr.Msg)
+		}
 	}
 
-	// Sanity: a non-reserved slug still creates successfully.
-	body, _ := json.Marshal(map[string]any{
-		"action":     "create",
-		"slug":       "feature-launch",
-		"name":       "Feature Launch",
-		"created_by": "ceo",
+	// Sanity: an ordinary slug still creates. Without this the loop above
+	// would pass just as well if every create were broken.
+	ch, cerr := b.createChannelLocked(channelCreateInput{
+		Slug:      "feature-launch",
+		Name:      "Feature Launch",
+		CreatedBy: "ceo",
 	})
-	req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(body))
-	req.Header.Set("Authorization", "Bearer "+b.Token())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("create feature-launch: %v", err)
+	if cerr != nil {
+		t.Fatalf("create feature-launch: unexpected refusal %d (%s)", cerr.Code, cerr.Msg)
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("create feature-launch: expected 200, got %d", resp.StatusCode)
+	if ch == nil || ch.Slug != "feature-launch" {
+		t.Fatalf("create feature-launch: got %+v", ch)
 	}
 }
 
 // Regression for "empty slug normalized to general, falls through to
 // 'channel already exists' instead of 'slug required'". The fix validates
 // the raw slug before normalizeChannelSlug rewrites whitespace to "general".
+//
+// Driven through createChannelLocked for the same reason as the reserved-slug
+// test above: POST /channels now 409s on the named-channel retirement before
+// the validation runs, and the ordering bug this pins lives in the helper.
 func TestChannelCreateRejectsEmptySlug(t *testing.T) {
 	b := newTestBroker(t)
-	if err := b.StartOnPort(0); err != nil {
-		t.Fatalf("failed to start broker: %v", err)
-	}
-	defer b.Stop()
-
-	base := fmt.Sprintf("http://%s", b.Addr())
+	b.mu.Lock()
+	defer b.mu.Unlock()
 
 	for _, raw := range []string{"", "   ", "\t"} {
-		body, _ := json.Marshal(map[string]any{
-			"action":     "create",
-			"slug":       raw,
-			"name":       "anything",
-			"created_by": "ceo",
+		ch, cerr := b.createChannelLocked(channelCreateInput{
+			Slug:      raw,
+			Name:      "anything",
+			CreatedBy: "ceo",
 		})
-		req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(body))
-		req.Header.Set("Authorization", "Bearer "+b.Token())
-		req.Header.Set("Content-Type", "application/json")
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatalf("create empty slug %q: %v", raw, err)
+		if cerr == nil {
+			t.Fatalf("create empty slug %q: expected a refusal, got channel %+v", raw, ch)
 		}
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Fatalf("create empty slug %q: expected 400, got %d (body=%s)",
-				raw, resp.StatusCode, string(bodyBytes))
+		if cerr.Code != http.StatusBadRequest {
+			t.Fatalf("create empty slug %q: expected 400, got %d (%s)", raw, cerr.Code, cerr.Msg)
 		}
-		if !strings.Contains(strings.ToLower(string(bodyBytes)), "slug") {
-			t.Fatalf("create empty slug %q: expected error to mention 'slug', got %q",
-				raw, string(bodyBytes))
+		// The message must name the missing field. "channel already exists"
+		// (what the pre-fix code said, because "" normalized to "general")
+		// sent people looking for a duplicate that was not there.
+		if !strings.Contains(strings.ToLower(cerr.Msg), "slug") {
+			t.Fatalf("create empty slug %q: expected the error to mention 'slug', got %q", raw, cerr.Msg)
 		}
 	}
 }
@@ -560,32 +555,27 @@ func TestChannelUpdateMutatesDescriptionAndMembers(t *testing.T) {
 	createOfficeMemberForTest(t, base, b.Token(), "scriptwriter", "Scriptwriter", "Scripts")
 	createOfficeMemberForTest(t, base, b.Token(), "growth-ops", "Growth Ops", "Growth")
 
-	createBody, _ := json.Marshal(map[string]any{
-		"action":      "create",
-		"slug":        "yt-research",
-		"name":        "yt-research",
-		"description": "Old description",
-		"members":     []string{"research-lead"},
-		"created_by":  "ceo",
-	})
-	createReq, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(createBody))
-	createReq.Header.Set("Authorization", "Bearer "+b.Token())
-	createReq.Header.Set("Content-Type", "application/json")
-	createResp, err := http.DefaultClient.Do(createReq)
-	if err != nil {
-		t.Fatalf("create seed channel failed: %v", err)
-	}
-	if createResp.StatusCode != http.StatusOK {
-		raw, _ := io.ReadAll(createResp.Body)
-		createResp.Body.Close()
-		t.Fatalf("expected 200 creating seed channel, got %d: %s", createResp.StatusCode, raw)
-	}
-	createResp.Body.Close()
+	// Seed room via createChannelLocked: named-channel CREATE is retired at the
+	// HTTP boundary, but UPDATE — the subject of this test — is not gated, and
+	// the rooms that still exist (bridge channels, app threads, anything on
+	// disk from before the retirement) must stay editable.
 	b.mu.Lock()
-	if ch := b.findChannelLocked("yt-research"); ch != nil {
-		ch.Disabled = []string{"scriptwriter"}
+	_, cerr := b.createChannelLocked(channelCreateInput{
+		Slug:        "yt-research",
+		Name:        "yt-research",
+		Description: "Old description",
+		Members:     []string{"research-lead"},
+		CreatedBy:   "ceo",
+	})
+	if cerr == nil {
+		if ch := b.findChannelLocked("yt-research"); ch != nil {
+			ch.Disabled = []string{"scriptwriter"}
+		}
 	}
 	b.mu.Unlock()
+	if cerr != nil {
+		t.Fatalf("create seed channel failed: %d %s", cerr.Code, cerr.Msg)
+	}
 
 	updateBody, _ := json.Marshal(map[string]any{
 		"action":      "update",
@@ -757,23 +747,29 @@ func TestLoadDoesNotAppendDefaultsAfterBlueprintSeed(t *testing.T) {
 	}
 	reloaded.mu.Unlock()
 
-	// The curated blueprint roster must survive reload with NO generic
-	// default-manifest agents (ceo/planner/executor/reviewer) leaking back in.
-	// The exceptions are the universal built-ins added to every roster on load:
-	// the Librarian (Pam) and the App Builder — like the CEO is meant to be — so
-	// both are expected here, appended last (Librarian first, App Builder after).
-	want := []string{"operator", "planner", "builder", "growth", "reviewer", LibrarianSlug, appBuilderSlug}
+	// The curated blueprint roster must survive reload EXACTLY — no additions
+	// at all.
+	//
+	// This assertion used to carry two exceptions: the Librarian and the App
+	// Builder, "the universal built-ins added to every roster on load". Those
+	// two exceptions were the load-time back-fill, and the back-fill was how
+	// the founder's removal of both agents kept undoing itself — the seed edit
+	// landed, and the next boot appended them again. The back-fill is deleted,
+	// so the exceptions are too, and this test now fails if either one comes
+	// back.
+	want := []string{"operator", "planner", "builder", "growth", "reviewer"}
 	if len(slugs) != len(want) {
-		t.Fatalf("expected blueprint roster %v to survive reload, got %v", want, slugs)
+		t.Fatalf("expected blueprint roster %v to survive reload untouched, got %v", want, slugs)
 	}
 	for i := range want {
 		if slugs[i] != want[i] {
-			t.Fatalf("expected blueprint roster %v to survive reload, got %v", want, slugs)
+			t.Fatalf("expected blueprint roster %v to survive reload untouched, got %v", want, slugs)
 		}
 	}
 	for _, s := range slugs {
-		if s == "ceo" || s == "executor" {
-			t.Fatalf("default slug %q leaked into reloaded roster: %v", s, slugs)
+		switch s {
+		case "ceo", "executor", LibrarianSlug, appBuilderSlug:
+			t.Fatalf("slug %q was appended to the reloaded roster: a back-fill is live again (%v)", s, slugs)
 		}
 	}
 }

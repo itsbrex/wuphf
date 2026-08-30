@@ -196,7 +196,7 @@ func handleTeamWikiRead(ctx context.Context, _ *mcp.CallToolRequest, args TeamWi
 	}
 	brokerPath := "/wiki/read?path=" + url.QueryEscape(path)
 	// Pass agent slug so the broker can record this read in the attention log.
-	// Fall back to NEX_AGENT_SLUG for environments that use the new Nex CLI identity.
+	// Fall back to the legacy-prefixed spelling for environments still setting it.
 	if slug := strings.TrimSpace(os.Getenv("WUPHF_AGENT_SLUG")); slug != "" {
 		brokerPath += "&reader=" + url.QueryEscape(slug)
 	} else if slug := strings.TrimSpace(os.Getenv("NEX_AGENT_SLUG")); slug != "" {

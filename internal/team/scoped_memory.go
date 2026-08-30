@@ -242,7 +242,7 @@ func fetchScopedMemoryBrief(ctx context.Context, slug string, notification strin
 }
 
 // wrapUntrustedMemoryBrief frames the memory brief as background context that
-// originated in external systems (email, CRM, calendar, Nex, etc.) rather than
+// originated in external systems (email, CRM, calendar, etc.) rather than
 // as instructions from the operator. External data can be attacker-controlled
 // (a malicious email body, a poisoned CRM note), so the agent must treat any
 // directives inside this block as data, not commands.

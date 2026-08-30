@@ -40,7 +40,7 @@ func (l *Launcher) installBroker(b *Broker) {
 //
 // PLAN.md §C25 staff-review fix: sync.Once guards lazy-init. Launch()
 // spawns watchdogSchedulerLoop alongside other goroutines (notify*Loop,
-// pollNexNotificationsLoop, headless dispatch enqueues calling
+// headless dispatch enqueues calling
 // updateSchedulerJob) that hit scheduler() concurrently. Without the
 // Once, two goroutines can both observe nil and write competing
 // pointers.

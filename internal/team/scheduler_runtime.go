@@ -16,7 +16,7 @@ func (b *Broker) DueSchedulerJobs() []schedulerJob {
 // cron slug. effectiveInterval is IntervalOverride when non-zero, else the
 // caller's defaultInterval. Run-loops call this once per tick (PR 8 Lane G):
 //
-//	enabled, interval := l.broker.SchedulerJobControl("nex-insights", config-default)
+//	enabled, interval := l.broker.SchedulerJobControl("review-expiry", config-default)
 //	if !enabled { time.Sleep(interval); continue }
 //	... do work ...
 //	time.Sleep(interval)

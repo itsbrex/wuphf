@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/config"
-	"github.com/nex-crm/wuphf/internal/nex"
 	"github.com/nex-crm/wuphf/internal/provider"
 )
 
@@ -172,7 +171,6 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			"email":          cfg.Email,
 			"workspace_id":   cfg.WorkspaceID,
 			"workspace_slug": cfg.WorkspaceSlug,
-			"dev_url":        cfg.DevURL,
 			// Company
 			"company_name":        cfg.CompanyName,
 			"company_description": cfg.CompanyDescription,
@@ -185,7 +183,6 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			"task_reminder_minutes":  config.ResolveTaskReminderInterval(),
 			"task_recheck_minutes":   config.ResolveTaskRecheckInterval(),
 			// Integrations — secret fields as booleans
-			"api_key_set":          config.ResolveAPIKey("") != "",
 			"openai_key_set":       config.ResolveOpenAIAPIKey() != "",
 			"realtime_model":       config.ResolveRealtimeModel(),
 			"anthropic_key_set":    config.ResolveAnthropicAPIKey() != "",
@@ -446,10 +443,6 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			changed = true
 		}
 		// Secret fields
-		if body.APIKey != nil {
-			cfg.APIKey = strings.TrimSpace(*body.APIKey)
-			changed = true
-		}
 		if body.OpenAIAPIKey != nil {
 			cfg.OpenAIAPIKey = strings.TrimSpace(*body.OpenAIAPIKey)
 			changed = true
@@ -600,45 +593,6 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
-}
-
-// handleNexRegister wraps `nex-cli --cmd "setup <email>"` so the onboarding
-// wizard can register a Nex identity without the user dropping to the terminal.
-// Body: {"email": "..."}. Returns whatever the CLI prints on success, or the
-// CLI's stderr on failure. Requires nex-cli to be installed and on PATH.
-func (b *Broker) handleNexRegister(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	var body struct {
-		Email string `json:"email"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-	email := strings.TrimSpace(body.Email)
-	if email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
-		return
-	}
-	output, err := nex.Register(r.Context(), email)
-	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadGateway)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status": "error",
-			"error":  err.Error(),
-		})
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{
-		"status": "ok",
-		"email":  email,
-		"output": output,
-	})
 }
 
 // handleOfficeMembers and the action handlers (create/update/remove)

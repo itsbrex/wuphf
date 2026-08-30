@@ -58,6 +58,24 @@ func resolveChannel(input string) string {
 	return ""
 }
 
+// resolveChannelForAgent is resolveChannel for callers that already know WHICH
+// agent they are resolving for.
+//
+// resolveChannel can only consult WUPHF_AGENT_SLUG, which the launcher sets on
+// a real agent process but which is absent whenever the slug arrives as a tool
+// ARGUMENT instead (my_slug=...). In that case resolveChannel has no identity
+// to work from and correctly returns "" — but the caller here does have one, so
+// falling back to the env would throw away the better answer.
+func resolveChannelForAgent(input, slug string) string {
+	if hint := resolveChannelHint(input); hint != "" {
+		return hint
+	}
+	if s := strings.TrimSpace(slug); s != "" {
+		return channel.DirectSlug("human", s)
+	}
+	return resolveChannel(input)
+}
+
 func resolveConversationChannel(ctx context.Context, slug string, requestedChannel string) string {
 	return resolveConversationContext(ctx, slug, requestedChannel, "").Channel
 }
@@ -81,7 +99,7 @@ func resolveConversationContext(ctx context.Context, slug, requestedChannel, req
 	}
 
 	if isOneOnOneMode() {
-		channel = resolveChannel("")
+		channel = resolveChannelForAgent("", slug)
 		if replyTo == "" {
 			replyTo = inferDirectReplyTarget(ctx, slug, channel)
 		}
@@ -108,7 +126,7 @@ func resolveConversationContext(ctx context.Context, slug, requestedChannel, req
 		return inferred
 	}
 
-	channel = resolveChannel("")
+	channel = resolveChannelForAgent("", slug)
 	if replyTo == "" {
 		replyTo = defaultReplyTargetForChannel(ctx, slug, channel)
 	}

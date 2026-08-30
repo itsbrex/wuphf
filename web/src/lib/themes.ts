@@ -37,14 +37,14 @@ export const THEMES = [
   },
   {
     id: "nex",
-    name: "Nex Light",
+    name: "Light",
     desc: "Clean light. Purple accent.",
     swatch: { primary: "#612a92", accent: "#9f4dbf", surface: "#ffffff" },
     cssPath: "/themes/nex.css",
   },
   {
     id: "nex-dark",
-    name: "Nex Dark",
+    name: "Dark",
     desc: "Low-glare dark.",
     swatch: { primary: "#0f0f12", accent: "#9f4dbf", surface: "#1a1a1f" },
     cssPath: "/themes/nex-dark.css",

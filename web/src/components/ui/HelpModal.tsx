@@ -65,7 +65,7 @@ const WIZARD_KEYS: Keybinding[] = [
     description: "New line inside the first-task editor",
   },
   { keys: ["Tab"], description: "Move between fields, tiles, and actions" },
-  { keys: ["Esc"], description: "Close an inline panel (Nex signup, etc.)" },
+  { keys: ["Esc"], description: "Close an inline panel" },
 ];
 
 const PALETTE_KEYS: Keybinding[] = [

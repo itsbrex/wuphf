@@ -116,7 +116,7 @@ func (b *Broker) sweepChatDigests(now time.Time) {
 		snapshot = append(snapshot, chatDigestMessage{
 			ID:        m.ID,
 			From:      m.From,
-			Channel:   normalizeChannelSlug(m.Channel),
+			Channel:   bucketChannelKey(m.Channel),
 			Kind:      m.Kind,
 			Content:   m.Content,
 			ReplyTo:   m.ReplyTo,
@@ -146,9 +146,11 @@ func buildChatDigestJobs(messages []chatDigestMessage, window time.Duration) []S
 	}
 	groups := map[chatDigestGroupKey][]chatDigestMessage{}
 	for _, m := range messages {
-		if strings.TrimSpace(m.Channel) == "" {
-			m.Channel = "general"
-		}
+		// Channel-less messages group under "" — their own bucket. This used to
+		// re-stamp them as "general", which both invented a room and pooled
+		// them with real #general traffic, so a digest for the retired room was
+		// summarising unrelated conversations. bucketChannelKey upstream
+		// already produced the right key; this only had to stop overwriting it.
 		key := chatDigestGroupKey{
 			channel:     m.Channel,
 			windowStart: m.Timestamp.Truncate(window).UTC(),

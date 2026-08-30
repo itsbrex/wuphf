@@ -152,7 +152,9 @@ func TestAgentMCPServersReturnsEveryLegacyKey(t *testing.T) {
 	if !containsString(full, ServerKey) || !containsString(full, legacy) {
 		t.Errorf("full branch returned %v, want both %q and %q", full, ServerKey, legacy)
 	}
-	if !containsString(full, "nex") {
-		t.Errorf("full branch dropped nex: %v", full)
+	// There is no separate knowledge-graph MCP server any more; the office
+	// server owns memory access, so both branches return the same key set.
+	if len(full) != len(dm) {
+		t.Errorf("full branch should match the DM key set, got %v vs %v", full, dm)
 	}
 }

@@ -306,22 +306,23 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 	defer b.Stop()
 
 	base := fmt.Sprintf("http://%s", b.Addr())
-	createChannelBody, _ := json.Marshal(map[string]any{
-		"action":      "create",
-		"slug":        "launch",
-		"name":        "Launch",
-		"description": "Launch planning and messaging.",
-		"members":     []string{"pm", "cmo"},
-		"created_by":  "ceo",
+	// The target room comes from createChannelLocked, not POST /channels:
+	// named-channel create is retired at the handler (409), which left this
+	// test bridging into a channel that was never created and failing on the
+	// bridge's own "channel not found". The bridge endpoint — what this test is
+	// about — is not gated, and the rooms it bridges between still exist.
+	b.mu.Lock()
+	_, cerr := b.createChannelLocked(channelCreateInput{
+		Slug:        "launch",
+		Name:        "Launch",
+		Description: "Launch planning and messaging.",
+		Members:     []string{"pm", "cmo"},
+		CreatedBy:   "ceo",
 	})
-	req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(createChannelBody))
-	req.Header.Set("Authorization", "Bearer "+b.Token())
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("create channel: %v", err)
+	b.mu.Unlock()
+	if cerr != nil {
+		t.Fatalf("create launch channel: %d %s", cerr.Code, cerr.Msg)
 	}
-	resp.Body.Close()
 
 	bridgeBody, _ := json.Marshal(map[string]any{
 		"actor":          "ceo",
@@ -330,10 +331,10 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 		"summary":        "Use the stronger product narrative from #team in this launch channel before drafting the landing page.",
 		"tagged":         []string{"cmo"},
 	})
-	req, _ = http.NewRequest(http.MethodPost, base+"/bridges", bytes.NewReader(bridgeBody))
+	req, _ := http.NewRequest(http.MethodPost, base+"/bridges", bytes.NewReader(bridgeBody))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
 	req.Header.Set("Content-Type", "application/json")
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		t.Fatalf("bridge request: %v", err)
 	}

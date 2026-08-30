@@ -31,7 +31,6 @@ describe("platform api client", () => {
       memory_backend: "nex",
       memory_backend_active: "nex",
       memory_backend_ready: true,
-      nex_connected: true,
       build: {
         version: "0.84.0",
         build_timestamp: "2026-05-02T12:00:00Z",

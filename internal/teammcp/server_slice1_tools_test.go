@@ -30,15 +30,6 @@ func TestConfigureServerTools_Slice1Tools_MarkdownOnly(t *testing.T) {
 			},
 		},
 		{
-			name:    "nex_hides_slice1_tools",
-			backend: "nex",
-			mustNotHave: []string{
-				"wuphf_wiki_lookup",
-				"run_lint",
-				"resolve_contradiction",
-			},
-		},
-		{
 			name:    "gbrain_hides_slice1_tools",
 			backend: "gbrain",
 			mustNotHave: []string{
@@ -88,26 +79,26 @@ func TestConfigureServerTools_Slice1BackendFlipRemovesTools(t *testing.T) {
 		t.Fatalf("markdown instance missing wuphf_wiki_lookup; tools=%v", markdownTools)
 	}
 
-	// Instance 2: nex.
-	t.Setenv("WUPHF_MEMORY_BACKEND", "nex")
-	nexTools := listRegisteredTools(t, "general", false)
-	if slices.Contains(nexTools, "wuphf_wiki_lookup") {
-		t.Errorf("nex instance leaked wuphf_wiki_lookup; tools=%v", nexTools)
+	// Instance 2: gbrain.
+	t.Setenv("WUPHF_MEMORY_BACKEND", "gbrain")
+	gbrainTools := listRegisteredTools(t, "general", false)
+	if slices.Contains(gbrainTools, "wuphf_wiki_lookup") {
+		t.Errorf("gbrain instance leaked wuphf_wiki_lookup; tools=%v", gbrainTools)
 	}
-	if slices.Contains(nexTools, "run_lint") {
-		t.Errorf("nex instance leaked run_lint; tools=%v", nexTools)
+	if slices.Contains(gbrainTools, "run_lint") {
+		t.Errorf("gbrain instance leaked run_lint; tools=%v", gbrainTools)
 	}
 }
 
 // TestConfigureServerTools_Slice1_OneOnOneAlsoGated verifies the same gate
 // applies in 1:1 DM contexts — slice-1 tools must not leak there either.
 func TestConfigureServerTools_Slice1_OneOnOneAlsoGated(t *testing.T) {
-	t.Setenv("WUPHF_MEMORY_BACKEND", "nex")
+	t.Setenv("WUPHF_MEMORY_BACKEND", "gbrain")
 	names := listRegisteredTools(t, "dm-ceo", true)
 	forbidden := []string{"wuphf_wiki_lookup", "run_lint", "resolve_contradiction"}
 	for _, f := range forbidden {
 		if slices.Contains(names, f) {
-			t.Errorf("1:1 DM with nex backend leaked %q; tools=%v", f, names)
+			t.Errorf("1:1 DM with gbrain backend leaked %q; tools=%v", f, names)
 		}
 	}
 }

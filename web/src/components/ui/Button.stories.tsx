@@ -11,7 +11,7 @@ const meta: Meta<typeof Button> = {
     docs: {
       description: {
         component:
-          "Primary action primitive built on Tailwind utility classes. Six variants, four sizes. Reads its colors from the shadcn token bridge (`shadcn.css`) so it retints automatically across all three themes (Nex Light, Nex Dark, Noir Gold).",
+          "Primary action primitive built on Tailwind utility classes. Six variants, four sizes. Reads its colors from the shadcn token bridge (`shadcn.css`) so it retints automatically across all three themes (Light, Dark, Noir Gold).",
       },
     },
   },

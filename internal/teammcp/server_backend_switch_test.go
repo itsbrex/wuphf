@@ -62,25 +62,6 @@ func TestConfigureServerToolsBackendMatrix(t *testing.T) {
 			commonPresent: []string{"team_broadcast", "team_poll", "context_lookup", "context_capture", "context_promote", "context_health"},
 		},
 		{
-			name:    "nex/office",
-			backend: "nex",
-			mustHave: []string{
-				"team_memory_query",
-				"team_memory_write",
-				"team_memory_promote",
-			},
-			mustNotHave: []string{
-				"team_wiki_read",
-				"team_wiki_write",
-				"team_wiki_search",
-				"team_wiki_list",
-				"notebook_write",
-				"notebook_promote",
-				"visual_artifact_create",
-			},
-			commonPresent: []string{"team_broadcast", "team_poll", "context_lookup", "context_capture", "context_promote", "context_health"},
-		},
-		{
 			name:    "gbrain/office",
 			backend: "gbrain",
 			mustHave: []string{

@@ -1,7 +1,7 @@
 package team
 
 // broker_id_prefix.go derives the Linear-style ID prefix used for new
-// Issue IDs (e.g. "NEX" → NEX-1, NEX-2). The prefix is personal to each
+// Issue IDs (e.g. "ACME" → ACME-1, ACME-2). The prefix is personal to each
 // workspace: it comes from the workspace's company name, falling back to
 // the workspace's own name, and only then to a neutral default. This keeps
 // every workspace's task ids distinct instead of all reading "OFFICE-N".
@@ -29,7 +29,7 @@ const idPrefixMaxLen = 5
 // Strips non-letters, uppercases, truncates to idPrefixMaxLen. Empty or
 // blank input returns defaultIDPrefix.
 //
-//	"Nex"          → "NEX"
+//	"Acme"         → "ACME"
 //	"Acme Corp"    → "ACMEC" (would be "ACME" if we stayed under 4)
 //	"a.b.c"        → "ABC"
 //	"  "           → "OFFICE"
@@ -53,7 +53,7 @@ func deriveIDPrefix(companyName string) string {
 
 // workspaceIDPrefix picks a Linear-style prefix for a workspace, preferring
 // the explicit company name (the brand the human picks during onboarding,
-// e.g. "Nex" → NEX) and falling back to the workspace's own name so each
+// e.g. "Acme" → ACME) and falling back to the workspace's own name so each
 // workspace still gets a personal, scannable prefix. Candidates that carry
 // no letters (and would only resolve to defaultIDPrefix) are skipped so a
 // blank or symbol-only company name doesn't mask a usable workspace name.
@@ -111,7 +111,7 @@ func (b *Broker) refreshIDPrefixFromWorkspaceLocked() {
 
 // allocateIssueIDLocked mints the next Issue ID using the current
 // prefix and the broker's monotonic counter. Caller is responsible for
-// incrementing b.counter before calling. Returns e.g. "NEX-42".
+// incrementing b.counter before calling. Returns e.g. "ACME-42".
 func (b *Broker) allocateIssueIDLocked() string {
 	prefix := b.idPrefix
 	if prefix == "" {

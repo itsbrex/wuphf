@@ -19,6 +19,31 @@ func newSeededBroker(t *testing.T) *Broker {
 	return NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
 }
 
+// hireSpecialists adds ordinary, user-created agents to the roster and runs the
+// production DM seed over the result.
+//
+// It exists because the default roster is now the Chief of Staff alone. These
+// tests used to lean on app-builder / planner / librarian being preinstalled,
+// and with those agents retired as DEFAULTS the assertions below would have
+// gone quiet: "no DM to check" reads exactly like "the DM is fine". The agents
+// themselves are still perfectly legal — a user creates them — so the fixture
+// creates them the way a user would, and every property here stays falsifiable.
+func hireSpecialists(t *testing.T, b *Broker, slugs ...string) {
+	t.Helper()
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	for _, slug := range slugs {
+		if b.findMemberLocked(slug) != nil {
+			continue
+		}
+		member := officeMember{Slug: slug}
+		applyOfficeMemberDefaults(&member)
+		b.members = append(b.members, member)
+	}
+	b.rebuildMemberIndexLocked()
+	b.ensureAgentDMsLocked()
+}
+
 // The office must be usable on first boot. A roster with no conversation is
 // not a product, and this is the exact state the switch produced before the
 // DM seed existed.
@@ -55,6 +80,7 @@ func TestFreshOfficeSeedsADMForEveryAgent(t *testing.T) {
 // not an agent.
 func TestDMHoldsExactlyItsTwoParticipants(t *testing.T) {
 	b := newSeededBroker(t)
+	hireSpecialists(t, b, "app-builder")
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
@@ -89,22 +115,29 @@ func TestDMHoldsExactlyItsTwoParticipants(t *testing.T) {
 // The access check was never wrong. Its input was. A test on the check alone
 // would have stayed green through the whole bug, which is why this one asserts
 // the OUTCOME on a seeded broker rather than the rule in isolation.
+// The specialists are HIRED here rather than assumed. They used to be the
+// default roster, and the loop below skipped any agent whose DM was missing --
+// so once the defaults were retired this test would have iterated five absent
+// channels, asserted nothing, and passed. A privacy guard that cannot fail is
+// worse than no guard, because it reads as coverage.
 func TestCEOCannotReadDMsItIsNotPartyTo(t *testing.T) {
 	b := newSeededBroker(t)
+	others := []string{"app-builder", "planner", "executor", "reviewer", "librarian"}
+	hireSpecialists(t, b, others...)
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	others := []string{"app-builder", "planner", "executor", "reviewer", "librarian"}
 	for _, agent := range others {
 		dm := directSlugFor("human", agent)
 		if b.findChannelLocked(dm) == nil {
+			t.Errorf("%s has no DM: the fixture is broken, so the privacy check below is vacuous", agent)
 			continue
 		}
 		if b.canAccessChannelLocked("ceo", dm) {
 			t.Errorf("ceo can read %s: a DM is private to its two participants", dm)
 		}
 		if b.canAccessChannelLocked("librarian", dm) && agent != "librarian" {
-			t.Errorf("librarian can read %s: Pam must not read other agents' DMs", dm)
+			t.Errorf("librarian can read %s: no agent gets a blanket read over other agents' DMs", dm)
 		}
 	}
 
@@ -127,6 +160,7 @@ func TestCEOCannotReadDMsItIsNotPartyTo(t *testing.T) {
 // already exists -- not its membership, and not its history.
 func TestSeedingIsIdempotentAndLeavesExistingDMsAlone(t *testing.T) {
 	b := newSeededBroker(t)
+	hireSpecialists(t, b, "planner")
 
 	b.mu.Lock()
 	slug := directSlugFor("human", "planner")

@@ -43,7 +43,9 @@ func (l *Launcher) postTurnKilledNote(slug, channel string) {
 	}
 	target := strings.TrimSpace(channel)
 	if target == "" {
-		target = "general"
+		// This notice is ABOUT this agent, so its DM is where it belongs.
+		// "general" is retired, and PostSystemMessage would drop it there.
+		target = DMSlugFor(slug)
 	}
 	l.broker.PostSystemMessage(target,
 		fmt.Sprintf("%s. The turn will be retried or the task paused — no action needed unless it repeats.", turnKilledHumanDetail(slug)),
@@ -80,7 +82,8 @@ func (l *Launcher) noteChatTurnStall(slug string, turn headlessCodexTurn, reason
 	}
 	target := strings.TrimSpace(turn.Channel)
 	if target == "" {
-		target = "general"
+		// The agent's own DM; see postTurnKilledNote above.
+		target = DMSlugFor(slug)
 	}
 	l.broker.PostSystemMessage(target,
 		fmt.Sprintf("@%s couldn't finish replying — %s. Try asking again.", slug, strings.TrimSpace(reason)),
@@ -116,7 +119,8 @@ func (l *Launcher) noteChatTurnNoReply(slug string, turn headlessCodexTurn, star
 	}
 	target := strings.TrimSpace(turn.Channel)
 	if target == "" {
-		target = "general"
+		// The agent's own DM; see postTurnKilledNote above.
+		target = DMSlugFor(slug)
 	}
 	l.broker.PostSystemMessage(target,
 		fmt.Sprintf("@%s finished without posting a reply — this is usually a hiccup, not a refusal. Try asking again.", slug),

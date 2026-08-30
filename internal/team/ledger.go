@@ -10,12 +10,29 @@ func (b *Broker) appendActionWithRefsLocked(kind, source, channel, actor, summar
 	b.appendActionWithMetadataLocked(kind, source, channel, actor, summary, relatedID, signalIDs, decisionID, nil)
 }
 
+// appendActionWithMetadataLocked writes one row to the office activity ledger.
+//
+// The Channel field records where the action happened and is deliberately left
+// EMPTY when the caller did not name a channel. It used to run every value
+// through normalizeChannelSlug, which turns "" into "general" — and since a
+// large share of the tree calls appendActionLocked with no channel, that one
+// line stamped the retired room onto a big fraction of the activity log. The
+// rows then read as "this happened in #general", which is both false and
+// unfilterable once the room is gone.
+//
+// An action with no channel is a real thing (it happened at office scope, not
+// in a conversation) and the readers already handle an empty value. Recording
+// the truth is better than recording a room.
 func (b *Broker) appendActionWithMetadataLocked(kind, source, channel, actor, summary, relatedID string, signalIDs []string, decisionID string, metadata map[string]string) {
+	actionChannel := ""
+	if raw := strings.TrimSpace(channel); raw != "" {
+		actionChannel = normalizeChannelSlug(raw)
+	}
 	record := officeActionLog{
 		ID:         fmt.Sprintf("action-%d", len(b.actions)+1),
 		Kind:       strings.TrimSpace(kind),
 		Source:     strings.TrimSpace(source),
-		Channel:    normalizeChannelSlug(channel),
+		Channel:    actionChannel,
 		Actor:      strings.TrimSpace(actor),
 		Summary:    strings.TrimSpace(summary),
 		RelatedID:  strings.TrimSpace(relatedID),

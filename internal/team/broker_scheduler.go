@@ -411,18 +411,6 @@ func (s systemCronSpec) resolvedDefaultInterval() int {
 func systemCronSpecs() []systemCronSpec {
 	return []systemCronSpec{
 		{
-			Slug:            "nex-insights",
-			Label:           "Nex insights",
-			DefaultInterval: func() int { return config.ResolveInsightsPollInterval() },
-			MinFloor:        30, // LLM-touching, quota burn — keep the floor high
-		},
-		{
-			Slug:            "nex-notifications",
-			Label:           "Nex notifications",
-			DefaultInterval: func() int { return int(notificationPollInterval() / time.Minute) },
-			MinFloor:        5,
-		},
-		{
 			Slug:            "one-relay-events",
 			Label:           "One relay events",
 			DefaultInterval: func() int { return 1 },
@@ -715,7 +703,7 @@ func (b *Broker) handleSchedulerSubpath(w http.ResponseWriter, r *http.Request) 
 //     so the watchdog scheduler's next poll finds the job as due and dispatches
 //     processWorkflowJob. The job executes within one scheduler tick (~20 s).
 //
-//   - System crons (SystemManaged == true, e.g. nex-notifications, nex-insights):
+//   - System crons (SystemManaged == true, e.g. review-expiry):
 //     executed by dedicated broker goroutines that cannot be poked from the HTTP
 //     layer. LastRun and LastRunStatus are updated so the Calendar panel shows the
 //     manual trigger; actual side-effects happen on the goroutine's natural tick.
@@ -725,7 +713,7 @@ func (b *Broker) handleSchedulerSubpath(w http.ResponseWriter, r *http.Request) 
 //     HTTP handler has no context to evaluate.
 //
 // Idempotency: this handler never touches the notification cursor. It cannot
-// cause the cursor to advance twice; the nex-notifications goroutine advances
+// cause the cursor to advance twice; the notifications goroutine advances
 // the cursor via SetNotificationCursor only after a successful API round-trip,
 // entirely independently of this endpoint.
 func (b *Broker) handleRunSchedulerJob(w http.ResponseWriter, r *http.Request, slug string) {

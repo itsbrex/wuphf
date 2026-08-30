@@ -571,7 +571,10 @@ export interface TokenUsage {
  * legitimately have no channel yet must not call at all (guard the hook's
  * `enabled`, or early-return) rather than pass "".
  */
-function requireChannel(channel: string | undefined | null, op: string): string {
+function requireChannel(
+  channel: string | undefined | null,
+  op: string,
+): string {
   const trimmed = (channel ?? "").trim();
   if (!trimmed) {
     throw new Error(

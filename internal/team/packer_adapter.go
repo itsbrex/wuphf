@@ -12,7 +12,6 @@ import (
 // (internal/packer) to the live broker. The packer is transport- and
 // brain-agnostic; this file implements its BrainHandle / SnapshotValidator /
 // InjectionSink interfaces over the OSS self-hosted broker (one office = one
-// brain). Nex cloud provides a per-tenant adapter over the same interfaces.
 
 // packerBrain adapts the broker to packer.BrainHandle. Every retrieval is
 // task-scoped, and only human-vetted content leaves: the approved plan step, the

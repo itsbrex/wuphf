@@ -160,37 +160,35 @@ func channelMessageCount(t *testing.T, b *Broker, slug string) int {
 func TestPhase6MigrationLoadsLegacyWorkspaceClean(t *testing.T) {
 	b, _ := bootLegacyBroker(t)
 
-	// --- Librarian (Pam) added to the existing roster, built-in. ---
-	pam, ok := memberBySlug(t, b, LibrarianSlug)
-	if !ok {
-		t.Fatalf("Librarian (%q) was not added to the legacy roster", LibrarianSlug)
+	// --- NOTHING is appended to the legacy roster. ---
+	//
+	// This block used to assert the opposite: that loading a legacy workspace
+	// back-filled a built-in Librarian and App Builder onto it, "so the agent
+	// appears in the office without re-onboarding". That back-fill is exactly
+	// how the founder's removal of both agents kept undoing itself — the seed
+	// edit landed and the next boot appended them again — so it is deleted,
+	// and the assertion is inverted rather than dropped.
+	//
+	// A legacy workspace that HAS these agents on disk still keeps them; that
+	// half is pinned in broker_default_roster_test.go. What this fixture has is
+	// a roster that never had them, and it must come back the same way.
+	for _, slug := range []string{LibrarianSlug, appBuilderSlug} {
+		if m, found := memberBySlug(t, b, slug); found {
+			t.Fatalf("migration appended %q (%+v) to a legacy roster that never had it: a back-fill is live again", slug, m)
+		}
 	}
-	if !pam.BuiltIn {
-		t.Fatalf("Librarian should be built-in after migration, got BuiltIn=false")
-	}
-	if pam.Name != librarianName {
-		t.Fatalf("Librarian name = %q, want %q", pam.Name, librarianName)
-	}
-
-	// --- App Builder back-filled onto the existing roster, built-in. The
-	// roster was persisted before the Apps feature, so this is the same
-	// load-time migration as the Librarian: the agent must appear in the
-	// office (and therefore the sidebar) without re-onboarding. ---
-	ab, ok := memberBySlug(t, b, appBuilderSlug)
-	if !ok {
-		t.Fatalf("App Builder (%q) was not added to the legacy roster", appBuilderSlug)
-	}
-	if !ab.BuiltIn {
-		t.Fatalf("App Builder should be built-in after migration, got BuiltIn=false")
-	}
-	if ab.Name != appBuilderRole {
-		t.Fatalf("App Builder name = %q, want %q", ab.Name, appBuilderRole)
-	}
-	// The pre-existing specialists must still be present (no roster clobber).
-	for _, slug := range []string{"ceo", "dwight", "angela"} {
+	// The pre-existing roster must survive untouched (no clobber, no additions).
+	legacy := []string{"ceo", "dwight", "angela"}
+	for _, slug := range legacy {
 		if _, found := memberBySlug(t, b, slug); !found {
 			t.Fatalf("legacy member %q was lost during migration", slug)
 		}
+	}
+	b.mu.Lock()
+	rosterSize := len(b.members)
+	b.mu.Unlock()
+	if rosterSize != len(legacy) {
+		t.Fatalf("legacy roster grew from %d to %d members on load", len(legacy), rosterSize)
 	}
 
 	// --- Legacy lifecycle_state remapped, in-flight task survives. ---
@@ -349,14 +347,27 @@ func TestPhase6MigrationRoundTripsThroughSave(t *testing.T) {
 		t.Fatalf("saveLocked: %v", saveErr)
 	}
 
-	// Reload from the same path: the Librarian and the folded archive tasks
+	// Reload from the same path: the legacy roster and the folded archive tasks
 	// must persist (they were written), and the second boot's migration must
-	// not duplicate them.
+	// not duplicate them or grow the roster.
+	//
+	// The roster subject used to be the Librarian, which the load path appended
+	// on every boot. With that back-fill deleted, the honest round-trip subject
+	// is a member the workspace actually had — and the second boot is where a
+	// resurrected back-fill would show up, so the absence check belongs here
+	// too.
 	b2 := NewBrokerAt(path)
 	runStartupMigrations(b2)
 
-	if _, ok := memberBySlug(t, b2, LibrarianSlug); !ok {
-		t.Fatalf("Librarian missing after save+reload")
+	for _, slug := range []string{"ceo", "dwight", "angela"} {
+		if _, ok := memberBySlug(t, b2, slug); !ok {
+			t.Fatalf("legacy member %q missing after save+reload", slug)
+		}
+	}
+	for _, slug := range []string{LibrarianSlug, appBuilderSlug} {
+		if _, ok := memberBySlug(t, b2, slug); ok {
+			t.Fatalf("%q appeared on the second boot: a back-fill is live again", slug)
+		}
 	}
 	for _, slug := range []string{"product", "dwight__human"} {
 		if _, ok := archivedOwnerOf(t, b2, slug); !ok {

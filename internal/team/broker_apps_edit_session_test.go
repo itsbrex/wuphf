@@ -33,6 +33,13 @@ func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 
 	b := newTestBroker(t)
+	// The App Builder is hired rather than assumed. It is retired as a DEFAULT
+	// agent, and ensureAppEditChannelLocked deliberately refuses to invent a
+	// member the roster does not have — so in a lead-only office the minted
+	// thread comes back holding only the CEO, and the membership assertion
+	// below would be testing the absence of the agent instead of the minting
+	// rule. app-builder is still a legal agent, so the fixture creates one.
+	hireSpecialists(t, b, appBuilderSlug)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}

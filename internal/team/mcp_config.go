@@ -12,7 +12,6 @@ package team
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -31,25 +30,13 @@ var codingAgentSlugs = map[string]bool{
 }
 
 // agentMCPServers returns the MCP server keys that a given agent should receive.
-func agentMCPServers(slug string) []string {
-	channel := strings.TrimSpace(os.Getenv("WUPHF_CHANNEL"))
-	// DM mode: only the office server (minimal tool set, no nex overhead).
-	// IsDMSlug, not a raw "dm-" prefix — the canonical slug is the pair-sorted
-	// "<a>__<b>", so the prefix test silently handed every canonical DM the
-	// full server set including nex.
-	if IsDMSlug(channel) {
-		return ServerKeys()
-	}
-	if codingAgentSlugs[slug] {
-		return ServerKeys()
-	}
-	return append(ServerKeys(), "nex")
+func agentMCPServers(_ string) []string {
+	return ServerKeys()
 }
 
 // buildMCPServerMap constructs the full set of MCP server entries.
 // This is the shared helper used by both ensureMCPConfig and ensureAgentMCPConfig.
 func (l *Launcher) buildMCPServerMap() (map[string]any, error) {
-	apiKey := config.ResolveAPIKey("")
 	servers := map[string]any{}
 	wuphfBinary, err := os.Executable()
 	if err != nil {
@@ -87,16 +74,6 @@ func (l *Launcher) buildMCPServerMap() (map[string]any, error) {
 	}
 
 	switch config.ResolveMemoryBackend("") {
-	case config.MemoryBackendNex:
-		if apiKey != "" {
-			env, _ := office["env"].(map[string]string)
-			if env == nil {
-				env = map[string]string{}
-			}
-			env["WUPHF_API_KEY"] = apiKey
-			env["NEX_API_KEY"] = apiKey
-			office["env"] = env
-		}
 	case config.MemoryBackendGBrain:
 		env, _ := office["env"].(map[string]string)
 		if env == nil {
@@ -119,18 +96,6 @@ func (l *Launcher) buildMCPServerMap() (map[string]any, error) {
 			env[key] = value
 		}
 		office["env"] = env
-	}
-
-	if !config.ResolveNoNex() && apiKey != "" {
-		if nexMCP, err := exec.LookPath("nex-mcp"); err == nil {
-			servers["nex"] = map[string]any{
-				"command": nexMCP,
-				"env": map[string]string{
-					"WUPHF_API_KEY": apiKey,
-					"NEX_API_KEY":   apiKey,
-				},
-			}
-		}
 	}
 
 	return servers, nil

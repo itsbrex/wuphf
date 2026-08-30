@@ -51,21 +51,25 @@ func TestBrokerStatePersistsAcrossReload_ChannelAndMember(t *testing.T) {
 		return resp
 	}
 
-	// Create a custom channel. Explicitly empty Members so the handler
-	// doesn't try to validate against defaults; "ceo" is auto-prepended
-	// by the handler anyway.
-	channelBody := map[string]any{
-		"action":      "create",
-		"slug":        "persistence-test",
-		"name":        "Persistence Test",
-		"description": "Created by TestBrokerStatePersistsAcrossReload",
-		"created_by":  "ceo",
-	}
-	if resp := post("/channels", channelBody); resp.StatusCode != http.StatusOK {
-		resp.Body.Close()
-		t.Fatalf("POST /channels: status %d", resp.StatusCode)
-	} else {
-		resp.Body.Close()
+	// Create a custom channel. Explicitly empty Members; "ceo" is prepended
+	// by createChannelLocked anyway.
+	//
+	// This used to POST /channels. Named-channel CREATE is retired at that
+	// handler (409), so the room now comes from createChannelLocked — the path
+	// the surviving minters (Slack bridge, Telegram bridge, app-<id> edit
+	// thread) use. What is under test is unchanged and is not the create at
+	// all: it is that a channel written to disk comes back, description
+	// intact, through a real save + reload cycle.
+	b.mu.Lock()
+	_, cerr := b.createChannelLocked(channelCreateInput{
+		Slug:        "persistence-test",
+		Name:        "Persistence Test",
+		Description: "Created by TestBrokerStatePersistsAcrossReload",
+		CreatedBy:   "ceo",
+	})
+	b.mu.Unlock()
+	if cerr != nil {
+		t.Fatalf("create persistence-test: %d %s", cerr.Code, cerr.Msg)
 	}
 
 	// Create a custom member on claude-code (the default provider; no

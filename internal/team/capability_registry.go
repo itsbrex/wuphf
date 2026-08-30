@@ -277,17 +277,6 @@ func buildMemoryDescriptor() CapabilityDescriptor {
 }
 
 func buildActionCapabilityDescriptor(key, label string, category CapabilityCategory, cap action.Capability) CapabilityDescriptor {
-	if config.ResolveNoNex() {
-		return CapabilityDescriptor{
-			Key:       key,
-			Label:     label,
-			Category:  category,
-			Level:     CapabilityInfo,
-			Lifecycle: CapabilityLifecycleDisabled,
-			Detail:    "Disabled for this session with --no-nex.",
-			NextStep:  "Restart without --no-nex to enable provider-backed actions.",
-		}
-	}
 	provider, err := ResolveActionProviderForCapability(cap)
 	if err != nil {
 		return CapabilityDescriptor{
@@ -311,17 +300,6 @@ func buildActionCapabilityDescriptor(key, label string, category CapabilityCateg
 }
 
 func buildConnectionsDescriptor(opts CapabilityProbeOptions) CapabilityDescriptor {
-	if config.ResolveNoNex() {
-		return CapabilityDescriptor{
-			Key:       CapabilityKeyConnections,
-			Label:     "Connected accounts",
-			Category:  CapabilityCategoryAction,
-			Level:     CapabilityInfo,
-			Lifecycle: CapabilityLifecycleDisabled,
-			Detail:    "Disabled for this session with --no-nex.",
-			NextStep:  "Restart without --no-nex to enable live connected accounts.",
-		}
-	}
 	provider, err := ResolveActionProviderForCapability(action.CapabilityConnections)
 	if err != nil {
 		return CapabilityDescriptor{

@@ -90,7 +90,9 @@ describe("<RequestAIChangeControl>", () => {
             "Also update related items (linked articles, the index) that this change affects.",
         },
       ],
-      { channel: "general", createdBy: "human" },
+      // The librarian's DM, not the retired shared room: the task is assigned
+      // to Pam, so Pam's conversation is where it belongs.
+      { channel: "human__librarian", createdBy: "human" },
     );
     const link = screen.getByRole("link", { name: /Open task WIKI-9/ });
     expect(link).toHaveAttribute("href", "#/tasks/WIKI-9");

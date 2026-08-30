@@ -55,7 +55,9 @@ describe("<TaskNewForm>", () => {
           task_type: "issue",
         },
       ],
-      { channel: "general", createdBy: "human" },
+      // No channel: the form no longer pre-fills one, so the broker routes the
+      // Issue to its assignee's DM. It used to send "general", a retired room.
+      { channel: "", createdBy: "human" },
     );
   });
 });

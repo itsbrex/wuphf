@@ -51,7 +51,7 @@ func (a AutocompleteModel) View() string {
 	}
 
 	highlighted := lipgloss.NewStyle().
-		Background(lipgloss.Color(NexBlue)).
+		Background(lipgloss.Color(BrandBlue)).
 		Foreground(lipgloss.Color("#ffffff")).
 		Padding(0, 1)
 

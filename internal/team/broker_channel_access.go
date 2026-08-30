@@ -22,7 +22,8 @@ import (
 // reservedChannelSlugs are slug values a user-created channel may not take.
 //
 // Two distinct reasons, no longer one:
-//   - "system", "nex", "you", "human" are universally trusted senders in
+//   - "system", the legacy "nex" automation slug, "you", "human" are
+//     universally trusted senders in
 //     canAccessChannelLocked. A channel sharing one of those slugs would
 //     inherit that trust, letting those senders read every message in it
 //     without an explicit Members entry. Keep these in sync with the trust
@@ -43,6 +44,32 @@ var reservedChannelSlugs = map[string]bool{
 
 func (b *Broker) canAccessChannelLocked(slug, channel string) bool {
 	slug = normalizeActorSlug(slug)
+	// NO CHANNEL IS NOT A MEMBERSHIP QUESTION.
+	//
+	// Tested on the RAW argument, before normalising, for the usual reason:
+	// normalizeChannelSlug("") returns "general", so a guard after the
+	// normalise cannot tell "no channel" from "explicitly #general".
+	//
+	// A record with no channel is not scoped to a room, so there is no room to
+	// be a member of and no room-shaped confidentiality to enforce. Membership
+	// is the wrong gate for it; the owner check the callers already run
+	// (checkTaskActionAuthLocked and friends) is the right one.
+	//
+	// Measured, not assumed. Today this returns true on an UPGRADED workspace
+	// and false on a FRESH one, purely by accident: #general's row is still on
+	// disk after the retirement, broker_defaults.go re-populates its member
+	// list with every agent on each Load, and normalizeChannelSlug("") lands
+	// the lookup on exactly that row. A fresh workspace has no such row, so
+	// findChannelLocked("") is nil and every agent is already denied — which
+	// is why channel-less tasks vanish from agent task lists and office stats
+	// on a new workspace. Same broker, same code, opposite answer, decided by
+	// leftover state. Making it explicit fixes the fresh-workspace bug now and
+	// keeps the answer stable when normalizeChannelSlug stops inventing a room.
+	//
+	// DM privacy is untouched: a DM always has a slug, so it never reaches here.
+	if strings.TrimSpace(channel) == "" {
+		return true
+	}
 	channel = normalizeChannelSlug(channel)
 	if b.sessionMode == SessionModeOneOnOne {
 		if isHumanMessageSender(slug) {

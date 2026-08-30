@@ -643,8 +643,13 @@ func TestBuildOperationBootstrapPackageSynthesizesWhenNoPackSeedExists(t *testin
 	if len(pkg.Blueprint.Stages) < 4 || len(pkg.Blueprint.Artifacts) < 4 || len(pkg.Blueprint.Workflows) < 1 {
 		t.Fatalf("expected synthesized blueprint structure, got %+v", pkg.Blueprint)
 	}
-	if len(pkg.Starter.Agents) < 4 || len(pkg.Starter.Channels) < 3 || len(pkg.Starter.Tasks) < 3 {
-		t.Fatalf("expected synthesized starter plan, got %+v", pkg.Starter)
+	// Channels must be ZERO: named channels are retired, and generic
+	// synthesis gates on channel.NamedChannelsEnabled. Tasks dropped from 3+
+	// to 2 when synthesis stopped minting the planner/executor/reviewer trio
+	// and their per-specialist tasks; two real tasks owned by the lead is the
+	// synthesized shape now.
+	if len(pkg.Starter.Agents) < 4 || len(pkg.Starter.Channels) != 0 || len(pkg.Starter.Tasks) < 2 {
+		t.Fatalf("expected synthesized starter plan (agents>=4, channels==0, tasks>=2), got %+v", pkg.Starter)
 	}
 	if len(pkg.Connections) != len(pkg.Blueprint.Connections) {
 		t.Fatalf("expected synthesized connection cards to mirror the synthesized blueprint, got cards=%d blueprint=%d", len(pkg.Connections), len(pkg.Blueprint.Connections))

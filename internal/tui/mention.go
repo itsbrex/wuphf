@@ -151,7 +151,7 @@ func (m MentionModel) View() string {
 	}
 
 	highlighted := lipgloss.NewStyle().
-		Background(lipgloss.Color(NexGreen)).
+		Background(lipgloss.Color(BrandGreen)).
 		Foreground(lipgloss.Color("#000000")).
 		Padding(0, 1)
 

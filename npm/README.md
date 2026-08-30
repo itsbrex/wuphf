@@ -43,8 +43,7 @@ Supported platforms: macOS, Linux, and Windows 10+ on x64 or arm64. The native b
 
 | Flag | What it does |
 |------|-------------|
-| `--memory-backend <name>` | Pick the organizational memory backend (`markdown`, `nex`, `gbrain`, `none`) |
-| `--no-nex` | Skip the Nex backend (no context graph, no Nex-managed integrations) |
+| `--memory-backend <name>` | Pick the organizational memory backend (`markdown`, `gbrain`, `none`) |
 | `--tui` | Use the tmux TUI instead of the web UI |
 | `--no-open` | Don't auto-open the browser |
 | `--pack <name>` | Pick an agent pack (`starter`, `founding-team`, `coding-team`, `lead-gen-agency`, `revops`) |

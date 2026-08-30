@@ -16,7 +16,7 @@ import (
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
-// broker_realtime.go backs the real "Demo workflow to Nex" call: a screen-share
+// broker_realtime.go backs the real demo voice call: a screen-share
 // + realtime-voice session against OpenAI's Realtime API. The browser does the
 // WebRTC handshake, but it must NEVER hold the operator's long-lived OpenAI key.
 // So the broker mints a short-lived EPHEMERAL token from the configured key and

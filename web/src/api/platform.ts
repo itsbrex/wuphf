@@ -20,7 +20,6 @@ export interface HealthResponse {
   memory_backend: string;
   memory_backend_active: string;
   memory_backend_ready: boolean;
-  nex_connected: boolean;
   build: VersionInfo;
 }
 

@@ -205,9 +205,8 @@ func TestPromptBuilder_OneOnOneBranch(t *testing.T) {
 		members: func() []officeMember {
 			return []officeMember{{Slug: "ceo", Name: "CEO", Role: "ceo", Personality: "decisive"}}
 		},
-		policies:    func() []officePolicy { return nil },
-		nameFor:     func(slug string) string { return slug },
-		nexDisabled: true,
+		policies: func() []officePolicy { return nil },
+		nameFor:  func(slug string) string { return slug },
 	}
 
 	got := pb.Build("ceo")
@@ -223,8 +222,11 @@ func TestPromptBuilder_OneOnOneBranch(t *testing.T) {
 	if !strings.Contains(got, "team_broadcast: Send a normal direct chat reply") {
 		t.Fatalf("1:1 prompt should describe team_broadcast in 1:1 framing")
 	}
-	if !strings.Contains(got, "Nex tools are disabled for this run") {
-		t.Fatalf("nexDisabled=true should produce the no-Nex 1:1 line")
+	if !strings.Contains(got, "There is no external knowledge graph in this run") {
+		t.Fatalf("a non-markdown 1:1 prompt should say there is no external knowledge graph")
+	}
+	if strings.Contains(got, "Nex") {
+		t.Fatalf("prompt must not mention Nex:\n%s", got)
 	}
 }
 
@@ -238,7 +240,6 @@ func TestPromptBuilder_OneOnOneMarkdownMemoryMentionsHTMLArtifacts(t *testing.T)
 		policies:       func() []officePolicy { return nil },
 		nameFor:        func(slug string) string { return slug },
 		markdownMemory: true,
-		nexDisabled:    true,
 	}
 
 	got := pb.Build("ceo")
@@ -273,23 +274,6 @@ func TestPromptBuilder_OneOnOneSkipsLearningLookup(t *testing.T) {
 	got := pb.Build("ceo")
 	if strings.Contains(got, "== PRIOR TEAM LEARNINGS ==") {
 		t.Fatalf("1:1 prompt should not render prior learnings")
-	}
-}
-
-func TestPromptBuilder_OneOnOneNexEnabledMentionsContextGraph(t *testing.T) {
-	pb := &promptBuilder{
-		isOneOnOne:  func() bool { return true },
-		isFocusMode: func() bool { return false },
-		packName:    func() string { return "1:1 with CEO" },
-		leadSlug:    func() string { return "ceo" },
-		members:     func() []officeMember { return []officeMember{{Slug: "ceo", Name: "CEO"}} },
-		policies:    func() []officePolicy { return nil },
-		nameFor:     func(slug string) string { return slug },
-		nexDisabled: false,
-	}
-	got := pb.Build("ceo")
-	if !strings.Contains(got, "query_context") {
-		t.Fatalf("Nex-enabled 1:1 prompt should reference query_context")
 	}
 }
 
@@ -352,7 +336,6 @@ func TestPromptBuilder_VisualArtifactSelectivityRulePresentOnEverySurface(t *tes
 			policies:       func() []officePolicy { return nil },
 			nameFor:        func(slug string) string { return slug },
 			markdownMemory: true,
-			nexDisabled:    true,
 		}
 	}
 
@@ -444,7 +427,6 @@ func TestPromptBuilder_HTMLArtifactFlowIsConsistentAcrossBlocks(t *testing.T) {
 			policies:       func() []officePolicy { return nil },
 			nameFor:        func(slug string) string { return slug },
 			markdownMemory: true,
-			nexDisabled:    true,
 		}
 	}
 	cases := []struct {
@@ -547,7 +529,6 @@ func TestPromptBuilder_UnsolicitedToolBanIsExplicit(t *testing.T) {
 		policies:       func() []officePolicy { return nil },
 		nameFor:        func(slug string) string { return slug },
 		markdownMemory: true,
-		nexDisabled:    true,
 	}
 	for _, slug := range []string{"ceo", "pm"} {
 		got := pb.Build(slug)
@@ -585,7 +566,6 @@ func TestPromptBuilder_VisualArtifactForcingRuleSkippedWithoutMarkdownMemory(t *
 			policies:       func() []officePolicy { return nil },
 			nameFor:        func(slug string) string { return slug },
 			markdownMemory: false,
-			nexDisabled:    true,
 		}
 	}
 	cases := []struct {
@@ -755,11 +735,21 @@ func TestMarkdownKnowledgeToolBlock_HumanRememberAutoRoutingNote(t *testing.T) {
 	}
 }
 
-func TestPromptBuilder_LibrarianOwnsWikiReviewCEODelegates(t *testing.T) {
-	// Phase 4: wiki promotion/review authority moved from the CEO to the
-	// Librarian. The Librarian prompt mentions team_notebook_review + the demand
-	// signal; the CEO prompt no longer runs review itself and instead delegates
-	// to @librarian.
+// TestPromptBuilder_NoAgentOwnsTheWikiPromotionNeedsAHuman is the INVERSION of
+// the test that stood here ("the Librarian owns wiki review, the CEO
+// delegates").
+//
+// Phase 4 gave wiki authority to a Librarian agent, and the prompt builder
+// special-cased that slug with a WIKI OWNERSHIP block naming it the sole writer
+// of canonical knowledge. The Librarian is retired as a default agent, so there
+// is no sole writer to hand authority to. Wiki contribution is a system skill
+// every agent carries, and what gates canonical knowledge is now a HUMAN
+// approving the promotion — not an agent's job title.
+//
+// Inverted rather than deleted because the special case is the regression risk:
+// a slug-keyed branch that hands one agent authority over everyone else's
+// knowledge is exactly what this must not grow back.
+func TestPromptBuilder_NoAgentOwnsTheWikiPromotionNeedsAHuman(t *testing.T) {
 	mk := func() *promptBuilder {
 		return &promptBuilder{
 			isOneOnOne:  func() bool { return false },
@@ -780,22 +770,43 @@ func TestPromptBuilder_LibrarianOwnsWikiReviewCEODelegates(t *testing.T) {
 	}
 
 	lib := mk().Build(LibrarianSlug)
-	for _, want := range []string{
-		"WIKI OWNERSHIP (you are the Librarian)",
-		"You own the team's wiki",
-	} {
-		if !strings.Contains(lib, want) {
-			t.Errorf("Librarian prompt missing wiki-authority fragment %q", want)
+	fe := mk().Build("fe")
+	ceo := mk().Build("ceo")
+
+	// 1. The ownership block is gone from EVERY prompt, including the slug it
+	//    used to be keyed on.
+	for name, prompt := range map[string]string{"librarian": lib, "fe": fe, "ceo": ceo} {
+		for _, banned := range []string{
+			"WIKI OWNERSHIP (you are the Librarian)",
+			"You own the team's wiki",
+		} {
+			if strings.Contains(prompt, banned) {
+				t.Errorf("%s prompt still carries the retired wiki-ownership block %q", name, banned)
+			}
 		}
 	}
 
-	ceo := mk().Build("ceo")
-	if strings.Contains(ceo, "WIKI OWNERSHIP (you are the Librarian)") {
-		t.Errorf("CEO prompt must not carry the Librarian's wiki-ownership block")
+	// 2. A workspace that still holds a legacy agent on the "librarian" slug
+	//    gets the ordinary specialist prompt. Compared against another
+	//    specialist so the assertion fails if any slug-keyed branch returns:
+	//    the two differ only in the agent's own identity lines.
+	if lib == fe {
+		t.Fatal("librarian and fe prompts are byte-identical; the fixture is not exercising per-agent rendering")
 	}
-	if !strings.Contains(ceo, "tag @librarian (Pam) to capture it into the team wiki") {
-		t.Errorf("CEO prompt should hand durable knowledge capture to @librarian")
+	for _, shared := range []string{
+		"Use wuphf_wiki_lookup or team_wiki_search when prior knowledge matters",
+		"Promotion into the canonical wiki requires human approval",
+	} {
+		if !strings.Contains(lib, shared) {
+			t.Errorf("librarian prompt missing the shared wiki rule %q: a special case is back", shared)
+		}
+		if !strings.Contains(fe, shared) {
+			t.Errorf("specialist prompt missing the shared wiki rule %q", shared)
+		}
 	}
+
+	// 3. Still true, and still worth pinning: the lead does not run notebook
+	//    review itself with a tool that no longer exists.
 	if strings.Contains(ceo, "team_notebook_review") {
 		t.Errorf("CEO prompt must not reference the removed team_notebook_review tool")
 	}

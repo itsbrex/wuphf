@@ -343,12 +343,19 @@ func (b *Broker) raiseAppActionApproval(r *http.Request, platform, actionID stri
 	options, recommended := requestOptionDefaults("approval")
 	now := time.Now().UTC().Format(time.RFC3339)
 	b.counter++
+	// The requesting actor's DM. It was "general", and the Inbox and
+	// Requests(channel) both FILTER by channel, so a card in the retired room
+	// is one the human can never find and never approve.
+	approvalHome := ""
+	if home, err := b.homeChannelForLocked(actor); err == nil {
+		approvalHome = home
+	}
 	req := humanInterview{
 		ID:            fmt.Sprintf("request-%d", b.counter),
 		Kind:          "approval",
 		Status:        "pending",
 		From:          actor,
-		Channel:       "general",
+		Channel:       approvalHome,
 		Title:         "App action: " + display,
 		Question:      fmt.Sprintf("An app wants to run %s on %s. Approve?", actionID, display),
 		Context:       "Requested by an internal tool you are using.",
@@ -366,7 +373,7 @@ func (b *Broker) raiseAppActionApproval(r *http.Request, platform, actionID stri
 		UpdatedAt: now,
 	}
 	b.requests = append(b.requests, req)
-	b.appendActionLocked("app_external_action_requested", "office", "general", actor,
+	b.appendActionLocked("app_external_action_requested", "office", approvalHome, actor,
 		truncateSummary(req.Title, 140), req.ID)
 	_ = b.saveLocked()
 	return req.ID

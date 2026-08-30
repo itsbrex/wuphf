@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/agent"
-	"github.com/nex-crm/wuphf/internal/api"
 	"github.com/nex-crm/wuphf/internal/channel"
 )
 
@@ -109,12 +108,16 @@ func TestNewLauncherFromScratchUsesGenericOffice(t *testing.T) {
 	if got := l.PackName(); got != "WUPHF Office" {
 		t.Fatalf("PackName: got %q, want %q", got, "WUPHF Office")
 	}
-	if got := l.AgentCount(); got != 5 {
-		t.Fatalf("AgentCount: got %d, want 5", got)
+	if got := l.AgentCount(); got != 1 {
+		t.Fatalf("AgentCount: got %d, want 1", got)
 	}
 	got := l.officeMembersSnapshot()
-	// app-builder is the built-in App Builder agent, seeded into every office.
-	want := []string{"founder", "operator", "app-builder", "builder", "reviewer"}
+	// The from-scratch office is the Chief of Staff alone. It used to be five —
+	// founder, operator, app-builder, builder, reviewer — an invented team of
+	// default specialists that the founder retired. A first run should show the
+	// smallest system that produces a trustworthy output; the rest are created
+	// on demand.
+	want := []string{"ceo"}
 	if len(got) != len(want) {
 		t.Fatalf("officeMembersSnapshot: got %d members, want %d (%+v)", len(got), len(want), got)
 	}
@@ -289,53 +292,6 @@ func TestLoadRunningSessionModePrefersLiveBrokerState(t *testing.T) {
 	}
 	if agent != "pm" {
 		t.Fatalf("expected live 1o1 agent pm, got %q", agent)
-	}
-}
-
-func TestFormatNexFeedItem(t *testing.T) {
-	title, content := formatNexFeedItem(nexFeedItem{
-		Type: "context_alert",
-		Content: nexFeedItemContent{
-			ImportantItems: []nexFeedItemContentItem{
-				{Title: "Budget pressure", Context: "Acme mentioned a freeze"},
-			},
-			EntityChanges: []nexFeedItemContentItem{
-				{Title: "Champion changed", Context: "New VP now owns the deal"},
-			},
-		},
-	})
-
-	if title != "Context alert" {
-		t.Fatalf("unexpected title: %q", title)
-	}
-	if !strings.Contains(content, "Important: Budget pressure") || !strings.Contains(content, "Change: Champion changed") {
-		t.Fatalf("unexpected content: %q", content)
-	}
-}
-
-func TestFetchAndIngestNexNotificationsSeedsCursorOnColdStart(t *testing.T) {
-	requests := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requests++
-		t.Fatalf("expected cold start to seed cursor without calling feed, got %s", r.URL.String())
-	}))
-	defer server.Close()
-
-	b := newTestBroker(t)
-	launcher := &Launcher{broker: b}
-	client := api.NewClient("test-key")
-	client.BaseURL = server.URL
-
-	launcher.fetchAndIngestNexNotifications(client)
-
-	if requests != 0 {
-		t.Fatalf("expected no feed requests on cold start, got %d", requests)
-	}
-	if got := b.NotificationCursor(); got == "" {
-		t.Fatal("expected cold start to seed notification cursor")
-	}
-	if len(b.Messages()) != 0 {
-		t.Fatalf("expected no notifications to be posted on cold start, got %d", len(b.Messages()))
 	}
 }
 

@@ -22,7 +22,13 @@ func (b *Broker) handleMessages(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (b *Broker) handleNexNotifications(w http.ResponseWriter, r *http.Request) {
+// handleAutomationNotifications ingests an externally-produced automation
+// message into a channel. The default sender slug stays "nex" for now: it is
+// the persisted identity on every automation message already written to users'
+// broker state, and changing it would orphan the sender on that history. It is
+// a legacy identifier, not a live integration — nothing here talks to any
+// external service.
+func (b *Broker) handleAutomationNotifications(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -492,9 +498,16 @@ func (b *Broker) PostMessage(from, channel, content string, tagged []string, rep
 	if firstBlockingRequestInChannel(b.requests, channel) != nil {
 		return channelMessage{}, fmt.Errorf("request pending in this channel; answer required before chat resumes here")
 	}
+	// A post with no channel goes to the SENDER's own DM. It used to be
+	// laundered into "general", which after the retirement fails the lookup
+	// below with "channel not found" — so every channel-less PostMessage
+	// caller (the task-comment handler among them) simply stopped working.
+	rawChannel := channel
 	channel = normalizeChannelSlug(channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(rawChannel) == "" {
+		if home, err := b.homeChannelForLocked(from); err == nil {
+			channel = home
+		}
 	}
 	if b.findChannelLocked(channel) == nil {
 		if IsDMSlug(channel) {
@@ -574,9 +587,15 @@ func (b *Broker) PostAutomationMessage(from, channel, title, content, eventID, s
 	}
 
 	b.counter++
+	// Same rule as PostMessage: the sender's DM, never the retired room. This
+	// path does NOT check the channel exists, so a laundered "general" here
+	// wrote an automation message straight into a conversation with no readers.
+	rawAutomationChannel := channel
 	channel = normalizeChannelSlug(channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(rawAutomationChannel) == "" {
+		if home, err := b.homeChannelForLocked(from); err == nil {
+			channel = home
+		}
 	}
 	msg := channelMessage{
 		ID:          fmt.Sprintf("msg-%d", b.counter),
@@ -596,7 +615,7 @@ func (b *Broker) PostAutomationMessage(from, channel, title, content, eventID, s
 		msg.Source = "context_graph"
 	}
 	if msg.SourceLabel == "" {
-		msg.SourceLabel = "Nex"
+		msg.SourceLabel = "Automation"
 	}
 	if msg.From == "" {
 		msg.From = "nex"
@@ -612,9 +631,14 @@ func (b *Broker) PostAutomationMessage(from, channel, title, content, eventID, s
 func (b *Broker) CreateRequest(req humanInterview) (humanInterview, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+	// The requesting agent's DM. A request card laundered into "general" is a
+	// card the human can never see — and for a blocking request that means the
+	// agent waits on an answer that cannot be given.
 	channel := normalizeChannelSlug(req.Channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(req.Channel) == "" {
+		if home, err := b.homeChannelForLocked(req.From); err == nil {
+			channel = home
+		}
 	}
 	if b.findChannelLocked(channel) == nil {
 		return humanInterview{}, fmt.Errorf("channel not found")
@@ -944,7 +968,7 @@ func FormatChannelView(messages []channelMessage) string {
 			if title != "" {
 				title += ": "
 			}
-			sb.WriteString(fmt.Sprintf("  %s  Nex/%s: %s%s\n", ts, source, title, m.Content))
+			sb.WriteString(fmt.Sprintf("  %s  Automation/%s: %s%s\n", ts, source, title, m.Content))
 			continue
 		}
 		if strings.HasPrefix(m.Content, "[STATUS]") {

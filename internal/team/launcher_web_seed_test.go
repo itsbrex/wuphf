@@ -8,11 +8,15 @@ import (
 )
 
 // TestSkipTaskSeedsWelcomeOnly asserts the post-R6 onboarding invariant:
-// when the wizard finishes with skip_task=true, #general lands with the
+// when the wizard finishes with skip_task=true, the human lands with the
 // system welcome and NO staged agent presence line. The demo_seed
 // machinery was removed (core-loop R6) — the loop wants a real first
 // paint, so any reappearance of a synthetic agent post here is a
 // regression.
+//
+// The welcome now lands in the LEAD's DM rather than #general. That is the
+// point of the retirement: there is no shared room to open into, so the first
+// thing the human sees has to be a conversation with somebody.
 func TestSkipTaskSeedsWelcomeOnly(t *testing.T) {
 	ensureOperationsFallbackFS(t)
 	b := newTestBroker(t)
@@ -20,22 +24,38 @@ func TestSkipTaskSeedsWelcomeOnly(t *testing.T) {
 		t.Fatalf("onboardingCompleteFn: %v", err)
 	}
 
-	msgs := b.ChannelMessages("general")
-	var welcome *channelMessage
+	b.mu.Lock()
+	lead := officeLeadSlugFromMembers(b.members)
+	b.mu.Unlock()
+	if lead == "" {
+		lead = "ceo"
+	}
+	home := DMSlugFor(lead)
+	msgs := b.ChannelMessages(home)
+	// The old contract was a "Welcome to your team" post From "system". The
+	// founder's onboarding spec replaced it: with no task kicked off, the
+	// Chief of Staff itself opens the DM, introduces what it does, and asks
+	// for the goal. So the pin flips: the opener comes FROM the lead, and
+	// nothing here speaks as "system". The demo_seed guard stays — R6 removed
+	// staged fake presence and it must not creep back through this path.
+	var intro *channelMessage
 	for i := range msgs {
 		m := &msgs[i]
-		if m.Kind == "system" && strings.Contains(m.Content, "Welcome to your team") {
-			welcome = m
-		}
 		if m.Kind == "demo_seed" {
-			t.Errorf("demo_seed message seeded in #general after R6 removal: %+v", *m)
+			t.Errorf("demo_seed message seeded in the lead DM after R6 removal: %+v", *m)
 		}
-		if m.From != "system" {
-			t.Errorf("expected only system messages in #general on skip_task; got From=%q: %+v", m.From, *m)
+		if m.From == lead {
+			intro = m
 		}
 	}
-	if welcome == nil {
-		t.Fatalf("expected system welcome in #general; got %d messages: %+v", len(msgs), msgs)
+	if intro == nil {
+		t.Fatalf("expected the Chief of Staff intro in %s; got %d messages: %+v", home, len(msgs), msgs)
+	}
+	if !strings.Contains(intro.Content, "what are you trying to get done") {
+		t.Errorf("intro does not ask for the goal; content = %q", intro.Content)
+	}
+	if strings.Contains(intro.Content, "I am CEO") {
+		t.Errorf("intro uses the retired display name: %q", intro.Content)
 	}
 }
 

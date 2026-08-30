@@ -237,9 +237,20 @@ func (b *Broker) ensureOnboardingFirstIssue(s *onboarding.State) error {
 	if taskID == "" || b.findTaskByIDLocked(taskID) == nil {
 		now := time.Now().UTC().Format(time.RFC3339)
 		b.counter++
+		// The human's FIRST issue, owned by the CEO. It was filed into
+		// "general", so after the retirement the one task the whole onboarding
+		// exists to produce landed in a room nobody can open. It belongs in the
+		// owner's DM. An unresolvable home leaves the task homeless rather than
+		// naming a dead room — a homeless task is legal and still listable,
+		// which is strictly better than one addressed to nothing.
+		firstIssueHome, homeErr := b.homeChannelForLocked("ceo")
+		if homeErr != nil {
+			log.Printf("onboarding: first issue has no home channel: %v", homeErr)
+			firstIssueHome = ""
+		}
 		task := teamTask{
 			ID:            b.allocateIssueIDLocked(),
-			Channel:       "general",
+			Channel:       firstIssueHome,
 			Title:         onboardingFirstIssueTitle(prompt),
 			Details:       prompt,
 			Owner:         "ceo",

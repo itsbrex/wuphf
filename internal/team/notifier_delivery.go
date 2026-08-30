@@ -175,9 +175,13 @@ func (l *Launcher) sendTaskUpdate(target notificationTarget, action officeAction
 	if l.broker != nil && l.broker.AgentAwaitingInterviewAnswer(target.Slug) {
 		return
 	}
+	// The channel this agent is told to reply in. A task with no channel used
+	// to resolve to "general", so the packet literally instructed the agent to
+	// answer in a room that no longer exists. Its own DM is the conversation it
+	// is actually having with the human.
 	channel := normalizeChannelSlug(task.Channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(task.Channel) == "" {
+		channel = DMSlugFor(target.Slug)
 	}
 	notification, contextUsed := l.notifyCtx().BuildTaskExecutionPacketWithContext(target.Slug, action, task, content)
 	// Plan mode: a task in Planning gets a plan-only directive in front of the
@@ -272,9 +276,12 @@ func (l *Launcher) sendChannelUpdate(target notificationTarget, msg channelMessa
 	if l.broker != nil && l.broker.AgentAwaitingInterviewAnswer(target.Slug) {
 		return
 	}
+	// Same as sendTaskUpdate: this value is interpolated straight into the
+	// prompt ("channel \"%s\"" below), so a laundered "general" told the agent
+	// to reply into the retired room.
 	channel := normalizeChannelSlug(msg.Channel)
-	if channel == "" {
-		channel = "general"
+	if strings.TrimSpace(msg.Channel) == "" {
+		channel = DMSlugFor(target.Slug)
 	}
 	notification := ""
 	var contextUsed []string

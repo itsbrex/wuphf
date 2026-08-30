@@ -34,7 +34,6 @@ path is fine and the coworker's bug is state-specific — compare their
 - Pre-seeded `onboarded.json` + `config.json` — no wizard.
 - Fake `claude` and `codex` binaries on `PATH` — the turn is dispatched but
   exits immediately; we're testing routing, not LLM quality.
-- Nex disabled (`--no-nex`, `WUPHF_NO_NEX=1`).
 
 ## Usage
 

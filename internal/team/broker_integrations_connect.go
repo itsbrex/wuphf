@@ -98,13 +98,18 @@ func (b *Broker) ensureIntegrationDecisionLocked(spec integrationDecisionCard) s
 		}
 	}
 
-	channel := normalizeChannelSlug(spec.Channel)
-	if channel == "" {
-		channel = "general"
-	}
 	from := strings.TrimSpace(spec.Agent)
 	if from == "" {
 		from = "office"
+	}
+	// The requesting agent's DM. Blocking + Required: an invisible connect
+	// card means the agent waits forever for a credential the human was never
+	// asked for.
+	channel := normalizeChannelSlug(spec.Channel)
+	if strings.TrimSpace(spec.Channel) == "" {
+		if home, err := b.homeChannelForLocked(from); err == nil {
+			channel = home
+		}
 	}
 	title := strings.TrimSpace(spec.Title)
 	options, recommended := requestOptionDefaults(kind)

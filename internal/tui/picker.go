@@ -141,7 +141,7 @@ func (p PickerModel) View() string {
 	sb.WriteString(TitleStyle.Render(p.Title) + "\n")
 
 	if p.TextInput {
-		promptStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(NexBlue)).Bold(true)
+		promptStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(BrandBlue)).Bold(true)
 		cursorStyle := lipgloss.NewStyle().Reverse(true)
 		mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(MutedColor))
 
@@ -153,7 +153,7 @@ func (p PickerModel) View() string {
 	}
 
 	highlighted := lipgloss.NewStyle().
-		Background(lipgloss.Color(NexBlue)).
+		Background(lipgloss.Color(BrandBlue)).
 		Foreground(lipgloss.Color("#ffffff")).
 		Padding(0, 1)
 

@@ -185,16 +185,14 @@ export function handleSlashCommand(
       confirm({
         title: "Reset the team?",
         message:
-          "Clears channels back to #general and drops in-memory state. Persisted tasks and requests stay on the broker.",
+          "Clears conversations and drops in-memory state. Persisted tasks and requests stay on the broker.",
         confirmLabel: "Reset",
         danger: true,
         onConfirm: () =>
           post("/reset", {})
             .then(() => {
-              void router.navigate({
-                to: "/channels/$channelSlug",
-                params: { channelSlug: "general" },
-              });
+              // Home, not the retired #general.
+              void router.navigate({ to: "/" });
               showNotice("Office reset", "success");
             })
             .catch((e: Error) =>

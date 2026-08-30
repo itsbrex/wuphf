@@ -96,7 +96,7 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 	}
 	cmd.Env = env
 
-	// Enrich the notification with Nex entity context. Use a 2s deadline so a
+	// Enrich the notification with memory-backend context. Use a 2s deadline so a
 	// slow or unreachable memory backend never holds up the agent turn.
 	//
 	// The memory brief can contain attacker-controlled data (email bodies, CRM
@@ -403,7 +403,6 @@ func (l *Launcher) buildHeadlessClaudeEnv(slug string) []string {
 		"WUPHF_BROKER_BASE_URL="+l.BrokerBaseURL(),
 		"WUPHF_HEADLESS_PROVIDER=claude",
 		"WUPHF_MEMORY_BACKEND="+config.ResolveMemoryBackend(""),
-		fmt.Sprintf("WUPHF_NO_NEX=%t", config.ResolveNoNex()),
 		"ANTHROPIC_PROMPT_CACHING=1",
 	)
 	if l.isOneOnOne() {
@@ -420,12 +419,6 @@ func (l *Launcher) buildHeadlessClaudeEnv(slug string) []string {
 		if identityType := strings.TrimSpace(config.ResolveOneIdentityType()); identityType != "" {
 			env = append(env, "ONE_IDENTITY_TYPE="+identityType)
 		}
-	}
-	if apiKey := strings.TrimSpace(config.ResolveAPIKey("")); apiKey != "" {
-		env = append(env,
-			"WUPHF_API_KEY="+apiKey,
-			"NEX_API_KEY="+apiKey,
-		)
 	}
 	return env
 }

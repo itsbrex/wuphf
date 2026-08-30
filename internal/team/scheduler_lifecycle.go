@@ -47,7 +47,7 @@ const (
 	schedulerActivityHistoryLimit = 50
 	schedulerRevisionHistoryLimit = 20
 	// minRoutineIntervalMinutes is the floor we enforce on user-created
-	// routines. System-managed crons (nex-insights, etc.) self-register
+	// routines. System-managed crons self-register
 	// at boot and are not subject to this rule. The cap exists to keep
 	// the agent dispatcher from getting hammered by accidentally-fast
 	// cadences ("every minute" is almost always a misclick).

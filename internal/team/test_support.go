@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -243,4 +244,66 @@ func SeedLegacyRoomForTest(b *Broker) {
 		Description: "Legacy room provided by the test fixture only",
 		Members:     members,
 	})
+}
+
+// SeedBridgedRoomForTest gives a broker a BRIDGED room that several agents
+// share — the shape of a Slack or Telegram channel wired into the office.
+//
+// Cross-package callers (teammcp) have routing tests — which channel does a
+// broadcast default to, which room does a task action report in — that need a
+// room holding more than two participants. Two other candidates do not work,
+// and both failures are the product behaving correctly:
+//
+//   - A DM has exactly two members by definition, so the CEO tagging a
+//     specialist inside another agent's DM is refused. That is the privacy
+//     model, not a broken fixture.
+//   - A plain named room can be seeded, but GET /channels WITHHOLDS ordinary
+//     named rooms while the retirement switch is off, so it is invisible to
+//     the agent-side channel inference these tests drive. The room would exist
+//     and the routing would still resolve elsewhere.
+//
+// A bridged room is the multi-participant surface that survives the
+// retirement, and it survives deliberately: it is how external messages
+// arrive, so hiding it would strand every message that came in through it.
+// Routing between agents in a shared room is exactly what still has to work
+// there, which makes it the honest fixture rather than a way around the gate.
+func SeedBridgedRoomForTest(b *Broker, slug string, members ...string) {
+	if b == nil {
+		return
+	}
+	slug = normalizeChannelSlug(slug)
+	if slug == "" {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.findChannelLocked(slug) != nil {
+		return
+	}
+	b.channels = append(b.channels, teamChannel{
+		Slug:        slug,
+		Name:        slug,
+		Type:        "channel",
+		Description: "Bridged room provided by the test fixture only",
+		Members:     uniqueSlugs(append([]string{"human", "ceo"}, members...)),
+		Surface:     &channelSurface{Provider: "slack", RemoteID: "C" + strings.ToUpper(slug), RemoteTitle: slug},
+	})
+	b.rebuildChannelIndexLocked()
+}
+
+// HasChannelForTest reports whether the broker holds a channel with this slug.
+//
+// Cross-package existence check, for teammcp and anyone else asserting that a
+// refused create really created nothing. It exists because GET /channels is no
+// longer a usable proxy for that: with named channels retired the listing
+// WITHHOLDS ordinary named rooms, so "the room is not in the response" is true
+// whether or not it was created, and a test built on the listing would pass
+// through the exact bug it guards. This reads the roster of rooms directly.
+func HasChannelForTest(b *Broker, slug string) bool {
+	if b == nil {
+		return false
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.findChannelLocked(slug) != nil
 }
