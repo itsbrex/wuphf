@@ -24,10 +24,16 @@ func dmBrokerWithRoster(t *testing.T) (*Broker, string) {
 	b := newTestBroker(t)
 	const dmChannel = "eng__human"
 	b.mu.Lock()
-	b.members = ensureAppBuilderOfficeMember(ensureLibrarianMember([]officeMember{
+	// Inline roster: the ensure-style helpers that used to append the
+	// Librarian and App Builder are deleted with those agents' retirement as
+	// defaults. The privacy rules pinned here still matter for LEGACY
+	// workspaces that hold both agents on disk, so the fixture keeps them.
+	b.members = []officeMember{
 		{Slug: "ceo", Name: "CEO", Role: "Chief Executive"},
 		{Slug: "eng", Name: "Engineer", Role: "Engineer"},
-	}))
+		{Slug: LibrarianSlug, Name: librarianName, Role: librarianRole},
+		{Slug: appBuilderSlug, Name: appBuilderRole, Role: appBuilderRole},
+	}
 	b.channels = []teamChannel{{
 		Slug:    dmChannel,
 		Name:    dmChannel,
@@ -162,7 +168,9 @@ func TestTaskOwnerPromotionGivesAppBuilderChannelAccess(t *testing.T) {
 	const buildChannel = "build-thread"
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.members = ensureAppBuilderOfficeMember(nil)
+	b.members = []officeMember{
+		{Slug: appBuilderSlug, Name: appBuilderRole, Role: appBuilderRole},
+	}
 	b.channels = []teamChannel{{
 		Slug:    buildChannel,
 		Name:    buildChannel,

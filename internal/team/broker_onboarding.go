@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nex-crm/wuphf/internal/company"
 	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/onboarding"
 	"github.com/nex-crm/wuphf/internal/operations"
@@ -71,9 +72,18 @@ func (b *Broker) onboardingCompleteFn(task string, skipTask bool, blueprintID st
 		// If a prior call already posted this exact task as an onboarding_origin
 		// message (crash-recovery scenario), skip re-seeding and preserve the
 		// earlier team.
+		//
+		// Matched on kind + content only. It also required
+		// Channel == "general", which was the room the kickoff used to be
+		// posted to — now that the kickoff lands in the lead's DM that clause
+		// could never match again, the dedupe would silently stop firing, and
+		// a crash-recovered onboarding would re-seed the entire team on top of
+		// the existing one. The kind is already unique to this message and the
+		// content is the task itself, so the channel added nothing but the
+		// coupling.
 		if !skipTask && task != "" {
 			for _, existing := range b.messages {
-				if existing.Channel == "general" && existing.Kind == "onboarding_origin" && existing.Content == task {
+				if existing.Kind == "onboarding_origin" && existing.Content == task {
 					return b.saveLocked()
 				}
 			}
@@ -365,6 +375,31 @@ func (b *Broker) seedFromBlueprintLocked(bp operations.Blueprint, selectedAgents
 func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []string, task string, skipTask bool, synthesized bool) error {
 	now := time.Now().UTC().Format(time.RFC3339)
 
+	// Every message below goes to the LEAD's DM.
+	//
+	// All five were addressed to "general". With the shared room retired that
+	// is a channel with no readers, so a freshly onboarded workspace wrote its
+	// origin task, its welcome, and its blueprint markers into nothing and
+	// opened completely silent — the worst possible first paint, and invisible
+	// because appendMessageLocked does not check that the channel exists.
+	//
+	// homeChannelForLocked both resolves the DM and creates it if missing, and
+	// ensureAgentDMsLocked has just run one call up, so the lead's
+	// conversation is there. Failing loudly is right if it somehow is not:
+	// this is the first thing the human ever sees, and an office seeded with
+	// an unreachable kickoff is worse than one that refuses to seed.
+	lead := officeLeadSlugFromMembers(b.members)
+	if lead == "" {
+		// Every shipped blueprint declares ceo as lead (guarded by
+		// TestAllOperationBlueprintsUseCEOLead). The fallback here only fires
+		// for malformed/synthesized blueprints with no identifiable lead.
+		lead = "ceo"
+	}
+	leadHome, err := b.homeChannelForLocked(lead)
+	if err != nil {
+		return fmt.Errorf("onboarding: no conversation to post the kickoff into: %w", err)
+	}
+
 	// Lead-only warning: the wizard sent agents=[] (explicit empty = every
 	// toggle unchecked). The seed helper fell back to lead-only; surface
 	// that via a system message so the user knows the team is minimal. The
@@ -382,7 +417,7 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 		b.appendMessageLocked(channelMessage{
 			ID:        fmt.Sprintf("msg-%d", b.counter),
 			From:      "system",
-			Channel:   "general",
+			Channel:   leadHome,
 			Kind:      "system",
 			Content:   "Team seeded with lead only. Add specialists from Team settings.",
 			Timestamp: now,
@@ -400,7 +435,7 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 		b.appendMessageLocked(channelMessage{
 			ID:        fmt.Sprintf("msg-%d", b.counter),
 			From:      "system",
-			Channel:   "general",
+			Channel:   leadHome,
 			Kind:      "system",
 			Content:   welcomeMessageForMembers(b.members),
 			Timestamp: now,
@@ -417,19 +452,11 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 		return fmt.Errorf("onboarding: task is required when skip_task=false")
 	}
 
-	lead := officeLeadSlugFromMembers(b.members)
-	if lead == "" {
-		// Every shipped blueprint declares ceo as lead (guarded by
-		// TestAllOperationBlueprintsUseCEOLead). The fallback here only fires
-		// for malformed/synthesized blueprints with no identifiable lead.
-		lead = "ceo"
-	}
-
 	b.counter++
 	b.appendMessageLocked(channelMessage{
 		ID:        fmt.Sprintf("msg-%d", b.counter),
 		From:      "human",
-		Channel:   "general",
+		Channel:   leadHome,
 		Kind:      "onboarding_origin",
 		Content:   task,
 		Tagged:    []string{lead},
@@ -449,7 +476,7 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 			b.appendMessageLocked(channelMessage{
 				ID:        fmt.Sprintf("msg-%d", b.counter),
 				From:      "system",
-				Channel:   "general",
+				Channel:   leadHome,
 				Kind:      "synthesized_blueprint",
 				Content:   fmt.Sprintf("Synthesized operation: %s (%s)", bp.Name, bp.Kind),
 				Timestamp: now,
@@ -459,7 +486,7 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedAgents []str
 		b.appendMessageLocked(channelMessage{
 			ID:        fmt.Sprintf("msg-%d", b.counter),
 			From:      "system",
-			Channel:   "general",
+			Channel:   leadHome,
 			Kind:      "from_scratch_contract",
 			Content:   "Run this as a real business workflow. If a needed specialist, channel, skill, or tooling path is missing, create it and keep going. Local proof packets, review bundles, and other internal substitute artifacts do not count when a live business step is possible.",
 			Timestamp: now,
@@ -537,23 +564,19 @@ func blankSlateOfficeMembersFromBlueprint(blueprint operations.Blueprint, select
 		members = blankSlateOfficeMembersFromAgents(agents, leadSlug, nil)
 	}
 	if len(members) > 0 {
-		// The Librarian and App Builder are built-in, like the lead — present in
-		// every workspace regardless of blueprint or agent selection. Without the
-		// App Builder here, an onboarded office has no app-builder roster member,
-		// so app-builder-owned tasks fall back to the CEO — which lacks the
-		// register_app tool (gated to the app-builder slug) and bypasses the
-		// host-owned build + publish gates.
-		return ensureAppBuilderOfficeMember(ensureLibrarianMember(members))
+		// The blueprint roster stands as selected. The Librarian and App
+		// Builder are no longer appended here: both are retired as default
+		// agents, and their jobs (wiki contribution, app building) are system
+		// skills every agent carries rather than agents of their own.
+		return members
 	}
 	// Defensive fallback used only when the blueprint had zero parseable
-	// agents. Keeps the broker from crashing on empty rosters.
+	// agents. The smallest office that works is the Chief of Staff alone; it
+	// creates specialists on demand instead of shipping an invented team.
 	now := time.Now().UTC().Format(time.RFC3339)
-	return ensureAppBuilderOfficeMember(ensureLibrarianMember([]officeMember{
-		{Slug: "founder", Name: "Founder", Role: "Founder", BuiltIn: true, CreatedBy: "wuphf", CreatedAt: now},
-		{Slug: "operator", Name: "Operator", Role: "Operator", BuiltIn: true, CreatedBy: "wuphf", CreatedAt: now},
-		{Slug: "builder", Name: "Builder", Role: "Builder", CreatedBy: "wuphf", CreatedAt: now},
-		{Slug: "reviewer", Name: "Reviewer", Role: "Reviewer", CreatedBy: "wuphf", CreatedAt: now},
-	}))
+	return []officeMember{
+		{Slug: "ceo", Name: company.ChiefOfStaffName(), Role: company.ChiefOfStaffRole(), BuiltIn: true, CreatedBy: "wuphf", CreatedAt: now},
+	}
 }
 
 func blankSlateOfficeMembersFromAgents(agents []operations.StarterAgent, leadSlug string, filter func(string) bool) []officeMember {

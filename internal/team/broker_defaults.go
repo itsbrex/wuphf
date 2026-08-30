@@ -40,9 +40,7 @@ func defaultOfficeMembers() []officeMember {
 		builtIn := cfg.System || cfg.Slug == manifest.Lead || cfg.Slug == "ceo"
 		members = append(members, memberFromSpec(cfg, "wuphf", now, builtIn))
 	}
-	// The Librarian and App Builder are built-in, present in every workspace
-	// alongside the lead.
-	return ensureAppBuilderOfficeMember(ensureLibrarianMember(members))
+	return members
 }
 
 func defaultOfficeMemberSlugs() []string {
@@ -342,7 +340,11 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		if member.Role == "" {
 			member.Role = member.Name
 		}
-		member.BuiltIn = member.Slug == "ceo" || isLibrarianSlug(member.Slug) || isAppBuilderSlug(member.Slug)
+		// Only the lead is built-in now. A legacy librarian or app-builder on
+		// disk becomes an ordinary, removable member: with the agents retired
+		// as defaults, pinning them undeletable would strand users with two
+		// agents the product no longer defines.
+		member.BuiltIn = member.Slug == "ceo"
 		// A built-in's display name is owned by the code, not by the saved
 		// roster. Renaming the Librarian to "Pam the librarian" changed the
 		// constant, but every office already on disk kept the old name — the
@@ -367,18 +369,13 @@ func (b *Broker) normalizeLoadedStateLocked() {
 	// disk predate her, and ensureDefaultOfficeMembersLocked only seeds when the
 	// roster is empty — so append her here on every load. Idempotent (no-op once
 	// present); the BuiltIn line above keeps her flag set on subsequent loads.
-	// The App Builder is back-filled the same way so it shows in the roster of
-	// offices created before the Apps feature.
-	//
-	// The back-fill only applies to a NON-empty roster: since the packs/CEO
-	// removal a fresh office intentionally seeds zero agents (people spin up
-	// agents that run their workflows end to end), and resurrecting built-ins
-	// on every load would undo that contract on the first restart.
-	if len(normalizedMembers) > 0 {
-		b.members = ensureAppBuilderOfficeMember(ensureLibrarianMember(normalizedMembers))
-	} else {
-		b.members = normalizedMembers
-	}
+	// No back-fill. The load path used to append the Librarian and App Builder
+	// to any non-empty roster ("legacy-safe migration"), which is precisely how
+	// the founder's removal of both agents kept undoing itself: the seed edit
+	// was real, and this line resurrected them on the next boot. Existing
+	// members already on disk load unchanged — the migration's data-safety half
+	// — but nothing is ever appended.
+	b.members = normalizedMembers
 	for i := range b.channels {
 		b.channels[i].Slug = normalizeChannelSlug(b.channels[i].Slug)
 		if strings.TrimSpace(b.channels[i].Name) == "" {

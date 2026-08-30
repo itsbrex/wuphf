@@ -60,7 +60,6 @@ func (b *Broker) handleOnboardingReseed(w http.ResponseWriter, r *http.Request) 
 
 	bp := scratchFoundingTeamBlueprint(companyName, "", "")
 	members := blankSlateOfficeMembersFromBlueprint(bp, nil)
-	members = ensureAppBuilderOfficeMember(ensureLibrarianMember(members))
 	if len(members) == 0 {
 		b.mu.Unlock()
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "founding roster came back empty"})

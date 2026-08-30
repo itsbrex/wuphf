@@ -117,16 +117,22 @@ func registerAppTools(server *mcp.Server, slug string) {
 		"propose_app",
 		"Propose building (or improving) an internal tool when you notice a repeatable workflow. Raises a NON-BLOCKING approval card the human can Approve, Approve-with-note, or Reject. Do NOT use this when the human used /create-app, /update-app, or explicitly asked you to build — in that case the build is already authorized. After proposing, keep working; do not block waiting for the answer. On approval the App Builder builds it automatically.",
 	), handleProposeApp)
-	if strings.EqualFold(strings.TrimSpace(slug), appBuilderSlug) {
-		mcp.AddTool(server, readOnlyTool(
-			"get_app",
-			"Read an existing app's manifest and current HTML so you can edit it. App Builder only.",
-		), handleGetApp)
-		mcp.AddTool(server, officeWriteTool(
-			"register_app",
-			"Publish a built app so it appears under Apps. Pass html_path (absolute path to the built dist/index.html) and source_path (absolute path to the project root) — the broker reads both from disk, so you never paste the minified bundle or hand-list files. Set app_id to update an existing app in place. App Builder only.",
-		), handleRegisterApp)
-	}
+	// App building is a system skill every agent carries, not a dedicated
+	// agent's monopoly. These used to be gated to the app-builder slug, which
+	// forced an "App Builder" onto every roster just to make builds possible;
+	// with that agent retired as a default, the gate would have made apps
+	// unbuildable in a fresh office. Builds still flow through the host-owned
+	// build and publish gates regardless of which agent registers them.
+	// TODO(system-skills): per-agent disable toggle — the founder's model is
+	// "system skills can never be removed but can be disabled per agent".
+	mcp.AddTool(server, readOnlyTool(
+		"get_app",
+		"Read an existing app's manifest and current HTML so you can edit it.",
+	), handleGetApp)
+	mcp.AddTool(server, officeWriteTool(
+		"register_app",
+		"Publish a built app so it appears under Apps. Pass html_path (absolute path to the built dist/index.html) and source_path (absolute path to the project root) — the broker reads both from disk, so you never paste the minified bundle or hand-list files. Set app_id to update an existing app in place.",
+	), handleRegisterApp)
 }
 
 func handleListApps(ctx context.Context, _ *mcp.CallToolRequest, _ ListAppsArgs) (*mcp.CallToolResult, any, error) {

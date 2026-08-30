@@ -1,5 +1,5 @@
-import { APP_BUILDER_SLUG } from "../lib/constants";
 import { directChannelSlug } from "../lib/channels";
+import { CHIEF_OF_STAFF_SLUG } from "../lib/constants";
 import { del, get, post } from "./client";
 import type { Task, TaskResponse } from "./tasks";
 
@@ -249,18 +249,19 @@ export async function requestAppBuild(req: AppBuildRequest): Promise<Task> {
   const title = `${verb} app: ${req.name}`;
   const res = await post<TaskResponse>("/tasks", {
     action: "create",
-    // The App Builder's own DM. This used to be the literal "general", which
-    // 404'd with "channel not found" the moment the shared room was retired —
-    // the broker's create path looks the channel up before it will accept the
-    // task, and #general no longer exists. The owner is right there on the
-    // next line, so the task has an obvious home: the agent that will do the
-    // work. Not omitted-and-resolved-server-side, because the broker resolves
-    // an omitted channel from `created_by` ("human"), who is not a roster
-    // member and so has no DM to fall back to.
-    channel: directChannelSlug(APP_BUILDER_SLUG),
+    // The Chief of Staff's DM, and the Chief of Staff as owner. Two retired
+    // destinations preceded this: the literal "general" (404'd the moment the
+    // shared room was retired) and then the App Builder's DM — but the App
+    // Builder is no longer seeded, so on a fresh office that owner does not
+    // exist and its DM cannot be created. The lead is the one agent every
+    // office is guaranteed to have; app building is a system skill it carries
+    // like any agent. Not omitted-and-resolved-server-side, because the broker
+    // resolves an omitted channel from `created_by` ("human"), who is not a
+    // roster member and so has no DM to fall back to.
+    channel: directChannelSlug(CHIEF_OF_STAFF_SLUG),
     title,
     details: composeAppBrief(req),
-    owner: "app-builder",
+    owner: CHIEF_OF_STAFF_SLUG,
     created_by: "human",
     task_type: "issue",
   });

@@ -54,11 +54,10 @@ type promptBuilder struct {
 	officeUser       func() string
 
 	// Captured-at-construction config flags. They control major branches
-	// (markdown wiki section, no-Nex fallbacks) and are stable for the
+	// (markdown wiki section, no-external-graph fallbacks) and are stable for the
 	// lifetime of a launcher session, so they're snapshot once rather than
 	// re-resolved on every Build call.
 	markdownMemory bool
-	nexDisabled    bool
 }
 
 // agentFilesPromptBlock assembles the per-agent instruction files (SOUL,
@@ -125,7 +124,6 @@ func (p *promptBuilder) Build(slug string) string {
 
 	lead := p.leadSlug()
 	markdownMemory := p.markdownMemory
-	noNex := p.nexDisabled
 
 	// Filter policies to the ones assigned to THIS agent (core-loop step 8:
 	// assigned policies are always loaded; a policy scoped to other agents
@@ -180,12 +178,8 @@ func (p *promptBuilder) Build(slug string) string {
 		if markdownMemory {
 			sb.WriteString("Markdown wiki memory is active in this 1:1. When the work would be clearer as a diagram, mockup, report, comparison grid, code explainer, PR review, or interactive tuning surface, build a self-contained HTML article with visual_artifact_create — the HTML article IS the deliverable, so leave source_path empty (see the HTML ARTICLE RULE below). Keep the HTML self-contained and include visual-artifact:ra_... on its own line when you reference it in chat.\n\n")
 			sb.WriteString(visualArtifactForcingBlock())
-		} else if noNex {
-			sb.WriteString("Nex tools are disabled for this run. Base your work on the conversation and direct human answers only.\n\n")
 		} else {
-			sb.WriteString("Use the Nex context graph when it materially helps:\n")
-			sb.WriteString("- query_context: Look up prior decisions, people, projects, and history before guessing\n")
-			sb.WriteString("- add_context: Store durable conclusions only after you have actually landed them\n\n")
+			sb.WriteString("There is no external knowledge graph in this run. Base your work on the conversation and direct human answers only.\n\n")
 		}
 		sb.WriteString("RULES:\n")
 		sb.WriteString("1. Do not talk as if a team exists. There are no other agents in this session.\n")
@@ -194,14 +188,13 @@ func (p *promptBuilder) Build(slug string) string {
 		sb.WriteString("4. The pushed notification IS the latest state. Respond directly from it. Do NOT poll before replying.\n")
 		sb.WriteString("5. Use team_broadcast for normal replies. Use human_message only when you are deliberately presenting completion, a recommendation, or a next action.\n")
 		sb.WriteString("6. Use human_interview only for cancelable clarifications you can proceed without. If a decision must block your work, ask the human directly via human_message and wait for the answer.\n")
-		sb.WriteString("7. If Nex is enabled, do not claim something is stored unless add_context actually succeeded.\n")
 		sb.WriteString("8. No fake collaboration language like 'I'll ask the team' or 'let me route this'. It is just you and the human here.\n\n")
 		sb.WriteString("CONVERSATION STYLE:\n")
 		sb.WriteString("- Sound like a sharp human operator, not a formal assistant.\n")
 		sb.WriteString("- Be concise, direct, and a little alive.\n")
 		sb.WriteString("- Light humor is fine. Don't turn the 1:1 into a bit.\n")
 		sb.WriteString("- If the human asks for a plan, recommendation, explanation, or judgment you can reasonably give now, answer now.\n")
-		sb.WriteString("- Do not go silent and over-research by default. Only inspect files, run tools, or query Nex first when the answer genuinely depends on that context.\n")
+		sb.WriteString("- Do not go silent and over-research by default. Only inspect files or run tools first when the answer genuinely depends on that context.\n")
 		sb.WriteString("- If you need a deeper pass, give the human the quick answer first, then continue with the deeper work.\n")
 		return sb.String()
 	}
@@ -245,10 +238,8 @@ func (p *promptBuilder) Build(slug string) string {
 		if markdownMemory {
 			sb.WriteString(markdownKnowledgeMemoryBlock())
 			sb.WriteString(renderPriorLearningsBlock(p.learningSnapshot(slug)))
-		} else if noNex {
-			sb.WriteString("Nex tools are disabled for this run. Work only with the shared office channel and human answers.\n\n")
 		} else {
-			sb.WriteString("Nex memory: query_context before reinventing; add_context only after a decision is actually landed.\n\n")
+			sb.WriteString("There is no external knowledge graph in this run. Work only with the shared office channel and human answers.\n\n")
 		}
 		if len(activePolicies) > 0 {
 			sb.WriteString("== ACTIVE OFFICE POLICIES ==\n")
@@ -283,10 +274,8 @@ func (p *promptBuilder) Build(slug string) string {
 		sb.WriteString("YOUR ROLE AS LEADER:\n")
 		if markdownMemory {
 			sb.WriteString("1. On strategy or prior decisions, use wuphf_wiki_lookup or team_wiki_search before guessing\n")
-		} else if noNex {
-			sb.WriteString("1. Coordinate inside the team channel first and keep the team aligned there\n")
 		} else {
-			sb.WriteString("1. On strategy or prior decisions, call query_context early\n")
+			sb.WriteString("1. Coordinate inside the team channel first and keep the team aligned there\n")
 		}
 		sb.WriteString("2. The pushed notification is your starting context — it contains thread context, task state, and agent activity. When it already answers the question, respond directly from it. When anything material is missing or ambiguous, pull it (team_poll, team_tasks, wiki search) before deciding. Acting on a guess you could have checked is the failure; gathering needed context is not.\n")
 		sb.WriteString("3. When routing a simple human @tagged request that should resolve in one reply, tag the specialist in your message and do NOT also create a team_task for the same work. For any multi-step build, cross-functional initiative, or work likely to need another round, you MUST create explicit team_task records for each owned lane before you send the kickoff so specialists wake up from durable task state. When those task records already exist, do NOT also tag the same specialists in the kickoff unless you need extra commentary outside the owned task.\n")
@@ -297,10 +286,8 @@ func (p *promptBuilder) Build(slug string) string {
 		sb.WriteString("7. Use human_message for direct human-facing output, human_interview for cancelable clarifications, and team_request for blocking decisions\n")
 		if markdownMemory {
 			sb.WriteString("8. When you lock a durable decision that matters for the team's long-term knowledge, tag @librarian (Pam) to capture it into the team wiki. @librarian owns the wiki and is the sole writer of canonical articles — you do not write the canonical wiki yourself.\n")
-		} else if noNex {
-			sb.WriteString("8. Summarize final decisions clearly in-channel\n")
 		} else {
-			sb.WriteString("8. When you lock a decision, call add_context before claiming it is stored\n")
+			sb.WriteString("8. Summarize final decisions clearly in-channel\n")
 		}
 		sb.WriteString("9. Once decided, create durable task state first, then broadcast the kickoff and assignments. If you already know multiple owned lanes, prefer one team_plan call over several separate team_task creates. Every created task should set `task_type` and `execution_mode` deliberately instead of relying on inference.\n")
 		sb.WriteString("10. Choose task_type deliberately. Use `issue` only for project-sized specs that should be broken into smaller execution tasks; use `research` for audits/analysis, `launch` for GTM/rollout packages, `follow_up` for scoped office deliverables, and `feature` only for real implementation work. Do NOT label planning or audit work as `feature` just because it matters, and do NOT create issue records for tiny one-step todos.\n")
@@ -337,10 +324,8 @@ func (p *promptBuilder) Build(slug string) string {
 		sb.WriteString("STYLE: Be concise, delegate, short lively messages. Use compact markdown for simple chat structure; for dense, visual, or interactive outputs, create an HTML visual artifact instead of leaving the human with a long markdown wall.\n")
 		if markdownMemory {
 			sb.WriteString("Do not pretend the team wiki was updated; verify @librarian captured the knowledge or team_wiki_write succeeded from a verified human request before claiming canonical storage.\n")
-		} else if noNex {
-			sb.WriteString("Do not claim you stored anything outside the team.\n")
 		} else {
-			sb.WriteString("Do not pretend the graph was updated; verify add_context succeeded.\n")
+			sb.WriteString("Do not claim you stored anything outside the team.\n")
 		}
 		sb.WriteString("Never launch another WUPHF office from inside your turn (`wuphf`, `./wuphf`, `/reset`, or a new browser instance). The team is already running; inspect the current repo and UI instead.\n")
 	} else {
@@ -383,10 +368,8 @@ func (p *promptBuilder) Build(slug string) string {
 		if markdownMemory {
 			sb.WriteString(markdownKnowledgeMemoryBlock())
 			sb.WriteString(renderPriorLearningsBlock(p.learningSnapshot(slug)))
-		} else if noNex {
-			sb.WriteString("Nex tools are disabled for this run. Base your work on the team conversation and direct human answers only.\n\n")
 		} else {
-			sb.WriteString("Nex memory: query_context before making assumptions; add_context only for durable conclusions.\n\n")
+			sb.WriteString("There is no external knowledge graph in this run. Base your work on the team conversation and direct human answers only.\n\n")
 		}
 		if len(activePolicies) > 0 {
 			sb.WriteString("== ACTIVE OFFICE POLICIES ==\n")
@@ -442,18 +425,15 @@ func (p *promptBuilder) Build(slug string) string {
 			sb.WriteString("11g. When you commit to opening a pull request, actually open it. Run `gh pr create --title \"<short title>\" --body \"<body>\" --head \"<your-branch>\" --base main` via the bash tool. Paste the returned URL into your channel message so the team can click through. Do not claim a PR is open unless the bash output shows a https://github.com/... URL.\n")
 		}
 		if markdownMemory {
-			if isLibrarianSlug(slug) {
-				sb.WriteString(librarianWikiAuthorityBlock())
-			} else {
-				sb.WriteString("12. Use wuphf_wiki_lookup or team_wiki_search when prior knowledge matters. When something should become canonical team knowledge, tag @librarian (Pam) to capture it into the wiki.\n")
-				sb.WriteString("12b. When another agent or the human explicitly asks you to preserve something for the team, tag @librarian (Pam) in the same turn to capture it into the wiki. @librarian owns the wiki and is the sole writer of canonical knowledge — claim canonical wiki storage only after @librarian has landed it.\n")
-			}
-			sb.WriteString("13. Once you have posted the needed update for the current packet, stop. A later pushed notification will wake you again if more is needed.\n\n")
-		} else if noNex {
-			sb.WriteString("12. Don't fake outside memory. Surface uncertainty in-channel and keep outcomes explicit in-thread.\n")
+			// Wiki contribution is a system skill every agent carries. The
+			// Librarian is retired as a default agent, so there is no sole
+			// writer to tag; knowledge becomes canonical through promotion,
+			// which a human approves.
+			sb.WriteString("12. Use wuphf_wiki_lookup or team_wiki_search when prior knowledge matters. Capture durable knowledge in your notebook as you work.\n")
+			sb.WriteString("12b. When something deserves to become canonical team knowledge, propose promoting it to the wiki. Promotion into the canonical wiki requires human approval — never claim canonical storage for anything a human has not approved.\n")
 			sb.WriteString("13. Once you have posted the needed update for the current packet, stop. A later pushed notification will wake you again if more is needed.\n\n")
 		} else {
-			sb.WriteString("12. Use query_context when prior knowledge matters. Only use add_context for durable conclusions, and don't claim something stored unless add_context actually succeeded.\n")
+			sb.WriteString("12. Don't fake outside memory. Surface uncertainty in-channel and keep outcomes explicit in-thread.\n")
 			sb.WriteString("13. Once you have posted the needed update for the current packet, stop. A later pushed notification will wake you again if more is needed.\n\n")
 		}
 		sb.WriteString("STYLE: Be concise, stay in lane, short lively messages. Use compact markdown for simple chat structure; for dense, visual, or interactive outputs, create an HTML visual artifact instead of leaving the human with a long markdown wall.\n")

@@ -249,23 +249,6 @@ func SaveManifest(manifest Manifest) error {
 // like the CEO.
 const AppBuilderSlug = "app-builder"
 
-func appBuilderMemberSpec() MemberSpec {
-	return MemberSpec{Slug: AppBuilderSlug, Name: "App Builder", Role: "App Builder", System: true}
-}
-
-// ensureAppBuilderMember guarantees the App Builder is present in the roster.
-// Runs inside normalizeManifest so it covers the default, from-scratch, AND
-// blueprint-materialized paths — and back-fills existing offices on next load
-// (legacy-safe migration, the same shape used to roll out the Librarian).
-func ensureAppBuilderMember(members []MemberSpec) []MemberSpec {
-	for _, m := range members {
-		if normalizeSlug(m.Slug) == AppBuilderSlug {
-			return members
-		}
-	}
-	return append(members, appBuilderMemberSpec())
-}
-
 func DefaultManifest() Manifest {
 	now := time.Now().UTC().Format(time.RFC3339)
 	cfg, _ := config.Load()
@@ -290,12 +273,17 @@ func DefaultManifest() Manifest {
 			return normalizeManifest(resolved)
 		}
 	}
+	// The default roster is the Chief of Staff alone. It used to be six: the
+	// lead plus an App Builder, a Librarian, and a planner/executor/reviewer
+	// trio. The founder retired all five as defaults — "that concept should
+	// now be gone with those bots as default. their defintions also shouldn't
+	// exist" — because a new user's first run should show the smallest system
+	// that produces a trustworthy output: one agent that introduces itself,
+	// asks the goal, and plans the first thing. Specialists are created on
+	// demand, not preinstalled. App building and wiki contribution are system
+	// skills every agent carries, not agents of their own.
 	manifest.Members = []MemberSpec{
 		{Slug: "ceo", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
-		appBuilderMemberSpec(),
-		{Slug: "planner", Name: "Planner", Role: "Planner"},
-		{Slug: "executor", Name: "Executor", Role: "Executor"},
-		{Slug: "reviewer", Name: "Reviewer", Role: "Reviewer"},
 	}
 	// #general kill switch, gate 3b of 7. See internal/channel/general.go.
 	if channel.GeneralEnabled() {
@@ -323,12 +311,12 @@ func launchFromScratchRequested() bool {
 }
 
 func fromScratchDefaultManifest(now string) Manifest {
+	// Same principle as the default manifest above: the smallest office that
+	// works is the Chief of Staff alone. The old founder/operator/app-builder/
+	// builder/reviewer set was an invented team of default specialists, which
+	// the founder retired.
 	members := []MemberSpec{
-		{Slug: "founder", Name: "Founder", Role: "Founder", System: true},
-		{Slug: "operator", Name: "Operator", Role: "Operator", System: true},
-		appBuilderMemberSpec(),
-		{Slug: "builder", Name: "Builder", Role: "Builder"},
-		{Slug: "reviewer", Name: "Reviewer", Role: "Reviewer"},
+		{Slug: "ceo", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
 	}
 	channelMembers := make([]string, 0, len(members))
 	for _, member := range members {
@@ -396,7 +384,6 @@ func normalizeManifest(manifest Manifest) Manifest {
 	// Guarantee the built-in App Builder exists in every office — including
 	// blueprint-materialized ones — and back-fill it for existing offices on
 	// load. Appended last so it never displaces the lead or a blueprint roster.
-	members = ensureAppBuilderMember(members)
 	manifest.Members = members
 
 	seenChannels := make(map[string]struct{}, len(manifest.Channels))
