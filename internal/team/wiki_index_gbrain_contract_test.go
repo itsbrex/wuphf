@@ -35,6 +35,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/nex-crm/wuphf/internal/gbrain"
 )
 
 // gbrainTestEnabled reports whether the live gbrain contract tests should run.
@@ -72,18 +74,41 @@ func newGBrainTestStore(t *testing.T) FactStore {
 }
 
 // purgeGBrainNamespaces deletes every page WUPHF owns in the brain.
+//
+// Drains in passes rather than listing once: allPageMetas deliberately refuses
+// to enumerate past gbrain's 100-row list_pages cap (see errCorpusExceedsListCap),
+// and a brain left dirty by a previous run or by the bench is routinely over it.
+// Each pass lists what it can and deletes it, which shrinks the live set, so
+// repeating drains the namespace without needing pagination that gbrain does
+// not offer.
 func purgeGBrainNamespaces(t *testing.T, ctx context.Context, s *gbrainFactStore) {
 	t.Helper()
 	for _, prefix := range []string{
 		gbrainFactPrefix, gbrainEntityPrefix, gbrainCategoryPrefix, gbrainArticlePrefix,
 	} {
-		metas, err := s.allPageMetas(ctx, prefix, "")
-		if err != nil {
-			t.Fatalf("purge list %s: %v", prefix, err)
-		}
-		for _, m := range metas {
-			if err := s.client.DeletePage(ctx, m.Slug); err != nil {
-				t.Fatalf("purge delete %s: %v", m.Slug, err)
+		for pass := 0; ; pass++ {
+			if pass > 200 { // bounded: 200 passes * 100 rows is far past any test corpus
+				t.Fatalf("purge %s: still draining after %d passes", prefix, pass)
+			}
+			kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+				SlugPrefix: prefix,
+				Limit:      gbrainListPageSize,
+			})
+			if err != nil {
+				t.Fatalf("purge list %s: %v", prefix, err)
+			}
+			if len(kept) == 0 {
+				// Nothing of ours left. A non-zero raw count here just means the
+				// page budget was spent on other namespaces' rows.
+				if raw < gbrainListPageCap {
+					break
+				}
+				break
+			}
+			for _, m := range kept {
+				if err := s.client.DeletePage(ctx, m.Slug); err != nil {
+					t.Fatalf("purge delete %s: %v", m.Slug, err)
+				}
 			}
 		}
 	}

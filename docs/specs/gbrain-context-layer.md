@@ -185,6 +185,23 @@ cannot enumerate a corpus above 100 rows. They now return
 list or a wrong hash would corrupt reconcile decisions silently. Fixing this
 needs an `updated_after` cursor (lossy on tied timestamps) or upstream support.
 
+## Known latency defect in this adapter (not gbrain's fault)
+
+`gbrainTextIndex.Search` issues ONE `get_page` per hit to populate
+`SearchHit.Entity`, which renders as the citation title. At the bench's topK=20
+that is 20 sequential MCP round-trips per query, and it dominates the measured
+264 ms p50.
+
+It is fixable without touching gbrain: encode the entity slug into the atom slug
+(`atoms/<entity>__<factID>` rather than `atoms/<factID>`) so `Entity` is
+derivable from the search result with zero extra calls. That is a slug-scheme
+change, so it needs the mapping helpers, the contract tests, and a re-bench.
+
+Deliberately NOT done yet: it would cut latency but cannot touch the ranking
+numbers (nDCG@10 0.425 vs 0.809), and those are what decide whether this backend
+is viable at all. Optimising the latency of a retrieval path that returns worse
+results first would be gold-plating a possible dead end.
+
 ## Not done
 
 - **No benchmark run.** `bench/slice-1/` and the CI gate
