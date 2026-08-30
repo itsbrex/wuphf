@@ -646,10 +646,23 @@ func TestBuildOperationBootstrapPackageSynthesizesWhenNoPackSeedExists(t *testin
 	// Channels must be ZERO: named channels are retired, and generic
 	// synthesis gates on channel.NamedChannelsEnabled. Tasks dropped from 3+
 	// to 2 when synthesis stopped minting the planner/executor/reviewer trio
-	// and their per-specialist tasks; two real tasks owned by the lead is the
-	// synthesized shape now.
-	if len(pkg.Starter.Agents) < 4 || len(pkg.Starter.Channels) != 0 || len(pkg.Starter.Tasks) < 2 {
-		t.Fatalf("expected synthesized starter plan (agents>=4, channels==0, tasks>=2), got %+v", pkg.Starter)
+	// and their per-specialist tasks.
+	//
+	// Agents are asserted by NAME, not by count. The synthesizer pads the
+	// roster with one agent per CONNECTED INTEGRATION, so a count threshold
+	// is a hermeticity bug: "agents >= 4" passed on a dev machine whose
+	// Composio config added gmail/drive/notion/slack and failed on CI, which
+	// has none. The environment-independent invariant is the two agents the
+	// synthesizer always mints.
+	agents := map[string]bool{}
+	for _, a := range pkg.Starter.Agents {
+		agents[a.Slug] = true
+	}
+	if !agents["operator"] || !agents["capability-scout"] {
+		t.Fatalf("expected synthesized starter agents to include operator and capability-scout, got %+v", pkg.Starter.Agents)
+	}
+	if len(pkg.Starter.Channels) != 0 || len(pkg.Starter.Tasks) < 2 {
+		t.Fatalf("expected synthesized starter plan (channels==0, tasks>=2), got %+v", pkg.Starter)
 	}
 	if len(pkg.Connections) != len(pkg.Blueprint.Connections) {
 		t.Fatalf("expected synthesized connection cards to mirror the synthesized blueprint, got cards=%d blueprint=%d", len(pkg.Connections), len(pkg.Blueprint.Connections))
