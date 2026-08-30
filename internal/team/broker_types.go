@@ -173,13 +173,20 @@ type humanInterview struct {
 	// approve / approve_with_note the broker spawns a task owned by the App
 	// Builder agent to build (or improve) the app. Nil for every other request.
 	AppProposal *appProposalSpec `json:"app_proposal,omitempty"`
-	DueAt       string           `json:"due_at,omitempty"`
-	FollowUpAt  string           `json:"follow_up_at,omitempty"`
-	ReminderAt  string           `json:"reminder_at,omitempty"`
-	RecheckAt   string           `json:"recheck_at,omitempty"`
-	CreatedAt   string           `json:"created_at"`
-	UpdatedAt   string           `json:"updated_at,omitempty"`
-	Answered    *interviewAnswer `json:"answered,omitempty"`
+	// KnowledgePromotion marks this approval request as an agent asking a human
+	// to promote one of its knowledge pages into the shared wiki. It carries the
+	// IMMUTABLE snapshot of the page the human is shown, and on approve the
+	// broker promotes exactly those bytes. Set ONLY by
+	// requestKnowledgePromotion (broker_agent_knowledge.go) — it is deliberately
+	// not part of the POST /requests body, so an agent cannot forge one.
+	KnowledgePromotion *knowledgePromotionSpec `json:"knowledge_promotion,omitempty"`
+	DueAt              string                  `json:"due_at,omitempty"`
+	FollowUpAt         string                  `json:"follow_up_at,omitempty"`
+	ReminderAt         string                  `json:"reminder_at,omitempty"`
+	RecheckAt          string                  `json:"recheck_at,omitempty"`
+	CreatedAt          string                  `json:"created_at"`
+	UpdatedAt          string                  `json:"updated_at,omitempty"`
+	Answered           *interviewAnswer        `json:"answered,omitempty"`
 }
 
 type humanInvite struct {

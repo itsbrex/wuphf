@@ -1,17 +1,23 @@
 /**
- * AgentSubspace — tabbed per-agent view with 6 tabs:
- *   Chat · Tasks · Skills · Policies · Live Stream · Config
+ * AgentSubspace — tabbed per-agent view with 7 tabs:
+ *   Chat · Tasks · Skills · Knowledge · Policies · Live Stream · Config
  *
  * The shell header (avatar + editable name + role + status + current-task chip
  * + "Teach a workflow") is persistent across all tabs. Tab content is
  * mounted/unmounted on switch; the active tab uses stable keys to prevent
  * unnecessary remounts.
  *
- * "Teach a workflow" lives in the header rather than in a seventh tab because
- * it is an action, not a section: it opens a screenshare, runs once, and hands
- * the result to the Chat tab. Being in the header also makes it reachable from
+ * "Teach a workflow" lives in the header rather than in its own tab because it
+ * is an action, not a section: it opens a screenshare, runs once, and hands the
+ * result to the Chat tab. Being in the header also makes it reachable from
  * every tab and, since this header is the one per-agent surface, from every
  * agent without exception.
+ *
+ * Knowledge IS a section, so it is a tab. It holds what this agent knows — the
+ * pages in its own notebook — and the gate that promotes one of them into the
+ * shared team wiki. It sits next to Skills because both answer "what does this
+ * agent bring", and it is per-agent for the same reason the other tabs are:
+ * knowledge belongs to whoever learned it.
  */
 
 import { useCallback, useState } from "react";
@@ -21,6 +27,7 @@ import type { OfficeMember } from "../../api/client";
 import { useDefaultHarness } from "../../hooks/useConfig";
 import { resolveHarness } from "../../lib/harness";
 import { router } from "../../lib/router";
+import { AgentKnowledgePanel } from "../knowledge/AgentKnowledgePanel";
 import { HarnessBadge } from "../ui/HarnessBadge";
 import { PixelAvatar } from "../ui/PixelAvatar";
 import { EditableName } from "./AgentProfilePanel";
@@ -38,6 +45,7 @@ export type AgentTab =
   | "chat"
   | "tasks"
   | "skills"
+  | "knowledge"
   | "policies"
   | "live-stream"
   | "config";
@@ -46,6 +54,7 @@ export const AGENT_TABS: Array<{ id: AgentTab; label: string }> = [
   { id: "chat", label: "Chat" },
   { id: "tasks", label: "Tasks" },
   { id: "skills", label: "Skills" },
+  { id: "knowledge", label: "Knowledge" },
   { id: "policies", label: "Policies" },
   { id: "live-stream", label: "Live Stream" },
   { id: "config", label: "Config" },
@@ -72,6 +81,11 @@ const TAB_ALIASES: Record<string, AgentTab> = {
   task: "tasks",
   skill: "skills",
   policy: "policies",
+  // Knowledge used to be an app tab and is now per-agent, so the words people
+  // reach for from the old surface (and from the wiki) land on it.
+  wiki: "knowledge",
+  notes: "knowledge",
+  notebook: "knowledge",
 };
 
 function resolveTab(raw: string): AgentTab {
@@ -233,6 +247,20 @@ function TabContent({ agent, tab }: { agent: OfficeMember; tab: AgentTab }) {
           className="agent-subspace-panel"
         >
           <SkillsTab key={`skills-${agent.slug}`} agentSlug={agent.slug} />
+        </div>
+      );
+    case "knowledge":
+      return (
+        <div
+          role="tabpanel"
+          id="agent-tabpanel-knowledge"
+          aria-labelledby="agent-tab-knowledge"
+          className="agent-subspace-panel"
+        >
+          <AgentKnowledgePanel
+            key={`knowledge-${agent.slug}`}
+            agentSlug={agent.slug}
+          />
         </div>
       );
     case "policies":

@@ -83,25 +83,18 @@ func loadLegacyKnowledgePages(root string) []appKnowledgePage {
 		return nil
 	})
 
-	// Notebook notes: agents/<agent>/notebook/*.md — each old office agent's
-	// draft notes, kept under that agent's name.
+	// Notebook notes: agents/<agent>/notebook/*.md — each agent's draft notes,
+	// kept under that agent's name. This is the SAME tree the per-agent
+	// Knowledge surface reads (broker_agent_knowledge.go); the shared parser
+	// lives in loadAgentNotebookPages so both callers see identical pages.
 	agentDirs, _ := os.ReadDir(filepath.Join(root, "agents"))
 	for _, agentDir := range agentDirs {
 		if !agentDir.IsDir() || strings.HasPrefix(agentDir.Name(), ".") {
 			continue
 		}
-		agent := agentDir.Name()
-		notes, _ := os.ReadDir(filepath.Join(root, "agents", agent, "notebook"))
-		for _, note := range notes {
-			if note.IsDir() {
-				continue
-			}
-			path := filepath.Join(root, "agents", agent, "notebook", note.Name())
-			id := "legacy-notebook-" + slugifyKnowledgeID(agent+"-"+note.Name())
-			if page, ok := legacyPageFromFile(path, id, "Notebook · "+agent); ok {
-				byRel["agents/"+agent+"/notebook/"+note.Name()] = len(pages)
-				pages = append(pages, page)
-			}
+		for _, page := range loadAgentNotebookPages(root, agentDir.Name()) {
+			byRel[page.SourcePath] = len(pages)
+			pages = append(pages, page)
 		}
 	}
 

@@ -653,7 +653,10 @@ func (b *Broker) StartOnPort(port int) error {
 	mux.HandleFunc("/focus-mode", b.requireAuth(b.handleFocusMode))
 	mux.HandleFunc("/messages", b.requireAuth(b.handleMessages))
 	mux.HandleFunc("/reactions", b.requireAuth(b.handleReactions))
-	mux.HandleFunc("/notifications/nex", b.requireAuth(b.handleNexNotifications))
+	mux.HandleFunc("/notifications/automation", b.requireAuth(b.handleAutomationNotifications))
+	// Legacy path for the same handler. Anything already pointed at the old
+	// route keeps working rather than starting to 404 silently.
+	mux.HandleFunc("/notifications/nex", b.requireAuth(b.handleAutomationNotifications))
 	mux.HandleFunc("/realtime/session", b.requireAuth(b.handleRealtimeSession))
 	mux.HandleFunc("/execute/browser", b.requireAuth(b.handleExecuteBrowser))
 	mux.HandleFunc("/execute/replay", b.requireAuth(b.handleExecuteReplay))
@@ -792,7 +795,6 @@ func (b *Broker) StartOnPort(port int) error {
 	mux.HandleFunc("/knowledge/install", b.requireAuth(b.handleKnowledgeInstall))
 	mux.HandleFunc("/status/local-providers", b.requireAuth(b.handleLocalProvidersStatus))
 	mux.HandleFunc("/image-providers", b.requireAuth(b.handleImageProviders))
-	mux.HandleFunc("/nex/register", b.requireAuth(b.handleNexRegister))
 	mux.HandleFunc("/v1/logs", b.requireAuth(b.handleOTLPLogs))
 	mux.HandleFunc("/events", b.handleEvents)
 	mux.HandleFunc("/agent-stream/", b.requireAuth(b.handleAgentStream))

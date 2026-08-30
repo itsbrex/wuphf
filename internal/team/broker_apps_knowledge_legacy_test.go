@@ -116,9 +116,16 @@ func TestLoadLegacyKnowledgePages(t *testing.T) {
 		t.Fatalf("decision page = %+v ok=%v (H1 must become the title)", decision, ok)
 	}
 
-	note, ok := byID["legacy-notebook-"+slugifyKnowledgeID("rag-engineer-papers-survey.md")]
+	// Notebook notes now share their id scheme with the per-agent Knowledge
+	// surface (loadAgentNotebookPages), so the "legacy-" qualifier is gone: the
+	// same note is the same page whichever surface reads it.
+	note, ok := byID["notebook-"+slugifyKnowledgeID("rag-engineer-papers-survey.md")]
 	if !ok || note.Category != "Notebook · rag-engineer" || note.Title != "RAG papers survey" {
 		t.Fatalf("notebook page = %+v ok=%v", note, ok)
+	}
+	if note.Agent != "rag-engineer" || note.SourcePath != "agents/rag-engineer/notebook/papers-survey.md" {
+		t.Fatalf("notebook page provenance = agent %q source %q, want the owning agent and its note path",
+			note.Agent, note.SourcePath)
 	}
 
 	// The visual artifact attaches to BOTH owner pages its sidecar names —

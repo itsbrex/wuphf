@@ -122,6 +122,16 @@ vi.mock("../apps/skills/PixelSkillCard", () => ({
   ),
 }));
 
+// The Knowledge panel does its own fetching and promotion; its behavior is
+// covered in AgentKnowledgePanel.test.tsx. Here we only care that the tab is
+// registered and hands the panel the right agent, so mock it like the other
+// heavy children and assert on the slug it receives.
+vi.mock("../knowledge/AgentKnowledgePanel", () => ({
+  AgentKnowledgePanel: ({ agentSlug }: { agentSlug: string }) => (
+    <div data-testid="agent-knowledge-panel" data-agent={agentSlug} />
+  ),
+}));
+
 import type { OfficeMember } from "../../api/client";
 import { AGENT_TABS, AgentSubspace } from "./AgentSubspace";
 
@@ -156,16 +166,18 @@ describe("<AgentSubspace>", () => {
     getLocalProvidersStatusMock.mockResolvedValue([]);
   });
 
-  it("renders all 6 tabs in order", () => {
+  it("renders all 7 tabs in order", () => {
     render(wrap(<AgentSubspace agent={baseAgent} tab="chat" />));
 
     const tabs = screen.getAllByRole("tab");
     expect(tabs).toHaveLength(AGENT_TABS.length);
     const labels = tabs.map((t) => t.textContent?.trim());
+    // Knowledge sits next to Skills: both answer "what does this agent bring".
     expect(labels).toEqual([
       "Chat",
       "Tasks",
       "Skills",
+      "Knowledge",
       "Policies",
       "Live Stream",
       "Config",
@@ -258,6 +270,34 @@ describe("<AgentSubspace>", () => {
   it("renders Skills tab content", () => {
     render(wrap(<AgentSubspace agent={baseAgent} tab="skills" />));
     expect(screen.getByTestId("skills-tab")).toBeInTheDocument();
+  });
+
+  // Knowledge is per-agent: the panel is handed THIS agent's slug, so the tab
+  // can only ever show what this agent knows.
+  it("renders Knowledge tab content scoped to the agent", () => {
+    render(wrap(<AgentSubspace agent={baseAgent} tab="knowledge" />));
+
+    const panel = screen.getByTestId("agent-knowledge-panel");
+    expect(panel).toBeInTheDocument();
+    expect(panel).toHaveAttribute("data-agent", "planner");
+    expect(screen.getByRole("tab", { name: "Knowledge" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it.each([
+    "wiki",
+    "notes",
+    "notebook",
+  ])("resolves the /%s alias to the Knowledge tab", (alias) => {
+    render(wrap(<AgentSubspace agent={baseAgent} tab={alias} />));
+
+    expect(screen.getByRole("tab", { name: "Knowledge" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByTestId("agent-knowledge-panel")).toBeInTheDocument();
   });
 
   it("renders Policies tab content", () => {

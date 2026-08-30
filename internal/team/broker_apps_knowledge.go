@@ -92,6 +92,15 @@ type appKnowledgePage struct {
 	// their legacy pages (broker_apps_knowledge_legacy.go). URL is a broker
 	// route the FE fetches with auth and renders sandboxed.
 	Artifacts []appKnowledgeArtifact `json:"artifacts,omitempty"`
+	// Agent is the slug of the agent that knows this page. Set for agent-scoped
+	// knowledge (broker_agent_knowledge.go); empty for synthesized app pages.
+	Agent string `json:"agent,omitempty"`
+	// SourcePath is the repo-relative note this page was read from
+	// (agents/<slug>/notebook/<file>.md). It is what a promotion addresses.
+	SourcePath string `json:"sourcePath,omitempty"`
+	// Promotion reports this page's standing with the shared wiki: private to
+	// the agent, waiting on a human, or already promoted.
+	Promotion *knowledgePromotionStatus `json:"promotion,omitempty"`
 }
 
 // appKnowledgeArtifact is one attached file-ish view of a knowledge page.
