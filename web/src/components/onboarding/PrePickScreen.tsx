@@ -111,7 +111,7 @@ function RuntimeCard({
 }: RuntimeCardProps) {
   const { spec, detected, available, signedIn, signInCommand } = state;
   const statusLabel = isSubmitting
-    ? "Starting your office…"
+    ? "Starting your team…"
     : cardStatusLabel({
         prereqsLoaded,
         prereqsFailed,
@@ -646,7 +646,7 @@ export function PrePickScreen({ onComplete }: PrePickScreenProps) {
       onComplete();
     } catch (err: unknown) {
       const msg =
-        err instanceof Error ? err.message : "Failed to start the office";
+        err instanceof Error ? err.message : "Failed to start the team";
       setSubmitError(msg);
       setSubmitting(null);
     }

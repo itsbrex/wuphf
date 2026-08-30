@@ -889,7 +889,7 @@ export default function RootRoute() {
   // wizard steps), so we pass `enabled={false}` to suppress the post-office
   // auto-open. The replay path is independent of `enabled` in useOfficeTour:
   // the `requestShowOfficeTour()` window-event listener stays bound, so Help →
-  // "Replay the office tour" still overlays the tour on the live office.
+  // "Replay the team tour" still overlays the tour on the live team.
   const officeTour = useOfficeTour(false);
 
   // Finish handoff (spec section 4): drop the user mid-action in the CEO DM
@@ -1027,7 +1027,7 @@ export default function RootRoute() {
   } else if (!onboardingComplete) {
     if (inCeoOnboarding || bootPhase) {
       // Visual stepped wizard — full-screen, NOT inside the office Shell. The
-      // user is not "in the office" yet. The wizard educates with a persistent
+      // user is not "on the team" yet. The wizard educates with a persistent
       // mock office and creates the team (pick a blueprint, brief the first
       // agent, write the first issue), then POSTs /onboarding/complete to seed
       // the office and flip onboarded=true. Its onComplete fires after the seed
@@ -1069,7 +1069,7 @@ export default function RootRoute() {
             reads it via useCurrentRoute. */}
         <Outlet />
         {/* Replay only: an already-onboarded user reopened the tour from Help,
-            so it overlays the live office at --z-modal. First-run shows the
+            so it overlays the live team at --z-modal. First-run shows the
             tour as the surface above (no Shell behind), per the converged arc. */}
         {officeTour.open && officeTour.replay ? (
           <OfficeTour

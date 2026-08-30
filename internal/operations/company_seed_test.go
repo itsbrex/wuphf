@@ -460,7 +460,7 @@ func TestSeedGettingStarted(t *testing.T) {
 			if readErr != nil {
 				t.Fatalf("read index.md: %v", readErr)
 			}
-			for _, want := range []string{"title: How your office works", "# How your office works"} {
+			for _, want := range []string{"title: How your team works", "# How your team works"} {
 				if !strings.Contains(string(indexBody), want) {
 					t.Errorf("index.md missing %q", want)
 				}

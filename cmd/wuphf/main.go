@@ -259,7 +259,7 @@ func main() {
 	helpAll := flag.Bool("help-all", false, "Show all flags including internal ones")
 
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "gawkbot v%s — the terminal office Ryan Howard always wanted.\n\n", buildinfo.Current().Version)
+		fmt.Fprintf(os.Stderr, "gawkbot v%s. Everyone is already staring.\n\n", buildinfo.Current().Version)
 		fmt.Fprintf(os.Stderr, "Usage:\n")
 		fmt.Fprintf(os.Stderr, "  %s              Launch multi-agent team (web UI on :%d)\n", appName, *webPort)
 		fmt.Fprintf(os.Stderr, "  %s --legacy-tui  Launch with legacy tmux TUI instead\n", appName)
@@ -417,7 +417,7 @@ func main() {
 			return
 		case "shred":
 			if !confirmDestructive(args[1:], "shred", shredSummary) {
-				fmt.Println("Cancelled. The office lives to serve another day.")
+				fmt.Println("Cancelled. The team lives to serve another day.")
 				return
 			}
 			if err := stopRunningSession(selectedBlueprint); err != nil {
@@ -638,7 +638,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 		// this env var directly; the flag is deliberately local-only.
 		_ = os.Setenv("WUPHF_UNSAFE", "1")
 		fmt.Fprintf(os.Stderr, "\n\u26a0\ufe0f  UNSAFE MODE: All agents have unrestricted permissions.\n")
-		fmt.Fprintf(os.Stderr, "   Prison Mike would be proud. Use for local dev only.\n\n")
+		fmt.Fprintf(os.Stderr, "   Use for local dev only.\n\n")
 	}
 
 	if err := l.Preflight(); err != nil {
@@ -668,7 +668,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 		return
 	}
 
-	fmt.Println("Team launched. Welcome to The gawkbot Office. Attaching...")
+	fmt.Println("Team launched. Welcome to gawkbot. Attaching...")
 	fmt.Println()
 	fmt.Println("  Ctrl+B arrow     switch between panes")
 	fmt.Println("  Ctrl+B { or }    swap panes left/right")
@@ -680,7 +680,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 	if err := l.Attach(); err != nil {
 		// Attach failed (not a terminal, or tmux error).
 		// Keep the process alive to maintain the broker.
-		fmt.Fprintf(os.Stderr, "Could not attach to tmux (not a terminal?). The office is running without you — like when Michael went to New York.\n")
+		fmt.Fprintf(os.Stderr, "Could not attach to tmux (not a terminal?). The team is running without you — like when Michael went to New York.\n")
 		fmt.Fprintf(os.Stderr, "Team is running in background. Attach manually:\n")
 		fmt.Fprintf(os.Stderr, "  tmux -L gawkbot attach -t wuphf-team\n")
 		fmt.Fprintf(os.Stderr, "Broker running on %s\n", l.BrokerBaseURL())
@@ -758,7 +758,7 @@ func runWeb(args []string, packSlug string, unsafe bool, webPort int, opusCEO bo
 		tunnelController.SetBroker(b)
 		b.SetWebTunnelController(tunnelController.start, tunnelController.status, tunnelController.stop)
 	})
-	fmt.Printf("Launching %s web view... the browser is the office now.\n", l.PackName())
+	fmt.Printf("Launching %s web view... the browser is the team now.\n", l.PackName())
 	if err := l.LaunchWeb(webPort); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

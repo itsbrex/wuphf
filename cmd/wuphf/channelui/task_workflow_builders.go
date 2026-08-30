@@ -134,7 +134,7 @@ func BuildOrphanTaskLogRuntimeArtifact(artifact TaskLogArtifact) team.RuntimeArt
 		Path:          strings.TrimSpace(artifact.LogPath),
 		Worktree:      strings.TrimSpace(artifact.WorktreePath),
 		PartialOutput: strings.TrimSpace(artifact.Summary),
-		ResumeHint:    "Inspect the retained log on disk or reopen the task from the office history.",
+		ResumeHint:    "Inspect the retained log on disk or reopen the task from the team history.",
 		ReviewHint:    reviewHint,
 	}
 }

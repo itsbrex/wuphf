@@ -341,7 +341,7 @@ func (b *Broker) acceptHumanInvite(token, displayName, device string) (string, h
 			From:      humanShareEventFrom,
 			Channel:   "general",
 			Kind:      "system",
-			Content:   fmt.Sprintf("%s joined the office.", displayName),
+			Content:   fmt.Sprintf("%s joined the team.", displayName),
 			Timestamp: now.Format(time.RFC3339),
 		})
 		if err := b.saveLocked(); err != nil {

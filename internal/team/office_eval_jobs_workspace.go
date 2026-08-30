@@ -39,7 +39,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	const job = "workspace-isolation"
 
 	// Pin the office runtime home to this job's scratch dir — the same env
-	// knob the live office launches with (WUPHF_RUNTIME_HOME) — so agent
+	// knob the live team launches with (WUPHF_RUNTIME_HOME) — so agent
 	// scratch dirs land in the fixture, never the developer's real home.
 	// Workers are stopped before the env is restored (defers run LIFO).
 	priorHome, hadHome := os.LookupEnv("WUPHF_RUNTIME_HOME")

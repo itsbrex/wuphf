@@ -471,7 +471,7 @@ func (w *watchdogScheduler) recordLedger(channel, kind, targetID, owner, summary
 		signalIDs = append(signalIDs, record.ID)
 	}
 	decisionKind := "remind_owner"
-	decisionReason := "The watchdog detected owned work with no visible movement, so the office should remind the current owner."
+	decisionReason := "The watchdog detected owned work with no visible movement, so the team should remind the current owner."
 	decisionOwner := strings.TrimSpace(owner)
 	requiresHuman := false
 	blocking := false
@@ -482,7 +482,7 @@ func (w *watchdogScheduler) recordLedger(channel, kind, targetID, owner, summary
 	}
 	if kind == "request_waiting" {
 		decisionKind = "ask_human"
-		decisionReason = "The watchdog detected a pending human decision that is still blocking the office."
+		decisionReason = "The watchdog detected a pending human decision that is still blocking the team."
 		decisionOwner = "ceo"
 		requiresHuman = true
 		blocking = true

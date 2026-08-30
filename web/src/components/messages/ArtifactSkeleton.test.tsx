@@ -287,7 +287,7 @@ describe("shouldShowArtifactSkeleton — author guards", () => {
     ).toBe(false);
   });
 
-  it("does not show when the authoring agent is missing from the office roster", () => {
+  it("does not show when the authoring agent is missing from the team roster", () => {
     expect(
       shouldShowArtifactSkeleton({
         message: buildMessage(),

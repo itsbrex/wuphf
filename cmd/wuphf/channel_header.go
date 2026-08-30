@@ -143,7 +143,7 @@ func (m channelModel) currentHeaderMeta() string {
 				external++
 			}
 		}
-		return fmt.Sprintf("  Signals, Decisions, External Actions, and Watchdogs driving the office · %d signals · %d decisions · %d external · %d active watchdogs · %d high signal", len(m.signals), len(m.decisions), external, activeWatchdogs, highSignal)
+		return fmt.Sprintf("  Signals, Decisions, External Actions, and Watchdogs driving the team · %d signals · %d decisions · %d external · %d active watchdogs · %d high signal", len(m.signals), len(m.decisions), external, activeWatchdogs, highSignal)
 	case channelui.OfficeAppCalendar:
 		events := channelui.FilterCalendarEvents(channelui.CollectCalendarEvents(m.scheduler, m.tasks, m.requests, m.activeChannel, m.members), m.calendarRange, m.calendarFilter)
 		dueSoon := 0

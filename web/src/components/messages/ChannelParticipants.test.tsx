@@ -172,7 +172,7 @@ describe("<ChannelParticipants>", () => {
     });
   });
 
-  it("removes a channel participant without deleting the office member", async () => {
+  it("removes a channel participant without deleting the team member", async () => {
     mocks.useChannelMembers.mockReturnValue({
       data: [member({ slug: "ops", name: "Ops" })],
       isLoading: false,

@@ -31,7 +31,7 @@ const blankSlateStarterTemplateID = "__blank_slate__"
 func DefaultTemplates() []TaskTemplate {
 	return []TaskTemplate{
 		{ID: "landing", Title: "Draft the landing page", Description: "Hero, value props, one clear CTA. Not the WUPHF.com approach.", OwnerSlug: "executor"},
-		{ID: "repo", Title: "Set up repo structure", Description: "Folders, README, CI scaffold. Dwight would document everything.", OwnerSlug: "executor"},
+		{ID: "repo", Title: "Set up repo structure", Description: "Folders, README, CI scaffold. Worth document everything.", OwnerSlug: "executor"},
 		{ID: "spec", Title: "Write the product spec", Description: "What we're building, why, and what done looks like. Michael would skip this step.", OwnerSlug: "planner"},
 		{ID: "readme", Title: "Write the README", Description: "Installation, usage, one example. Short enough that someone actually reads it.", OwnerSlug: "planner"},
 		{ID: "audit", Title: "Audit the competition", Description: "What they do, what they miss, where we win. No memos. Just findings.", OwnerSlug: "ceo"},
@@ -54,7 +54,7 @@ func BlankSlateTemplates() []TaskTemplate {
 		{ID: "objective", Title: "Choose the first real business win", Description: "Turn the directive into one concrete outcome for a real customer, audience, or internal operation this week.", OwnerSlug: "founder"},
 		{ID: "offer", Title: "Draft the first sellable offer", Description: "Name the customer, the promise, the scope, and the next decision needed to move the business forward.", OwnerSlug: "operator"},
 		{ID: "delivery", Title: "Build the first delivery loop", Description: "Create the minimum workflow, handoffs, approvals, and artifacts needed to deliver the offer end to end.", OwnerSlug: "builder"},
-		{ID: "instrumentation", Title: "Create the operating record", Description: "Set up the place where client state, approvals, and delivery evidence will live so the office can keep operating.", OwnerSlug: "founder"},
+		{ID: "instrumentation", Title: "Create the operating record", Description: "Set up the place where client state, approvals, and delivery evidence will live so the team can keep operating.", OwnerSlug: "founder"},
 		{ID: "go-live", Title: "Create missing capabilities and take the first live step", Description: "If agents, channels, skills, or tooling are missing, create them, then execute the smallest safe real action in the business workflow.", OwnerSlug: "founder"},
 	}
 }

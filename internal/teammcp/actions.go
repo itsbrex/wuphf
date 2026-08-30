@@ -630,7 +630,7 @@ func registerActionTools(server *mcp.Server) {
 	), handleTeamActionWorkflowExecute)
 	mcp.AddTool(server, officeWriteTool(
 		"team_action_workflow_schedule",
-		"Schedule a saved external workflow on a WUPHF-native cadence so it shows up in Calendar and runs through the office scheduler. Set run_now when the human also asked for an immediate first run.",
+		"Schedule a saved external workflow on a WUPHF-native cadence so it shows up in Calendar and runs through the team scheduler. Set run_now when the human also asked for an immediate first run.",
 	), handleTeamActionWorkflowSchedule)
 	mcp.AddTool(server, readOnlyTool(
 		"team_action_relays",
@@ -650,7 +650,7 @@ func registerActionTools(server *mcp.Server) {
 	), handleTeamActionRelayActivate)
 	mcp.AddTool(server, readOnlyTool(
 		"team_action_relay_events",
-		"List recent One relay events so the office can inspect or poll them.",
+		"List recent One relay events so the team can inspect or poll them.",
 	), handleTeamActionRelayEvents)
 	mcp.AddTool(server, readOnlyTool(
 		"team_action_relay_event",

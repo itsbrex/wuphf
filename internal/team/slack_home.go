@@ -180,7 +180,7 @@ func buildSlackHomeBlocks(b *Broker) []slack.Block {
 	// snippet from the body), never the raw index markdown (Slack cannot
 	// resolve its relative links).
 	header("Wiki")
-	contextLine("The office brain — agents read and write these articles as they work.")
+	contextLine("The team brain — agents read and write these articles as they work.")
 	var entries []slackWikiIndexEntry
 	var repo *Repo
 	if worker := b.WikiWorker(); worker != nil {

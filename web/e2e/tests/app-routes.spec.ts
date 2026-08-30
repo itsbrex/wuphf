@@ -9,7 +9,7 @@ import {
 // The office app panels (Graph, Policies, Skills, Dashboard, ...) are back.
 //
 // This spec used to assert the exact opposite, and said so plainly: it existed
-// "so a regression that resurrects the office panels (or breaks their
+// "so a regression that resurrects the team panels (or breaks their
 // redirect) fails loudly". The panels were resurrected deliberately, so the
 // test fired exactly as designed — on a decision that had been reversed.
 // Mounting is the contract now; a redirect to a retired surface would be the

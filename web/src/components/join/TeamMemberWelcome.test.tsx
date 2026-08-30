@@ -54,7 +54,7 @@ describe("TeamMemberWelcome", () => {
     ).toBeInTheDocument();
   });
 
-  it("uses the host display name in the office label when available", async () => {
+  it("uses the host display name on the team label when available", async () => {
     getHumanMeMock.mockResolvedValue({
       human: {
         role: "member",

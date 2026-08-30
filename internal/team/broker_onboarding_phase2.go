@@ -331,7 +331,7 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 	if generalChannelEnabled() {
 		companyName := strings.TrimSpace(s.FormAnswers.CompanyName)
 		if companyName == "" {
-			companyName = "your office"
+			companyName = "your team"
 		}
 		generalDesc := fmt.Sprintf("Primary coordination channel for %s.", companyName)
 		seeded = append(seeded, teamChannel{
@@ -357,6 +357,9 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 	// Seed the "Backup & Migration" system task that owns #general so the
 	// ~141 fallback call sites that post to "general" keep working.
 	b.ensureBackupMigrationTaskLocked()
+	// The lead needs a DM, or this seed produces a workspace with one member
+	// and nowhere to talk to them once #general is retired.
+	b.ensureAgentDMsLocked()
 
 	// Signal subscribers that the office roster was replaced.
 	b.publishOfficeChangeLocked(officeChangeEvent{Kind: "office_reseeded"})

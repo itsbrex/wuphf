@@ -100,7 +100,7 @@ func formatSlackInterviewBlocks(req humanInterview) []slack.Block {
 	if req.ConnectionUnverified {
 		blocks = append(blocks, slack.NewContextBlock("",
 			slack.NewTextBlockObject(slack.MarkdownType,
-				"⚠️ Connection unverified — the office could not confirm this integration is connected.", false, false)))
+				"⚠️ Connection unverified — the team could not confirm this integration is connected.", false, false)))
 	}
 
 	if buttons := slackInterviewButtons(req); len(buttons) > 0 {

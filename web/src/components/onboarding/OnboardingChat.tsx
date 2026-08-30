@@ -1,7 +1,7 @@
 /**
  * OnboardingChat — full-screen CEO wizard.
  *
- * The user is NOT yet "in the office": until the broker flips
+ * The user is NOT yet "on the team": until the broker flips
  * `onboarded=true`, RootRoute mounts this component instead of the office
  * Shell. It masquerades as a chat with the CEO, but the only valid input
  * zone is the chip / form-field card surfaced by InterviewBar (which falls
@@ -11,7 +11,7 @@
  *
  * Lifts from the onboarding spec (docs/specs/onboarding-into-office.md):
  *   "Onboarding is a wizard mocked as a Chief of Staff chat. The user is not really in
- *    the office yet until onboarding finishes."
+ *    the team yet until onboarding finishes."
  *
  * Component shape mirrors DMView's chat region but drops the workbench
  * (`AgentWorkbenchPane`) and the free-form `Composer`. We keep the same
@@ -52,11 +52,11 @@ const PHASE_LABELS: Record<string, string> = {
   scan: "Scanning your site",
   blueprint: "Pick a starter",
   team: "Confirm the team",
-  seed: "Setting up your office",
+  seed: "Setting up your team",
   bridge: "First task",
   draft: "Drafting your first issue",
   approve: "Review and approve",
-  kickoff: "Starting your office",
+  kickoff: "Starting your team",
   complete: "Done",
 };
 

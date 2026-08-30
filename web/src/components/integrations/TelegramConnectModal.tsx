@@ -416,7 +416,7 @@ export function TelegramConnectModal({
               {botName ? `Bot: ${botName}. ` : ""}
               {groups.length === 0
                 ? "No groups found yet. Send a message in the group while the bot is a member, then retry — or enter the chat ID manually."
-                : "Choose a chat to bridge into the office."}
+                : "Choose a chat to bridge onto the team."}
             </p>
 
             {groups.length > 0 && (

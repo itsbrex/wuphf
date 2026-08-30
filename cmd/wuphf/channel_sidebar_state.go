@@ -222,7 +222,7 @@ func (m *channelModel) selectSidebarItem(item sidebarItem) tea.Cmd {
 			m.notice = "Viewing Nex and office insights."
 			return pollOfficeLedger()
 		case channelui.OfficeAppCalendar:
-			m.notice = "Viewing the office calendar."
+			m.notice = "Viewing the team calendar."
 			return pollOfficeLedger()
 		case channelui.OfficeAppArtifacts:
 			m.notice = "Viewing recent execution artifacts."

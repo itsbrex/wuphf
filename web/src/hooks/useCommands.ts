@@ -39,7 +39,7 @@ export const FALLBACK_SLASH_COMMANDS: SlashCommand[] = [
   { name: "/remember", desc: "Store a fact in memory", icon: "🧠" },
   { name: "/help", desc: "Show all commands + keys", icon: "❓" },
   { name: "/clear", desc: "Clear messages", icon: "🧹" },
-  { name: "/reset", desc: "Reset the office", icon: "🔄" },
+  { name: "/reset", desc: "Reset the team", icon: "🔄" },
   { name: "/tasks", desc: "Open task board", icon: "📋" },
   { name: "/requests", desc: "Open requests", icon: "🔔" },
   { name: "/recover", desc: "Access & Health view", icon: "🔁" },

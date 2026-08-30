@@ -1,6 +1,9 @@
 package operations
 
-import "testing"
+import (
+	"github.com/nex-crm/wuphf/internal/channel"
+	"testing"
+)
 
 func TestSynthesizeBlueprintDerivesGenericPlanFromDirectiveProfileAndCapabilities(t *testing.T) {
 	blueprint := SynthesizeBlueprint(SynthesisInput{
@@ -94,8 +97,16 @@ func TestSynthesizeBlueprintFallsBackToBlankOperationsShape(t *testing.T) {
 	if blueprint.Starter.LeadSlug != "operator" {
 		t.Fatalf("unexpected fallback lead slug: %+v", blueprint.Starter)
 	}
-	if len(blueprint.Starter.Channels) < 4 {
+	// Three, not four. #general used to be prepended to every blueprint's
+	// channel set; with the lobby retired a blueprint declares only its own
+	// working lanes (planning, execution, review).
+	if len(blueprint.Starter.Channels) < 3 {
 		t.Fatalf("expected baseline channels in fallback blueprint, got %+v", blueprint.Starter.Channels)
+	}
+	for _, ch := range blueprint.Starter.Channels {
+		if ch.Slug == "general" && !channel.GeneralEnabled() {
+			t.Fatalf("#general is retired but the fallback blueprint declares it: %+v", blueprint.Starter.Channels)
+		}
 	}
 	if len(blueprint.Stages) != 5 {
 		t.Fatalf("expected 5 generic stages in fallback blueprint, got %+v", blueprint.Stages)

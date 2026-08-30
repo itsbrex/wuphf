@@ -247,7 +247,7 @@ export function useOnboardingWizard(
   );
 
   // Shared seed sequence for both the primary Finish (with a first issue) and
-  // the "skip and explore the office first" path (skipTask = true: complete
+  // the "skip and explore the team first" path (skipTask = true: complete
   // with no task, so the office opens empty instead of with a queued issue).
   const runFinish = useCallback(
     (skipTask: boolean) => {
@@ -346,7 +346,7 @@ export function useOnboardingWizard(
 
       run().catch((err: unknown) => {
         const message =
-          err instanceof Error ? err.message : "Failed to set up your office";
+          err instanceof Error ? err.message : "Failed to set up your team";
         setError(message);
         setSeeding(false);
       });

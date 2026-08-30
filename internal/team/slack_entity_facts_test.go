@@ -93,9 +93,9 @@ func TestSlackEntityFactSyncBuildsPeopleArticles(t *testing.T) {
 		}
 	}
 
-	// Office agent: role + runtime.
+	// Team agent: role + runtime.
 	ceo := readEntityArticle(t, repo, "ceo")
-	for _, want := range []string{"office agent", "Coordinator", "codex runtime"} {
+	for _, want := range []string{"team agent", "Coordinator", "codex runtime"} {
 		if !strings.Contains(ceo, want) {
 			t.Errorf("ceo article missing %q:\n%s", want, ceo)
 		}
@@ -103,13 +103,13 @@ func TestSlackEntityFactSyncBuildsPeopleArticles(t *testing.T) {
 
 	// Unregistered stray bot is still observed.
 	stray := readEntityArticle(t, repo, "some-vendor-bot")
-	if !strings.Contains(stray, "not registered as an office agent") {
+	if !strings.Contains(stray, "not registered as a team agent") {
 		t.Errorf("stray bot article missing unregistered note:\n%s", stray)
 	}
 
 	// The office's own bot user is the observer, not an entity.
 	if _, err := os.Stat(filepath.Join(repo.Root(), "team", "people", "ubot.md")); err == nil {
-		t.Error("the office bot must not get an entity article")
+		t.Error("the team bot must not get an entity article")
 	}
 }
 

@@ -85,7 +85,7 @@ func sharedMemoryRoutingHints(mySlug string, hits []team.ScopedMemoryHit, office
 		mentions = append(mentions, "@"+slug)
 	}
 	return []string{
-		fmt.Sprintf("- Shared memory points to %s. If you need fresher working context, ask in the office instead of guessing; private notes stay private.", strings.Join(mentions, ", ")),
+		fmt.Sprintf("- Shared memory points to %s. If you need fresher working context, ask on the team instead of guessing; private notes stay private.", strings.Join(mentions, ", ")),
 	}
 }
 

@@ -54,7 +54,7 @@ func TestProcessDueWorkflowJobUsesComposioProvider(t *testing.T) {
 	})
 	mux.HandleFunc("/api/developers/v1/context/ask", func(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"answer": "Executive Summary\n- Digest generated.\n\nWhy This Matters\n- It keeps the office current.\n\nWhat To Do Next\n- Read the highlights.\n\nEmail Highlights\n- support@example.com | Digest source email\n\nRelevant Nex Insights\n- Insight included.",
+			"answer": "Executive Summary\n- Digest generated.\n\nWhy This Matters\n- It keeps the team current.\n\nWhat To Do Next\n- Read the highlights.\n\nEmail Highlights\n- support@example.com | Digest source email\n\nRelevant Nex Insights\n- Insight included.",
 		})
 	})
 	mux.HandleFunc("/api/developers/v1/insights", func(w http.ResponseWriter, r *http.Request) {

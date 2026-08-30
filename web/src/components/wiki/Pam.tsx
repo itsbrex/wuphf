@@ -72,7 +72,7 @@ const JIM_PAM_CONVERSATIONS: readonly (readonly JimPamLine[])[] = [
     { who: "jim", text: "Honestly kind of amazing." },
   ],
   [
-    { who: "jim", text: "Dwight filed a formal complaint. Against the wiki." },
+    { who: "jim", text: "Someone filed a formal complaint. Against the wiki." },
     { who: "pam", text: "...Against the wiki?" },
     { who: "jim", text: "He says the footnotes are insubordinate." },
   ],

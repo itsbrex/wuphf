@@ -28,7 +28,7 @@ func TestRegisterSlackAgent_CreatesBridgedMemberWithBinding(t *testing.T) {
 		}
 	}
 	if member == nil {
-		t.Fatal("registered agent should be an office member")
+		t.Fatal("registered agent should be a team member")
 	}
 	if member.CreatedBy != "slack" || member.Role != "Bridged agent" {
 		t.Fatalf("member = %+v, want CreatedBy=slack Role=Bridged agent", member)

@@ -1,5 +1,5 @@
 /**
- * SlideIntro — tour slide 1, "This is your office."
+ * SlideIntro — tour slide 1, "This is your team."
  *
  * Sets the metaphor: gawkbot is an office, and a team of agents lives in it.
  * The visual is the `TourMockupSidebar` materializing piece by piece — the

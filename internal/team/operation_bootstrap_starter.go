@@ -18,7 +18,7 @@ func buildOperationStarterTemplate(blueprint operations.Blueprint, pack operatio
 		strings.TrimSpace(profile.Priority),
 		firstBacklogTitle(backlog),
 		firstOperationStarterTaskTitle(blueprint.Starter.Tasks),
-		"Stand up the first workflow lane and prove the office can run it with the right approvals.",
+		"Stand up the first workflow lane and prove the team can run it with the right approvals.",
 	)
 	size := operationFirstNonEmpty(strings.TrimSpace(profile.Size), strings.TrimSpace(pack.Audience.TeamSize), "2-5")
 	id := operationSlug(operationFirstNonEmpty(profile.BlueprintID, blueprint.ID, pack.Metadata.ID, brandName))

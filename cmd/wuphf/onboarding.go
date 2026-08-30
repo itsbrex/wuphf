@@ -542,7 +542,7 @@ func (m onboardingModel) viewWelcome(w, h int) string {
 	var lines []string
 
 	lines = append(lines, "")
-	lines = append(lines, accentStyle.Render("  gawkbot — Let's set up your office"))
+	lines = append(lines, accentStyle.Render("  gawkbot — Let's set up your team"))
 	lines = append(lines, mutedStyle.Render("  The cast is ready. We just need a few details."))
 	lines = append(lines, "")
 	lines = append(lines, labelStyle.Render("  Company or project name"))

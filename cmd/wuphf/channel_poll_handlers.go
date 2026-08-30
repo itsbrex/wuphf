@@ -141,7 +141,7 @@ func (m channelModel) handleChannelHealthMsg(msg channelHealthMsg) (channelModel
 		m.clearUnreadState()
 		m.refreshSlashCommands()
 		if m.isOneOnOne() && strings.TrimSpace(m.notice) == "" {
-			m.notice = "Conference room reserved. Direct session reset. Agent pane reloaded in place. No Toby."
+			m.notice = "Direct session reset. Agent pane reloaded in place."
 		}
 		return m, m.pollCurrentState()
 	}

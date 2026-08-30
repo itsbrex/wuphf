@@ -284,7 +284,7 @@ var companyMovePatterns = []string{
 
 // noisePatterns: artifacts with NO extractable fact (test null handling).
 var noisePatterns = []string{
-	"Reminder: the office is closed Monday for the holiday. Plan accordingly.",
+	"Reminder: the team is closed Monday for the holiday. Plan accordingly.",
 	"The snack budget got approved. Vote for new options in the shared doc.",
 	"Laptop rotations start next week. IT will email you a pickup slot.",
 	"Big thanks to whoever fixed the conference room AC. Heroes walk among us.",
@@ -298,7 +298,7 @@ var noisePatterns = []string{
 	"Coffee machine is back. Third time this year. Let's hope it holds.",
 	"Team lunch Tuesday — sign up by EOD Monday or lose your spot.",
 	"Reminder to finish your annual compliance training before the 30th.",
-	"The office dog, Bagel, will be in on Thursday. Bring your allergy meds if needed.",
+	"The team dog, Bagel, will be in on Thursday. Bring your allergy meds if needed.",
 	"Someone left a container of leftovers in the fridge since last Wednesday. Claim or it goes.",
 	"The Wi-Fi in the east wing is flaky today. IT is on it.",
 	"Do not forget to submit your expense reports before Friday.",

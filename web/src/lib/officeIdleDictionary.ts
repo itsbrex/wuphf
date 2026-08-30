@@ -16,7 +16,7 @@ const SLUG_OVERRIDES: Record<string, readonly string[]> = {
   tess: [
     "drafting a thought",
     "rereading the brief",
-    "watching the office",
+    "watching the team",
     "sipping coffee",
     "thinking up a plan",
   ],
@@ -152,7 +152,7 @@ const GENERALIST_COPY: readonly string[] = [
   "looking at memes",
   "refilling coffee",
   "checking Slack",
-  "watching the office",
+  "watching the team",
   "thinking about lunch",
 ];
 

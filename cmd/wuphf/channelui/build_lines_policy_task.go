@@ -19,7 +19,7 @@ func BuildPolicyLines(signals []Signal, decisions []Decision, alerts []Watchdog,
 		lines = append(lines, RenderedLine{Text: ""})
 		lines = append(lines, RenderedLine{Text: muted.Render("  No office insights yet. Give the team a minute.")})
 		lines = append(lines, RenderedLine{Text: muted.Render("  Signals, decisions, watchdogs, and external actions will appear here")})
-		lines = append(lines, RenderedLine{Text: muted.Render("  as the office starts tracking higher-signal work — like the Dundies, but actually useful.")})
+		lines = append(lines, RenderedLine{Text: muted.Render("  as the team starts tracking higher-signal work.")})
 		lines = append(lines, RenderedLine{Text: ""})
 		lines = append(lines, RenderedLine{Text: muted.Render("  Use /policies to refresh this ledger. Even Michael checked his metrics eventually.")})
 		return lines

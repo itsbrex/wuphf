@@ -106,7 +106,7 @@ func TestHeadlessQueueRetriesOfficeTurnAfterTransientProviderError(t *testing.T)
 	l.broker = b
 
 	l.enqueueHeadlessCodexTurnRecord("app-builder", headlessCodexTurn{
-		Prompt:  "Work the office build for #" + task.ID,
+		Prompt:  "Work the team build for #" + task.ID,
 		Channel: task.Channel,
 		TaskID:  task.ID,
 	})
@@ -185,7 +185,7 @@ func TestHeadlessQueueDoesNotRetryOfficeTurnAfterNonTransientError(t *testing.T)
 	l.broker = b
 
 	l.enqueueHeadlessCodexTurnRecord("cmo", headlessCodexTurn{
-		Prompt:  "Work the office build for #" + task.ID,
+		Prompt:  "Work the team build for #" + task.ID,
 		Channel: task.Channel,
 		TaskID:  task.ID,
 	})
@@ -340,7 +340,7 @@ func TestRecoverFailedHeadlessTurnRetriesOfficeTaskOnceOnTransientFailure(t *tes
 	l.broker = b
 
 	turn := headlessCodexTurn{
-		Prompt:  "Work the office build for #" + task.ID,
+		Prompt:  "Work the team build for #" + task.ID,
 		Channel: task.Channel,
 		TaskID:  task.ID,
 	}

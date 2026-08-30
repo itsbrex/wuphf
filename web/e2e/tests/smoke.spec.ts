@@ -16,7 +16,7 @@ import { collectReactErrors, waitForReactMount } from "./_helpers";
 // wizard. Wizard coverage lives in local-llm-onboarding.spec.ts.
 
 test.describe("wuphf web UI smoke (office)", () => {
-  test("first paint mounts the office without tripping the error boundary", async ({
+  test("first paint mounts the team without tripping the error boundary", async ({
     page,
   }) => {
     const getErrors = collectReactErrors(page);

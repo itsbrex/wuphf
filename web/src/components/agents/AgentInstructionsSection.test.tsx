@@ -65,13 +65,13 @@ describe("<AgentInstructionsSection>", () => {
     expect(readAgentFileMock).not.toHaveBeenCalled();
   });
 
-  it("does not show the office USER file for a non-lead agent", () => {
+  it("does not show the team USER file for a non-lead agent", () => {
     render(wrap(<AgentInstructionsSection agent={specialist} />));
     expect(screen.queryByText("USER")).not.toBeInTheDocument();
     expect(screen.queryByText(/office context/i)).not.toBeInTheDocument();
   });
 
-  it("shows the office USER file for the lead agent", () => {
+  it("shows the team USER file for the lead agent", () => {
     render(wrap(<AgentInstructionsSection agent={lead} />));
     expect(screen.getByText("USER")).toBeInTheDocument();
     expect(screen.getByText(/office context/i)).toBeInTheDocument();

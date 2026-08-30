@@ -184,6 +184,6 @@ func TestAgentFilesPromptBlock(t *testing.T) {
 		}
 	}
 	if strings.Index(got, "lead persona") > strings.Index(got, "the human") {
-		t.Error("agent files should precede the office USER file in the block")
+		t.Error("agent files should precede the team USER file in the block")
 	}
 }

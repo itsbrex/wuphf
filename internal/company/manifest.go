@@ -204,7 +204,7 @@ func LoadManifest() (Manifest, error) {
 // so onboarding answers flow into the company manifest.
 func backfillFromConfig(manifest Manifest) Manifest {
 	cfg, _ := config.Load()
-	if strings.TrimSpace(manifest.Name) == "" || manifest.Name == "The WUPHF Office" {
+	if strings.TrimSpace(manifest.Name) == "" || manifest.Name == "Your gawkbot team" {
 		if name := strings.TrimSpace(cfg.CompanyName); name != "" {
 			manifest.Name = name
 		}
@@ -213,7 +213,7 @@ func backfillFromConfig(manifest Manifest) Manifest {
 		if desc := strings.TrimSpace(cfg.CompanyDescription); desc != "" {
 			manifest.Description = desc
 		} else {
-			manifest.Description = "Autonomous office runtime."
+			manifest.Description = "Autonomous agent team runtime."
 		}
 	}
 	if len(normalizeBlueprintRefs(manifest.BlueprintRefs)) == 0 {
@@ -274,8 +274,8 @@ func DefaultManifest() Manifest {
 	}
 	blueprintID := normalizeSlug(cfg.ActiveBlueprint())
 	manifest := Manifest{
-		Name:        "The WUPHF Office",
-		Description: "Autonomous office runtime.",
+		Name:        "Your gawkbot team",
+		Description: "Autonomous agent team runtime.",
 		Lead:        "ceo",
 		UpdatedAt:   now,
 	}
@@ -356,7 +356,7 @@ func fromScratchDefaultManifest(now string) Manifest {
 
 func normalizeManifest(manifest Manifest) Manifest {
 	if strings.TrimSpace(manifest.Name) == "" {
-		manifest.Name = "The WUPHF Office"
+		manifest.Name = "Your gawkbot team"
 	}
 	if strings.TrimSpace(manifest.Lead) == "" {
 		manifest.Lead = "ceo"

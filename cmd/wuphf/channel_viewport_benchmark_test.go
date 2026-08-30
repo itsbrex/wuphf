@@ -74,7 +74,7 @@ func benchmarkViewportModel(messageCount int) channelModel {
 	m.actions = []channelui.Action{{
 		Kind:      "external_build",
 		Actor:     "fe",
-		Summary:   "Build the office UI",
+		Summary:   "Build the team UI",
 		CreatedAt: time.Date(2026, 4, 8, 10, 5, 0, 0, time.UTC).Format(time.RFC3339),
 	}}
 

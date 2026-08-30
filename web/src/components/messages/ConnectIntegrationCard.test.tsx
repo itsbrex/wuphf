@@ -147,7 +147,7 @@ describe("<ConnectIntegrationCard>", () => {
     );
   });
 
-  it("runs Composio sign-in FIRST when the office isn't signed in", async () => {
+  it("runs Composio sign-in FIRST when the team isn't signed in", async () => {
     // Composio not signed in → the first Connect click must kick off the
     // "Sign in with Composio" flow, NOT the integration connection.
     getConfig.mockResolvedValue({ composio_key_set: false });

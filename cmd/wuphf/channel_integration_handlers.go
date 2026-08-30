@@ -70,7 +70,7 @@ func (m channelModel) handleTelegramDiscoverMsg(msg telegramDiscoverMsg) (channe
 
 	// Build picker: DM + discovered groups + manual group entry
 	options := []tui.PickerOption{
-		{Label: "Direct message with Telegram bot", Value: "dm", Description: "Anyone can DM the bot to reach the office"},
+		{Label: "Direct message with Telegram bot", Value: "dm", Description: "Anyone can DM the bot to reach the team"},
 	}
 	for _, g := range allGroups {
 		options = append(options, tui.PickerOption{
@@ -135,7 +135,7 @@ func (m channelModel) handleOpenclawConnectDoneMsg(msg openclawConnectDoneMsg) (
 		m.notice = "OpenClaw connect failed: " + msg.err.Error()
 		return m, nil
 	}
-	m.notice = fmt.Sprintf("@%s is now in the office", msg.slug)
+	m.notice = fmt.Sprintf("@%s is now on the team", msg.slug)
 	return m, nil
 }
 

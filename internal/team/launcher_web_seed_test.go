@@ -24,7 +24,7 @@ func TestSkipTaskSeedsWelcomeOnly(t *testing.T) {
 	var welcome *channelMessage
 	for i := range msgs {
 		m := &msgs[i]
-		if m.Kind == "system" && strings.Contains(m.Content, "Welcome to your office") {
+		if m.Kind == "system" && strings.Contains(m.Content, "Welcome to your team") {
 			welcome = m
 		}
 		if m.Kind == "demo_seed" {

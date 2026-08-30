@@ -67,7 +67,7 @@ func (m channelModel) handlePickerSelectMsg(msg tui.PickerSelectMsg) (channelMod
 				return m, pollOfficeLedger()
 			case channelui.OfficeAppCalendar:
 				m.activeApp = channelui.OfficeAppCalendar
-				m.notice = "Viewing the office calendar."
+				m.notice = "Viewing the team calendar."
 				m.syncSidebarCursorToActive()
 				return m, pollOfficeLedger()
 			}

@@ -407,7 +407,7 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 		t.Fatalf("app EditChannel = %q, want %q", apps[0].EditChannel, wantChannel)
 	}
 	if apps[0].EditChannel == "team" {
-		t.Fatal("an app's edit thread must never be the office channel")
+		t.Fatal("an app's edit thread must never be the team channel")
 	}
 	// The build task works IN that thread, so appForEditChannel (app acceptance)
 	// and appBuilderRunTaskID (the activity stream) still resolve, and a human

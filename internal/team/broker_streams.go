@@ -510,7 +510,7 @@ const staleActivityThreshold = 5 * time.Minute
 // stuckThresholdSeconds is how long an active agent can go without any new
 // activity event before the reaper marks it Kind="stuck" (without changing
 // Status — the next real event clears the stuck flag). Far below
-// staleActivityThreshold so the human gets a stuck signal in the office well
+// staleActivityThreshold so the human gets a stuck signal on the team well
 // before the safety reset to idle fires. See ICP tutorial 2 (Marcus): 90s is
 // calibrated for "long terraform plan stalled on remote-state lock" rhythm.
 //
@@ -522,7 +522,7 @@ const stuckThresholdSeconds = 90
 //
 //  1. Stuck-while-active (>= stuckThresholdSeconds, < staleActivityThreshold):
 //     the agent is still nominally "active"/"thinking"/"tool_use" but has gone
-//     quiet long enough that the human in the office should be alerted. We
+//     quiet long enough that the human on the team should be alerted. We
 //     stamp Kind="stuck" without changing Status — the next real event from
 //     the agent flips Kind back to whatever the classifier returns. Emitted
 //     once per stuck transition (re-emitting every reaper tick would spam the

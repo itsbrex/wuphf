@@ -76,7 +76,7 @@ afterEach(() => {
 });
 
 describe("StepMeet email capture", () => {
-  it("renders the optional email field next to the office name", () => {
+  it("renders the optional email field next to the team name", () => {
     renderStep();
     expect(screen.getByTestId("onboarding-office-name")).toBeTruthy();
     expect(screen.getByTestId("onboarding-owner-email")).toBeTruthy();

@@ -994,7 +994,7 @@ func applyProviderSelection(providerName string) tea.Cmd {
 		}
 
 		if current := strings.TrimSpace(os.Getenv("WUPHF_HEADLESS_PROVIDER")); current != "" {
-			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the office runtime with the new configuration."}
+			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the team runtime with the new configuration."}
 		}
 		if providerName == "codex" {
 			l, err := team.NewLauncher("")
@@ -1017,7 +1017,7 @@ func applyProviderSelection(providerName string) tea.Cmd {
 			return channelInitDoneMsg{notice: "Provider switched to opencode. Claude teammate panes were stopped. Restart gawkbot to launch the headless Opencode office runtime."}
 		}
 		if currentProvider == "codex" || currentProvider == "opencode" {
-			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the office runtime with the new configuration."}
+			return channelInitDoneMsg{notice: "Provider switched to " + providerName + ". Restart gawkbot to reload the team runtime with the new configuration."}
 		}
 
 		l, err := team.NewLauncher("")

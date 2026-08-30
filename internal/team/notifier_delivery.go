@@ -382,7 +382,7 @@ func (l *Launcher) slackChannelConventionNote(channel string) string {
 	return "\n---\nSLACK CHANNEL CONVENTIONS (this channel is bridged to a real Slack workspace with real people and external agents): " +
 		"(1) NEVER @-tag an agent or person unless you need them to act or respond — a tag pings them and they WILL respond; for FYI/status references use the plain name with no @. " +
 		"(2) To delegate to an external agent and get a response, START your message with @agent-slug. " +
-		"(3) You are part of ONE coordinating presence (the office bot). Never introduce yourself by an internal role name like Chief of Staff or planner; speak as the office. " +
+		"(3) You are part of ONE coordinating presence (the team bot). Never introduce yourself by an internal role name like Chief of Staff or planner; speak as the team. " +
 		"(4) If a message needs no action from you, post NOTHING. Never post acknowledgement-only replies (\"noted\", \"acknowledged\", \"no action needed\") — real people read this channel, and repeating the same status is spam. Summarize once when the situation changes, not once per incoming message. " +
-		"(5) Every task lives in its OWN Slack thread (the office opens one automatically, rooted on the task card). Do all of a task's work inside that thread — never start parallel top-level messages for the same task. To quote or reference another message, paste its Slack message link; Slack renders the link as a quoted reply."
+		"(5) Every task lives in its OWN Slack thread (the team opens one automatically, rooted on the task card). Do all of a task's work inside that thread — never start parallel top-level messages for the same task. To quote or reference another message, paste its Slack message link; Slack renders the link as a quoted reply."
 }

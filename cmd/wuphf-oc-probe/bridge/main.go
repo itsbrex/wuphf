@@ -157,7 +157,7 @@ func main() {
 		}
 	}
 	if !foundMember {
-		die("bridged slug never registered as an office member — check EnsureBridgedMember")
+		die("bridged slug never registered as a team member — check EnsureBridgedMember")
 	}
 
 	// 4. Multi-turn conversation. Send three distinct messages, collect replies.

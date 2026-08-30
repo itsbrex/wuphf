@@ -111,7 +111,7 @@ func TestBuildSessionMemorySnapshotFromOfficeStateReconstructsContext(t *testing
 			Status:        "pending",
 			From:          "ceo",
 			Title:         "Confirm launch plan",
-			Question:      "Should the office proceed with this launch plan?",
+			Question:      "Should the team proceed with this launch plan?",
 			Blocking:      true,
 			Required:      true,
 			ReplyTo:       "msg-7",

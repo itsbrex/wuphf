@@ -163,7 +163,7 @@ export function StepFirstIssue({
           </div>
           <div className="onboarding-handoff-bubble">
             {answers.firstIssue.trim() ||
-              "Write the first thing you want your office to handle."}
+              "Write the first thing you want your team to handle."}
           </div>
           <div className="onboarding-handoff-foot">
             <span className="onboarding-handoff-send">Send</span>

@@ -72,8 +72,8 @@ func (m channelModel) buildOfficeIntroLines(contentWidth int) []channelui.Render
 		{Text: channelui.RenderDateSeparator(contentWidth, "Office overview")},
 		{Text: ""},
 	}
-	title := channelui.SubtlePill("office", "#F8FAFC", "#1264A3") + " " + lipgloss.NewStyle().Bold(true).Render("The gawkbot Office")
-	body := "Welcome to The gawkbot Office. Live company-building coordination across channels, direct sessions, tasks, and decisions. Michael Scott would be proud — and also confused, but mostly proud."
+	title := channelui.SubtlePill("office", "#F8FAFC", "#1264A3") + " " + lipgloss.NewStyle().Bold(true).Render("gawkbot")
+	body := "Welcome to gawkbot. Live coordination across rooms, direct sessions, tasks, and decisions. Everyone can see everything, which is the entire point."
 	extra := []string{
 		fmt.Sprintf("%d teammates · %d running tasks · %d open requests", state.PeerCount, state.RunningTasks, state.OpenRequests),
 	}
@@ -116,8 +116,8 @@ func (m channelModel) buildDirectIntroLines(contentWidth int) []channelui.Render
 		{Text: ""},
 	}
 	title := channelui.SubtlePill("1:1", "#F8FAFC", "#334155") + " " + lipgloss.NewStyle().Bold(true).Render("Direct session with "+m.oneOnOneAgentName())
-	body := "Direct session reset. Agent pane reloaded in place. This surface is just you and the selected agent. No office channels, no colleague chatter, no Toby. The door is closed."
-	extra := []string{"Use /switcher to jump back to the office."}
+	body := "Direct session reset. Agent pane reloaded in place. This surface is just you and the selected agent. No rooms, no chatter from anyone else. The door is closed."
+	extra := []string{"Use /switcher to jump back to the team."}
 	if strings.TrimSpace(state.Focus) != "" {
 		extra = append(extra, "Focus: "+state.Focus)
 	}
@@ -134,7 +134,7 @@ func (m channelModel) buildDirectIntroLines(contentWidth int) []channelui.Render
 			lines = append(lines, channelui.RenderedLine{Text: "  " + line})
 		}
 	} else {
-		lines = append(lines, channelui.RenderedLine{Text: mutedStyle.Render("  Suggested: ask for planning help, a review pass, or a direct decision memo. Dwight would want a full briefing first. You do not have to do that.")})
+		lines = append(lines, channelui.RenderedLine{Text: mutedStyle.Render("  Suggested: ask for planning help, a review pass, or a direct decision memo.")})
 	}
 	return lines
 }

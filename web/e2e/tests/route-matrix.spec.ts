@@ -43,7 +43,7 @@ async function expectCanonicalRoute(
 }
 
 test.describe("canonical route matrix", () => {
-  test("index mounts the office shell (the product front door)", async ({
+  test("index mounts the team shell (the product front door)", async ({
     page,
   }) => {
     const getErrors = collectReactErrors(page);
@@ -69,7 +69,7 @@ test.describe("canonical route matrix", () => {
     page,
   }) => {
     // The inverse of the retired pin. This spec's predecessor asserted these
-    // panels must NOT mount ("a regression that resurrects the office panels
+    // panels must NOT mount ("a regression that resurrects the team panels
     // fails loudly"). They were resurrected on purpose, so mounting is now
     // the contract and a redirect would be the regression.
     for (const appId of APP_PANEL_IDS) {

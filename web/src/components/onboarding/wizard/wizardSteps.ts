@@ -172,7 +172,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
   meet: {
     eyebrow: "WELCOME TO THE OFFICE",
     headline: "Meet WUPHF.",
-    body: "gawkbot is an office of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your office assemble itself on the right.",
+    body: "gawkbot is a team of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your team assemble itself on the right.",
   },
   wiki: {
     eyebrow: "YOUR KNOWLEDGE BASE",
@@ -192,7 +192,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
   "first-issue": {
     eyebrow: "WRITE YOUR FIRST ISSUE",
     headline: "Give your team something to do.",
-    body: "Write the first thing you want your office to handle. We prefilled a CRM cleanup so your team has real work the moment you walk in. Edit it, or write your own.",
+    body: "Write the first thing you want your team to handle. We prefilled a CRM cleanup so your team has real work the moment you walk in. Edit it, or write your own.",
   },
 };
 
@@ -304,7 +304,7 @@ export const ONBOARDING_EMBEDDING_COPY = {
 /** UI chrome labels for the wizard host. gawkbot voice, no contractions. */
 export const ONBOARDING_WIZARD_LABELS = {
   /** Accessible label for the wizard dialog surface. */
-  dialog: "Set up your office",
+  dialog: "Set up your team",
   /** Back button. */
   back: "Back",
   /** Advance button (non-final steps). */
@@ -322,7 +322,7 @@ export const ONBOARDING_WIZARD_LABELS = {
    * First-issue escape: seed the office with no queued issue and land in it to
    * look around first. Maps to the broker's skip_task path.
    */
-  firstIssueSkip: "Skip and explore the office first",
+  firstIssueSkip: "Skip and explore the team first",
   /** Shown while the broker seeds the office after Finish. */
-  seeding: "Setting up your office…",
+  seeding: "Setting up your team…",
 } as const;

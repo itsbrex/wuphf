@@ -64,7 +64,7 @@ func runWorkspaceShred(args []string) {
 			printError("read confirmation: %v", err)
 		}
 		if !ok {
-			_, _ = fmt.Fprintln(os.Stdout, "Cancelled. The office lives to see another quarter.")
+			_, _ = fmt.Fprintln(os.Stdout, "Cancelled. The team lives to see another quarter.")
 			return
 		}
 	}

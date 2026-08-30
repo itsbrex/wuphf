@@ -412,7 +412,7 @@ func TestStartOpenclawBridgeFromConfigWithBindings(t *testing.T) {
 		}
 	}
 	if member == nil {
-		t.Fatal("bound slug should be registered as an office member")
+		t.Fatal("bound slug should be registered as a team member")
 	}
 	if member.Name != "Boot" {
 		t.Fatalf("member name: got %q want %q", member.Name, "Boot")
@@ -461,7 +461,7 @@ func TestRouteOpenclawMentionsLoopForwardsHumanMention(t *testing.T) {
 		ID:        "msg-mention-1",
 		From:      "human",
 		Channel:   "general",
-		Content:   "ping from the office",
+		Content:   "ping from the team",
 		Tagged:    []string{"openclaw-mentions"},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
@@ -484,7 +484,7 @@ func TestRouteOpenclawMentionsLoopForwardsHumanMention(t *testing.T) {
 	if len(fake.sentKeys) != 1 {
 		t.Fatalf("expected 1 forwarded send, got %d: %v", len(fake.sentKeys), fake.sentKeys)
 	}
-	if !strings.HasPrefix(fake.sentKeys[0], "mk|ping from the office|") {
+	if !strings.HasPrefix(fake.sentKeys[0], "mk|ping from the team|") {
 		t.Fatalf("forwarded send has unexpected shape: %q", fake.sentKeys[0])
 	}
 }

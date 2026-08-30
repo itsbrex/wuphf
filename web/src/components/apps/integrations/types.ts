@@ -34,7 +34,7 @@ export const INTEGRATION_CATEGORIES: readonly IntegrationCategoryMeta[] = [
     id: "channels",
     title: "Channels",
     description:
-      "Inbound messaging streams that surface as channels in the office.",
+      "Inbound messaging streams that surface as channels on the team.",
   },
 ] as const;
 

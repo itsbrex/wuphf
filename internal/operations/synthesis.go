@@ -207,7 +207,7 @@ func synthesizeBootstrapConfig(name string, input SynthesisInput, workstreams []
 		},
 		KPITracking: []KPI{
 			{Name: "First durable workflow", Target: "Within 7 days", Why: "Proves the operation can move from planning into repeatable execution."},
-			{Name: "Task throughput", Target: "4 closed tasks/week", Why: "Shows the office is producing output instead of only conversation."},
+			{Name: "Task throughput", Target: "4 closed tasks/week", Why: "Shows the team is producing output instead of only conversation."},
 			{Name: "Approval latency", Target: "< 1 business day", Why: "Keeps humans in the loop without freezing the system."},
 			{Name: "Repeatable wins", Target: "2 validated loops", Why: "Marks the transition from one-off heroics to a durable operation."},
 		},

@@ -226,7 +226,7 @@ func TestChannelViewUsesOfficeHeaderAndComposer(t *testing.T) {
 	m.height = 30
 
 	view := stripANSI(m.View())
-	if !strings.Contains(view, "The gawkbot Office") || !strings.Contains(view, "Message #general") {
+	if !strings.Contains(view, "gawkbot") || !strings.Contains(view, "Message #general") {
 		t.Fatalf("expected office chrome, got %q", view)
 	}
 }
@@ -244,8 +244,18 @@ func TestChannelViewUsesOneOnOneChrome(t *testing.T) {
 	if !strings.Contains(view, "1:1 with Chief of Staff") {
 		t.Fatalf("expected 1o1 header, got %q", view)
 	}
-	if strings.Contains(view, "The gawkbot Office") || strings.Contains(view, "Message #general") {
-		t.Fatalf("expected office chrome to be hidden in 1o1 mode, got %q", view)
+	// Assert the CHROME is gone, not the brand word.
+	//
+	// This used to check that the view contained no "WUPHF", using the
+	// wordmark as a proxy for "the shared-room chrome is hidden". The proxy
+	// broke on the rename: "Launch gawkbot to attach the live team" is a
+	// runtime hint, not chrome, so the brand legitimately appears in 1:1 mode
+	// and the old assertion failed on correct output.
+	//
+	// The real property is that a 1:1 session shows no shared-room affordance:
+	// no channel composer, no channel list.
+	if strings.Contains(view, "Message #general") || strings.Contains(view, "Channels") {
+		t.Fatalf("expected shared-room chrome to be hidden in 1o1 mode, got %q", view)
 	}
 }
 
@@ -739,7 +749,7 @@ func TestRecentExternalActionsIncludesBridgeChannel(t *testing.T) {
 }
 
 func TestDisplayDecisionSummaryUsesHumanDirectiveLabel(t *testing.T) {
-	got := channelui.DisplayDecisionSummary("Human directed the office:\n- tighten scope")
+	got := channelui.DisplayDecisionSummary("Human directed the team:\n- tighten scope")
 	if !strings.Contains(got, "Human directive:") {
 		t.Fatalf("expected human directive heading, got %q", got)
 	}
@@ -750,7 +760,7 @@ func TestDisplayDecisionSummaryUsesHumanDirectiveLabel(t *testing.T) {
 
 func TestCalendarRecentActionsIncludeBridgeChannel(t *testing.T) {
 	lines := channelui.BuildCalendarLines([]channelui.Action{
-		{ID: "action-1", Kind: "human_directive", Channel: "general", Summary: "Human directed the office:", Actor: "you"},
+		{ID: "action-1", Kind: "human_directive", Channel: "general", Summary: "Human directed the team:", Actor: "you"},
 		{ID: "action-2", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "ceo"},
 		{ID: "action-3", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "ceo"},
 	}, nil, nil, nil, "general", nil, channelui.CalendarRangeWeek, "", 90)
@@ -766,7 +776,7 @@ func TestCalendarRecentActionsIncludeBridgeChannel(t *testing.T) {
 func TestCalendarRecentActionsPinsBridgeWhenCapWouldDropIt(t *testing.T) {
 	lines := channelui.BuildCalendarLines([]channelui.Action{
 		{ID: "action-1", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "ceo"},
-		{ID: "action-2", Kind: "human_directive", Channel: "general", Summary: "Human directed the office.", Actor: "you"},
+		{ID: "action-2", Kind: "human_directive", Channel: "general", Summary: "Human directed the team.", Actor: "you"},
 		{ID: "action-3", Kind: "request_answered", Channel: "general", Summary: "Approved the launch direction.", Actor: "you"},
 		{ID: "action-4", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "ceo"},
 		{ID: "action-5", Kind: "signal_recorded", Channel: "general", Summary: "Recorded a human directive signal.", Actor: "ceo"},
@@ -2223,7 +2233,7 @@ func TestOfficeViewportWindowMatchesFullRenderAndMouseHitTesting(t *testing.T) {
 	m.actions = []channelui.Action{{
 		Kind:      "external_build",
 		Actor:     "fe",
-		Summary:   "Build the office UI",
+		Summary:   "Build the team UI",
 		CreatedAt: time.Now().Add(-90 * time.Minute).Format(time.RFC3339),
 	}}
 	m.messages = []channelui.BrokerMessage{
@@ -2586,7 +2596,7 @@ func TestChannelResetDoneImmediatelyRehydratesDirectMode(t *testing.T) {
 	if !strings.Contains(view, "Direct session reset. Agent pane reloaded in place.") {
 		t.Fatalf("expected direct-session empty state, got %q", view)
 	}
-	if strings.Contains(view, "Welcome to The gawkbot Office.") {
+	if strings.Contains(view, "Welcome to gawkbot.") {
 		t.Fatalf("expected office welcome to disappear in direct mode, got %q", view)
 	}
 }

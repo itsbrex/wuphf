@@ -861,7 +861,7 @@ func (b *notificationContextBuilder) BuildTaskExecutionPacketWithContext(slug st
 		lines = append(lines, ctx)
 	}
 	lines = append(lines, fmt.Sprintf("If you deliver the substantive result for #%s in this turn, you MUST call team_task complete or review-ready for \"%s\" before any completion post and before you stop. A channel reply alone does not unblock dependent work, and a completion post without the task mutation is a failure.", task.ID, task.ID))
-	lines = append(lines, "Runtime rule: never launch another WUPHF office, copied wuphf binary, browser instance, or local web server/--web-port process from inside this turn. The office is already running; use the existing repo, broker state, and assigned worktree instead.")
+	lines = append(lines, "Runtime rule: never launch another WUPHF office, copied wuphf binary, browser instance, or local web server/--web-port process from inside this turn. The team is already running; use the existing repo, broker state, and assigned worktree instead.")
 	lines = append(lines, fmt.Sprintf("%s Use team_task with my_slug \"%s\" to update status as you go.", truncate(content, triggerContentClipChars), slug))
 	return strings.Join(lines, "\n"), contextUsed
 }

@@ -12,7 +12,7 @@ import (
 
 func (m channelModel) confirmationForReset() *channelui.ChannelConfirm {
 	title := "Reset Office Session"
-	detail := "This clears the live office transcript and refreshes all team panes in place."
+	detail := "This clears the live team transcript and refreshes all team panes in place."
 	if m.isOneOnOne() {
 		title = "Reset Direct Session"
 		detail = fmt.Sprintf("This clears the direct transcript with %s and reloads the direct pane in place.", m.oneOnOneAgentName())

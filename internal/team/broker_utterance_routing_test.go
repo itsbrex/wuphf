@@ -211,7 +211,7 @@ func TestBlockingRequestGateIsChannelScoped(t *testing.T) {
 	if _, err := b.PostMessage("you", "task-acme", "Trying to chat past the gate.", nil, ""); err == nil {
 		t.Fatalf("chat in the blocking request's channel must 409")
 	}
-	if _, err := b.PostMessage("you", "team", "The rest of the office keeps talking.", nil, ""); err != nil {
+	if _, err := b.PostMessage("you", "team", "The rest of the team keeps talking.", nil, ""); err != nil {
 		t.Fatalf("chat in another channel must flow: %v", err)
 	}
 }

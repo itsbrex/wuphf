@@ -176,7 +176,7 @@ func (l *Launcher) GenerateAgentFileFromContext(ctx context.Context, relPath, hi
 			fmt.Fprintf(&info, "Persona: %s\n", p)
 		}
 		if isLead {
-			info.WriteString("This agent is the office lead: it coordinates and delegates rather than doing all the work itself.\n")
+			info.WriteString("This agent is the team lead: it coordinates and delegates rather than doing all the work itself.\n")
 		}
 		example = renderAgentFileContent(member, name, isLead)
 	}

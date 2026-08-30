@@ -264,7 +264,7 @@ type TeamTaskArgs struct {
 	VerificationKind     string   `json:"verification_kind,omitempty" jsonschema:"Machine-checkable definition of done (create and define actions). One of: command (shell command that must exit 0), artifact (file path or glob that must exist non-empty in the task worktree), url (http(s) URL that must answer 2xx), none. Set this on every task whose outcome can be checked mechanically — a test command for code, an artifact path for documents."`
 	VerificationSpec     string   `json:"verification_spec,omitempty" jsonschema:"The check itself: the shell command, artifact path/glob, or URL for verification_kind"`
 	VerificationRequired bool     `json:"verification_required,omitempty" jsonschema:"When true the broker runs the check on complete/approve and BLOCKS the transition until it passes. Prefer true whenever a reliable check exists."`
-	ParentIssueID        string   `json:"parent_issue_id,omitempty" jsonschema:"Parent Issue id when this is a sub-issue created INSIDE an existing Issue (create action only). Leave empty for top-level Issues. Sub-issues surface nested under the parent on the Issue board and detail view. They do NOT get their own chat room: all discussion happens in the office channel the work came from."`
+	ParentIssueID        string   `json:"parent_issue_id,omitempty" jsonschema:"Parent Issue id when this is a sub-issue created INSIDE an existing Issue (create action only). Leave empty for top-level Issues. Sub-issues surface nested under the parent on the Issue board and detail view. They do NOT get their own chat room: all discussion happens on the team channel the work came from."`
 	ArtifactPath         string   `json:"artifact_path,omitempty" jsonschema:"Delivered-artifact reference: a wiki-relative path (e.g. team/playbooks/launch.md) or a visual-artifact id. Pass it on complete/approve (or submit_for_review). A task with a Definition CANNOT reach done until an artifact is recorded — publish the deliverable to the wiki first, then complete with this set."`
 	// action=define fields — the R4 structured intake contract. Goal is
 	// required for define; the broker stamps defined_at itself.
@@ -317,7 +317,7 @@ type TeamOfficeMembersArgs struct{}
 type TeamMemberArgs struct {
 	Action      string   `json:"action" jsonschema:"One of: create, remove"`
 	Slug        string   `json:"slug" jsonschema:"Stable agent slug like growthops or research-lead"`
-	Name        string   `json:"name,omitempty" jsonschema:"Display name for the office member"`
+	Name        string   `json:"name,omitempty" jsonschema:"Display name for the team member"`
 	Role        string   `json:"role,omitempty" jsonschema:"Role/job title"`
 	Expertise   []string `json:"expertise,omitempty" jsonschema:"Optional expertise list"`
 	Personality string   `json:"personality,omitempty" jsonschema:"Optional short personality description"`

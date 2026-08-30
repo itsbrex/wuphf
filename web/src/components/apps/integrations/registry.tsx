@@ -19,7 +19,7 @@ export const INTEGRATIONS: readonly IntegrationDescriptor[] = [
     category: "external-agents",
     title: "OpenClaw",
     summary:
-      "Bridge OpenClaw-controlled agent sessions into the office over a WebSocket gateway.",
+      "Bridge OpenClaw-controlled agent sessions onto the team over a WebSocket gateway.",
     logo: OpenClawLogo,
     isAvailable: ({ cfg }: IntegrationContext) => {
       const kinds = cfg.gateway_kinds ?? ["openclaw"];
@@ -49,7 +49,7 @@ export const INTEGRATIONS: readonly IntegrationDescriptor[] = [
     category: "channels",
     title: "Telegram",
     summary:
-      "Bring a Telegram chat into the office as a channel; replies route through a bot you control.",
+      "Bring a Telegram chat onto the team as a channel; replies route through a bot you control.",
     logo: TelegramLogo,
     // Telegram is always available — the modal handles the
     // server-not-reachable case at submit time, and there's no compile

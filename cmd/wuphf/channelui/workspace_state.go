@@ -32,7 +32,7 @@ type WorkspaceReadinessState struct {
 }
 
 // WorkspaceUIState is a derived snapshot of the channel UI's view of
-// the live office: the underlying runtime snapshot, broker / direct
+// the live team: the underlying runtime snapshot, broker / direct
 // session flags, headline counts, and the current focus / next-step
 // sentences. Built once per render via
 // channelModel.currentWorkspaceUIState() and threaded through the
@@ -86,8 +86,8 @@ func DeriveWorkspaceReadiness(state WorkspaceUIState, doctor *DoctorReport) Work
 		return WorkspaceReadinessState{
 			Level:    WorkspaceReadinessPreview,
 			Headline: "Offline preview",
-			Detail:   "The workspace is showing manifest-backed context, not the live office runtime.",
-			NextStep: "Launch gawkbot to attach the live office, or run /doctor to inspect runtime readiness.",
+			Detail:   "The workspace is showing manifest-backed context, not the live team runtime.",
+			NextStep: "Launch gawkbot to attach the live team, or run /doctor to inspect runtime readiness.",
 		}
 	}
 	if state.Memory.SelectedKind == config.MemoryBackendNone {
@@ -136,8 +136,8 @@ func DeriveWorkspaceReadiness(state WorkspaceUIState, doctor *DoctorReport) Work
 	return WorkspaceReadinessState{
 		Level:    WorkspaceReadinessReady,
 		Headline: "Ready to work",
-		Detail:   fmt.Sprintf("The live office runtime is attached and ready for collaboration with %s memory.", state.Memory.ActiveLabel),
-		NextStep: "Use /switcher to move through the office, or /recover to regain context before replying.",
+		Detail:   fmt.Sprintf("The live team runtime is attached and ready for collaboration with %s memory.", state.Memory.ActiveLabel),
+		NextStep: "Use /switcher to move through the team, or /recover to regain context before replying.",
 	}
 }
 
@@ -227,7 +227,7 @@ func (s WorkspaceUIState) HeaderMeta() string {
 // DefaultStatusLine renders the bottom status line for the channel
 // view. The exact wording is picked from a precedence: direct mode
 // first, then offline preview, then needs-you / readiness warn /
-// while-away / focus-task / live office.
+// while-away / focus-task / live team.
 func (s WorkspaceUIState) DefaultStatusLine(scrollHint string) string {
 	if s.Direct {
 		label := "offline preview"
@@ -312,6 +312,6 @@ func (s WorkspaceUIState) SidebarHintLine() string {
 	case strings.TrimSpace(s.Focus) != "":
 		return "Focus: " + s.Focus
 	default:
-		return "Use /switcher or /recover to move through live office context"
+		return "Use /switcher or /recover to move through live team context"
 	}
 }

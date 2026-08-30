@@ -43,8 +43,8 @@ func materializeManifestFromBlueprintRefs(manifest Manifest, repoRoot string) (M
 	cfg, _ := config.Load()
 
 	resolved := Manifest{
-		Name:          firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyName), strings.TrimSpace(manifest.Name), strings.TrimSpace(operationBlueprint.Name), "The WUPHF Office"),
-		Description:   firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyDescription), strings.TrimSpace(manifest.Description), strings.TrimSpace(operationBlueprint.Description), strings.TrimSpace(operationBlueprint.Objective), "Autonomous office runtime."),
+		Name:          firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyName), strings.TrimSpace(manifest.Name), strings.TrimSpace(operationBlueprint.Name), "Your gawkbot team"),
+		Description:   firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyDescription), strings.TrimSpace(manifest.Description), strings.TrimSpace(operationBlueprint.Description), strings.TrimSpace(operationBlueprint.Objective), "Autonomous agent team runtime."),
 		Lead:          firstNonEmpty(strings.TrimSpace(operationBlueprint.Starter.LeadSlug), strings.TrimSpace(manifest.Lead), "ceo"),
 		BlueprintRefs: refs,
 		UpdatedAt:     manifest.UpdatedAt,

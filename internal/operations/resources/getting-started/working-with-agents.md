@@ -11,8 +11,8 @@ An agent is a member of your team. It is not a chatbot you have to babysit, and 
 
 Every agent has three things that make it useful:
 
-- **A persona.** A role, a name, and a way of working. The CEO coordinates and keeps the office moving. A RevOps agent keeps your CRM clean, merging duplicate accounts and backfilling the fields everyone forgets. An analyst watches the funnel and reads the numbers. Each one stays in its lane, which is more than you can say for most people.
-- **A heartbeat.** Agents do not freeze the moment you stop typing. A heartbeat is a regular check-in where an agent looks at its open work, makes progress, and reports back. This is why the office keeps moving when you are not watching it.
+- **A persona.** A role, a name, and a way of working. The CEO coordinates and keeps the team moving. A RevOps agent keeps your CRM clean, merging duplicate accounts and backfilling the fields everyone forgets. An analyst watches the funnel and reads the numbers. Each one stays in its lane, which is more than you can say for most people.
+- **A heartbeat.** Agents do not freeze the moment you stop typing. A heartbeat is a regular check-in where an agent looks at its open work, makes progress, and reports back. This is why the team keeps moving when you are not watching it.
 - **A memory that does not reset.** What an agent learns lands in the wiki, so you do not have to re-explain your company every morning. Context compounds instead of evaporating.
 
 ## How to talk to them

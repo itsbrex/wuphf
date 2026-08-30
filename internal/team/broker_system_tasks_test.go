@@ -18,7 +18,13 @@ import (
 // TestBackupMigrationSystemTaskExistsAfterBrokerInit asserts that booting a
 // broker via NewBrokerAt seeds the "Backup & Migration" system task with the
 // expected ID, channel, System flag, and LifecycleState.
+// The Backup & Migration system task exists to OWN #general. With the lobby
+// retired there is nothing for it to own, and ensureBackupMigrationTaskLocked
+// already declines to seed it when the channel is absent. These pin that.
 func TestBackupMigrationSystemTaskExistsAfterBrokerInit(t *testing.T) {
+	if !generalChannelEnabled() {
+		t.Skip("#general is retired; the task that owns it is not seeded")
+	}
 	b := newTestBroker(t)
 
 	// Find task-general directly from the raw task slice (not AllTasks,
@@ -58,6 +64,9 @@ func TestBackupMigrationSystemTaskExistsAfterBrokerInit(t *testing.T) {
 // task does NOT appear in default ListTasks responses (no include_done), but
 // DOES appear when include_done=true is set.
 func TestBackupMigrationTaskExcludedFromDefaultListTasks(t *testing.T) {
+	if !generalChannelEnabled() {
+		t.Skip("#general is retired")
+	}
 	b := newTestBroker(t)
 
 	// Default list — system task must be absent (it's archived).
@@ -99,6 +108,9 @@ func TestBackupMigrationTaskExcludedFromDefaultListTasks(t *testing.T) {
 // TestBackupMigrationTaskIdempotentSeed asserts that calling
 // ensureBackupMigrationTaskLocked twice does not create duplicate entries.
 func TestBackupMigrationTaskIdempotentSeed(t *testing.T) {
+	if !generalChannelEnabled() {
+		t.Skip("#general is retired")
+	}
 	b := newTestBroker(t)
 
 	b.mu.Lock()
@@ -123,6 +135,9 @@ func TestBackupMigrationTaskIdempotentSeed(t *testing.T) {
 // channel is unchanged after system task seeding — the 141 fallback call sites
 // must keep working.
 func TestGeneralChannelStillExistsAfterSystemTaskSeed(t *testing.T) {
+	if !generalChannelEnabled() {
+		t.Skip("#general is retired")
+	}
 	b := newTestBroker(t)
 
 	b.mu.Lock()

@@ -133,7 +133,7 @@ describe("<MessageBubble> synthetic senders", () => {
     id: "msg-sys",
     from: "system",
     channel: "general",
-    content: "Welcome to your office.",
+    content: "Welcome to your team.",
     timestamp: "2026-08-23T00:00:00Z",
   };
 

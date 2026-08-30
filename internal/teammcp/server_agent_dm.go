@@ -69,7 +69,7 @@ func handleAgentMessage(ctx context.Context, _ *mcp.CallToolRequest, args AgentM
 			names = append(names, "@"+slug)
 		}
 		return textResult(fmt.Sprintf(
-			"There is no teammate @%s. The office has: %s.",
+			"There is no teammate @%s. The team has: %s.",
 			to, strings.Join(names, ", "),
 		)), nil, nil
 	}

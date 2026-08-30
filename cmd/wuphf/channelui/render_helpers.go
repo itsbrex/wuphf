@@ -93,8 +93,8 @@ func RenderUnreadDivider(contentWidth int, unreadCount int) string {
 // stay tight without losing the directive marker.
 func DisplayDecisionSummary(summary string) string {
 	summary = strings.TrimSpace(summary)
-	if strings.HasPrefix(summary, "Human directed the office:") {
-		return strings.Replace(summary, "Human directed the office:", "Human directive:", 1)
+	if strings.HasPrefix(summary, "Human directed the team:") {
+		return strings.Replace(summary, "Human directed the team:", "Human directive:", 1)
 	}
 	return summary
 }

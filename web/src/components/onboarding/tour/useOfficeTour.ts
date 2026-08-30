@@ -66,7 +66,7 @@ export interface UseOfficeTourResult {
    * already-onboarded office), false on the first-run auto-open. The caller
    * uses this to decide placement: first-run renders the tour as onboarding's
    * final full-screen act (no office behind it, so the flow reads as one arc);
-   * replay overlays it on the live office Shell.
+   * replay overlays it on the live team Shell.
    */
   replay: boolean;
   /** Force the tour open (replay), without touching the done flag. */
@@ -110,7 +110,7 @@ export function useOfficeTour(enabled: boolean): UseOfficeTourResult {
   }, [enabled]);
 
   // Replay listener. Bound for the lifetime of the hook, independent of the
-  // auto-open gate, so Help → "Replay the office tour" works at any time. This
+  // auto-open gate, so Help → "Replay the team tour" works at any time. This
   // is a replay open (the office Shell is already mounted), so the caller
   // overlays the tour rather than replacing the office.
   useEffect(() => {

@@ -64,7 +64,7 @@ func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 	// Never the office channel: that is the binding that broke, and it would
 	// mount the whole office chat inside the app's Edit panel.
 	if ch1 == "team" {
-		t.Fatalf("an app's edit thread must never be the office channel")
+		t.Fatalf("an app's edit thread must never be the team channel")
 	}
 	// It is a real channel, not a dangling slug.
 	b.mu.Lock()

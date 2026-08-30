@@ -77,7 +77,7 @@ func RegisterAllCommands(r *Registry) {
 	// behaviour (navigate to a view, post to /signals, etc). Listed here so
 	// GET /commands — the single source of truth for the web autocomplete —
 	// keeps them discoverable. See Composer.tsx's handleSlashCommand switch.
-	r.Register(SlashCommand{Name: "reset", Description: "Reset the office", WebSupported: true})
+	r.Register(SlashCommand{Name: "reset", Description: "Reset the team", WebSupported: true})
 	r.Register(SlashCommand{Name: "requests", Description: "Open requests", WebSupported: true})
 	r.Register(SlashCommand{Name: "policies", Description: "View policies", WebSupported: true})
 	r.Register(SlashCommand{Name: "skills", Description: "View skills", WebSupported: true})
@@ -90,5 +90,5 @@ func RegisterAllCommands(r *Registry) {
 	r.Register(SlashCommand{Name: "resume", Description: "Resume all agents", WebSupported: true})
 	r.Register(SlashCommand{Name: "1o1", Description: "1:1 with agent", WebSupported: true})
 	r.Register(SlashCommand{Name: "cancel", Description: "Cancel a task", WebSupported: true})
-	r.Register(SlashCommand{Name: "connect", Description: "Connect a Telegram chat to the office", WebSupported: true})
+	r.Register(SlashCommand{Name: "connect", Description: "Connect a Telegram chat to the team", WebSupported: true})
 }

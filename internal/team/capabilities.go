@@ -133,7 +133,7 @@ func probeTmuxCapability() (CapabilityStatus, TmuxCapability) {
 			Name:     "tmux",
 			Level:    CapabilityWarn,
 			Detail:   "tmux is not available on PATH.",
-			NextStep: "Install tmux so WUPHF can manage the office session.",
+			NextStep: "Install tmux so WUPHF can manage the team session.",
 		}, capability
 	}
 	capability.BinaryPath = path
@@ -217,7 +217,7 @@ func (t TmuxCapability) summaryDetail() string {
 
 func (t TmuxCapability) nextStep() string {
 	if t.BinaryPath == "" {
-		return "Install tmux so WUPHF can manage the office session."
+		return "Install tmux so WUPHF can manage the team session."
 	}
 	if !t.ServerRunning {
 		return "Launch WUPHF to create the tmux office session."

@@ -624,7 +624,7 @@ func TestBuildOperationBootstrapPackageSynthesizesWhenNoPackSeedExists(t *testin
 	pkg, err := buildOperationBootstrapPackageFromRepo(context.Background(), operationCompanyProfile{
 		Name:        "Blank Slate Ops",
 		Description: "Stand up a new operation from a blank directive.",
-		Goals:       "Prove the office can synthesize a blueprint without repo-authored seed docs.",
+		Goals:       "Prove the team can synthesize a blueprint without repo-authored seed docs.",
 		Size:        "3-5",
 		Priority:    "Bootstrap the first working lane.",
 	})

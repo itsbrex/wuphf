@@ -148,7 +148,7 @@ func main() {
 	}
 	for _, m := range members {
 		if !gotMembers[m.slug] {
-			die("bridged slug %q never registered as an office member", m.slug)
+			die("bridged slug %q never registered as a team member", m.slug)
 		}
 	}
 

@@ -220,7 +220,7 @@ func evalJobSchedulerTruth(fx *officeEvalFixture, r *OfficeEvalReport) error {
 			break
 		}
 	}
-	r.add(job, "due automation fires through the office scheduler into its channel", fired,
+	r.add(job, "due automation fires through the team scheduler into its channel", fired,
 		"forced next_run into the past, ran one scheduler tick, expected the routine prompt tagged at @eng in #general", "")
 	return nil
 }

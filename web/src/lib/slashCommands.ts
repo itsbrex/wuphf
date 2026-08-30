@@ -183,7 +183,7 @@ export function handleSlashCommand(
       return true;
     case "/reset":
       confirm({
-        title: "Reset the office?",
+        title: "Reset the team?",
         message:
           "Clears channels back to #general and drops in-memory state. Persisted tasks and requests stay on the broker.",
         confirmLabel: "Reset",

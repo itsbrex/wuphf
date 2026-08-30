@@ -179,7 +179,7 @@ func TestCompleteSlackAgentSpawn_CreatesRealOfficeAgent(t *testing.T) {
 		}
 	}
 	if member == nil {
-		t.Fatal("completed spawn should be an office member")
+		t.Fatal("completed spawn should be a team member")
 	}
 	if member.Provider.Kind != "" || provider.IsGatewayKind(member.Provider.Kind) {
 		t.Fatalf("provider kind = %q, want install-default (empty)", member.Provider.Kind)

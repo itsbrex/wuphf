@@ -303,7 +303,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 	), handleTeamInbox)
 	mcp.AddTool(server, readOnlyTool(
 		"team_outbox",
-		"Read only the messages you authored, so you can review what you already told the office.",
+		"Read only the messages you authored, so you can review what you already told the team.",
 	), handleTeamOutbox)
 
 	mcp.AddTool(server, officeWriteTool(
@@ -318,7 +318,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 
 	mcp.AddTool(server, readOnlyTool(
 		"team_office_members",
-		"List the office-wide roster, including members who are not in the current channel.",
+		"List the team-wide roster, including members who are not in the current channel.",
 	), handleTeamOfficeMembers)
 
 	mcp.AddTool(server, readOnlyTool(
@@ -348,7 +348,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 
 	mcp.AddTool(server, officeWriteTool(
 		"team_task",
-		"Create, define, claim, assign, complete, block, resume, or release a shared task in the office task list. action=define sets the structured task definition (goal, deliverables+format, success_criteria, access_needed) — the intake contract the owner executes against.",
+		"Create, define, claim, assign, complete, block, resume, or release a shared task on the team task list. action=define sets the structured task definition (goal, deliverables+format, success_criteria, access_needed) — the intake contract the owner executes against.",
 	), handleTeamTask)
 
 	if slug == "artist" {
@@ -382,7 +382,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 	), handleTeamReact)
 	mcp.AddTool(server, officeWriteTool(
 		"team_skill_run",
-		"Invoke a named team skill. When the request matches an available skill (see the skill list in your prompt), call this BEFORE doing the work — do not freelance. Bumps the skill's usage, logs a skill_invocation in the channel so the office sees you followed the playbook, and returns the skill's canonical step-by-step content for you to execute.",
+		"Invoke a named team skill. When the request matches an available skill (see the skill list in your prompt), call this BEFORE doing the work — do not freelance. Bumps the skill's usage, logs a skill_invocation in the channel so the team sees you followed the playbook, and returns the skill's canonical step-by-step content for you to execute.",
 	), handleTeamSkillRun)
 	registerSkillTools(server)
 	registerRoutineTools(server)
@@ -414,7 +414,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		), handleTeamBridge)
 		mcp.AddTool(server, officeWriteTool(
 			"team_channel",
-			"Propose creating (or remove) an office channel. Reuse an existing channel whenever the work fits in one. Creating a NEW channel ALWAYS requires explicit human approval: this tool raises an approval request and blocks until the human decides, then returns an error if they decline so you post in an existing channel instead. When proposing, include a clear description of what work belongs there and the initial roster that should be in it.",
+			"Propose creating (or remove) a team channel. Reuse an existing channel whenever the work fits in one. Creating a NEW channel ALWAYS requires explicit human approval: this tool raises an approval request and blocks until the human decides, then returns an error if they decline so you post in an existing channel instead. When proposing, include a clear description of what work belongs there and the initial roster that should be in it.",
 		), handleTeamChannel)
 		mcp.AddTool(server, officeWriteTool(
 			"team_channel_member",
@@ -422,7 +422,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		), handleTeamChannelMember)
 		mcp.AddTool(server, officeWriteTool(
 			"team_member",
-			"Propose creating (or remove) an office-wide member. Reuse an existing teammate whenever one can cover the work. Creating a NEW member ALWAYS requires explicit human approval: this tool raises an approval request and blocks until the human decides, then returns an error if they decline so you assign the work to an existing specialist instead.",
+			"Propose creating (or remove) a team-wide member. Reuse an existing teammate whenever one can cover the work. Creating a NEW member ALWAYS requires explicit human approval: this tool raises an approval request and blocks until the human decides, then returns an error if they decline so you assign the work to an existing specialist instead.",
 		), handleTeamMember)
 		// Human-chat-feedback policy writer (core-loop step 11): CEO-only,
 		// fires only on explicit human operating feedback.

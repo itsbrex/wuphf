@@ -643,7 +643,7 @@ func (f InitFlowModel) readinessChecks() []initReadinessCheck {
 		{
 			Label:  "tmux office runtime",
 			Status: readinessStatusForBool(binaryAvailable("tmux")),
-			Detail: binaryReadinessDetail("tmux", "WUPHF can open the office panes.", "Install tmux before launching the office."),
+			Detail: binaryReadinessDetail("tmux", "WUPHF can open the team panes.", "Install tmux before launching the team."),
 		},
 		{
 			Label:  "LLM runtime",
@@ -750,7 +750,7 @@ func memoryReadinessDetail(backend string) string {
 	case config.MemoryBackendNone:
 		return "No shared memory. Agents only know what's in the current conversation."
 	default:
-		return "Pick a memory backend so the office can remember what it learns."
+		return "Pick a memory backend so the team can remember what it learns."
 	}
 }
 
@@ -805,7 +805,7 @@ func (f InitFlowModel) phaseText() (heading, instructions string) {
 	case InitProviderChoice:
 		return "Choose LLM Provider", "Select your preferred AI provider. Integrations are handled automatically through Nex using One."
 	case InitMemoryChoice:
-		return "Choose Memory Backend", "Where should the office remember what it learns? Nex is hosted org memory, GBrain is a local knowledge graph, or skip for no shared memory."
+		return "Choose Memory Backend", "Where should the team remember what it learns? Nex is hosted org memory, GBrain is a local knowledge graph, or skip for no shared memory."
 	case InitGBrainOpenAIKey:
 		return "Enter OpenAI API Key (optional)", "GBrain uses OpenAI for cloud embeddings. Paste your OpenAI API key (starts with sk-), or press Enter to use a local Ollama embedding model if present, or keyword-only search."
 	case InitGBrainAnthropKey:

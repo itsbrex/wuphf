@@ -157,12 +157,12 @@ func slackSpawnTokenEnv(slug string) string {
 // slackSpawnGuide is the numbered human guide returned with the manifest.
 func slackSpawnGuide(name, tokenEnv, slug string) []string {
 	return []string{
-		`1. Open https://api.slack.com/apps?new_app=1, choose "From a manifest", and pick the Slack workspace your office is bridged to.`,
+		`1. Open https://api.slack.com/apps?new_app=1, choose "From a manifest", and pick the Slack workspace your team is bridged to.`,
 		"2. Paste the manifest JSON from this response and create the app.",
 		`3. Under "OAuth & Permissions", click "Install to Workspace", approve, and copy the Bot User OAuth Token (starts with xoxb-).`,
 		fmt.Sprintf("4. In the bridged Slack channel, invite the new bot: /invite @%s.", name),
 		fmt.Sprintf("5. Set the token in the WUPHF broker's environment as %s (never paste the raw token into a request body) and restart WUPHF so the env var is visible.", tokenEnv),
-		fmt.Sprintf(`6. Finish with: POST /slack/agents/spawn/complete {"slug":%q} — WUPHF verifies the token, discovers the bot's Slack user id, and creates the office agent.`, slug),
+		fmt.Sprintf(`6. Finish with: POST /slack/agents/spawn/complete {"slug":%q} — WUPHF verifies the token, discovers the bot's Slack user id, and creates the team agent.`, slug),
 	}
 }
 
@@ -261,7 +261,7 @@ func (b *Broker) SpawnSlackAgent(slug, name, role string) (slackSpawnRecord, err
 	b.officeMemberMutationMu.Lock()
 	defer b.officeMemberMutationMu.Unlock()
 	if b.memberExists(slug) {
-		return slackSpawnRecord{}, fmt.Errorf("slug %q already names an office member", slug)
+		return slackSpawnRecord{}, fmt.Errorf("slug %q already names a team member", slug)
 	}
 	rec := slackSpawnRecord{
 		Slug:      slug,
@@ -367,7 +367,7 @@ func (b *Broker) slackSpawnConflict(slug, userID string) (alreadyCompleted bool,
 			if boundID != "" {
 				return false, fmt.Errorf("slug %q already bound to slack user %s", slug, boundID)
 			}
-			return false, fmt.Errorf("slug %q already names an office member", slug)
+			return false, fmt.Errorf("slug %q already names a team member", slug)
 		}
 		if boundID == userID {
 			return false, fmt.Errorf("slack user %s already registered as %q", userID, m.Slug)

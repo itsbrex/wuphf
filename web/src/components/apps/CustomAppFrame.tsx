@@ -66,7 +66,7 @@ const APP_CSP = [
 ].join("; ");
 
 // Read-only broker paths an app may request through the bridge. Prefix match on
-// the path (query string ignored). Deliberately small: live office data an
+// the path (query string ignored). Deliberately small: live team data an
 // internal tool would display. Mutations are NOT exposed in this version.
 const ALLOWED_GET_PREFIXES: readonly string[] = [
   // Bridge v2: the connected-integrations catalog (listIntegrations). NOTE the
@@ -1037,7 +1037,7 @@ function useAppBridge(
 ): void {
   useEffect(() => {
     // In DEV mode the frame is a real, known origin (the proxy), so pin replies
-    // to it — the office data must not reach a frame that navigated to a
+    // to it — the team data must not reach a frame that navigated to a
     // different origin. In SEALED mode the frame is an opaque origin ("null")
     // and "*" is the only option (and is safe: no allow-same-origin, no nested
     // browsing contexts).

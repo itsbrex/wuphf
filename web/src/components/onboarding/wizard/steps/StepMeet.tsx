@@ -129,7 +129,7 @@ export function StepMeet({
                 type="button"
                 className="onboarding-meet-chip"
                 onClick={() => setOfficeName(example)}
-                aria-label={`Use ${example} as the office name`}
+                aria-label={`Use ${example} as the team name`}
                 data-testid={`onboarding-office-name-chip-${example}`}
               >
                 {example}
@@ -188,7 +188,7 @@ export function StepMeet({
             src="/media/onboarding/meet-office.gif"
             width={868}
             height={620}
-            alt="A gawkbot office coming online: the Chief of Staff who runs the office, @revops who keeps the CRM clean, and @analyst who watches the funnel, each turning to an online presence as they arrive."
+            alt="A gawkbot office coming online: the Chief of Staff who runs the team, @revops who keeps the CRM clean, and @analyst who watches the funnel, each turning to an online presence as they arrive."
             loading="lazy"
             decoding="async"
           />

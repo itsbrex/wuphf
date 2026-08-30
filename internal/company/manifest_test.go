@@ -3,6 +3,7 @@ package company
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,7 +32,10 @@ func TestLoadManifestFallsBackToDefault(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadManifest: %v", err)
 	}
-	if manifest.Name == "" || len(manifest.Members) == 0 || len(manifest.Channels) == 0 {
+	// Channels are NOT asserted. #general is retired, so the default manifest
+	// ships a roster and no shared room -- conversations are DMs, which the
+	// broker seeds per agent rather than the manifest declaring them.
+	if manifest.Name == "" || len(manifest.Members) == 0 {
 		t.Fatalf("expected default manifest, got %+v", manifest)
 	}
 }
@@ -48,8 +52,11 @@ func TestSaveAndLoadManifestRoundTrips(t *testing.T) {
 			{Slug: "ceo", Name: "CEO", Role: "CEO", System: true},
 			{Slug: "ops", Name: "Ops", Role: "Operations"},
 		},
+		// Two ORDINARY channels. This test is about the save/load roundtrip,
+		// and #general is filtered out on load now that it is retired -- using
+		// it here would make the roundtrip look lossy when it is not.
 		Channels: []ChannelSpec{
-			{Slug: "general", Name: "general", Members: []string{"ceo", "ops"}},
+			{Slug: "pipeline", Name: "pipeline", Members: []string{"ceo", "ops"}},
 			{Slug: "deals", Name: "deals", Members: []string{"ceo", "ops"}},
 		},
 		BlueprintRefs: []BlueprintRef{
@@ -72,8 +79,20 @@ func TestSaveAndLoadManifestRoundTrips(t *testing.T) {
 	if loaded.Name != "Test Office" {
 		t.Fatalf("unexpected manifest name: %q", loaded.Name)
 	}
-	if len(loaded.Channels) != 2 {
-		t.Fatalf("expected 2 channels, got %d", len(loaded.Channels))
+	// While #general is enabled it is prepended on load, so the two saved
+	// channels come back as three. Assert the SAVED ones survived rather than
+	// a raw count, which is what the roundtrip is actually about.
+	for _, want := range []string{"pipeline", "deals"} {
+		found := false
+		for _, ch := range loaded.Channels {
+			if ch.Slug == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("channel %q did not survive the roundtrip: %+v", want, loaded.Channels)
+		}
 	}
 	if got := loaded.ActiveBlueprintRefs(); len(got) != 2 {
 		t.Fatalf("expected 2 normalized blueprint refs, got %+v", got)
@@ -296,8 +315,13 @@ func TestLoadRuntimeManifestMaterializesEveryOperationFixture(t *testing.T) {
 			if len(runtimeManifest.Channels) == 0 {
 				t.Fatalf("expected channels for %s, got %+v", id, runtimeManifest)
 			}
-			if runtimeManifest.Channels[0].Slug != "general" {
-				t.Fatalf("expected general channel first for %s, got %+v", id, runtimeManifest.Channels)
+			// Was: #general must be the first channel. With the lobby retired
+			// a blueprint declares only its own working channels, and the
+			// team reaches each agent through its DM.
+			for _, ch := range runtimeManifest.Channels {
+				if ch.Slug == "general" && !channel.GeneralEnabled() {
+					t.Fatalf("#general is retired but %s still declares it: %+v", id, runtimeManifest.Channels)
+				}
 			}
 			for _, ch := range runtimeManifest.Channels {
 				for _, value := range []string{ch.Slug, ch.Name, ch.Description} {

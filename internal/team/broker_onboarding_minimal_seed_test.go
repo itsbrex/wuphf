@@ -2,6 +2,7 @@ package team
 
 import (
 	"fmt"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"testing"
 )
 
@@ -54,6 +55,22 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 			general = &b.channels[i]
 			break
 		}
+	}
+	if !generalChannelEnabled() {
+		// #general is retired. The property this test exists for -- "after
+		// onboarding the human has somewhere to talk to the lead" -- is now
+		// satisfied by the lead's DM, so assert THAT rather than the lobby.
+		if general != nil {
+			t.Fatalf("#general is retired but onboarding seeded it")
+		}
+		if b.findChannelLocked(channel.DirectSlug("human", "ceo")) == nil {
+			slugs := make([]string, 0, len(b.channels))
+			for i := range b.channels {
+				slugs = append(slugs, b.channels[i].Slug)
+			}
+			t.Fatalf("no way to reach the lead after onboarding; channels were %v", slugs)
+		}
+		return
 	}
 	if general == nil {
 		slugs := make([]string, 0, len(b.channels))

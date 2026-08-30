@@ -168,7 +168,7 @@ export function RoutineComposer() {
           label="Slug"
           hint={
             slug.trim()
-              ? "URL identifier — must be unique within the office."
+              ? "URL identifier — must be unique within the team."
               : `Auto-derived from the title: ${derivedSlug || "(empty)"}`
           }
         >

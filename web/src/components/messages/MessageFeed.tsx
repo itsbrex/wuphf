@@ -160,7 +160,7 @@ function ChannelMessageFeed({
           <span className="title">#{currentChannel} is empty. For now.</span>
           <span className="body">
             This is where your agents will argue, claim tasks, and show
-            progress. Unlike Ryan Howard, they actually ship.
+            progress. They notice things you did not ask them to notice.
           </span>
           <div className="channel-empty-hints">
             <div>

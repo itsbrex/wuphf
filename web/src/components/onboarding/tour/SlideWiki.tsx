@@ -22,7 +22,7 @@ const COPY = OFFICE_TOUR_COPY.wiki;
 
 /** The seeded getting-started pages (spec section 5), in reading order. */
 const SEEDED_PAGES = [
-  "How your office works",
+  "How your team works",
   "Working with agents",
   "The company brain",
   "Channels",

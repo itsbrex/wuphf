@@ -317,6 +317,14 @@ func (b *Broker) seedFromBlueprintLocked(bp operations.Blueprint, selectedAgents
 	// Seed the "Backup & Migration" system task that owns #general so the
 	// ~141 fallback call sites that post to "general" keep working.
 	b.ensureBackupMigrationTaskLocked()
+	// Every agent gets a DM, HERE and not only on the next Load.
+	//
+	// Onboarding replaces the roster wholesale, so the DMs seeded at boot are
+	// for members that no longer exist. Without this the human finishes
+	// onboarding and has the blueprint's working channels but no 1:1 with
+	// anyone -- and with #general retired, no way to talk to the lead at all
+	// until the process is restarted.
+	b.ensureAgentDMsLocked()
 	if err := b.postKickoffLocked(bp, selectedAgents, task, skipTask, synthesized); err != nil {
 		return err
 	}
@@ -470,7 +478,7 @@ func welcomeMessageForMembers(members []officeMember) string {
 		leadName = "Your lead"
 	}
 	return fmt.Sprintf(
-		"Welcome to your office. %s and the team are online and ready. Type a directive in the composer below — they'll claim work, argue, and ship.",
+		"Welcome to your team. %s and the team are online and ready. Type a directive in the composer below — they'll claim work, argue, and ship.",
 		leadName,
 	)
 }

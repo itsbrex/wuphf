@@ -39,9 +39,9 @@ type TeamRoutineArgs struct {
 	Summary  string `json:"summary,omitempty" jsonschema:"Optional short office log summary"`
 }
 
-const teamRoutineDescription = "Register a standing automation (recurring routine) in the office's persistent scheduler. " +
+const teamRoutineDescription = "Register a standing automation (recurring routine) on the team's persistent scheduler. " +
 	"This is the ONLY correct way to set up recurring work: the job is stored by the broker, survives restarts and session ends, " +
-	"runs on schedule through the office scheduler, and is visible and editable by the human in the Scheduled Tasks app. " +
+	"runs on schedule through the team scheduler, and is visible and editable by the human in the Scheduled Tasks app. " +
 	"Registering the same purpose + schedule again updates the existing routine instead of creating a duplicate, so do not " +
 	"register a second job for an automation a teammate already set up. NEVER use provider-level or session-scoped cron " +
 	"features for office automations — those die with the session, need re-registration, and are invisible to the human."
@@ -127,7 +127,7 @@ func handleTeamRoutine(ctx context.Context, _ *mcp.CallToolRequest, args TeamRou
 		"channel":     resp.Job.Channel,
 		"next_run":    resp.Job.NextRun,
 		"updated":     resp.Updated,
-		"persistence": "Stored in the office scheduler (broker state). Survives restarts and session ends; no re-registration is ever needed.",
+		"persistence": "Stored on the team scheduler (broker state). Survives restarts and session ends; no re-registration is ever needed.",
 		"visible_in":  "Scheduled Tasks app — the human can pause, edit, or re-cadence it there.",
 		"tell_the_human": fmt.Sprintf(
 			"Standing automation %q is %s — it runs %s, persists across restarts, and is visible in the Scheduled Tasks app.",

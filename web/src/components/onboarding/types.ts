@@ -27,7 +27,7 @@ export interface OnboardingFormAnswers {
 /**
  * One row of the legacy post-onboarding checklist. Mirrors
  * `internal/onboarding/state.go` ChecklistItem (`id` + `done` on the
- * wire). The "Settle into your office" overlay that rendered these was
+ * wire). The "Settle into your team" overlay that rendered these was
  * removed (core-loop R6); the fields stay typed so the /onboarding/state
  * wire mirror remains complete for persisted workspaces.
  */

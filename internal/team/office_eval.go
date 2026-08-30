@@ -180,7 +180,7 @@ func RunOfficeEvals(dir string) (*OfficeEvalReport, error) {
 	setRetrievalEmbedding(nil, nil)
 	defer resetRetrievalEmbedding()
 	// Pin the office runtime home to the eval scratch dir — the same env
-	// knob the live office launches with. Agent scratch dirs and DoD-check
+	// knob the live team launches with. Agent scratch dirs and DoD-check
 	// working dirs (headless_workspace.go) derive from it; without the pin
 	// a `go run ./cmd/office-eval` would create dirs under the developer's
 	// real ~/.wuphf. Restored on return; in `go test` the package init
@@ -474,7 +474,7 @@ func evalJobKnowledgeInjection(fx *officeEvalFixture, r *OfficeEvalReport) error
 	}
 	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(task.ID), "Task assigned to you.")
 	r.add(job, "warm: task-relevant learning reaches the work packet", strings.Contains(packet, insight),
-		"the office knows the playbook; the packet for the exact matching task must carry it (U2.2 regression guard)", "")
+		"the team knows the playbook; the packet for the exact matching task must carry it (U2.2 regression guard)", "")
 
 	// Cold control: an unrelated task must NOT receive that learning, or
 	// the warm check is measuring spray, not relevance.

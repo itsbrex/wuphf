@@ -23,7 +23,7 @@ import (
 //
 // It deliberately does NOT reuse seedFromBlueprintLocked, even though that is
 // the wizard's path: that function is a blank-slate seed and clears
-// b.messages, b.tasks, and b.counter. Running it against a live office would
+// b.messages, b.tasks, and b.counter. Running it against a live team would
 // delete the work already in it (an app build task and its channel, every
 // message posted so far). This adds members and their channel memberships and
 // touches nothing else.

@@ -23,6 +23,7 @@ package team
 
 import (
 	"encoding/json"
+	"github.com/nex-crm/wuphf/internal/channel"
 	"strings"
 	"testing"
 
@@ -414,15 +415,32 @@ func TestSeedMinimalScratchLocked(t *testing.T) {
 		t.Error("CEO should be BuiltIn=true in scratch seed")
 	}
 
-	// Exactly one channel: #general.
-	if len(b.channels) != 1 {
-		t.Fatalf("expected 1 channel after scratch seed, got %d: %v", len(b.channels), b.channels)
+	// Exactly one channel. While #general is enabled that is the lobby; once
+	// it is retired the scratch seed produces the lead's DM instead, which is
+	// the surface that replaced it. Either way the human lands with exactly
+	// one place to talk, which is the property this pins.
+	// While #general is enabled the scratch seed produces the lobby AND the
+	// lead's DM; once it is retired only the DM remains. Assert the DM is
+	// present either way, which is the property that actually matters.
+	wantCount := 2
+	if !generalChannelEnabled() {
+		wantCount = 1
 	}
-	if b.channels[0].Slug != "general" {
-		t.Errorf("expected #general as sole channel, got %q", b.channels[0].Slug)
+	if len(b.channels) != wantCount {
+		t.Fatalf("expected %d channel(s) after scratch seed, got %d: %v", wantCount, len(b.channels), b.channels)
+	}
+	if b.findChannelLocked(channel.DirectSlug("human", "ceo")) == nil {
+		t.Fatalf("scratch seed produced no DM with the lead: %v", b.channels)
 	}
 
-	// Exactly one task: the "Backup & Migration" system task that owns #general.
+	// The "Backup & Migration" system task exists only to own #general, so it
+	// is seeded only while #general is.
+	if !generalChannelEnabled() {
+		if len(b.tasks) != 0 {
+			t.Errorf("#general is retired; expected no system task, got %v", b.tasks)
+		}
+		return
+	}
 	if len(b.tasks) != 1 {
 		t.Errorf("expected 1 task (Backup & Migration) after scratch seed, got %d: %v", len(b.tasks), b.tasks)
 		return

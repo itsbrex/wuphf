@@ -402,7 +402,7 @@ func ResolveMemoryBackendStatus() MemoryBackendStatus {
 		status.ActiveKind = config.MemoryBackendNone
 		status.ActiveLabel = config.MemoryBackendLabel(config.MemoryBackendNone)
 		if config.ResolveNoNex() {
-			status.Detail = "Nex is disabled for this run, so the office is operating without an external memory backend."
+			status.Detail = "Nex is disabled for this run, so the team is operating without an external memory backend."
 			status.NextStep = "Restart without --no-nex or select --memory-backend gbrain when you want external context."
 		} else {
 			status.Detail = "External memory is disabled for this run."
@@ -443,7 +443,7 @@ func ResolveMemoryBackendStatus() MemoryBackendStatus {
 		}
 		if !gbrain.IsInstalled() {
 			status.Detail = "GBrain backend selected, but the gbrain CLI is not installed."
-			status.NextStep = "Install GBrain and initialize a brain before launching the office."
+			status.NextStep = "Install GBrain and initialize a brain before launching the team."
 			return status
 		}
 		status.ActiveKind = config.MemoryBackendGBrain
@@ -564,9 +564,9 @@ func gbrainMCPEnvVars() []string {
 func directMemoryPromptBlock() string {
 	switch activeMemoryBackendKind() {
 	case config.MemoryBackendNex:
-		return "Memory scopes:\n- team_memory_query: Read your private notes (`scope=private`) or shared org memory backed by Nex (`scope=shared`)\n- team_memory_write: Store private notes by default; only write shared memory after a durable outcome is real\n- team_memory_promote: Copy one of your private notes into shared Nex memory when it becomes canonical\n- If shared memory points at another agent, ask them in the office for fresher working detail instead of guessing\n\n"
+		return "Memory scopes:\n- team_memory_query: Read your private notes (`scope=private`) or shared org memory backed by Nex (`scope=shared`)\n- team_memory_write: Store private notes by default; only write shared memory after a durable outcome is real\n- team_memory_promote: Copy one of your private notes into shared Nex memory when it becomes canonical\n- If shared memory points at another agent, ask them on the team for fresher working detail instead of guessing\n\n"
 	case config.MemoryBackendGBrain:
-		return "Memory scopes:\n- team_memory_query: Read your private notes (`scope=private`) or shared org memory backed by GBrain (`scope=shared`)\n- team_memory_write: Store private notes by default; only write shared memory after a durable outcome is real\n- team_memory_promote: Copy one of your private notes into shared GBrain memory when it becomes canonical\n- If shared memory points at another agent, ask them in the office for fresher working detail instead of guessing\n\n"
+		return "Memory scopes:\n- team_memory_query: Read your private notes (`scope=private`) or shared org memory backed by GBrain (`scope=shared`)\n- team_memory_write: Store private notes by default; only write shared memory after a durable outcome is real\n- team_memory_promote: Copy one of your private notes into shared GBrain memory when it becomes canonical\n- If shared memory points at another agent, ask them on the team for fresher working detail instead of guessing\n\n"
 	default:
 		return "Memory scopes:\n- team_memory_query: Your private notes still work with `scope=private`\n- team_memory_write: Store private notes for yourself\n- Shared org memory is not active for this run, so `scope=shared` and team_memory_promote are unavailable\n\n"
 	}
@@ -586,9 +586,9 @@ func directMemoryStorageRule() string {
 func leadMemoryPromptBlock() string {
 	switch activeMemoryBackendKind() {
 	case config.MemoryBackendNex:
-		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by Nex, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them in the office for the freshest working context.\n\n"
+		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by Nex, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them on the team for the freshest working context.\n\n"
 	case config.MemoryBackendGBrain:
-		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by GBrain, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them in the office for the freshest working context. Keep task coordination in the office, not in shared memory.\n\n"
+		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by GBrain, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them on the team for the freshest working context. Keep task coordination on the team, not in shared memory.\n\n"
 	default:
 		return "Shared org memory is not active for this run. You can still use private notes with team_memory_query/team_memory_write scope=private.\n\n"
 	}
@@ -601,7 +601,7 @@ func leadMemoryFirstRule() string {
 	case config.MemoryBackendGBrain:
 		return "1. On strategy, relationships, or prior decisions, start with team_memory_query. Use shared scope for org context and private scope for your own retained notes.\n"
 	default:
-		return "1. Coordinate inside the office channel first, and use private memory only for your own scratch history.\n"
+		return "1. Coordinate inside the team channel first, and use private memory only for your own scratch history.\n"
 	}
 }
 
@@ -630,9 +630,9 @@ func leadMemoryFinalWarning() string {
 func specialistMemoryPromptBlock() string {
 	switch activeMemoryBackendKind() {
 	case config.MemoryBackendNex:
-		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by Nex, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them in the office for the freshest working context.\n\n"
+		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by Nex, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them on the team for the freshest working context.\n\n"
 	case config.MemoryBackendGBrain:
-		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by GBrain, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them in the office for the freshest working context.\n\n"
+		return "Memory scopes: use team_memory_query with scope=shared for org memory backed by GBrain, scope=private for your own notes, and team_memory_promote when a private note becomes durable shared knowledge. If shared memory points at another agent, ask them on the team for the freshest working context.\n\n"
 	default:
 		return "Shared org memory is not active for this run. You can still use private notes with team_memory_query/team_memory_write scope=private.\n\n"
 	}

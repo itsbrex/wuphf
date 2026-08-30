@@ -58,7 +58,7 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.lastCtrlCAt = now
-		m.setTransientNotice("Press Ctrl+C again to quit WUPHF. Toby will file the exit paperwork.")
+		m.setTransientNotice("Press Ctrl+C again to quit gawkbot.")
 		return m, nil
 	case "ctrl+b":
 		if m.isOneOnOne() {
@@ -68,26 +68,26 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 		return m, nil
 	case "ctrl+g":
 		if m.isOneOnOne() {
-			m.setTransientNotice("1:1 mode: no sidebar, no distractions, no Toby. Ideal.")
+			m.setTransientNotice("1:1 mode: no sidebar, no distractions. Just the two of you.")
 			return m, nil
 		}
 		if m.quickJumpTarget == quickJumpChannels {
 			m.quickJumpTarget = quickJumpNone
 		} else {
 			m.quickJumpTarget = quickJumpChannels
-			m.setTransientNotice("Quick nav: 1-9 switches channels. Faster than Dwight in a fire drill.")
+			m.setTransientNotice("Quick nav: 1-9 switches channels.")
 		}
 		return m, nil
 	case "ctrl+o":
 		if m.isOneOnOne() {
-			m.setTransientNotice("1:1 mode: just the direct conversation. Like a conference room with no Toby.")
+			m.setTransientNotice("1:1 mode: just the direct conversation.")
 			return m, nil
 		}
 		if m.quickJumpTarget == quickJumpApps {
 			m.quickJumpTarget = quickJumpNone
 		} else {
 			m.quickJumpTarget = quickJumpApps
-			m.setTransientNotice("Quick nav: 1-9 switches apps. Even faster than Stanley doing the crossword.")
+			m.setTransientNotice("Quick nav: 1-9 switches apps.")
 		}
 		return m, nil
 	case "ctrl+d":
@@ -96,7 +96,7 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			m.activeChannel = "general"
 			m.lastID = ""
 			m.messages = nil
-			m.setTransientNotice("Back to #general — the heart of the office.")
+			m.setTransientNotice("Back to #general — the heart of the team.")
 			return m, pollBroker("", m.activeChannel)
 		}
 		return m, nil

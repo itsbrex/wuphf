@@ -60,8 +60,8 @@ export const OFFICE_TOUR_COPY: Record<
     // `lead` is the CEO hand-off line. The tour opens as a continuation of the
     // onboarding chat you just finished, so it reads as one arc rather than a
     // second, separate intro: the CEO walks you into your new office.
-    lead: "Your office is ready. Let me show you around.",
-    headline: "This is your office.",
+    lead: "Your team is ready. Let me show you around.",
+    headline: "This is your team.",
     body: "A team of agents lives here. They claim work, they ship, and they actually answer your messages.",
     caption:
       "This mock office assembles itself on the right. Yours is already real, one panel over.",
@@ -69,7 +69,7 @@ export const OFFICE_TOUR_COPY: Record<
   agents: {
     eyebrow: "MEET THE TEAM",
     headline: "Your team, on the clock.",
-    body: "Every agent has a role, a heartbeat that keeps it checking in, and a memory that does not reset. Unlike Ryan Howard, they actually ship.",
+    body: "Every agent has a role, a heartbeat that keeps it checking in, and a memory that does not reset. They notice things you did not ask them to notice.",
   },
   issues: {
     eyebrow: "FILE AN ISSUE",
@@ -93,11 +93,11 @@ export const OFFICE_TOUR_COPY: Record<
  * unavailable or motion is reduced. Verbatim from spec section 6.
  */
 export const OFFICE_TOUR_LABELS = {
-  dialog: "A quick tour of your office",
+  dialog: "A quick tour of your team",
   skip: "Skip the tour",
   next: "Next",
   back: "Back",
   finish: "Write your first issue",
   transitionFallback: "Setting up the next room of the tour.",
-  replay: "Replay the office tour",
+  replay: "Replay the team tour",
 } as const;
