@@ -170,7 +170,11 @@ type Config struct {
 // Bench backend identifiers.
 const (
 	BackendSQLite = "sqlite"
+	// BackendGBrain is gbrain's RECOMMENDED one-page-per-entity shape.
 	BackendGBrain = "gbrain"
+	// BackendGBrainAtoms is the first implementation: one page per fact. Kept
+	// addressable so the two shapes stay directly comparable on one corpus.
+	BackendGBrainAtoms = "gbrain-atoms"
 )
 
 // Defaults returns the canonical runtime knobs for the Week 0 bench.
@@ -366,11 +370,16 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 	switch cfg.Backend {
 	case BackendGBrain:
 		// The gbrain store writes into whatever brain GBRAIN_HOME points at,
-		// and the reconcile below is destructive within the wuphf namespaces.
-		// Point this at a scratch brain, never a personal one.
+		// and the reconcile below is destructive within its namespaces. Point
+		// this at a scratch brain, never a personal one.
+		idx, err = team.NewGBrainEntityIndex(ctx, tempRoot)
+		if err != nil {
+			return nil, nil, fmt.Errorf("new gbrain entity index: %w", err)
+		}
+	case BackendGBrainAtoms:
 		idx, err = team.NewGBrainIndex(ctx, tempRoot)
 		if err != nil {
-			return nil, nil, fmt.Errorf("new gbrain index: %w", err)
+			return nil, nil, fmt.Errorf("new gbrain atom index: %w", err)
 		}
 	default:
 		idx, err = team.NewPersistentWikiIndex(tempRoot, indexDir)
@@ -538,7 +547,7 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 
 	// Index footprint. Only meaningful for the SQLite + bleve pairing; the
 	// gbrain store keeps its data in the brain, so both stay zero there.
-	if cfg.Backend != BackendGBrain {
+	if cfg.Backend != BackendGBrain && cfg.Backend != BackendGBrainAtoms {
 		agg.IndexBytesSQLite = fileSize(filepath.Join(indexDir, "wiki.sqlite"))
 		agg.IndexBytesBleve = dirSize(filepath.Join(indexDir, "bleve"))
 	}
@@ -745,8 +754,12 @@ func truncate(s string, n int) string {
 
 // backendLabel renders the configured backend for the report header.
 func backendLabel(backend string) string {
-	if backend == BackendGBrain {
-		return BackendGBrain
+	switch backend {
+	case BackendGBrain:
+		return BackendGBrain + " (one page per entity, recommended shape)"
+	case BackendGBrainAtoms:
+		return BackendGBrainAtoms + " (one page per fact)"
+	default:
+		return BackendSQLite
 	}
-	return BackendSQLite
 }

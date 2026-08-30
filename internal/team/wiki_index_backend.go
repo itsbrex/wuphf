@@ -67,7 +67,7 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 		return NewWikiIndex(root), nil
 	}
 
-	idx, err := NewGBrainIndex(ctx, root)
+	idx, err := NewGBrainEntityIndex(ctx, root)
 	if err == nil {
 		log.Printf("wiki: context layer backed by gbrain")
 		return idx, nil

@@ -151,55 +151,64 @@ the git markdown repo is the substrate, so the extractor repopulates it.
 
 ## Benchmark result
 
-`bench/slice-1` (500 artifacts, 475 facts, 50 queries), same corpus and scoring
-for both backends via the `--backend` flag. gbrain ran on a fresh brain with
-embeddings live, so its vector arm was active.
+`bench/slice-1` (500 artifacts, 475 facts, 50 queries). One corpus, one scorer,
+three backends via `--backend`. gbrain ran on a fresh brain with embeddings live.
 
-| Metric | SQLite + bleve | gbrain (pre-fix) | gbrain (final) |
+| Metric | SQLite + bleve | gbrain atoms (page per fact) | **gbrain entity (recommended)** |
 |---|---|---|---|
-| Ship gate (recall@20 pass) | **100%** | 60% | **84%** (RED, gate 85%) |
-| Micro-recall | 99.73% | 84.88% | 92.57% |
-| nDCG@10 | 0.8091 | 0.4250 | 0.5642 |
-| MRR | 0.8023 | 0.5117 | 0.5877 |
-| Retrieval p50 | 0.09 ms | 264 ms | 390 ms |
+| Ship gate (recall@20) | 100% GREEN | 84% RED | **94% GREEN** |
+| Micro-recall | 99.73% | 92.57% | 97.61% |
+| nDCG@10 | 0.8091 | 0.5642 | 0.7201 |
+| **MRR** | 0.8023 | 0.5117 | **0.8578** |
+| **recall@1** | 0.1062 | 0.0590 | **0.1209** |
+| recall@10 | 0.8450 | 0.4555 | 0.7390 |
+| Retrieval p50 | 0.09 ms | 390 ms | 226 ms |
 
-The `ensureEntityPage` fix moved the gate from 60% to 84%. Per class, gbrain now
-matches the baseline everywhere EXCEPT one:
+Per class, the recommended shape:
 
-| Class | SQLite | gbrain |
-|---|---|---|
-| multi_hop | 100% | **100%** |
-| relationship | 100% | **100%** |
-| counterfactual | 100% | **100%** |
-| general | 100% | **100%** |
-| status | 100% | **60%** |
+| Class | SQLite | atoms | entity |
+|---|---|---|---|
+| multi_hop | 100% | 100% | 100% |
+| relationship | 100% | 100% | 100% |
+| counterfactual | 100% | 100% | 100% |
+| general | 100% | 100% | 100% |
+| status | 100% | 60% | 85% |
 
-**The typed graph walks port cleanly. The whole remaining gap is the untyped
-text-search path.**
+### Reading the result
 
-### Why status fails, and why the adapter cannot fix it
+Adopting gbrain's own recommended page shape moved the gate from RED (84%) to
+GREEN (94%), and it **beats the SQLite baseline on MRR (0.858 vs 0.802) and
+recall@1 (0.121 vs 0.106)** — the rank of the first relevant fact is better than
+what WUPHF had. That is the pre-computed-synthesis effect the schema doc claims:
+matching a person's page surfaces their most relevant fact first.
 
-Status queries ("Where does Esme Walker work?") have large expected sets — 10 to
-13 facts. gbrain returns 7 of 10 in its top 20 while bleve returns all 10.
+It still trails on recall@10 (0.739 vs 0.845) and nDCG@10 (0.720 vs 0.809),
+because deep in a result list the per-fact ranking of the atom/bleve shape
+orders better than "this entity's facts, newest first".
 
-Ruled out by direct experiment on the bench corpus:
+The honest read: **the first implementation, not gbrain, was most of the gap.**
+Writing one page per fact turned gbrain into flat RAG over 475 fragments, which
+is precisely what its schema doc argues against.
 
-- **Not the vector arm.** gbrain's keyword-only `search` returns the identical
-  7/10 as its hybrid `query`.
-- **Not missing text.** All three missed facts contain "Esme Walker" verbatim.
-- **Not entity-page dilution.** Entity pages do rank (the `esme-walker` page
-  comes back at position 2), but they occupy only one slot of twenty.
-- **Not the fetch width.** Tripling the fetch to 60 does not change the top-20
-  ordering.
-- **`type` filtering does not work.** `query` accepts a `type` argument and
-  ignores it — 19 atoms returned either way.
+Latency remains ~2500x the in-process index. That is structural (an MCP
+round-trip per query) and no page shape changes it.
 
-What remains is the ranking itself: gbrain places 13 non-expected facts above 3
-expected ones. Its hybrid RRF is simply weaker than bleve's BM25 with an English
-analyser for entity-scoped queries whose answer is "most of what we know about
-this person". Nothing in the adapter changes that.
+## The pagination blocker largely dissolves at this shape
 
-## Hard blocker: full scans cannot paginate
+gbrain's `list_pages` caps at 100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
+(`core/operations.ts` calls `engine.listPages({type, updated_after, limit,
+...scope})` — no offset parameter exists; verified offset=0 and offset=2 return
+byte-identical rows). Full scans therefore cannot paginate, and the store
+returns `errCorpusExceedsListCap` rather than a silently truncated result.
+
+Under the atom shape that was fatal: 475 facts meant 475 pages, so every full
+scan was over the cap. Under the recommended shape the same corpus is ~38 entity
+pages, comfortably under it. The ceiling is now ~100 ENTITIES rather than ~100
+FACTS, which is a different order of problem — but it is still a ceiling, and a
+real deployment will cross it. Fixing it needs an `updated_after` cursor (lossy
+on tied timestamps) or upstream support.
+
+## Original blocker note (atom shape)
 
 gbrain's `list_pages` caps at 100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
 (`core/operations.ts` calls `engine.listPages({type, updated_after, limit,

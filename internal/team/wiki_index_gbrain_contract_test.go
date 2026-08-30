@@ -59,17 +59,17 @@ func newGBrainTestStore(t *testing.T) FactStore {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	t.Cleanup(cancel)
 
-	store, err := NewGBrainFactStore(ctx)
+	store, err := NewGBrainEntityStore(ctx)
 	if err != nil {
-		t.Fatalf("NewGBrainFactStore: %v", err)
+		t.Fatalf("NewGBrainEntityStore: %v", err)
 	}
 	t.Cleanup(func() { _ = store.Close() })
 
-	gs, ok := store.(*gbrainFactStore)
+	es, ok := store.(*gbrainEntityStore)
 	if !ok {
-		t.Fatalf("NewGBrainFactStore returned %T, want *gbrainFactStore", store)
+		t.Fatalf("NewGBrainEntityStore returned %T, want *gbrainEntityStore", store)
 	}
-	purgeGBrainNamespaces(t, ctx, gs)
+	purgeGBrainNamespaces(t, ctx, es.client)
 	return store
 }
 
@@ -81,16 +81,17 @@ func newGBrainTestStore(t *testing.T) FactStore {
 // Each pass lists what it can and deletes it, which shrinks the live set, so
 // repeating drains the namespace without needing pagination that gbrain does
 // not offer.
-func purgeGBrainNamespaces(t *testing.T, ctx context.Context, s *gbrainFactStore) {
+func purgeGBrainNamespaces(t *testing.T, ctx context.Context, client *gbrain.Client) {
 	t.Helper()
-	for _, prefix := range []string{
-		gbrainFactPrefix, gbrainEntityPrefix, gbrainCategoryPrefix, gbrainArticlePrefix,
-	} {
+	prefixes := append([]string{
+		gbrainFactPrefix, gbrainEntityPrefix, gbrainCategoryPrefix, gbrainArticlePrefix, gbrainDirSources,
+	}, allEntityDirs()...)
+	for _, prefix := range prefixes {
 		for pass := 0; ; pass++ {
 			if pass > 200 { // bounded: 200 passes * 100 rows is far past any test corpus
 				t.Fatalf("purge %s: still draining after %d passes", prefix, pass)
 			}
-			kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+			kept, raw, err := client.ListPageBatch(ctx, gbrain.ListPageOptions{
 				SlugPrefix: prefix,
 				Limit:      gbrainListPageSize,
 			})
@@ -106,7 +107,7 @@ func purgeGBrainNamespaces(t *testing.T, ctx context.Context, s *gbrainFactStore
 				break
 			}
 			for _, m := range kept {
-				if err := s.client.DeletePage(ctx, m.Slug); err != nil {
+				if err := client.DeletePage(ctx, m.Slug); err != nil {
 					t.Fatalf("purge delete %s: %v", m.Slug, err)
 				}
 			}
@@ -308,11 +309,11 @@ func TestGBrainTextIndex_Search(t *testing.T) {
 		t.Fatalf("UpsertFact: %v", err)
 	}
 
-	gs, ok := store.(*gbrainFactStore)
+	es, ok := store.(*gbrainEntityStore)
 	if !ok {
-		t.Fatalf("store is %T, want *gbrainFactStore", store)
+		t.Fatalf("store is %T, want *gbrainEntityStore", store)
 	}
-	text := &gbrainTextIndex{store: gs}
+	text := &gbrainEntityTextIndex{store: es}
 
 	hits, err := text.Search(ctx, "Carol Mei partnerships", 10)
 	if err != nil {
@@ -374,11 +375,11 @@ func TestGBrainFactStore_ResurrectsDeletedFact(t *testing.T) {
 		t.Fatalf("UpsertFact (initial): %v", err)
 	}
 
-	gs, ok := store.(*gbrainFactStore)
+	es, ok := store.(*gbrainEntityStore)
 	if !ok {
-		t.Fatalf("store is %T, want *gbrainFactStore", store)
+		t.Fatalf("store is %T, want *gbrainEntityStore", store)
 	}
-	text := &gbrainTextIndex{store: gs}
+	text := &gbrainEntityTextIndex{store: es}
 
 	// Retire the fact, the way the reconcile loop does.
 	if err := text.Delete(ctx, "f-resurrect"); err != nil {
