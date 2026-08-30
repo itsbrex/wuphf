@@ -151,6 +151,17 @@ func normalizeChannelSlug(slug string) string {
 	slug = strings.ReplaceAll(slug, "_", "-")
 	slug = strings.ReplaceAll(slug, placeholder, "__")
 	if slug == "" {
+		// KNOWN WART, kept deliberately (2026-08-30). With #general retired
+		// this returns the slug of a channel that cannot exist, which fails
+		// CLOSED everywhere (lookups miss, access checks deny) but produced
+		// "channel not found" at write sites that passed an empty channel.
+		// Every known write site is fixed at the caller (see the ~12 "Raw
+		// emptiness first" guards, apps.ts, escalation, the kickoff). The
+		// honest fix is returning "" and letting callers resolve a home from
+		// the actor — but this function has 259 call sites, so that flip is
+		// its own audited change, not a drive-by. If you hit a fresh
+		// "channel not found" traced here, fix the CALLER to check emptiness
+		// before normalising, like the existing guards do.
 		return "general"
 	}
 	return slug
