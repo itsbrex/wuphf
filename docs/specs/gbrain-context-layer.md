@@ -149,28 +149,55 @@ needed on the write path.
 For the WUPHF context layer this wipe is cheap: the brain is a derived index and
 the git markdown repo is the substrate, so the extractor repopulates it.
 
-## Benchmark result: the swap is a REGRESSION
+## Benchmark result
 
 `bench/slice-1` (500 artifacts, 475 facts, 50 queries), same corpus and scoring
-for both backends via the new `--backend` flag. gbrain ran with embeddings fully
-populated (484/484 chunks), so its vector arm was active.
+for both backends via the `--backend` flag. gbrain ran on a fresh brain with
+embeddings live, so its vector arm was active.
 
-| Metric | SQLite + bleve | gbrain | Delta |
+| Metric | SQLite + bleve | gbrain (pre-fix) | gbrain (final) |
 |---|---|---|---|
-| Ship gate (recall@20 pass rate) | **100%** | **60%** | RED |
-| Micro-recall | 99.73% | 84.88% | -14.9pp |
-| nDCG@10 | 0.8091 | 0.4250 | **-47%** |
-| MRR | 0.8023 | 0.5117 | -36% |
-| recall@10 | 0.8450 | 0.4555 | -46% |
-| Retrieval p50 | 0.09 ms | 264 ms | **~2900x slower** |
-| Retrieval p95 | 0.52 ms | 557 ms | ~1070x slower |
+| Ship gate (recall@20 pass) | **100%** | 60% | **84%** (RED, gate 85%) |
+| Micro-recall | 99.73% | 84.88% | 92.57% |
+| nDCG@10 | 0.8091 | 0.4250 | 0.5642 |
+| MRR | 0.8023 | 0.5117 | 0.5877 |
+| Retrieval p50 | 0.09 ms | 264 ms | 390 ms |
 
-Per class, gbrain: multi_hop 10% pass (was 100%), status 60%, relationship 80%.
+The `ensureEntityPage` fix moved the gate from 60% to 84%. Per class, gbrain now
+matches the baseline everywhere EXCEPT one:
 
-NOTE: this run predates the `ensureEntityPage` fix, so the typed graph walks
-were inert and BM25 carried the results alone. A re-run is required before the
-numbers are final. The latency gap is structural and will not move: it is an
-MCP round-trip plus one `get_page` per hit, against an in-process index.
+| Class | SQLite | gbrain |
+|---|---|---|
+| multi_hop | 100% | **100%** |
+| relationship | 100% | **100%** |
+| counterfactual | 100% | **100%** |
+| general | 100% | **100%** |
+| status | 100% | **60%** |
+
+**The typed graph walks port cleanly. The whole remaining gap is the untyped
+text-search path.**
+
+### Why status fails, and why the adapter cannot fix it
+
+Status queries ("Where does Esme Walker work?") have large expected sets — 10 to
+13 facts. gbrain returns 7 of 10 in its top 20 while bleve returns all 10.
+
+Ruled out by direct experiment on the bench corpus:
+
+- **Not the vector arm.** gbrain's keyword-only `search` returns the identical
+  7/10 as its hybrid `query`.
+- **Not missing text.** All three missed facts contain "Esme Walker" verbatim.
+- **Not entity-page dilution.** Entity pages do rank (the `esme-walker` page
+  comes back at position 2), but they occupy only one slot of twenty.
+- **Not the fetch width.** Tripling the fetch to 60 does not change the top-20
+  ordering.
+- **`type` filtering does not work.** `query` accepts a `type` argument and
+  ignores it — 19 atoms returned either way.
+
+What remains is the ranking itself: gbrain places 13 non-expected facts above 3
+expected ones. Its hybrid RRF is simply weaker than bleve's BM25 with an English
+analyser for entity-scoped queries whose answer is "most of what we know about
+this person". Nothing in the adapter changes that.
 
 ## Hard blocker: full scans cannot paginate
 
