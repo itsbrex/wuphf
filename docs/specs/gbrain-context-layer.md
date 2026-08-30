@@ -111,18 +111,52 @@ rather than the missing dependency it is.
 
   ```bash
   GBRAIN_HOME=~/.wuphf-gbrain-ctx-home WUPHF_GBRAIN_TEST=1 \
-    go test ./internal/team/ -run TestGBrain -count=1
+    OPENAI_API_KEY=sk-... go test ./internal/team/ -run TestGBrain -count=1
   ```
+
+  `OPENAI_API_KEY` must be exported explicitly. The Go test harness points
+  `WUPHF_RUNTIME_HOME` at a temp dir, so `config.ResolveOpenAIAPIKey()` reads an
+  empty config and `gbrainEnv()` forwards no key to the subprocess. Without it
+  the tests pass but cover the keyword arm only, because gbrain writes chunks
+  with NULL embeddings. Check with `gbrain stats`: Embedded should equal Chunks.
+
+## Enabling embeddings
+
+gbrain REFUSES `gbrain config set embedding_model` on PGLite: the model and
+dimensions size the schema, so they are file-plane only and must be stable
+across connects. There is no in-place upgrade and no `--force`. The procedure
+is wipe and re-init:
+
+```bash
+export OPENAI_API_KEY=sk-...
+export GBRAIN_HOME="$HOME/.wuphf-gbrain-ctx-home"
+rm -rf "$GBRAIN_HOME/.gbrain/brain.pglite"
+gbrain init --pglite --embedding-model openai:text-embedding-3-large
+```
+
+Two traps:
+
+1. **A pre-existing `embedding_disabled: true` silently wins over
+   `--embedding-model`.** init honours it as a deferred-setup sentinel and
+   writes no model, with no warning. Remove the key from `config.json` first.
+2. **Use OpenAI.** `content_chunks.embedding` is declared `vector(1536)` with
+   `model` defaulting to `text-embedding-3-large`, so OpenAI at 1536d is a
+   native fit. Voyage (1024d) and ZeroEntropy (2560d) fight the column.
+
+`put_page` embeds synchronously when a key is present, so no background pass is
+needed on the write path.
+
+For the WUPHF context layer this wipe is cheap: the brain is a derived index and
+the git markdown repo is the substrate, so the extractor repopulates it.
 
 ## Not done
 
 - **No benchmark run.** `bench/slice-1/` and the CI gate
   (recall@3 >= 0.90, nDCG@10 >= 0.95 in `wiki_query_eval_test.go`) have not been
   run against the gbrain backend. Retrieval quality versus bleve is unmeasured.
-- **Embeddings are off.** Both the reference brain and the founder's own
-  (`~/.gbrain/config.json`) set `embedding_disabled: true`, so gbrain's hybrid
-  search is running its keyword arm only. The vector arm needs an embedding
-  provider key.
+- **The founder's own brain (`~/.gbrain`) still has `embedding_disabled: true`**
+  and is therefore keyword-only. Enabling it means the same wipe-and-re-init
+  against real data plus `gbrain sync`; not done, because it is destructive.
 - **No migration path.** Nothing backfills an existing SQLite wiki index into a
   brain. A fresh brain starts empty and repopulates as the extractor runs.
 - **`internal/gbrain/pages.go` duplicates nothing but extends `Client`**;

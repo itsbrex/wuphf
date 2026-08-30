@@ -13,7 +13,14 @@ package team
 // Run with:
 //
 //	GBRAIN_HOME=~/.wuphf-gbrain-ctx-home WUPHF_GBRAIN_TEST=1 \
-//	  go test ./internal/team/ -run TestGBrain -count=1
+//	  OPENAI_API_KEY=$(...) go test ./internal/team/ -run TestGBrain -count=1
+//
+// OPENAI_API_KEY must be exported explicitly to exercise the vector arm. The Go
+// test harness points WUPHF_RUNTIME_HOME at a temp dir for isolation, so
+// config.ResolveOpenAIAPIKey() reads an EMPTY config and gbrainEnv() forwards no
+// key to the `gbrain serve` subprocess. Without it the tests still pass, but
+// gbrain writes chunks with NULL embeddings and every assertion here is covering
+// the keyword arm only. Verify with `gbrain stats`: Embedded should equal Chunks.
 //
 // The value of these tests is that they feed the SAME assertions the SQLite and
 // in-memory stores already pass (via the shared harnesses in
