@@ -114,21 +114,29 @@ describe("pickIdleCopy", () => {
   });
 });
 
-describe("built-in roles all have their own copy", () => {
-  // The bug this pins: every built-in role fell through to GENERALIST_COPY,
-  // and rotateIndex is derived from idleMs alone, so the WHOLE ROSTER showed
-  // the same line at the same moment. A sidebar where six agents are all
-  // "clearing something small" reads as broken, not as charming.
+describe("a populated roster does not show one line for everybody", () => {
+  // The bug this pins: roles fell through to GENERALIST_COPY, and rotateIndex
+  // is derived from idleMs alone, so the WHOLE ROSTER showed the same line at
+  // the same moment. A sidebar where every agent is "clearing something small"
+  // reads as broken, not as charming.
+  //
+  // This used to iterate six built-ins. It cannot any more: the founder
+  // retired the librarian, app-builder, planner, executor and reviewer as
+  // defaults, so Chief of Staff is the only built-in left and "they all show
+  // the same line" is unfalsifiable against a roster of one.
+  //
+  // The regression is still real for the rosters users actually build, so the
+  // fixture is now user-created agents with distinct roles. That is the case
+  // that can still regress.
   const ROSTER: readonly { slug: string; role: string }[] = [
     { slug: "ceo", role: "Chief of Staff" },
-    { slug: "librarian", role: "Librarian" },
-    { slug: "app-builder", role: "App Builder" },
-    { slug: "planner", role: "Planner" },
-    { slug: "executor", role: "Executor" },
-    { slug: "reviewer", role: "Reviewer" },
+    { slug: "ada", role: "Engineer" },
+    { slug: "kit", role: "Designer" },
+    { slug: "rey", role: "PM" },
+    { slug: "sol", role: "DevOps" },
   ];
 
-  it("gives every built-in role a line that is not the generalist fallback", () => {
+  it("gives every known role a line that is not the generalist fallback", () => {
     for (const m of ROSTER) {
       const copy = pickIdleCopy({ slug: m.slug, role: m.role, idleMs: 0 });
       expect(copy, `${m.role} fell through to the generalist table`).not.toBe(
@@ -144,5 +152,14 @@ describe("built-in roles all have their own copy", () => {
       pickIdleCopy({ slug: m.slug, role: m.role, idleMs: 0 }),
     );
     expect(new Set(seen).size).toBeGreaterThan(1);
+  });
+
+  it("a retired built-in degrades to the generalist line, not a crash", () => {
+    // Legacy workspaces still hold these agents on disk. Their role tables are
+    // gone, so they must fall through cleanly rather than throw or return "".
+    for (const role of ["Librarian", "App Builder", "Planner", "Reviewer"]) {
+      const copy = pickIdleCopy({ slug: "legacy", role, idleMs: 0 });
+      expect(copy.length).toBeGreaterThan(0);
+    }
   });
 });

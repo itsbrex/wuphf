@@ -41,10 +41,17 @@ const SLUG_OVERRIDES: Record<string, readonly string[]> = {
  * "Engineer", " engineer ", and "Dev" all hit the same table.
  */
 const ROLE_TABLES: Record<string, readonly string[]> = {
-  // The six built-in roles. Before these existed every one of them fell
-  // through to GENERALIST_COPY, and because rotateIndex is derived from
-  // idleMs alone, all six showed the SAME line at the same moment -- a
-  // sidebar where the entire staff was "looking at memes".
+  // `lead` is the Chief of Staff, and it is now the ONLY built-in. The
+  // librarian, app-builder, planner, executor and reviewer tables were removed
+  // when the founder retired those agents as defaults: "that concept should
+  // now be gone with those bots as default. their defintions also shouldn't
+  // exist". The remaining entries below are ordinary ROLE copy, matched on
+  // whatever role a user gives an agent they created themselves, so they are
+  // not built-in definitions and they stay.
+  //
+  // A legacy workspace that still holds one of the retired agents falls
+  // through to GENERALIST_COPY, which is correct: generic copy for an agent
+  // the product no longer defines, rather than a dangling special case.
   //
   // Voice: flat, specific, mildly tedious. An idle agent is BETWEEN jobs,
   // never spectating and never lazy -- founder's rule is that gawkbot is not
@@ -58,32 +65,6 @@ const ROLE_TABLES: Record<string, readonly string[]> = {
     "reordering the queue",
     "taking it off your plate",
     "finding the next boring thing",
-  ],
-  librarian: [
-    "filing something",
-    "re-reading the wiki",
-    "looking for a contradiction",
-    "tidying a page nobody opened",
-  ],
-  "app-builder": [
-    "wiring up a button",
-    "laying out a screen",
-    "between builds",
-  ],
-  planner: [
-    "breaking it into steps",
-    "grooming the backlog",
-    "sequencing something",
-  ],
-  executor: [
-    "working through the queue",
-    "picking up the next one",
-    "clearing the small stuff",
-  ],
-  reviewer: [
-    "looking for the flaw",
-    "re-reading it once more",
-    "between diffs",
   ],
   engineer: [
     "running the tests",
@@ -142,12 +123,6 @@ const ROLE_ALIASES: Record<string, string> = {
   "chief of staff": "lead",
   "chief-of-staff": "lead",
   ceo: "lead",
-  librarian: "librarian",
-  "app builder": "app-builder",
-  "app-builder": "app-builder",
-  planner: "planner",
-  executor: "executor",
-  reviewer: "reviewer",
 };
 
 /**
