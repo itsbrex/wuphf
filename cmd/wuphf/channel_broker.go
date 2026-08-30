@@ -868,7 +868,7 @@ func resetTeamSession(oneOnOne bool) tea.Cmd {
 			mode = team.SessionModeOneOnOne
 		}
 		if oneOnOne {
-			return channelResetDoneMsg{notice: "Direct session reset. Agent pane reloaded in place.", sessionMode: mode, oneOnOneAgent: agent}
+			return channelResetDoneMsg{notice: "Direct session reset. Agent pane reloaded in place. Nobody else is looking.", sessionMode: mode, oneOnOneAgent: agent}
 		}
 		return channelResetDoneMsg{notice: "Office reset. Team panes reloaded in place.", sessionMode: mode, oneOnOneAgent: agent}
 	}

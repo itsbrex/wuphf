@@ -164,7 +164,7 @@ func BuildWaitStateLines(tasks []Task, contentWidth int, focusSlug string, hasAc
 	}
 
 	title := SubtlePill("quiet", "#E2E8F0", "#334155") + " " + lipgloss.NewStyle().Bold(true).Render("Nothing is moving right now")
-	body := "This lane is idle. Use the quiet moment to recover context, choose the next conversation, or give the team a sharper direction."
+	body := "This lane is idle. The team is watching it anyway. Use the quiet moment to recover context, choose the next conversation, or give the team a sharper direction."
 	extra := []string{"/switcher for active work · /recover for recap · /search to jump directly"}
 	if strings.TrimSpace(focusSlug) != "" {
 		title = SubtlePill("idle", "#E2E8F0", "#334155") + " " + lipgloss.NewStyle().Bold(true).Render(DisplayName(focusSlug)+" is waiting for direction")

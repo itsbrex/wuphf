@@ -77,6 +77,15 @@ func TestFallbackDecisionKindDefaults(t *testing.T) {
 // itself is covered by the action resolver unit tests.)
 func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
 	id1 := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "ceo", "Notion", "", "Create the launch page")
@@ -111,6 +120,15 @@ func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 // onto the same card (workspace-wide) rather than stacking duplicates.
 func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	// Force Composio unconfigured so the resolver classifies a mutating action as
 	// connect deterministically, with no network.
 	t.Setenv("WUPHF_COMPOSIO_API_KEY", "")
@@ -169,6 +187,15 @@ func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 // action resumes with zero re-asking. It must be idempotent across repeat polls.
 func TestFanOutConnectedResolvesParkedCard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
 	reqID := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
@@ -217,6 +244,15 @@ func TestFanOutConnectedResolvesParkedCard(t *testing.T) {
 // backstop.)
 func TestExpireStaleConnectCard(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
 	id := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")

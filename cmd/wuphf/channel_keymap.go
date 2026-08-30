@@ -58,7 +58,7 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.lastCtrlCAt = now
-		m.setTransientNotice("Press Ctrl+C again to quit gawkbot.")
+		m.setTransientNotice("Press Ctrl+C again to quit gawkbot. They will wait.")
 		return m, nil
 	case "ctrl+b":
 		if m.isOneOnOne() {
@@ -68,14 +68,14 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 		return m, nil
 	case "ctrl+g":
 		if m.isOneOnOne() {
-			m.setTransientNotice("1:1 mode: no sidebar, no distractions. Just the two of you.")
+			m.setTransientNotice("1:1 mode: no sidebar, no distractions. Just the two of you, and one of you is a bot.")
 			return m, nil
 		}
 		if m.quickJumpTarget == quickJumpChannels {
 			m.quickJumpTarget = quickJumpNone
 		} else {
 			m.quickJumpTarget = quickJumpChannels
-			m.setTransientNotice("Quick nav: 1-9 switches channels.")
+			m.setTransientNotice("Quick nav: 1-9 switches channels. The team keeps up.")
 		}
 		return m, nil
 	case "ctrl+o":
@@ -87,7 +87,7 @@ func (m channelModel) handleKeyMsg(msg tea.KeyMsg) (channelModel, tea.Cmd) {
 			m.quickJumpTarget = quickJumpNone
 		} else {
 			m.quickJumpTarget = quickJumpApps
-			m.setTransientNotice("Quick nav: 1-9 switches apps.")
+			m.setTransientNotice("Quick nav: 1-9 switches apps. Still being watched.")
 		}
 		return m, nil
 	case "ctrl+d":

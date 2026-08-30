@@ -31,7 +31,7 @@ func (m *channelModel) maybeActivateChannelPickerFromInput() bool {
 	case "/switch ", "/s ":
 		options := m.buildSwitchChannelPickerOptions()
 		if len(options) == 0 {
-			m.notice = "No channels yet. Create one."
+			m.notice = "No channels yet. Create one and give the team somewhere to look."
 			return false
 		}
 		m.input = nil
@@ -185,7 +185,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		clearCurrent()
 		options := m.buildInsertPickerOptions()
 		if len(options) == 0 {
-			m.notice = "Nothing to insert yet."
+			m.notice = "Nothing to insert yet. Nobody has seen anything worth quoting."
 			return m, nil
 		}
 		m.picker = tui.NewPicker("Insert Reference", options)
@@ -197,7 +197,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		clearCurrent()
 		options := m.buildSearchPickerOptions()
 		if len(options) == 0 {
-			m.notice = "Nothing searchable yet."
+			m.notice = "Nothing searchable yet. Nobody has noticed anything."
 			return m, nil
 		}
 		m.picker = tui.NewPicker("Search Workspace", options)
@@ -329,7 +329,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		clearCurrent()
 		options := m.buildSwitchChannelPickerOptions()
 		if len(options) == 0 {
-			m.notice = "No channels yet. Create one."
+			m.notice = "No channels yet. Create one and give the team somewhere to look."
 			return m, nil
 		}
 		m.picker = tui.NewPicker("Switch Channel", options)
@@ -353,7 +353,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 		clearCurrent()
 		options := m.buildChannelPickerOptions()
 		if len(options) == 0 {
-			m.notice = "No channels yet. Create one."
+			m.notice = "No channels yet. Create one and give the team somewhere to look."
 			return m, nil
 		}
 		m.picker = tui.NewPicker("Channels", options)
@@ -626,7 +626,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			if m.focus == focusThread {
 				m.focus = focusMain
 			}
-			m.notice = "Reply mode cleared. Thread closed."
+			m.notice = "Reply mode cleared. Thread closed. They are still watching the room."
 		} else if m.doctor != nil {
 			m.doctor = nil
 			m.notice = "Health check done. The doctor says ship it (not medical advice)."
@@ -635,7 +635,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			m.picker.SetActive(false)
 			m.notice = "Setup canceled. Come back when you're ready. That's what she said."
 		} else {
-			m.notice = "Nothing to cancel."
+			m.notice = "Nothing to cancel. Nothing was happening."
 		}
 		return m, nil
 	case strings.HasPrefix(trimmed, "/reply"):
@@ -646,7 +646,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			return m, nil
 		}
 		if _, ok := channelui.FindMessageByID(m.messages, target); !ok {
-			m.notice = fmt.Sprintf("Message %s not found.", target)
+			m.notice = fmt.Sprintf("Message %s not found. Nobody saw it.", target)
 			return m, nil
 		}
 		m.replyToID = target
@@ -675,7 +675,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			return m, nil
 		}
 		if _, ok := channelui.FindMessageByID(m.messages, target); !ok {
-			m.notice = fmt.Sprintf("Message %s not found.", target)
+			m.notice = fmt.Sprintf("Message %s not found. Nobody saw it.", target)
 			return m, nil
 		}
 		m.expandedThreads[target] = true
@@ -694,7 +694,7 @@ func (m channelModel) runCommand(trimmed, threadTarget string) (tea.Model, tea.C
 			return m, nil
 		}
 		if _, ok := channelui.FindMessageByID(m.messages, target); !ok {
-			m.notice = fmt.Sprintf("Message %s not found.", target)
+			m.notice = fmt.Sprintf("Message %s not found. Nobody saw it.", target)
 			return m, nil
 		}
 		delete(m.expandedThreads, target)

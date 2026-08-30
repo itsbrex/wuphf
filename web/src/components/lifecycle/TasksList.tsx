@@ -464,8 +464,8 @@ function TasksEmptyState({ onOpenCreate }: { onOpenCreate: () => void }) {
       data-testid="issues-list-empty"
     >
       <p className="issues-empty-copy">
-        No tasks yet. File larger project work here, then cut it into agent
-        tasks.
+        No tasks yet. The team is watching this space, which is all they can
+        do until you file something.
       </p>
       <button
         type="button"
@@ -863,6 +863,7 @@ export function TasksList({
                       <li
                         className="issues-kanban-column-empty"
                         aria-label={`No tasks in ${STAGE_LABELS[stage]}`}
+                        title="Watched closely. Still empty."
                       >
                         —
                       </li>

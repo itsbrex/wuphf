@@ -218,7 +218,7 @@ func printWorkspaceHelp() {
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Each workspace is one fully isolated gawkbot instance — its own team, wiki,")
 	fmt.Fprintln(os.Stderr, "office tasks, broker process, and per-workspace token bill. Like having")
-	fmt.Fprintln(os.Stderr, "Separate workspaces, same machine.")
+	fmt.Fprintln(os.Stderr, "Separate workspaces, same machine. Neither one knows about the other.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Usage:")
 	fmt.Fprintln(os.Stderr, "  gawkbot workspace list                       List all workspaces")

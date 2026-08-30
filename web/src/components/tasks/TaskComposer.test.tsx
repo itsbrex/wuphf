@@ -126,6 +126,6 @@ describe("TaskComposer copy", () => {
   it("does not promise an approval gate that no longer exists", () => {
     renderComposer();
     expect(screen.queryByText(/gets your approval/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/starts on it immediately/i)).toBeInTheDocument();
+    expect(screen.getByText(/starts immediately/i)).toBeInTheDocument();
   });
 });

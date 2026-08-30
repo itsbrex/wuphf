@@ -27,6 +27,15 @@ func decodeResolve(t *testing.T, resp *http.Response) integrationResolveResponse
 // decision can guide setup), never proceeds blind.
 func TestResolveUnconfiguredRoutesToConnect(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()
@@ -186,6 +195,15 @@ func TestMaskSensitivePayload(t *testing.T) {
 
 func TestResolveRejectsMissingFields(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
+	// Hermetic: these tests assert the UNCONFIGURED catalog, so they must not
+	// inherit a composio credential from the developer's environment or from
+	// another test's t.Setenv window. Observed failing in the full-package run
+	// while passing in isolation, with gmail reported "connected" -- the
+	// signature of ambient config leaking in.
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
 	defer srv.Close()

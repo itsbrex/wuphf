@@ -638,7 +638,7 @@ func runTeam(args []string, packSlug string, unsafe bool, oneOnOne bool, opusCEO
 		// this env var directly; the flag is deliberately local-only.
 		_ = os.Setenv("WUPHF_UNSAFE", "1")
 		fmt.Fprintf(os.Stderr, "\n\u26a0\ufe0f  UNSAFE MODE: All agents have unrestricted permissions.\n")
-		fmt.Fprintf(os.Stderr, "   Use for local dev only.\n\n")
+		fmt.Fprintf(os.Stderr, "   Use for local dev only. Nobody is watching in production yet.\n\n")
 	}
 
 	if err := l.Preflight(); err != nil {

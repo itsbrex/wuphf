@@ -170,19 +170,19 @@ var channelSlashCommands = []tui.SlashCommand{
 	{Name: "init", Description: "Run setup. Nothing is watching you yet", Category: "setup"},
 	{Name: "provider", Description: "Switch LLM provider (choose wisely, Michael)", Category: "setup"},
 	{Name: "doctor", Description: "Check readiness and runtime health (Meredith not involved)", Category: "setup"},
-	{Name: "integrate", Description: "Connect an integration", Category: "setup"},
+	{Name: "integrate", Description: "Connect an integration. More to look at", Category: "setup"},
 	{Name: "connect", Description: "Bring Telegram, OpenClaw, or other integrations onto the team", Category: "setup"},
-	{Name: "1o1", Description: "Direct 1:1 with an agent", Category: "session"},
+	{Name: "1o1", Description: "Direct 1:1 with an agent. The others pretend not to listen", Category: "session"},
 	{Name: "messages", Description: "Show the main office feed — where it all happens", Category: "navigate"},
 	{Name: "inbox", Description: "Show the selected agent inbox lane in 1:1 mode", Category: "navigate"},
 	{Name: "outbox", Description: "Show the selected agent outbox lane in 1:1 mode", Category: "navigate"},
-	{Name: "recover", Description: "Session recovery", Category: "navigate"},
+	{Name: "recover", Description: "Session recovery. Someone was watching, so nothing is lost", Category: "navigate"},
 	{Name: "resume", Description: "Alias for /recover", Category: "navigate"},
-	{Name: "rewind", Description: "Catch up from here", Category: "navigate"},
-	{Name: "search", Description: "Search channels, tasks, and requests", Category: "navigate"},
+	{Name: "rewind", Description: "Catch up from here. They already saw it", Category: "navigate"},
+	{Name: "search", Description: "Search channels, tasks, requests. Somebody took notes", Category: "navigate"},
 	{Name: "insert", Description: "Insert a channel, task, request, or message reference", Category: "navigate"},
-	{Name: "switcher", Description: "Switch between rooms and direct messages", Category: "navigate"},
-	{Name: "tasks", Description: "Show active work", Category: "navigate"},
+	{Name: "switcher", Description: "Switch rooms and DMs. The staring follows you", Category: "navigate"},
+	{Name: "tasks", Description: "Show active work. Everyone is watching it too", Category: "navigate"},
 	{Name: "switch", Description: "Switch to another channel", Category: "navigate"},
 	{Name: "channels", Description: "Browse and manage channels", Category: "navigate"},
 	{Name: "channel", Description: "Create or remove a channel", Category: "channels"},
@@ -193,13 +193,13 @@ var channelSlashCommands = []tui.SlashCommand{
 	{Name: "policies", Description: "Signals, watchdogs, decisions — no beet farm required", Category: "navigate"},
 	{Name: "calendar", Description: "Office schedule — more reliable than Michael's personal calendar", Category: "navigate"},
 	{Name: "queue", Description: "Alias for /calendar", Category: "navigate"},
-	{Name: "artifacts", Description: "Task logs, approvals, and workflow artifacts", Category: "navigate"},
-	{Name: "skills", Description: "Show available skills", Category: "navigate"},
+	{Name: "artifacts", Description: "Task logs, approvals, and artifacts. The receipts", Category: "navigate"},
+	{Name: "skills", Description: "Show available skills. Each agent watches one thing well", Category: "navigate"},
 	{Name: "skill", Description: "Create, invoke, or manage a skill — the team gets smarter over time", Category: "work"},
 	{Name: "reply", Description: "Reply in thread — threads keep context, unlike forwarded email chains", Category: "conversation"},
 	{Name: "threads", Description: "Browse threads — the antidote to 'per my last email'", Category: "conversation"},
 	{Name: "expand", Description: "Expand a collapsed thread — Michael never collapses anything", Category: "conversation"},
-	{Name: "collapse", Description: "Collapse a thread", Category: "conversation"},
+	{Name: "collapse", Description: "Collapse a thread. Out of sight, briefly", Category: "conversation"},
 	{Name: "cancel", Description: "Exit current mode — that's what she said (probably)", Category: "conversation"},
 	{Name: "collab", Description: "Open-floor mode: everyone hears everything", Category: "session"},
 	{Name: "focus", Description: "Delegation mode — Chief of Staff routes, specialists execute (that's how it was always meant to work)", Category: "session"},
@@ -425,7 +425,7 @@ func newChannelModelWithApp(threadsCollapsed bool, initialApp channelui.OfficeAp
 		m.sidebarCollapsed = true
 		m.threadsDefaultExpand = true
 		m.autocomplete = tui.NewAutocomplete(buildOneOnOneSlashCommands())
-		m.notice = "Direct session reset. Agent pane reloaded in place."
+		m.notice = "Direct session reset. Agent pane reloaded in place. Nobody else is looking."
 	}
 	memoryStatus := team.ResolveMemoryBackendStatus()
 	if memoryStatus.SelectedKind == config.MemoryBackendNone {
