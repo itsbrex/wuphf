@@ -54,6 +54,12 @@ jobs:
     # a tag ruleset over a silent env gate that nobody monitors.
     permissions:
       contents: write
+      # id-token lets npm publish authenticate via OIDC trusted publishing:
+      # npmjs.com is configured (package gawkbot -> Settings -> Trusted
+      # publisher) to trust THIS workflow file in THIS repo, so no npm token
+      # exists to leak, expire, or scope wrong. 2FA stays fully enforced for
+      # humans; CI publishes with per-run OIDC credentials and provenance.
+      id-token: write
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -125,16 +131,24 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
+      # Trusted publishing needs npm >= 11.5.1 for the OIDC exchange; Node 20
+      # bundles npm 10.x, which would silently fall back to token auth (and
+      # there is no token any more).
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest && npm --version
+
       - name: Set npm package version
         working-directory: npm
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: npm version "$VERSION" --no-git-tag-version --allow-same-version
 
+      # No NODE_AUTH_TOKEN: auth is OIDC trusted publishing (id-token: write
+      # above + the trusted publisher configured on npmjs.com for gawkbot).
+      # The granular NPM_TOKEN could publish wuphf but 404'd creating gawkbot;
+      # trusted publishing removes the long-lived token class entirely.
       - name: Publish to npm
         working-directory: npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public
 
   smoke-test-npx:
