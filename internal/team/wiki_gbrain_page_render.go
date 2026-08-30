@@ -156,7 +156,7 @@ func factRenderTime(f TypedFact) time.Time {
 
 // renderTimelineLine renders one evidence-log entry in the schema doc's format:
 //
-//	- **YYYY-MM-DD** | Source — What happened. ^factID
+//   - **YYYY-MM-DD** | Source — What happened. ^factID
 //
 // The anchor is last so factAnchorRe can pin it to end-of-line.
 func renderTimelineLine(f TypedFact) string {
