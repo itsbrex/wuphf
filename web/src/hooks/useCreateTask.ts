@@ -8,9 +8,11 @@ export interface CreateTaskFormInput {
   title: string;
   details?: string;
   /**
-   * Channel slug to file the task under. Optional: channels are no longer a
-   * user-facing concept (every task gets its own channel), so creation
-   * surfaces omit this and the broker defaults it to "general".
+   * Channel slug to file the task under. Optional, and normally omitted:
+   * channels are not a user-facing concept, and with the shared room retired
+   * there is no default to fall back to. When it is absent the broker routes
+   * the task to its OWNER's DM (falling back to the creator's), which is a
+   * better answer than any slug this layer could guess.
    */
   channel?: string;
   assignee?: string;
@@ -35,15 +37,22 @@ export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation<CreateTaskResult, Error, CreateTaskFormInput>({
     mutationFn: async (input) => {
-      const response = await post<TaskResponse>("/tasks", {
+      const body: Record<string, unknown> = {
         action: "create",
-        channel: input.channel?.trim() || "general",
         title: input.title.trim(),
         details: input.details?.trim() || "",
         owner: input.assignee?.trim() || "",
         created_by: input.createdBy?.trim() || "human",
         task_type: "issue",
-      });
+      };
+      // Send `channel` only when the caller actually named one. This was
+      // `|| "general"`, which stopped resolving the moment the shared room was
+      // retired and made every Issue created from the dialog, the command
+      // palette, or the inline card fail with "channel not found". Omitting it
+      // hands the decision to the broker, which routes to the owner's DM.
+      const channel = input.channel?.trim();
+      if (channel) body.channel = channel;
+      const response = await post<TaskResponse>("/tasks", body);
       return { task: response.task };
     },
     onSuccess: (_result, input) => {

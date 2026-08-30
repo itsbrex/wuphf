@@ -314,10 +314,14 @@ export async function postTaskReject(
     });
   }
   return trackOn(
+    // No `channel`: a reject addresses an EXISTING task by id, and the task
+    // already knows where it lives. This used to send the literal "general",
+    // which stopped existing when the shared room was retired and turned every
+    // reject into "channel not found". The broker resolves the task's own
+    // channel for non-create actions.
     post(`/tasks`, {
       action: "reject",
       id: taskId,
-      channel: "general",
       details: trimmed,
       created_by: "human",
     }),

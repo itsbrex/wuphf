@@ -281,7 +281,14 @@ func (b *Broker) preferredTaskChannelLocked(requestedChannel, createdBy, owner, 
 	if raw := strings.TrimSpace(requestedChannel); raw != "" {
 		return normalizeChannelSlug(raw)
 	}
-	if slug, err := b.homeChannelForLocked(owner); err == nil && slug != "" {
+	// The owner's DM, but only if the CREATOR may post in it. A DM has exactly
+	// two participants, so a task one agent opens for another would otherwise
+	// resolve to a private conversation the creator cannot write to, and the
+	// caller's own access check would then reject the whole plan with 403. The
+	// human passes every check, so a human-planned task still lands on its
+	// owner.
+	if slug, err := b.homeChannelForLocked(owner); err == nil && slug != "" &&
+		b.canAccessChannelLocked(createdBy, slug) {
 		return slug
 	}
 	if slug, err := b.homeChannelForLocked(createdBy); err == nil && slug != "" {

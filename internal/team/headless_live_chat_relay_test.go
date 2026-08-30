@@ -381,6 +381,25 @@ func TestAnsweredIncidentApprovalDoesNotCreateDuplicateRequest(t *testing.T) {
 }
 
 func TestApprovedIncidentSelfHealFailureSurfacesToChat(t *testing.T) {
+	// SKIPPED once #general is retired, and the reason is worth reading.
+	//
+	// This test asserts that a FAILED self-heal creation surfaces to chat. It
+	// never injected a failure: requestSelfHealingLocked resolved the task's
+	// home to "general", the fixture did not have a #general, and creation
+	// failed as a side effect. The assertion was riding on a room the fixture
+	// happened not to seed.
+	//
+	// With the lobby retired the resolver returns the owner's DM (or "", which
+	// is legal), creation succeeds, and there is nothing to surface. The
+	// behaviour is correct; the test has no failure to observe.
+	//
+	// Making this meaningful needs a real injection point in
+	// requestSelfHealingLocked rather than a room that happens to be missing.
+	// Skipping rather than deleting: the property is worth testing, and
+	// rewriting it to assert success would quietly drop the coverage.
+	if !generalChannelEnabled() {
+		t.Skip("failure condition was an artifact of #general being absent; needs a real injection point")
+	}
 	b := newTestBroker(t)
 	ensureTestMemberAccess(b, "team", "eng", "Engineer")
 

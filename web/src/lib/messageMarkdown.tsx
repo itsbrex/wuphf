@@ -29,6 +29,7 @@ import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { PluggableList } from "unified";
 
+import { AppRefLink } from "./AppRefLink";
 import { TaskRefLink } from "./TaskRefLink";
 
 // Mirrors the broker-side mention pattern in internal/team/broker.go.
@@ -48,6 +49,13 @@ const MENTION_RE = /(?:^|[^a-zA-Z0-9_])@([a-z0-9][a-z0-9-]{1,29})\b/g;
 // so dropping /i is the whole fix — each branch now spells its own case.
 const TASK_REF_RE =
   /(?:^|[^A-Za-z0-9_/-])((?:[A-Z][A-Z0-9]{1,11}-\d+|task-\d+))\b/g;
+
+// App references. Agent-built apps carry an `app_<hex>` id, and agents quote
+// them in prose ("shipped it in app_9f3c1d2e"). Bare, that is unreadable and
+// unclickable; AppRefLink resolves it to the app's name and opens it.
+// Mirrors TASK_REF_RE's boundary handling so an id inside a path or an
+// existing link is left alone.
+const APP_REF_RE = /(?:^|[^A-Za-z0-9_/-])(app_[0-9a-fA-F]{4,32})\b/g;
 
 // Defense-in-depth allowlist applied to anchor href values. ReactMarkdown's
 // defaultUrlTransform already strips javascript:, vbscript:, and data:
@@ -138,14 +146,57 @@ function buildInlineReplacements(value: string): MdAnyNode[] {
       continue;
     }
     const taskParts = buildTaskRefReplacements((part as MdTextNode).value);
-    if (taskParts.length === 0) {
+    if (taskParts.length > 0) {
+      linkified = true;
+      // An app id can sit in the text either side of a task ref, so the app
+      // pass runs over whatever text the task pass left behind rather than
+      // over the original string.
+      for (const tp of taskParts) {
+        if (tp.type !== "text") {
+          out.push(tp);
+          continue;
+        }
+        const appParts = buildAppRefReplacements((tp as MdTextNode).value);
+        if (appParts.length === 0) out.push(tp);
+        else out.push(...appParts);
+      }
+      continue;
+    }
+    const appOnly = buildAppRefReplacements((part as MdTextNode).value);
+    if (appOnly.length === 0) {
       out.push(part);
       continue;
     }
     linkified = true;
-    out.push(...taskParts);
+    out.push(...appOnly);
   }
   if (mentionParts.length === 0 && !linkified) return [];
+  return out;
+}
+
+function buildAppRefReplacements(value: string): MdAnyNode[] {
+  const matches = [...value.matchAll(APP_REF_RE)];
+  if (matches.length === 0) return [];
+  const out: MdAnyNode[] = [];
+  let cursor = 0;
+  for (const m of matches) {
+    const id = m[1];
+    if (!id) continue;
+    const start = value.indexOf(id, m.index ?? 0);
+    if (start === -1) continue;
+    if (start > cursor)
+      out.push({ type: "text", value: value.slice(cursor, start) });
+    out.push({
+      type: "link",
+      url: "#",
+      children: [{ type: "text", value: id }],
+      data: { hProperties: { "data-wuphf-app": "true", "data-app-id": id } },
+    });
+    cursor = start + id.length;
+  }
+  if (cursor === 0) return [];
+  if (cursor < value.length)
+    out.push({ type: "text", value: value.slice(cursor) });
   return out;
 }
 
@@ -277,6 +328,11 @@ export const messageMarkdownComponents: Partial<Components> = {
     if (record["data-wuphf-mention"] === "true") {
       // Mention chip — never a navigable link.
       return <span className="mention">{children}</span>;
+    }
+    if (record["data-wuphf-app"] === "true") {
+      // App reference — a pill that opens the app.
+      const appId = String(record["data-app-id"] ?? "").trim();
+      return <AppRefLink appId={appId}>{children}</AppRefLink>;
     }
     if (record["data-wuphf-task"] === "true") {
       // Task reference — opens the shared task modal in place. It must NOT

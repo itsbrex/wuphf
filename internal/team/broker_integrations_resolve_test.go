@@ -141,6 +141,10 @@ func TestResolveConnectedApproveAndReadOnlyProceed(t *testing.T) {
 }
 
 func TestMaskSensitivePayload(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	in := map[string]any{
 		"to":                   "lead@acme.com",
 		"token":                "secret-1",

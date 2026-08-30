@@ -32,5 +32,9 @@ func newTestBroker(t *testing.T) *team.Broker {
 	// "ceo"; since the R6 hardening, claiming a privileged slug requires
 	// the trusted env identity to match — launch the fixtures AS the CEO.
 	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
-	return team.NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	b := team.NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+	// These tests post into a room; #general is no longer seeded by the
+	// product, so the fixture supplies it. See SeedLegacyRoomForTest.
+	team.SeedLegacyRoomForTest(b)
+	return b
 }

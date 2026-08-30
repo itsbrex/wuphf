@@ -2425,3 +2425,90 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
     opacity: 0.6;
   }
 }
+
+/* Inline task reference in chat prose.
+   Previously this had NO rule at all: TaskRefLink rendered a bare <button>,
+   so a task id in a sentence looked like plain text and nobody could tell it
+   was clickable. It sits beside .mention above and is deliberately a
+   different hue -- a mention is a person, a task is a thing, and the reader
+   should not have to squint to tell them apart. */
+.msg-task-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  background: var(--task-pill-bg, var(--bg-elevated, #21262d));
+  color: var(--task-pill-fg, var(--text, #e6edf3));
+  border: 1px solid var(--task-pill-border, var(--border, #30363d));
+  padding: 0 6px;
+  border-radius: 4px;
+  font: inherit;
+  font-size: 0.9em;
+  line-height: 1.4;
+  vertical-align: baseline;
+  cursor: pointer;
+  text-align: left;
+}
+.msg-task-link:hover:not(:disabled) {
+  border-color: var(--accent, #4d8bb8);
+}
+.msg-task-link:focus-visible {
+  outline: 2px solid var(--accent, #4d8bb8);
+  outline-offset: 1px;
+}
+.msg-task-link:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+/* The id is the handle a human quotes back, so it stays monospace and never
+   truncates. The title is the meaning and may be long, so it is the half that
+   gives way on a narrow bubble. */
+.msg-task-link-id {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.msg-task-link-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+
+/* Inline app reference in chat prose. Sibling of .msg-task-link above, and
+   deliberately a THIRD look: a mention is a person, a task is a thing to do,
+   an app is a thing that exists. Three kinds of pill in one sentence have to
+   be tellable apart at a glance without reading them. */
+.msg-app-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  max-width: 100%;
+  background: var(--app-pill-bg, var(--bg-elevated, #21262d));
+  color: var(--app-pill-fg, var(--accent, #6b7fd7));
+  border: 1px solid var(--app-pill-border, var(--border, #30363d));
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 600;
+  line-height: 1.4;
+  vertical-align: baseline;
+  text-decoration: none;
+}
+.msg-app-link:hover {
+  border-color: var(--accent, #6b7fd7);
+  text-decoration: none;
+}
+.msg-app-link:focus-visible {
+  outline: 2px solid var(--accent, #6b7fd7);
+  outline-offset: 1px;
+}
+.msg-app-link-glyph {
+  opacity: 0.75;
+  font-size: 0.9em;
+}
+.msg-app-link-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

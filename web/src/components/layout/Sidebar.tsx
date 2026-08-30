@@ -9,6 +9,7 @@ import { TeamMemberBadge } from "../join/TeamMemberBadge";
 import { SidebarPreviewOverlay } from "../onboarding/SidebarPreviewOverlay";
 import { AgentList } from "../sidebar/AgentList";
 import { AppList } from "../sidebar/AppList";
+import { NAMED_CHANNELS_ENABLED } from "../../lib/constants";
 import { ChannelList } from "../sidebar/ChannelList";
 import { SidebarSection } from "../sidebar/SidebarSection";
 import { UsagePanel } from "../sidebar/UsagePanel";
@@ -143,19 +144,25 @@ export function Sidebar() {
               <AgentList />
             </SidebarSection>
 
-            {/* Channels are first-class again: the office is one room, so
-                #general is a place you go, not something you reach through a
-                task. Task-scoped channels are gone (a task lives in the channel
-                it was created from), so this list is the real conversation
-                surface. */}
-            <SidebarSection
-              label="Channels"
-              open={sidebarChannelsOpen}
-              onToggle={toggleSidebarChannels}
-              data-testid="sidebar-section-channels"
-            >
-              <ChannelList />
-            </SidebarSection>
+            {/* Channels are retired. Every conversation is a 1:1 DM with one
+                agent, and tagging another agent inside it sends yours to
+                consult them rather than pulling them into the room.
+
+                The SECTION is dropped, not just emptied: a "Channels" heading
+                over nothing but a "+ New Channel" button advertises a surface
+                the product no longer has, which is worse than removing it.
+                NAMED_CHANNELS_ENABLED is the single flip that brings it back
+                -- the list component and its wizard are untouched below. */}
+            {NAMED_CHANNELS_ENABLED ? (
+              <SidebarSection
+                label="Channels"
+                open={sidebarChannelsOpen}
+                onToggle={toggleSidebarChannels}
+                data-testid="sidebar-section-channels"
+              >
+                <ChannelList />
+              </SidebarSection>
+            ) : null}
 
             {/* The sidebar nav is three labeled groups — Work / Knowledge /
                 Config — rendered by AppList. Inbox lives in Work; there is no

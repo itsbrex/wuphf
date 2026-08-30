@@ -295,11 +295,16 @@ export function createTasks(
   tasks: CreateTaskInput[],
   opts?: { channel?: string; createdBy?: string },
 ): Promise<CreateTasksResponse> {
-  return post<CreateTasksResponse>("/task-plan", {
-    channel: opts?.channel || "general",
+  const body: Record<string, unknown> = {
     created_by: opts?.createdBy || "human",
     tasks,
-  }).then((r) => {
+  };
+  // Omit `channel` unless the caller named one. It was `|| "general"`, a room
+  // that no longer exists. The broker routes each task in the plan to its own
+  // assignee's DM, which is a better answer than one shared default anyway.
+  const planChannel = opts?.channel?.trim();
+  if (planChannel) body.channel = planChannel;
+  return post<CreateTasksResponse>("/task-plan", body).then((r) => {
     // One task_created per planned task — properties come from the input, never
     // the task title/details content.
     for (const t of tasks) {
@@ -323,17 +328,20 @@ export function reassignTask(
   channel: string,
   actor = "human",
 ) {
-  return trackOn(
-    post<TaskResponse>("/tasks", {
-      action: "reassign",
-      id: taskId,
-      owner: newOwner,
-      channel: channel || "general",
-      created_by: actor,
-    }),
-    "task_status_changed",
-    { action: "reassign" },
-  );
+  const body: Record<string, string> = {
+    action: "reassign",
+    id: taskId,
+    owner: newOwner,
+    created_by: actor,
+  };
+  // See editTaskFields: send `channel` only when the task has one. A reassign
+  // addresses an existing task by id, so the broker reads the task's own
+  // channel; `|| "general"` only ever pointed at a retired room.
+  const trimmed = channel.trim();
+  if (trimmed) body.channel = trimmed;
+  return trackOn(post<TaskResponse>("/tasks", body), "task_status_changed", {
+    action: "reassign",
+  });
 }
 
 /**
@@ -410,9 +418,13 @@ export function updateTaskStatus(
   const body: Record<string, string | boolean> = {
     action,
     id: taskId,
-    channel: channel || "general",
     created_by: actor,
   };
+  // See editTaskFields: omit rather than launder an empty channel into the
+  // retired shared room. A status change names the task by id and the broker
+  // authorizes against the task's own channel.
+  const trimmedChannel = channel.trim();
+  if (trimmedChannel) body.channel = trimmedChannel;
   if (options?.memoryWorkflowOverride) {
     body.memory_workflow_override = true;
     body.memory_workflow_override_actor =
@@ -433,10 +445,16 @@ export function getTasks(
   channel: string,
   opts?: { includeDone?: boolean; status?: string; mySlug?: string },
 ) {
-  const params: Record<string, string> = {
-    viewer_slug: "human",
-    channel: channel || "general",
-  };
+  const params: Record<string, string> = { viewer_slug: "human" };
+  // With no channel named, ask across channels rather than filtering on a room
+  // that does not exist. `|| "general"` returned an empty list and looked like
+  // "you have no tasks" instead of "you did not say where to look".
+  const trimmed = channel.trim();
+  if (trimmed) {
+    params.channel = trimmed;
+  } else {
+    params.all_channels = "true";
+  }
   if (opts?.includeDone) params.include_done = "true";
   if (opts?.status) params.status = opts.status;
   if (opts?.mySlug) params.my_slug = opts.mySlug;
@@ -564,16 +582,17 @@ export function createSubTask(opts: {
  *  reopens straight into running (owner re-dispatched); an ownerless one
  *  lands ready and dispatches on assignment. */
 export function reopenTask(taskId: string, channel: string) {
-  return trackOn(
-    post<TaskResponse>("/tasks", {
-      action: "reopen",
-      id: taskId,
-      channel: channel || "general",
-      created_by: "human",
-    }),
-    "task_status_changed",
-    { action: "reopen" },
-  );
+  const body: Record<string, string> = {
+    action: "reopen",
+    id: taskId,
+    created_by: "human",
+  };
+  // See editTaskFields: omit an empty channel instead of naming a dead room.
+  const trimmed = channel.trim();
+  if (trimmed) body.channel = trimmed;
+  return trackOn(post<TaskResponse>("/tasks", body), "task_status_changed", {
+    action: "reopen",
+  });
 }
 
 export function getOfficeTasks(opts?: {

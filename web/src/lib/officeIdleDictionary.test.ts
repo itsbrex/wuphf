@@ -6,7 +6,7 @@ describe("pickIdleCopy", () => {
   it("slug override wins over role", () => {
     // tess has a slug override; passing engineer role should still hit the
     // slug copy ("drafting a thought" at idleMs=0), not the engineer table
-    // ("watching tests" at idleMs=0).
+    // ("running the tests" at idleMs=0).
     const slugCopy = pickIdleCopy({
       slug: "tess",
       role: "engineer",
@@ -19,18 +19,18 @@ describe("pickIdleCopy", () => {
     });
     expect(slugCopy).not.toBe(engineerCopy);
     expect(slugCopy).toBe("drafting a thought");
-    expect(engineerCopy).toBe("watching tests");
+    expect(engineerCopy).toBe("running the tests");
   });
 
   it("each role table is reachable", () => {
     expect(pickIdleCopy({ slug: "x", role: "engineer", idleMs: 0 })).toBe(
-      "watching tests",
+      "running the tests",
     );
     expect(pickIdleCopy({ slug: "x", role: "developer", idleMs: 0 })).toBe(
-      "watching tests",
+      "running the tests",
     );
     expect(pickIdleCopy({ slug: "x", role: "dev", idleMs: 0 })).toBe(
-      "watching tests",
+      "running the tests",
     );
     expect(pickIdleCopy({ slug: "x", role: "designer", idleMs: 0 })).toBe(
       "doodling in Figma",
@@ -42,13 +42,13 @@ describe("pickIdleCopy", () => {
       "combing Linear",
     );
     expect(pickIdleCopy({ slug: "x", role: "devops", idleMs: 0 })).toBe(
-      "watching dashboards",
+      "rotating the logs",
     );
     expect(pickIdleCopy({ slug: "x", role: "sre", idleMs: 0 })).toBe(
-      "watching dashboards",
+      "rotating the logs",
     );
     expect(pickIdleCopy({ slug: "x", role: "platform", idleMs: 0 })).toBe(
-      "watching dashboards",
+      "rotating the logs",
     );
     expect(pickIdleCopy({ slug: "x", role: "marketing", idleMs: 0 })).toBe(
       "scrolling X",
@@ -60,24 +60,24 @@ describe("pickIdleCopy", () => {
 
   it("normalizes role with trim + lowercase", () => {
     expect(pickIdleCopy({ slug: "x", role: "  ENGINEER  ", idleMs: 0 })).toBe(
-      "watching tests",
+      "running the tests",
     );
   });
 
   it("unknown role falls back to generalist (does not crash, does not return empty)", () => {
     const result = pickIdleCopy({ slug: "x", role: "alchemist", idleMs: 0 });
-    expect(result).toBe("looking at memes");
+    expect(result).toBe("clearing something small");
     expect(result.length).toBeGreaterThan(0);
   });
 
   it("missing role falls back to generalist", () => {
     const result = pickIdleCopy({ slug: "x", idleMs: 0 });
-    expect(result).toBe("looking at memes");
+    expect(result).toBe("clearing something small");
   });
 
   it("empty role string falls back to generalist", () => {
     const result = pickIdleCopy({ slug: "x", role: "   ", idleMs: 0 });
-    expect(result).toBe("looking at memes");
+    expect(result).toBe("clearing something small");
   });
 
   it("same slug + same idleMs returns same copy (deterministic)", () => {
@@ -95,7 +95,7 @@ describe("pickIdleCopy", () => {
     const t4 = pickIdleCopy({ slug: "x", role: "engineer", idleMs: 48_000 });
     const t5 = pickIdleCopy({ slug: "x", role: "engineer", idleMs: 60_000 });
 
-    expect(t0).toBe("watching tests");
+    expect(t0).toBe("running the tests");
     expect(t1).toBe("reviewing the diff");
     expect(t2).toBe("skimming PRs");
     expect(t3).toBe("checking CI");
@@ -106,11 +106,11 @@ describe("pickIdleCopy", () => {
 
   it("handles negative or non-finite idleMs without crashing", () => {
     expect(pickIdleCopy({ slug: "x", role: "engineer", idleMs: -1 })).toBe(
-      "watching tests",
+      "running the tests",
     );
     expect(
       pickIdleCopy({ slug: "x", role: "engineer", idleMs: Number.NaN }),
-    ).toBe("watching tests");
+    ).toBe("running the tests");
   });
 });
 
@@ -118,7 +118,7 @@ describe("built-in roles all have their own copy", () => {
   // The bug this pins: every built-in role fell through to GENERALIST_COPY,
   // and rotateIndex is derived from idleMs alone, so the WHOLE ROSTER showed
   // the same line at the same moment. A sidebar where six agents are all
-  // "looking at memes" reads as broken, not as charming.
+  // "clearing something small" reads as broken, not as charming.
   const ROSTER: readonly { slug: string; role: string }[] = [
     { slug: "ceo", role: "Chief of Staff" },
     { slug: "librarian", role: "Librarian" },
@@ -132,7 +132,7 @@ describe("built-in roles all have their own copy", () => {
     for (const m of ROSTER) {
       const copy = pickIdleCopy({ slug: m.slug, role: m.role, idleMs: 0 });
       expect(copy, `${m.role} fell through to the generalist table`).not.toBe(
-        "looking at memes",
+        "clearing something small",
       );
     }
   });

@@ -103,19 +103,10 @@ function persistSidebarSections(state: SidebarSectionsState): void {
   } catch {}
 }
 
-/**
- * Build the broker's canonical direct-message channel slug for an agent.
- * The broker pairs `<lower>__<higher>` for stable ordering across sides;
- * we pass `humanSlug="human"` to match what `/dm` API endpoints expect.
- */
-export function directChannelSlug(
-  agentSlug: string,
-  humanSlug = "human",
-): string {
-  const a = humanSlug.trim().toLowerCase();
-  const b = agentSlug.trim().toLowerCase();
-  return a > b ? `${b}__${a}` : `${a}__${b}`;
-}
+// directChannelSlug moved to lib/channels.ts so the API layer can build a DM
+// slug without importing this store. Re-exported here because a dozen
+// components import it from this module.
+export { agentHomeChannel, directChannelSlug } from "../lib/channels";
 
 /**
  * Sentinel "channel" the onboarding wizard seeds the first-issue draft under so
@@ -380,7 +371,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setLastMessageId: (id) => set({ lastMessageId: id }),
   clearedMessageIdsByChannel: {},
   setChannelClearMarker: (channel, messageId) => {
-    const ch = channel.trim() || "general";
+    // No "general" fallback. These maps are keyed BY channel; an empty slug
+    // has no channel to key on, so filing it under the lobby silently
+    // attributes state to a room the message never came from -- and once
+    // #general is retired, to a room that does not exist.
+    const ch = channel.trim();
+    if (!ch) return;
     const id = messageId?.trim() || "";
     set((state) => {
       const next = { ...state.clearedMessageIdsByChannel };
@@ -391,7 +387,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
   },
   unreadByChannel: {},
   incrementUnread: (channel) => {
-    const ch = channel.trim() || "general";
+    const ch = channel.trim();
+    if (!ch) return;
     set((state) => ({
       unreadByChannel: {
         ...state.unreadByChannel,
@@ -400,7 +397,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
     }));
   },
   clearUnread: (channel) => {
-    const ch = channel.trim() || "general";
+    const ch = channel.trim();
+    if (!ch) return;
     set((state) => {
       if ((state.unreadByChannel[ch] ?? 0) === 0) return state;
       return {

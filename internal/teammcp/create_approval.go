@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 // createApproval describes one blocking "may I create this?" card raised by an
@@ -74,9 +76,14 @@ func requireHumanCreateApproval(ctx context.Context, req createApproval) error {
 	var created struct {
 		ID string `json:"id"`
 	}
+	// The approval card goes to the ACTOR's own DM. It was addressed to
+	// "general", and this is a BLOCKING, REQUIRED request: filed to a room that
+	// no longer exists it is invisible to the human, and the agent waits on it
+	// until the approval times out. The actor is resolved just above and is
+	// always set, so there is always a real conversation to put it in.
 	if err := brokerPostJSON(ctx, "/requests", map[string]any{
 		"kind":           "approval",
-		"channel":        "general",
+		"channel":        channel.DirectSlug("human", actor),
 		"from":           actor,
 		"title":          req.Title,
 		"question":       req.Question,

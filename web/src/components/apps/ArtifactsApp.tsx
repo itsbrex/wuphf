@@ -3,9 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   get,
-  getActions,
   getConfig,
-  getDecisions,
   getLocalProvidersStatus,
   getOfficeMembers,
   getScheduler,
@@ -15,43 +13,17 @@ import { getUsage } from "../../api/platform";
 import { getOfficeTasks } from "../../api/tasks";
 import { formatTokens } from "../../lib/format";
 import { isAgentActive, normalizeStatus } from "../../lib/officeStatus";
-import { keyedByOccurrence } from "../../lib/reactKeys";
 import { router } from "../../lib/router";
 import {
   configuredConnectedRuntimeProviders,
   type RuntimeProviderOption,
 } from "../../lib/runtimeProviders";
 import { type Insight, InsightsList } from "../activity/InsightsList";
-import { Timeline, type TimelineEvent } from "../activity/Timeline";
 import type { PrereqResult } from "../onboarding/runtimes";
 import { ActiveTasksPanel } from "./shared/ActiveTasksPanel";
 import { AgentPulsePanel } from "./shared/AgentPulsePanel";
 
 /** Minimal action/decision/watchdog shapes from the untyped endpoints. */
-interface ActionRecord {
-  summary?: string;
-  name?: string;
-  title?: string;
-  kind?: string;
-  type?: string;
-  channel?: string;
-  actor?: string;
-  source?: string;
-  created_at?: string;
-  related_id?: string;
-}
-
-interface DecisionRecord {
-  summary?: string;
-  kind?: string;
-  reason?: string;
-  channel?: string;
-  owner?: string;
-  created_at?: string;
-  requires_human?: boolean;
-  blocking?: boolean;
-}
-
 interface WatchdogRecord {
   summary?: string;
   kind?: string;
@@ -77,23 +49,10 @@ interface SchedulerJobRaw {
   due_at?: string;
 }
 
-// biome-ignore lint/complexity/noExcessiveLinesPerFunction: Existing function length is baselined for a focused follow-up refactor.
 export function ArtifactsApp() {
   const tasks = useQuery({
     queryKey: ["activity-tasks"],
     queryFn: () => getOfficeTasks({ includeDone: true }),
-    refetchInterval: 15_000,
-  });
-
-  const actions = useQuery({
-    queryKey: ["activity-actions"],
-    queryFn: () => getActions() as Promise<{ actions: ActionRecord[] }>,
-    refetchInterval: 15_000,
-  });
-
-  const decisions = useQuery({
-    queryKey: ["activity-decisions"],
-    queryFn: () => getDecisions() as Promise<{ decisions: DecisionRecord[] }>,
     refetchInterval: 15_000,
   });
 
@@ -139,8 +98,6 @@ export function ArtifactsApp() {
 
   const isLoading =
     tasks.isLoading ||
-    actions.isLoading ||
-    decisions.isLoading ||
     watchdogs.isLoading ||
     scheduler.isLoading ||
     usage.isLoading ||
@@ -162,12 +119,6 @@ export function ArtifactsApp() {
   }
 
   const allTasks = tasks.data?.tasks ?? [];
-  const allActions = (
-    (actions.data as { actions?: ActionRecord[] })?.actions ?? []
-  ).slice();
-  const allDecisions = (
-    (decisions.data as { decisions?: DecisionRecord[] })?.decisions ?? []
-  ).slice();
   const allWatchdogs = (
     (watchdogs.data as { watchdogs?: WatchdogRecord[] })?.watchdogs ?? []
   ).slice();
@@ -194,13 +145,6 @@ export function ArtifactsApp() {
     (t) => normalizeStatus(t.status) === "blocked",
   );
   const liveAgents = allMembers.filter(isAgentActive);
-
-  allActions.sort((a, b) =>
-    String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")),
-  );
-  allDecisions.sort((a, b) =>
-    String(b.created_at ?? "").localeCompare(String(a.created_at ?? "")),
-  );
 
   const insights: Insight[] = [
     ...blockedTasks.map<Insight>((t) => ({
@@ -237,33 +181,6 @@ export function ArtifactsApp() {
     })),
   ];
 
-  const timelineEvents: TimelineEvent[] = [
-    ...allDecisions
-      .filter((d) => d.created_at)
-      .map<TimelineEvent>((d) => ({
-        type: d.blocking ? "watchdog" : "decision",
-        timestamp: d.created_at || "",
-        actor: d.owner,
-        content: d.summary || d.reason || d.kind || "Decision",
-        meta:
-          [d.channel ? `#${d.channel}` : "", d.kind || ""]
-            .filter(Boolean)
-            .join(" · ") || undefined,
-      })),
-    ...allActions
-      .filter((a) => a.created_at)
-      .map<TimelineEvent>((a) => ({
-        type: "action",
-        timestamp: a.created_at || "",
-        actor: a.actor,
-        content: a.summary || a.name || a.title || "Action",
-        meta:
-          [a.channel ? `#${a.channel}` : "", a.kind || a.type || ""]
-            .filter(Boolean)
-            .join(" · ") || undefined,
-      })),
-  ];
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Hero */}
@@ -283,8 +200,8 @@ export function ArtifactsApp() {
               marginTop: 4,
             }}
           >
-            Which lanes are moving, which agents are active, what decisions just
-            got made, and where work is blocked.
+            Which lanes are moving, which agents are active, and where work is
+            blocked.
           </div>
         </div>
         <div
@@ -336,11 +253,6 @@ export function ArtifactsApp() {
           copy="Specialists currently shipping or plotting."
         />
         <StatCard
-          kicker="Recent actions"
-          value={String(allActions.length)}
-          copy="Automation and system actions logged."
-        />
-        <StatCard
           kicker="Due automations"
           value={String(allJobs.length)}
           copy="Scheduled jobs that are due now."
@@ -373,39 +285,6 @@ export function ArtifactsApp() {
           >
             <AgentPulsePanel agents={liveAgents} limit={10} />
           </ActivitySection>
-
-          <ActivitySection
-            title="Recent actions"
-            meta={`${allActions.length} recorded`}
-          >
-            {allActions.length === 0 ? (
-              <EmptyState>No actions recorded yet.</EmptyState>
-            ) : (
-              keyedByOccurrence(
-                allActions.slice(0, 12),
-                (action) =>
-                  `${action.name ?? ""}-${action.title ?? ""}-${action.related_id ?? ""}-${action.summary ?? ""}`,
-              ).map(({ key, value: action }) => (
-                <ActivityItem
-                  key={key}
-                  title={
-                    action.summary || action.name || action.title || "Action"
-                  }
-                  body={
-                    action.related_id ? `Related: ${action.related_id}` : ""
-                  }
-                  meta={[
-                    action.channel ? `#${action.channel}` : "",
-                    action.actor ? `@${action.actor}` : "",
-                    action.created_at
-                      ? new Date(action.created_at).toLocaleString()
-                      : "",
-                  ].filter(Boolean)}
-                  kindLabel={action.kind || action.type || "action"}
-                />
-              ))
-            )}
-          </ActivitySection>
         </div>
 
         {/* Right column */}
@@ -419,17 +298,6 @@ export function ArtifactsApp() {
               insights={insights}
               emptyLabel="No active blockers or watchdog alerts."
               limit={12}
-            />
-          </ActivitySection>
-
-          <ActivitySection
-            title="Recent activity"
-            meta={`${timelineEvents.length} events`}
-          >
-            <Timeline
-              events={timelineEvents}
-              emptyLabel="No decisions or actions logged yet."
-              limit={14}
             />
           </ActivitySection>
 

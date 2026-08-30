@@ -2263,6 +2263,10 @@ func TestRelevantTaskForTargetCrossChannel(t *testing.T) {
 	})
 	setCleanupTaskWorktreeForTest(t, func(string, string) error { return nil })
 	b := NewBrokerAt(filepath.Join(tmpDir, "broker-state.json"))
+	// The room the human posts into below. #general is no longer seeded by
+	// the product, so the fixture supplies it -- this test is about thread
+	// routing, not about which rooms exist.
+	seedTestLegacyRoom(b)
 
 	// Create "engineering" channel directly in broker state.
 	b.mu.Lock()

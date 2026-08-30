@@ -67,7 +67,7 @@ func GeneralEnabled() bool {
 // threaded has to flip it and re-run a full Load cycle. Treat it as a
 // constant in production code — nothing outside SetGeneralEnabledForTest may
 // assign to it.
-var generalEnabled = true
+var generalEnabled = false
 
 // SetGeneralEnabledForTest flips the switch and returns a restore function.
 // Test-only; production code reads GeneralEnabled and never writes.
@@ -129,7 +129,7 @@ func GroupDMsEnabled() bool {
 // groupDMsEnabled is the switch itself. See generalEnabled for why this is a
 // var rather than a bare return: the test that proves the gates hold has to
 // flip it. Treat it as a constant in production code.
-var groupDMsEnabled = true
+var groupDMsEnabled = false
 
 // SetGroupDMsEnabledForTest flips the switch and returns a restore function.
 // Test-only; production code reads GroupDMsEnabled and never writes. Callers
@@ -176,7 +176,7 @@ func NamedChannelsEnabled() bool {
 
 // namedChannelsEnabled is the switch itself. See generalEnabled for why this is
 // a var rather than a bare return.
-var namedChannelsEnabled = true
+var namedChannelsEnabled = false
 
 // SetNamedChannelsEnabledForTest flips the switch and returns a restore
 // function. Test-only; production code reads NamedChannelsEnabled.

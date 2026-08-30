@@ -1,153 +1,175 @@
 package team
 
 import (
+	"path/filepath"
+	"strings"
 	"testing"
-
-	"github.com/nex-crm/wuphf/internal/channel"
 )
 
-// preferredTaskChannelLocked decides where a task's conversation lives. Every
-// task in the product currently lives in #general — shouldMintPerTaskChannel
-// returns false unconditionally, so nothing mints a per-task room — which is
-// why this resolver has to be correct BEFORE the shared room is switched off.
-// If it still answered "general" at flip time, every task conversation would
-// point at a channel that no longer exists.
+// These tests pin the routing rule that replaced #general for task mutations:
+// a task with no explicit channel belongs in its OWNER's DM, and a mutation on
+// an existing task does not need a channel at all.
 //
-// The contract: an explicit request wins; otherwise the owner's home, then the
-// creator's home, then EMPTY.
-func TestPreferredTaskChannelResolvesOwnerThenCreatorThenEmpty(t *testing.T) {
-	newBroker := func(t *testing.T) *Broker {
-		t.Helper()
-		b := newTestBroker(t)
-		b.mu.Lock()
-		b.members = []officeMember{
-			{Slug: "ceo", Name: "CEO", BuiltIn: true},
-			{Slug: "designer", Name: "Designer"},
-		}
-		b.rebuildMemberIndexLocked()
-		b.mu.Unlock()
-		return b
+// Both were live bugs. With the shared room retired, MutateTask resolved a
+// missing channel from CreatedBy only — which is "human" for everything the web
+// sends, and "human" is not a roster member — so it refused the mutation
+// outright. The web worked around it by naming the literal "general", which no
+// longer exists, so that failed too with "channel not found". Every task-create
+// path from the UI was broken in both directions at once.
+
+func TestTaskCreateWithoutChannelLandsInOwnerDM(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	resp, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Title:     "Improve app: Pipeline",
+		Owner:     appBuilderSlug,
+		CreatedBy: "human",
+		TaskType:  "issue",
+	})
+	if err != nil {
+		t.Fatalf("create with no channel: %v", err)
 	}
-
-	t.Run("an explicit channel always wins, switch either way", func(t *testing.T) {
-		for _, enabled := range []bool{true, false} {
-			restore := channel.SetGeneralEnabledForTest(enabled)
-			b := newBroker(t)
-			b.mu.Lock()
-			got := b.preferredTaskChannelLocked("  Product  ", "ceo", "designer", "t", "d")
-			b.mu.Unlock()
-			restore()
-			if got != "product" {
-				t.Errorf("general enabled=%v: got %q, want the normalised explicit channel %q", enabled, got, "product")
-			}
-		}
-	})
-
-	t.Run("switch on: still general, so nothing changes today", func(t *testing.T) {
-		defer channel.SetGeneralEnabledForTest(true)()
-		b := newBroker(t)
-		b.mu.Lock()
-		defer b.mu.Unlock()
-		// Every shape, including the one with no actors at all, must answer
-		// general while the room exists. This is what makes landing the
-		// resolver before the flip a no-op.
-		cases := [][2]string{
-			{"ceo", "designer"},
-			{"ceo", ""},
-			{"", "designer"},
-			{"", ""},
-			{"nobody", "also-nobody"},
-		}
-		for _, c := range cases {
-			if got := b.preferredTaskChannelLocked("", c[0], c[1], "t", "d"); got != GeneralChannelSlug {
-				t.Errorf("createdBy=%q owner=%q: got %q, want %q", c[0], c[1], got, GeneralChannelSlug)
-			}
-		}
-	})
-
-	t.Run("switch off: the owner's DM wins over the creator's", func(t *testing.T) {
-		defer channel.SetGeneralEnabledForTest(false)()
-		b := newBroker(t)
-		b.mu.Lock()
-		defer b.mu.Unlock()
-		got := b.preferredTaskChannelLocked("", "ceo", "designer", "t", "d")
-		if DMTargetAgent(got) != "designer" {
-			t.Errorf("got %q, want the owner (designer) DM, not the creator's", got)
-		}
-	})
-
-	t.Run("switch off: falls back to the creator when there is no owner", func(t *testing.T) {
-		defer channel.SetGeneralEnabledForTest(false)()
-		b := newBroker(t)
-		b.mu.Lock()
-		defer b.mu.Unlock()
-		for _, owner := range []string{"", "   ", "someone-not-on-the-roster"} {
-			got := b.preferredTaskChannelLocked("", "ceo", owner, "t", "d")
-			if DMTargetAgent(got) != "ceo" {
-				t.Errorf("owner=%q: got %q, want the creator (ceo) DM", owner, got)
-			}
-		}
-	})
-
-	t.Run("switch off: empty when neither resolves, and never general", func(t *testing.T) {
-		defer channel.SetGeneralEnabledForTest(false)()
-		b := newBroker(t)
-		b.mu.Lock()
-		defer b.mu.Unlock()
-		for _, c := range [][2]string{
-			{"", ""},
-			{"human", ""},
-			{"ghost", "phantom"},
-		} {
-			got := b.preferredTaskChannelLocked("", c[0], c[1], "t", "d")
-			if got != "" {
-				t.Errorf("createdBy=%q owner=%q: got %q, want an empty home", c[0], c[1], got)
-			}
-		}
-	})
-}
-
-// The emptiness test inside the resolver must run on the RAW request, not on
-// the normalised one. normalizeChannelSlug("") returns "general" (its lobby
-// fallback), so normalising first would make "no channel requested"
-// indistinguishable from "explicitly requested #general" and quietly route
-// every homeless task straight back into the room being retired.
-//
-// normalizeChannelSlug is deliberately not being changed here (that is its own
-// stage), so this pins the behaviour the resolver has to work around.
-func TestPreferredTaskChannelDoesNotLaunderEmptyThroughNormalizeChannelSlug(t *testing.T) {
-	if got := normalizeChannelSlug(""); got != GeneralChannelSlug {
-		t.Fatalf("precondition changed: normalizeChannelSlug(\"\") = %q, want %q — re-check the resolver's raw-emptiness test", got, GeneralChannelSlug)
+	want := DMSlugFor(appBuilderSlug)
+	if resp.Task.Channel != want {
+		t.Errorf("task channel = %q, want the owner's DM %q", resp.Task.Channel, want)
 	}
-
-	defer channel.SetGeneralEnabledForTest(false)()
-	b := newTestBroker(t)
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.members = nil
-	b.rebuildMemberIndexLocked()
-
-	for _, requested := range []string{"", "   ", "\t"} {
-		if got := b.preferredTaskChannelLocked(requested, "", "", "t", "d"); got != "" {
-			t.Errorf("requested %q: got %q, want an empty home (the slug normaliser must not launder it into general)", requested, got)
-		}
+	if strings.Contains(resp.Task.Channel, GeneralChannelSlug) {
+		t.Errorf("task leaked into the retired shared room: %q", resp.Task.Channel)
 	}
 }
 
-// Every call site guards on "" before calling findChannelLocked, because that
-// helper normalises its argument and would turn an empty home back into
-// general — re-creating the leak one layer down. This pins the helper's
-// behaviour so the guards cannot be "simplified" away later on the assumption
-// that findChannelLocked("") is harmless.
-func TestFindChannelLockedTurnsEmptyIntoGeneral(t *testing.T) {
-	b := newTestBroker(t)
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	ch := b.findChannelLocked("")
-	if ch == nil {
-		t.Skip("no general channel in this fixture; nothing to pin")
+// The owner is preferred over the creator when the creator may post there.
+// The human is a party to every human__<agent> DM, so a human-created task
+// lands on its owner.
+func TestTaskCreateChannelPrefersOwnerOverCreator(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	resp, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Title:     "Draft the launch plan",
+		Owner:     "planner",
+		CreatedBy: "human",
+		TaskType:  "issue",
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
 	}
-	if ch.Slug != GeneralChannelSlug {
-		t.Fatalf("findChannelLocked(\"\") resolved to %q", ch.Slug)
+	if got, want := resp.Task.Channel, DMSlugFor("planner"); got != want {
+		t.Errorf("task channel = %q, want the owner's DM %q", got, want)
+	}
+}
+
+// But a DM has exactly two participants, so an agent opening a task for a
+// DIFFERENT agent must not be routed into a private conversation it cannot
+// post in. It falls back to its own DM rather than failing the create.
+func TestTaskCreateByAgentForAnotherAgentUsesTheCreatorsOwnDM(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	resp, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Title:     "Draft the launch plan",
+		Owner:     "planner",
+		CreatedBy: "ceo",
+		TaskType:  "issue",
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if got, want := resp.Task.Channel, DMSlugFor("ceo"); got != want {
+		t.Errorf("task channel = %q, want the creator's own DM %q", got, want)
+	}
+}
+
+// A create that names nobody resolvable must fail LOUDLY naming the field,
+// not silently land in a room nobody reads.
+func TestTaskCreateWithNoResolvableActorFailsLoudly(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	_, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Title:     "orphan",
+		Owner:     "nobody-on-the-roster",
+		CreatedBy: "human",
+		TaskType:  "issue",
+	})
+	if err == nil {
+		t.Fatal("expected a refusal when no actor resolves to a home channel")
+	}
+	if !strings.Contains(err.Error(), "channel is required") {
+		t.Errorf("error should name the missing field, got: %v", err)
+	}
+}
+
+// A mutation on an EXISTING task carries no channel and must not need one:
+// the task already knows where it lives.
+func TestTaskMutationWithoutChannelUsesTheTasksOwnChannel(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	created, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Title:     "Ship the thing",
+		Owner:     "planner",
+		CreatedBy: "human",
+		TaskType:  "issue",
+	})
+	if err != nil {
+		t.Fatalf("create: %v", err)
+	}
+
+	// No Channel field at all — exactly what web/src/api/tasks.ts sends once it
+	// stops laundering an empty channel into "general".
+	if _, err := b.MutateTask(TaskPostRequest{
+		Action:    "comment",
+		ID:        created.Task.ID,
+		Details:   "a note from the human",
+		CreatedBy: "human",
+	}); err != nil {
+		t.Fatalf("comment on an existing task with no channel: %v", err)
+	}
+}
+
+// The literal the web used to send. Kept as a test so a re-introduction is
+// caught here rather than in the browser.
+func TestTaskCreateIntoRetiredGeneralIsRefused(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	_, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Channel:   GeneralChannelSlug,
+		Title:     "Improve app: Pipeline",
+		Owner:     appBuilderSlug,
+		CreatedBy: "human",
+		TaskType:  "issue",
+	})
+	if err == nil {
+		t.Fatal("expected #general to be unroutable while the kill switch is off")
+	}
+}
+
+func TestHomeChannelForWriterSkipsUnresolvableAndInaccessible(t *testing.T) {
+	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+
+	// "" is skipped as empty, "human" as a non-member; the librarian resolves.
+	got, err := b.homeChannelForWriter("human", "", "human", "librarian")
+	if err != nil {
+		t.Fatalf("expected the librarian to resolve: %v", err)
+	}
+	if want := DMSlugFor("librarian"); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+
+	// The librarian's DM resolves but the CEO may not post there, so it is
+	// skipped in favour of the CEO's own.
+	got, err = b.homeChannelForWriter("ceo", "librarian", "ceo")
+	if err != nil {
+		t.Fatalf("expected the ceo to fall back to its own DM: %v", err)
+	}
+	if want := DMSlugFor("ceo"); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+
+	if _, err := b.homeChannelForWriter("human", "", "human"); err == nil {
+		t.Error("expected an error when nothing resolves")
 	}
 }

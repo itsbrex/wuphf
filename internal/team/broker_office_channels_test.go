@@ -120,7 +120,7 @@ func TestHandleCreateDM_RequiresPOST(t *testing.T) {
 
 func TestNewBrokerSeedsDefaultOfficeRosterOnFreshState(t *testing.T) {
 	t.Setenv("HOME", t.TempDir()) // isolate from ~/.wuphf company.json (e.g. RevOps pack)
-	b := newTestBroker(t)
+	b := newRawTestBroker(t)
 	members := b.OfficeMembers()
 	if len(members) < 2 {
 		t.Fatalf("expected default office roster on fresh state, got %d members", len(members))

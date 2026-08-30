@@ -645,3 +645,33 @@ func evalJobCompoundingLoop(fx *officeEvalFixture, r *OfficeEvalReport) error {
 // (c) entity facts for the mentioned entities land in the team knowledge
 // graph through the existing fact-log path; (d) reopen re-engages the
 // owner through the same wake path a fresh assignment uses.
+
+// ensureOfficeEvalRoom guarantees the room the eval scenarios post into.
+//
+// The scenarios were written when #general existed for free and they all name
+// it. They are testing task lifecycle, verification, and review mechanics --
+// not room policy -- so rather than rewrite every scenario, the harness makes
+// sure the room is there after any step that rebuilds the channel list.
+//
+// Production room policy is covered by its own tests; this is harness scaffolding.
+func ensureOfficeEvalRoom(b *Broker) {
+	if b == nil {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.findChannelLocked(GeneralChannelSlug) != nil {
+		return
+	}
+	members := make([]string, 0, len(b.members)+1)
+	members = append(members, "human")
+	for _, m := range b.members {
+		members = append(members, m.Slug)
+	}
+	b.channels = append(b.channels, teamChannel{
+		Slug:        GeneralChannelSlug,
+		Name:        GeneralChannelSlug,
+		Description: "Primary coordination channel.",
+		Members:     members,
+	})
+}

@@ -18,10 +18,14 @@ a call — and your AI builds the agent that runs it: its own screen, its own
 schedule, its own tools, with a human approval gate on everything it sends.
 Runs local, on your machine, on your account.
 
+The models do the boring part. You get a screen with buttons on it, and the
+pleasant feeling of being in charge.
+
 > **grok** *(verb)* — to understand something profoundly and intuitively.
 > **gawk** *(verb)* — to stare openly and stupidly.
 
-It is named after the second one.
+It is named after the second one. Not after the bots. The bots are working.
+You are the one with the dashboard open.
 
 ## Get Started
 
@@ -250,17 +254,16 @@ missed, [file an issue](https://github.com/najmuzzaman-mohammad/wuphf/issues).
 
 ## The Name
 
-From [*The Office*](https://theoffice.fandom.com/wiki/WUPHF.com_(Website)),
-Season 7. Ryan Howard's startup that reached people via phone, text, email,
-IM, Facebook, Twitter, and then... WUPHF. Michael Scott invested $10,000.
-Ryan burned through it. The site went offline.
+Grok is named for a verb that means to understand something completely and
+intuitively. That is a confident name. It promises you a machine that gets it.
 
-The joke still fits. Except this gawkbot ships.
+gawkbot is named for a verb that means to stare at something openly, at
+length, and without taking in any of it. That is the honest name for what
+actually happens once the agents are running. The work is done. You are
+looking at a dashboard about it.
 
-> *"I invested ten thousand dollars in WUPHF. Just need one good quarter."*
-> — Michael Scott
-
-Michael: still waiting on that quarter. We are not.
+We are a parody of a bot company. We also ship, which is the part they did
+not see coming.
 
 ## Star History
 

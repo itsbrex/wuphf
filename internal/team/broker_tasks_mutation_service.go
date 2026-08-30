@@ -412,8 +412,34 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 	if raw := strings.TrimSpace(body.Channel); raw != "" {
 		channel = normalizeChannelSlug(raw)
 	}
-	if channel == "" {
-		home, err := b.homeChannelFor(body.CreatedBy)
+	// Resolve a home ONLY for create, and resolve it from the OWNER before the
+	// creator.
+	//
+	// Both halves of that were wrong before and each broke a real flow:
+	//
+	//   - Demanding a channel for every action broke every non-create mutation
+	//     the web sends. Reject / resume / status / edit all address a task by
+	//     id and legitimately carry no channel, because the task already knows
+	//     where it lives — the else branch below reads task.Channel and treats
+	//     a homeless task as legal. This gate errored out ~400 lines before
+	//     that code could run, so "omit the channel and let the broker resolve
+	//     it" (the documented pattern in web/src/api/tasks.ts) returned
+	//     "channel is required" every time.
+	//
+	//   - Resolving from CreatedBy alone fails for exactly the caller that
+	//     matters. The web creates tasks as created_by="human", and "human" is
+	//     not a roster member, so homeChannelFor could never resolve it. The
+	//     owner is the agent that will actually do the work and is on the
+	//     roster by construction, which makes its DM the task's natural home.
+	//
+	// Order is owner, then creator, then a loud refusal naming the field. The
+	// creator is also the WRITER, so a candidate it cannot post in is skipped —
+	// otherwise a CEO-created, planner-owned task would route into the
+	// planner's private DM and be refused by the access check. No "" fallback:
+	// an empty slug is laundered back into the retired #general by
+	// normalizeChannelSlug downstream, which is the leak this retirement closes.
+	if channel == "" && strings.EqualFold(strings.TrimSpace(action), "create") {
+		home, err := b.homeChannelForWriter(actor, body.Owner, body.CreatedBy)
 		if err != nil {
 			return TaskResponse{}, taskMutationError(TaskMutationInvalid,
 				"channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.", nil)

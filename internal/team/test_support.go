@@ -210,3 +210,37 @@ func setKillHeadlessTaskRunnerProcessForTest(t *testing.T, fn killHeadlessTaskRu
 		killHeadlessTaskRunnerProcessOverride.Store(prior)
 	})
 }
+
+// SeedLegacyRoomForTest gives a broker a channel literally named "general".
+//
+// Cross-package version of the in-package fixture helper, for teammcp and any
+// other package whose tests need a room to post into. Those tests are not
+// about #general -- they exercise tool surfaces, message scoping, and task
+// plumbing, and they simply need somewhere for an agent to speak.
+//
+// The FIXTURE provides the room; PRODUCTION does not. This bypasses the create
+// gate deliberately, and the seed paths that would mint #general in a real
+// workspace stay gated behind generalChannelEnabled and are covered by their
+// own tests. A test that cares whether #general EXISTS must not call this.
+func SeedLegacyRoomForTest(b *Broker) {
+	if b == nil {
+		return
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.findChannelLocked(GeneralChannelSlug) != nil {
+		return
+	}
+	members := make([]string, 0, len(b.members)+1)
+	members = append(members, "human")
+	for _, m := range b.members {
+		members = append(members, m.Slug)
+	}
+	b.channels = append(b.channels, teamChannel{
+		Slug:        GeneralChannelSlug,
+		Name:        GeneralChannelSlug,
+		Type:        "channel",
+		Description: "Legacy room provided by the test fixture only",
+		Members:     members,
+	})
+}

@@ -91,7 +91,17 @@ export function TaskRefLink({ taskId, children }: TaskRefLinkProps) {
       }
       disabled={!taskId}
     >
-      {title ?? children}
+      {/* ALWAYS the id AND the title, in that order.
+          The id alone tells a reader nothing ("DUNDE-5" — what is that?),
+          and the title alone loses the handle they need to quote back to an
+          agent. Showing both is what makes the pill self-explanatory in the
+          middle of a sentence. Falls back to the id when the task is not in
+          the board cache yet, which is the case for a task created seconds
+          ago in this very message. */}
+      <span className="msg-task-link-id">{taskId || children}</span>
+      {title ? (
+        <span className="msg-task-link-title">{title}</span>
+      ) : null}
     </button>
   );
 }

@@ -150,7 +150,7 @@ func TestOperationBlueprintMatrixSeedsBrokerOffice(t *testing.T) {
 				t.Fatalf("load blueprint: %v", err)
 			}
 
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			members := b.OfficeMembers()
 			// Roster = the blueprint's starter agents PLUS the two always-present
 			// built-ins: the Librarian and the App Builder.

@@ -1,3 +1,5 @@
+import { APP_BUILDER_SLUG } from "../lib/constants";
+import { directChannelSlug } from "../lib/channels";
 import { del, get, post } from "./client";
 import type { Task, TaskResponse } from "./tasks";
 
@@ -247,7 +249,15 @@ export async function requestAppBuild(req: AppBuildRequest): Promise<Task> {
   const title = `${verb} app: ${req.name}`;
   const res = await post<TaskResponse>("/tasks", {
     action: "create",
-    channel: "general",
+    // The App Builder's own DM. This used to be the literal "general", which
+    // 404'd with "channel not found" the moment the shared room was retired —
+    // the broker's create path looks the channel up before it will accept the
+    // task, and #general no longer exists. The owner is right there on the
+    // next line, so the task has an obvious home: the agent that will do the
+    // work. Not omitted-and-resolved-server-side, because the broker resolves
+    // an omitted channel from `created_by` ("human"), who is not a roster
+    // member and so has no DM to fall back to.
+    channel: directChannelSlug(APP_BUILDER_SLUG),
     title,
     details: composeAppBrief(req),
     owner: "app-builder",

@@ -201,7 +201,7 @@ function SidebarAgentRow({
       />
       {isFirst && showNudge ? (
         <span className="sidebar-agent-nudge" data-testid="first-run-nudge">
-          {`→ tag @${agent.slug} in #general`}
+          {`→ open a DM with @${agent.slug}`}
         </span>
       ) : null}
     </div>

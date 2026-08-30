@@ -286,6 +286,12 @@ func TestBrokerTaskLifecycle(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -395,6 +401,12 @@ func TestBrokerTaskReassignNotifies(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -510,6 +522,12 @@ func TestBrokerTaskCancelNotifies(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -619,6 +637,12 @@ func TestBrokerOfficeFeatureTaskForGTMCompletesWithoutReviewAndUnblocksDependent
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -702,6 +726,12 @@ func TestBrokerTaskCreateReusesExistingOpenTask(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -833,6 +863,12 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -933,6 +969,12 @@ func TestBrokerSubtaskStaysInTheOfficeChannel(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -1022,6 +1064,12 @@ func TestBrokerSecondTopLevelTaskStaysInTheOfficeChannel(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -2995,6 +3043,12 @@ func TestBrokerCompleteClosesReviewTaskAndUnblocksDependents(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -3075,6 +3129,12 @@ func TestBrokerCreateTaskReusesCompletedDependencyWorktree(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -3316,6 +3376,12 @@ func TestBrokerCompleteAlreadyDoneTaskStaysApproved(t *testing.T) {
 
 	base := fmt.Sprintf("http://%s", b.Addr())
 	post := func(payload map[string]any) teamTask {
+		// No default room any more: a mutation that names no channel is
+		// refused on purpose. These cases are not testing that rule, so the
+		// helper supplies the fixture's room.
+		if _, ok := payload["channel"]; !ok {
+			payload["channel"] = GeneralChannelSlug
+		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 		req.Header.Set("Authorization", "Bearer "+b.Token())

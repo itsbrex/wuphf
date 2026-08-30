@@ -264,7 +264,7 @@ describe("<AgentList>", () => {
       '[data-testid="first-run-nudge"]',
     );
     expect(nudges.length).toBe(1);
-    expect(nudges[0].textContent).toBe("→ tag @devon in #general");
+    expect(nudges[0].textContent).toBe("→ open a DM with @devon");
 
     // Confirm the nudge is anchored to the first row, not the second.
     const [firstRow] = container.querySelectorAll(".sidebar-agent-row");

@@ -208,6 +208,10 @@ func TestWorkspaceShredRoutePostShredBrokerAcceptsNewState(t *testing.T) {
 	// Broker can accept a fresh post-shred message on the same listener,
 	// mimicking the user re-onboarding without restarting wuphf. Goes through
 	// the full /messages route + auth + persistence pipeline.
+	// A shred empties the workspace, and #general is no longer recreated, so
+	// the room has to be re-established before posting. This test is about the
+	// /messages route surviving a shred, not about what a shred leaves behind.
+	seedTestLegacyRoom(b)
 	postBody := strings.NewReader(`{"from":"human","channel":"general","content":"post-shred kickoff"}`)
 	postReq, err := http.NewRequest(http.MethodPost, "http://"+b.Addr()+"/messages", postBody)
 	if err != nil {

@@ -17,7 +17,7 @@ import (
 // makes sure the given broker actually has the channel, so a fixture that
 // depends on a shared room can opt back in with a single line:
 //
-//	b := newTestBroker(t)
+//	b := newRawTestBroker(t)
 //	enableGeneralForTest(t, b)
 //
 // It exists for the stage where generalChannelEnabled starts returning false:
@@ -80,13 +80,13 @@ func TestGeneralChannelKillSwitchHasNoResurrectionPath(t *testing.T) {
 		isolateRuntimeHome(t)
 
 		withSwitch(t, true, func() {
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			if !hasChannel(t, b, GeneralChannelSlug) {
 				t.Fatal("switch on: boot did not create #general, so this subtest cannot prove the gate")
 			}
 		})
 		withSwitch(t, false, func() {
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			if hasChannel(t, b, GeneralChannelSlug) {
 				t.Error("switch off: boot resurrected #general (gate 1 ensureDefaultChannelsLocked, gate 2 defaultTeamChannels, or gate 3 company manifest)")
 			}
@@ -99,7 +99,7 @@ func TestGeneralChannelKillSwitchHasNoResurrectionPath(t *testing.T) {
 
 		const task = "Audit the CRM"
 		withSwitch(t, true, func() {
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			if err := b.onboardingCompleteFn(task, false, "", []string{}, "Co"); err != nil {
 				t.Fatalf("seed: %v", err)
 			}
@@ -108,7 +108,7 @@ func TestGeneralChannelKillSwitchHasNoResurrectionPath(t *testing.T) {
 			}
 		})
 		withSwitch(t, false, func() {
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			if err := b.onboardingCompleteFn(task, false, "", []string{}, "Co"); err != nil {
 				t.Fatalf("seed: %v", err)
 			}
@@ -122,7 +122,7 @@ func TestGeneralChannelKillSwitchHasNoResurrectionPath(t *testing.T) {
 		isolateRuntimeHome(t)
 
 		seed := func() *Broker {
-			b := newTestBroker(t)
+			b := newRawTestBroker(t)
 			b.mu.Lock()
 			defer b.mu.Unlock()
 			if err := b.seedMinimalScratchLocked(&onboarding.State{}); err != nil {
@@ -155,7 +155,7 @@ func TestGeneralChannelKillSwitchNeverDeletes(t *testing.T) {
 	restore := channel.SetGeneralEnabledForTest(false)
 	defer restore()
 
-	b := newTestBroker(t)
+	b := newRawTestBroker(t)
 	// Stand in for a workspace that used #general before the switch was
 	// thrown: the row and its history are already on disk.
 	b.mu.Lock()
@@ -196,7 +196,7 @@ func TestHomeChannelForHasExactlyThreeOutcomes(t *testing.T) {
 
 	t.Run("switch on: always general", func(t *testing.T) {
 		defer channel.SetGeneralEnabledForTest(true)()
-		b := newTestBroker(t)
+		b := newRawTestBroker(t)
 		b.mu.Lock()
 		defer b.mu.Unlock()
 		// Even an actor who is not on the roster gets general while it exists.
@@ -211,7 +211,7 @@ func TestHomeChannelForHasExactlyThreeOutcomes(t *testing.T) {
 
 	t.Run("switch off: a roster member routes to their DM", func(t *testing.T) {
 		defer channel.SetGeneralEnabledForTest(false)()
-		b := newTestBroker(t)
+		b := newRawTestBroker(t)
 		b.mu.Lock()
 		defer b.mu.Unlock()
 		b.members = []officeMember{{Slug: "ceo", Name: "CEO", BuiltIn: true}}
@@ -235,7 +235,7 @@ func TestHomeChannelForHasExactlyThreeOutcomes(t *testing.T) {
 
 	t.Run("switch off: an unresolvable actor is an error, never a slug", func(t *testing.T) {
 		defer channel.SetGeneralEnabledForTest(false)()
-		b := newTestBroker(t)
+		b := newRawTestBroker(t)
 		b.mu.Lock()
 		defer b.mu.Unlock()
 		b.members = nil
@@ -281,7 +281,7 @@ func withSwitch(t *testing.T, enabled bool, fn func()) {
 func TestGroupDMKillSwitchRefusesAtTheAPI(t *testing.T) {
 	isolateRuntimeHome(t)
 
-	b := newTestBroker(t)
+	b := newRawTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -362,7 +362,7 @@ func TestGroupDMKillSwitchRefusesAtTheAPI(t *testing.T) {
 func TestGroupDMKillSwitchWithholdsFromListing(t *testing.T) {
 	isolateRuntimeHome(t)
 
-	b := newTestBroker(t)
+	b := newRawTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -458,7 +458,7 @@ func withGroupSwitch(t *testing.T, enabled bool, fn func()) {
 func TestNamedChannelRetirementKeepsBridgesAndAppThreads(t *testing.T) {
 	isolateRuntimeHome(t)
 
-	b := newTestBroker(t)
+	b := newRawTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -559,7 +559,7 @@ func TestBlueprintAndSynthesisChannelsRespectTheSwitch(t *testing.T) {
 
 	seed := func(t *testing.T) map[string]bool {
 		t.Helper()
-		b := newTestBroker(t)
+		b := newRawTestBroker(t)
 		if err := b.onboardingCompleteFn("Audit the CRM", false, "", []string{}, "Co"); err != nil {
 			t.Fatalf("seed: %v", err)
 		}

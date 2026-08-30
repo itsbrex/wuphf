@@ -15,6 +15,10 @@ import (
 // (drives OAuth) or Skip (abandons the action). This is the user's "block on a
 // typed Connect decision" call, so it must register as a human decision.
 func TestConnectDecisionKindDefaults(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	options, recommended := requestOptionDefaults("connect")
 	if recommended != "connect" {
 		t.Fatalf("recommended option = %q, want connect", recommended)
@@ -59,6 +63,10 @@ func activeCardsWithDedupe(b *Broker, kind, dedupeKey string) []humanInterview {
 // did it by hand) or skip. One CLI is product-removed, so this is the only
 // fallback for a platform with no Composio path.
 func TestFallbackDecisionKindDefaults(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	options, recommended := requestOptionDefaults("fallback")
 	if recommended != "mark_done" {
 		t.Fatalf("recommended option = %q, want mark_done", recommended)

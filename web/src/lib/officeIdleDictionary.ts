@@ -10,19 +10,19 @@ const ROTATION_INTERVAL_MS = 12_000;
 
 /**
  * Hardcoded copy for canonical built-in agents. Slug match wins over role.
- * Keep these in The Office voice — these are the agents users meet first.
+ * These are the agents users meet first, so they set the voice for the rest.
  */
 const SLUG_OVERRIDES: Record<string, readonly string[]> = {
   tess: [
     "drafting a thought",
     "rereading the brief",
-    "watching the team",
-    "sipping coffee",
+    "tidying the brief",
+    "closing out a note",
     "thinking up a plan",
   ],
   ava: [
     "reviewing the diff",
-    "watching tests",
+    "running the tests",
     "skimming PRs",
     "checking CI",
     "reading the changelog",
@@ -30,7 +30,7 @@ const SLUG_OVERRIDES: Record<string, readonly string[]> = {
   sam: [
     "combing Linear",
     "drafting a doc",
-    "in standup mentally",
+    "writing the update nobody reads",
     "checking burn-down",
     "rereading the brief",
   ],
@@ -46,13 +46,18 @@ const ROLE_TABLES: Record<string, readonly string[]> = {
   // idleMs alone, all six showed the SAME line at the same moment -- a
   // sidebar where the entire staff was "looking at memes".
   //
-  // Voice: placid, literal, faintly unhelpful. The joke is that watching IS
-  // the job, so idle copy is the one place it can be said plainly.
+  // Voice: flat, specific, mildly tedious. An idle agent is BETWEEN jobs,
+  // never spectating and never lazy -- founder's rule is that gawkbot is not
+  // a bystander in any messaging, because the agents do the menial work and
+  // the human is the one watching a dashboard. Idle copy is where that is
+  // easiest to get wrong: "watching the board" and "waiting to be asked" read
+  // as an agent doing nothing, which inverts the product story. Give it some
+  // small boring thing it is getting on with instead.
   lead: [
-    "reading over shoulders",
-    "waiting to be asked",
-    "watching the board",
-    "deciding who to bother",
+    "triaging what came in",
+    "reordering the queue",
+    "taking it off your plate",
+    "finding the next boring thing",
   ],
   librarian: [
     "filing something",
@@ -61,27 +66,27 @@ const ROLE_TABLES: Record<string, readonly string[]> = {
     "tidying a page nobody opened",
   ],
   "app-builder": [
-    "staring at a blank canvas",
-    "considering a button",
-    "waiting for a workflow",
+    "wiring up a button",
+    "laying out a screen",
+    "between builds",
   ],
   planner: [
     "breaking it into steps",
-    "staring at the backlog",
+    "grooming the backlog",
     "sequencing something",
   ],
   executor: [
-    "waiting for the green light",
-    "warming up",
-    "watching the queue",
+    "working through the queue",
+    "picking up the next one",
+    "clearing the small stuff",
   ],
   reviewer: [
     "looking for the flaw",
     "re-reading it once more",
-    "waiting for a diff",
+    "between diffs",
   ],
   engineer: [
-    "watching tests",
+    "running the tests",
     "reviewing the diff",
     "skimming PRs",
     "checking CI",
@@ -91,7 +96,7 @@ const ROLE_TABLES: Record<string, readonly string[]> = {
     "doodling in Figma",
     "tweaking spacing",
     "picking colors",
-    "staring at type",
+    "nudging the kerning",
     "moving pixels",
   ],
   pm: [
@@ -102,7 +107,7 @@ const ROLE_TABLES: Record<string, readonly string[]> = {
     "rereading the brief",
   ],
   devops: [
-    "watching dashboards",
+    "rotating the logs",
     "tailing logs",
     "checking uptime",
     "reviewing alerts",
@@ -149,11 +154,11 @@ const ROLE_ALIASES: Record<string, string> = {
  * Generalist fallback when slug + role both miss. Never returns empty.
  */
 const GENERALIST_COPY: readonly string[] = [
-  "looking at memes",
-  "refilling coffee",
-  "checking Slack",
-  "watching the team",
-  "thinking about lunch",
+  "clearing something small",
+  "tidying up after the last job",
+  "filing the paperwork",
+  "between tasks",
+  "getting on with it",
 ];
 
 interface PickIdleCopyInput {

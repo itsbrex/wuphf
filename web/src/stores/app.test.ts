@@ -86,11 +86,9 @@ describe("channel unread state", () => {
 describe("channel clear markers", () => {
   it("stores and removes clear markers by normalized channel", () => {
     useAppStore.getState().setChannelClearMarker(" launch ", " msg-2 ");
-    useAppStore.getState().setChannelClearMarker("", "msg-general");
 
     expect(useAppStore.getState().clearedMessageIdsByChannel).toMatchObject({
       launch: "msg-2",
-      general: "msg-general",
     });
 
     useAppStore.getState().setChannelClearMarker("launch", null);
@@ -98,8 +96,21 @@ describe("channel clear markers", () => {
     expect(useAppStore.getState().clearedMessageIdsByChannel.launch).toBe(
       undefined,
     );
+  });
+
+  it("ignores an empty channel instead of filing it under #general", () => {
+    // This map is keyed BY channel. An empty slug has no channel to key on,
+    // and the old fallback filed it under "general" -- silently attributing a
+    // clear marker to a room the message never came from, and once #general is
+    // retired, to a room that does not exist.
+    useAppStore.getState().setChannelClearMarker("", "msg-orphan");
+    useAppStore.getState().setChannelClearMarker("   ", "msg-orphan-2");
+
     expect(useAppStore.getState().clearedMessageIdsByChannel.general).toBe(
-      "msg-general",
+      undefined,
+    );
+    expect(useAppStore.getState().clearedMessageIdsByChannel[""]).toBe(
+      undefined,
     );
   });
 });

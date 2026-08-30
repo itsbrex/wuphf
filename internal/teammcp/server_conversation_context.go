@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 func normalizeChannelInput(input string) string {
@@ -29,12 +31,31 @@ func resolveChannelHint(input string) string {
 	return channel
 }
 
+// resolveChannel answers "which channel does this MCP call address?" when the
+// caller gave no explicit one.
+//
+// It used to answer "general". That is the single highest-fanout wrong answer
+// in this package — it is the destination resolver behind every agent-initiated
+// write here (actions.go, the channel tools, the wiki tools, the audit log), and
+// with the shared room retired all of them addressed a channel that no longer
+// exists.
+//
+// The right answer is the agent's OWN DM with the human. This process IS one
+// agent: the launcher stamps its identity into WUPHF_AGENT_SLUG, so the
+// conversation it belongs to is never ambiguous.
+//
+// When even that is unknown the answer is "" — not a guessed room. An empty
+// channel is refused by the broker with a clear error, which is the correct
+// outcome for a write nobody can address; inventing a room would put it
+// somewhere nobody reads, which is the leak the retirement closes.
 func resolveChannel(input string) string {
-	channel := resolveChannelHint(input)
-	if channel == "" {
-		channel = "general"
+	if hint := resolveChannelHint(input); hint != "" {
+		return hint
 	}
-	return channel
+	if slug := trustedEnvAgentSlug(); slug != "" {
+		return channel.DirectSlug("human", slug)
+	}
+	return ""
 }
 
 func resolveConversationChannel(ctx context.Context, slug string, requestedChannel string) string {
@@ -216,15 +237,19 @@ func latestRelevantMessageContext(messages []brokerMessage, slug, fallbackChanne
 		if err != nil {
 			continue
 		}
-		channel := normalizeChannelInput(msg.Channel)
-		if channel == "" {
-			channel = normalizeChannelInput(fallbackChannel)
+		// Local is `ch`, not `channel`, so the channel package stays reachable.
+		ch := normalizeChannelInput(msg.Channel)
+		if ch == "" {
+			ch = normalizeChannelInput(fallbackChannel)
 		}
-		if channel == "" {
-			channel = "general"
+		if ch == "" && strings.TrimSpace(slug) != "" {
+			// This agent's own DM with the human. Was "general": a reply to a
+			// message whose channel we could not read went to the retired
+			// shared room instead of back to the conversation it came from.
+			ch = channel.DirectSlug("human", strings.TrimSpace(slug))
 		}
 		return conversationContext{
-			Channel:   channel,
+			Channel:   ch,
 			ReplyToID: threadTargetForMessage(msg, byID),
 			Source:    "recent_message",
 		}, stamp

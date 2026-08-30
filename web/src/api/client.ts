@@ -555,13 +555,39 @@ export interface TokenUsage {
   cost_usd?: number;
 }
 
+/**
+ * Assert a channel was actually named, and return it trimmed.
+ *
+ * Every call below used to read `channel || "general"`. That was survivable
+ * while a shared room existed; now it addresses a channel that was retired, so
+ * a write lands nowhere and a read comes back empty and indistinguishable from
+ * "you have no messages". Neither failure is visible to the user, which is the
+ * whole problem.
+ *
+ * Throwing is deliberate. There is no default room left to pick, and inventing
+ * one is the leak the retirement exists to close — so a caller that reaches
+ * here without a channel has a bug, and it should surface as a query error the
+ * moment it happens rather than as quiet emptiness weeks later. Callers that
+ * legitimately have no channel yet must not call at all (guard the hook's
+ * `enabled`, or early-return) rather than pass "".
+ */
+function requireChannel(channel: string | undefined | null, op: string): string {
+  const trimmed = (channel ?? "").trim();
+  if (!trimmed) {
+    throw new Error(
+      `${op}: channel is required — there is no shared room to fall back to. Name the agent's DM.`,
+    );
+  }
+  return trimmed;
+}
+
 export function getMessages(
   channel: string,
   sinceId?: string | null,
   limit = 50,
 ) {
   return get<{ messages: Message[] }>("/messages", {
-    channel: channel || "general",
+    channel: requireChannel(channel, "getMessages"),
     viewer_slug: "human",
     since_id: sinceId ?? null,
     limit,
@@ -576,7 +602,7 @@ export function postMessage(
 ) {
   const body: Record<string, string | string[]> = {
     from: "you",
-    channel: channel || "general",
+    channel: requireChannel(channel, "postMessage"),
     content,
   };
   if (replyTo) body.reply_to = replyTo;
@@ -590,7 +616,7 @@ export function postMessage(
 
 export function getThreadMessages(channel: string, threadId: string) {
   return get<{ messages: Message[] }>("/messages", {
-    channel: channel || "general",
+    channel: requireChannel(channel, "getThreadMessages"),
     thread_id: threadId,
     viewer_slug: "human",
     limit: 50,
@@ -601,7 +627,7 @@ export function toggleReaction(msgId: string, emoji: string, channel: string) {
   return post("/messages/react", {
     message_id: msgId,
     emoji,
-    channel: channel || "general",
+    channel: requireChannel(channel, "toggleReaction"),
   });
 }
 
@@ -732,7 +758,7 @@ export function generateAgent(prompt: string) {
 
 export function getMembers(channel: string) {
   return get<{ members: OfficeMember[] }>("/members", {
-    channel: channel || "general",
+    channel: requireChannel(channel, "getMembers"),
     viewer_slug: "human",
   });
 }
@@ -877,7 +903,7 @@ export interface ActionApprovalPayload {
 
 export function getRequests(channel: string) {
   return get<{ requests: AgentRequest[] }>("/requests", {
-    channel: channel || "general",
+    channel: requireChannel(channel, "getRequests"),
     viewer_slug: "human",
   });
 }
@@ -1029,7 +1055,7 @@ export * from "./skills";
 // ── Memory ──
 
 export function getMemory(channel: string) {
-  return get("/memory", { channel: channel || "general" });
+  return get("/memory", { channel: requireChannel(channel, "getMemory") });
 }
 
 export function setMemory(namespace: string, key: string, value: string) {

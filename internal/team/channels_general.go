@@ -3,6 +3,7 @@ package team
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nex-crm/wuphf/internal/channel"
 )
@@ -139,6 +140,52 @@ func (b *Broker) homeChannelFor(actorSlug string) (string, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	return b.homeChannelForLocked(actorSlug)
+}
+
+// homeChannelForWriter returns the home channel of the first candidate that
+// both resolves to a roster member AND that `writer` is allowed to post in.
+// ErrNoHomeChannel if none qualify.
+//
+// It exists because "who does this belong to?" often has more than one honest
+// answer, ranked. A task has an OWNER (the agent that will do the work) and a
+// CREATOR (frequently "human", who is not on the roster and therefore has no
+// DM at all). Asking about the creator alone means a human-created task can
+// never find a home, even though the owner's DM was sitting right there — the
+// bug that made every human-initiated task create fail once #general was
+// retired.
+//
+// The access check is the half that is easy to miss, and leaving it out
+// produces a worse failure than the one being fixed. A DM has exactly two
+// participants, so when the CEO opens a task owned by the planner, the
+// planner's DM is a room the CEO may not write to — routing there would turn a
+// working create into "channel access denied". Checking here means the CEO's
+// task lands in the CEO's own DM, which is where the human is actually having
+// that conversation. The human passes every check, so a human-created task
+// still lands on its owner.
+//
+// Empty, unresolvable, and inaccessible candidates are all skipped rather than
+// treated as failures, so a caller can pass a field it is not sure is populated
+// without a nil-check dance.
+//
+// Takes b.mu, like homeChannelFor. Never returns a fallback slug.
+func (b *Broker) homeChannelForWriter(writer string, candidates ...string) (string, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	for _, actor := range candidates {
+		if strings.TrimSpace(actor) == "" {
+			continue
+		}
+		home, err := b.homeChannelForLocked(actor)
+		if err != nil {
+			continue
+		}
+		if !b.canAccessChannelLocked(writer, home) {
+			continue
+		}
+		return home, nil
+	}
+	return "", fmt.Errorf("%w: none of %v give %q a home it can post in",
+		ErrNoHomeChannel, candidates, writer)
 }
 
 // homeChannelForLocked resolves the channel an actor's work belongs in when no

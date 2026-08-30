@@ -69,6 +69,12 @@ func evalJobTaskIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	if seedErr != nil {
 		return fmt.Errorf("seed blueprint: %w", seedErr)
 	}
+	// The blueprint seed replaces the channel list wholesale, and it no
+	// longer mints #general -- the lobby is retired. This eval's scenarios are
+	// about TASK INTEGRITY, not about which rooms a blueprint creates, and
+	// they all post into "general", so the harness re-establishes the room it
+	// needs rather than every scenario threading a different one.
+	ensureOfficeEvalRoom(fx.broker)
 	var packID, idleID string
 	for _, t := range fx.broker.AllTasks() {
 		if t.Title == "Run the first CRM hygiene sweep" {

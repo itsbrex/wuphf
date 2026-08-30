@@ -51,7 +51,14 @@ import { HOME_COMPOSER_DRAFT_CHANNEL, useAppStore } from "../../stores/app";
 
 type CreateMode = "start" | "backlog" | "routine";
 
-const DEFAULT_CHANNEL = "general";
+// A new task belongs in its OWNER's DM, not a shared room. Resolved from the
+// owner at submit time rather than hardcoded, so the composer keeps working
+// when #general is retired.
+function defaultChannelForOwner(owner: string): string {
+  const slug = owner.trim().toLowerCase();
+  if (!slug || slug === AUTO_OWNER) return "";
+  return slug > "human" ? `human__${slug}` : `${slug}__human`;
+}
 
 // "auto" owner sentinel — the CEO picks the real specialist (the floor
 // assignment; every task is assigned). Mirrors isAutoOwner on the Go side.
@@ -205,7 +212,7 @@ export function TaskComposer() {
             park: mode === "backlog",
           },
         ],
-        { channel: DEFAULT_CHANNEL, createdBy: "human" },
+        { channel: defaultChannelForOwner(owner), createdBy: "human" },
       );
       const created = response.tasks?.[0];
       void queryClient.invalidateQueries({ queryKey: ["issues"] });

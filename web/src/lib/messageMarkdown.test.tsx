@@ -298,3 +298,29 @@ describe("messageMarkdown — task references", () => {
     expect(container.querySelector("a")).toBeNull();
   });
 });
+
+describe("app references", () => {
+  it("turns an app id into a pill that opens the app", () => {
+    // An agent quoting "app_9f3c1d2e" in prose is unreadable and unclickable
+    // bare. The pill resolves the name and links to the app.
+    const { container } = renderChat("Shipped it in app_9f3c1d2e.");
+    const pill = container.querySelector(".msg-app-link");
+    expect(pill).not.toBeNull();
+    expect(pill?.getAttribute("data-app-id")).toBe("app_9f3c1d2e");
+  });
+
+  it("leaves an app id inside a path alone", () => {
+    // Boundary handling, same as task refs: a path segment is not a reference.
+    const { container } = renderChat("see /apps/app_9f3c1d2e/data");
+    expect(container.querySelector(".msg-app-link")).toBeNull();
+  });
+
+  it("renders a task ref and an app ref in the same sentence", () => {
+    // The app pass runs over what the TASK pass left behind. Running the two
+    // passes over the original string independently loses whichever ran
+    // second, which is the bug this pins.
+    const { container } = renderChat("DUNDE-5 shipped as app_9f3c1d2e today");
+    expect(container.querySelector(".msg-task-link")).not.toBeNull();
+    expect(container.querySelector(".msg-app-link")).not.toBeNull();
+  });
+});

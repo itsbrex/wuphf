@@ -33,8 +33,9 @@ describe("tasks api client", () => {
     await expect(
       api.createTasks([{ title: "Write contract", assignee: "pm" }]),
     ).resolves.toEqual(response);
+    // No `channel`: the plan names no room, so the broker routes each task to
+    // its own assignee's DM. It used to send "general", which is retired.
     expect(postSpy).toHaveBeenCalledWith("/task-plan", {
-      channel: "general",
       created_by: "human",
       tasks: [{ title: "Write contract", assignee: "pm" }],
     });
@@ -50,7 +51,6 @@ describe("tasks api client", () => {
       ]),
     ).resolves.toEqual(response);
     expect(postSpy).toHaveBeenCalledWith("/task-plan", {
-      channel: "general",
       created_by: "human",
       tasks: [{ title: "Write contract", assignee: "pm", provider: "codex" }],
     });

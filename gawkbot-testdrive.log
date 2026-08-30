@@ -1,0 +1,10 @@
+Launching WUPHF Office web view... the browser is the team now.
+2026/08/30 00:07:07 wiki lint cron: disabled (set WUPHF_LINT_CRON=HH:MM to enable a daily run)
+2026/08/30 00:07:07 INFO skill_compile cron: started interval=30m0s
+2026/08/30 00:07:07 wiki_index: boot reconcile complete
+2026/08/30 00:07:07 [transport] share: registered (human-share)
+
+  Web UI:  http://127.0.0.1:7802
+  Broker:  http://127.0.0.1:7801
+  Press Ctrl+C to stop.
+

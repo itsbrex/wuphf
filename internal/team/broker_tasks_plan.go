@@ -40,18 +40,18 @@ func (b *Broker) handleTaskPlan(w http.ResponseWriter, r *http.Request) {
 	if raw := strings.TrimSpace(body.Channel); raw != "" {
 		channel = normalizeChannelSlug(raw)
 	}
-	if channel == "" {
-		home, err := b.homeChannelFor(createdBy)
-		if err != nil {
-			http.Error(w, `channel is required: there is no default room to fall back to. Name a channel, or set a member slug so the message can go to that agent's DM.`, http.StatusBadRequest)
-			return
-		}
-		channel = home
-	}
+	// An absent channel is legal here and must NOT be resolved at this level.
+	// This is a PLAN: it carries many tasks with different assignees, and
+	// preferredTaskChannelLocked below already routes each one to its own
+	// owner's DM. Resolving a single home from createdBy was both too coarse
+	// (every task in the plan would share one room) and simply broken — the web
+	// plans as created_by="human", "human" is not a roster member, so it could
+	// never resolve and the whole plan was refused with "channel is required".
+	// body.Channel stays what it is: a per-plan DEFAULT, not a requirement.
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	if b.findChannelLocked(channel) == nil {
+	if channel != "" && b.findChannelLocked(channel) == nil {
 		http.Error(w, "channel not found", http.StatusNotFound)
 		return
 	}

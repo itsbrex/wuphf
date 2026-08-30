@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { createTasks } from "../../api/tasks";
+import { directChannelSlug } from "../../lib/channels";
 import { useFocusTrap } from "./editor/inserts/useFocusTrap";
 
 /**
@@ -61,10 +62,13 @@ export default function RequestAIChangeControl({
     setPending(true);
     setError(null);
     try {
+      // The Librarian is the assignee (buildWikiChangeTask), so its DM is the
+      // task's home. This was "general", which no longer exists — the request
+      // died with "channel not found" before Pam ever saw it.
       const res = await createTasks(
         [buildWikiChangeTask(title, path, trimmed)],
         {
-          channel: "general",
+          channel: directChannelSlug(LIBRARIAN_SLUG),
           createdBy: "human",
         },
       );

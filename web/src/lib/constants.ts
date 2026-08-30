@@ -80,4 +80,4 @@ export const REQUEST_POLL_INTERVAL = 3000;
  * Typed `boolean` rather than left to literal inference so the disabled branch
  * stays live code for the type checker.
  */
-export const NAMED_CHANNELS_ENABLED: boolean = true;
+export const NAMED_CHANNELS_ENABLED: boolean = false;

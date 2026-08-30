@@ -44,6 +44,10 @@ func integrationRequest(t *testing.T, srv *httptest.Server, b *Broker, method, p
 }
 
 func TestIntegrationsEndpointReportsUnconfiguredProviders(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	t.Setenv("HOME", t.TempDir())
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
@@ -113,6 +117,10 @@ func TestIntegrationsEndpointReportsUnconfiguredProviders(t *testing.T) {
 // catalog. ?provider=undefined used to skip the whole composio catalog block,
 // so the page showed "Configured" with zero available integrations.
 func TestIntegrationsEndpointIgnoresUndefinedQuerySentinels(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	t.Setenv("HOME", t.TempDir())
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)
@@ -352,6 +360,10 @@ func TestIntegrationConnectStatusDisconnectAndAudit(t *testing.T) {
 }
 
 func TestIntegrationConnectRejectsOversizedBody(t *testing.T) {
+	t.Setenv("COMPOSIO_API_KEY", "")
+	t.Setenv("COMPOSIO_USER_ID", "")
+	t.Setenv("COMPOSIO_INSTALL_DIR", "")
+	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	t.Setenv("HOME", t.TempDir())
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	srv := newIntegrationsTestServer(t, b)

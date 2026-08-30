@@ -20,6 +20,7 @@ func newTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
 	seedTestTeamRoom(b)
+	seedTestLegacyRoom(b)
 	return b
 }
 
@@ -44,7 +45,50 @@ const testTeamRoom = "team"
 func newBrokerWithTeamRoom(path string) *Broker {
 	b := NewBrokerAt(path)
 	seedTestTeamRoom(b)
+	seedTestLegacyRoom(b)
 	return b
+}
+
+// seedTestLegacyRoom gives the fixture a room literally named "general".
+//
+// About a thousand existing test literals name that room, and they are not
+// testing #general -- they need somewhere for an agent to post while the test
+// exercises task plumbing, message scoping, or routing. Sweeping all of them
+// was tried and produced more churn than signal.
+//
+// So the FIXTURE provides the room; PRODUCTION does not. Nothing here goes
+// through the create gate, and the seed paths that would have made #general in
+// a real workspace are gated and tested separately -- see the tests that
+// assert it is absent once the switch is off. A test that cares whether
+// #general exists must not use this fixture.
+// newRawTestBroker is the broker WITHOUT any fixture-supplied rooms: exactly
+// what the product seeds and nothing more. Tests that assert what the product
+// does or does not create -- the #general kill-switch guards above all -- must
+// use this, or the fixture's convenience rooms silently satisfy the very
+// assertion they exist to make.
+func newRawTestBroker(t *testing.T) *Broker {
+	t.Helper()
+	return NewBrokerAt(filepath.Join(t.TempDir(), "broker-state.json"))
+}
+
+func seedTestLegacyRoom(b *Broker) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.findChannelLocked(GeneralChannelSlug) != nil {
+		return
+	}
+	members := make([]string, 0, len(b.members)+1)
+	members = append(members, "human")
+	for _, m := range b.members {
+		members = append(members, m.Slug)
+	}
+	b.channels = append(b.channels, teamChannel{
+		Slug:        GeneralChannelSlug,
+		Name:        GeneralChannelSlug,
+		Type:        "channel",
+		Description: "Legacy room provided by the test fixture only",
+		Members:     members,
+	})
 }
 
 func seedTestTeamRoom(b *Broker) {
