@@ -1,5 +1,11 @@
 // AppDemoTab — teach a tool by DEMONSTRATING it instead of describing it.
 //
+// NOT MOUNTED. Apps no longer author tools, so this is unwired from the app
+// tab bar and its hand-off target (AppToolsChat) is gone. The file is kept
+// deliberately: the screenshare teaching flow is moving to the AGENT surface
+// and this is its reference implementation, alongside apps/observeClient.ts
+// and apps/demoSeed.ts, which that flow imports directly.
+//
 // The honest loop, end to end, with no simulated middle:
 //
 //   1. The operator says what they are about to do (their words, required).
@@ -111,9 +117,10 @@ export function AppDemoTab({ appName, onHandoff, onTeach }: AppDemoTabProps) {
       <div className="opr-data-intro">
         <Eyebrow>Teach by demonstrating</Eyebrow>
         <p className="opr-scoped-note">
-          Show {appName} the job instead of describing it. While you work, gawkbot
-          reads the screens you are actually on — the app, the window, and the
-          elements on it — then hands that to the chat, which writes the tool.
+          Show {appName} the job instead of describing it. While you work,
+          gawkbot reads the screens you are actually on — the app, the window,
+          and the elements on it — then hands that to the chat, which writes the
+          tool.
         </p>
       </div>
 

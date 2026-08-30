@@ -1,34 +1,25 @@
-// OperatorAppDetail — the detail view for a REAL built app (id `app_…`). It
-// keeps the operator App's tab model (UI / Routines / Tools / Data / Knowledge /
-// Integrations); the UI tab renders the agent's ONE live app inside the shipped
-// hardened sandbox (CustomAppFrame + Bridge v2), with the artifacts its runs
-// produced (md/html/pdf) collected below the app.
+// OperatorAppDetail — the detail view for a REAL built app (id `app_…`). Three
+// tabs: UI / Data / Integrations. The UI tab renders the agent's ONE live app
+// inside the shipped hardened sandbox (CustomAppFrame + Bridge v2), with the
+// artifacts its runs produced (md/html/pdf) collected below the app.
+//
+// There is no chat on an app. Talking to an agent happens in that agent's DM,
+// full stop — an app's one conversational affordance is "Edit app", which posts
+// a change request to the App Builder that owns the build.
 
 import { useEffect, useRef, useState } from "react";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  ChevronsLeft,
-  ChevronsRight,
-  Maximize2,
-  Minimize2,
-  Pencil,
-  Sparkles,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 
 import "../../styles/app-detail.css";
 
-import type { CustomApp, CustomAppDetail } from "../../api/apps";
-import { get } from "../../api/client";
+import type { CustomAppDetail } from "../../api/apps";
 import { AppLivePreview } from "../../components/apps/AppLivePreview";
 import { CustomAppFrame } from "../../components/apps/CustomAppFrame";
 import { navigateToSidebarApp } from "../../lib/sidebarNav";
 import { AgentName } from "../agents/AgentName";
 import { AgentPurpose } from "../agents/AgentPurpose";
-import { AgentSessions } from "../agents/AgentSessions";
 import { tryListArtifacts } from "../agents/agentStateClient";
 import {
   appBuildState,
@@ -40,38 +31,14 @@ import type { Artifact } from "../artifacts/artifacts";
 import { AppIntegrationBanner } from "../components/AppIntegrationBanner";
 import { EmptyState } from "../components/EmptyState";
 import { Eyebrow, type TabDef, Tabs } from "../components/primitives";
-import { RoutinesTab } from "../routines/RoutinesTab";
-import { ToolsProvider } from "../tools/toolsContext";
 import { AppDataTab } from "./AppDataTab";
-import { AppDemoTab } from "./AppDemoTab";
-import { AppToolsTab } from "./AppToolsTab";
-import { KnowledgeSurface } from "./KnowledgeSurface";
 import { ToolIntegrations } from "./ToolIntegrations";
 
-type PanelSize = "dock" | "wide" | "modal";
-
-type AppTab =
-  | "ui"
-  | "workflow"
-  | "tools"
-  | "demo"
-  | "data"
-  | "integrations"
-  | "knowledge";
+type AppTab = "ui" | "data" | "integrations";
 
 const TABS: readonly TabDef<AppTab>[] = [
   { id: "ui", label: "UI" },
-  { id: "workflow", label: "Routines" },
-  // Tools: the callable tools Nex builds from taught workflows; the app's chat
-  // calls them. Additive — the Workflow tab is unchanged.
-  { id: "tools", label: "Tools" },
-  // Demo: the other way to teach a tool — demonstrate the job and let the cua
-  // observer read the real screens, then hand that capture to the same chat
-  // that authors from a description. Sits next to Tools because both end in a
-  // tool; only the input differs.
-  { id: "demo", label: "Demo" },
   { id: "data", label: "Data" },
-  { id: "knowledge", label: "Knowledge" },
   { id: "integrations", label: "Integrations" },
 ];
 
@@ -81,17 +48,16 @@ interface AppDetailProps {
    * sidebar owns navigation, so this is absent and the back button is hidden. */
   onBack?: () => void;
   /**
-   * Build mode: once the app publishes, walk the tabs UI → Workflow → Data →
-   * Knowledge so the operator sees each part get hooked up, then settle back on
-   * the UI. Used by the build experience; a manual tab click cancels the walk.
+   * Build mode: once the app publishes, walk from UI to Data and back so the
+   * operator sees the app's own database get hooked up. Used by the build
+   * experience; a manual tab click cancels the walk.
    */
   buildWalk?: boolean;
   /**
    * Opens the app-EDIT chat (AppBuilderChat in editApp mode → the broker's
-   * improve path, which republishes a new version). This is deliberately a
-   * SEPARATE affordance from Ask Agent: Ask Agent teaches/runs the agent's
-   * tools, and a UI change or bug report sent there would be misauthored as
-   * a tool. Absent in the build experience (the build chat is already docked).
+   * improve path, which republishes a new version). This is the ONLY way to ask
+   * for a change to an app: a UI change or a bug report goes to the agent that
+   * builds the app, not to a chat pane on the app itself.
    */
   onEditApp?: (app: { id: string; name: string }) => void;
 }
@@ -103,18 +69,6 @@ export function AppDetail({
   onEditApp,
 }: AppDetailProps) {
   const [tab, setTab] = useState<AppTab>("ui");
-  const [chatOpen, setChatOpen] = useState(false);
-  // A routine's "Open its chat" jumps the Ask Agent dock to that session.
-  const [requestedSession, setRequestedSession] = useState<string | null>(null);
-  const [panelSize, setPanelSize] = useState<PanelSize>("dock");
-  // The Demo tab's hand-off: a formatted capture that seeds the chat's first
-  // message, which is what actually authors the tool (POST /agent/tools/build).
-  // `nonce` remounts the session pane so a SECOND demo re-fires the seed —
-  // AppToolsChat fires a given seed exactly once per mount.
-  const [demoHandoff, setDemoHandoff] = useState<{
-    seed: string;
-    nonce: number;
-  } | null>(null);
   const query = useOperatorApp(appId);
   const remove = useDeleteApp();
 
@@ -169,8 +123,9 @@ export function AppDetail({
     };
   }, [tab, agentId]);
 
-  // Guided reveal: when the app finishes building, walk through the tabs once so
-  // the operator sees the workflow, data, and knowledge get hooked up.
+  // Guided reveal: when the app finishes building, step over to the Data tab
+  // once so the operator sees the app's own database get hooked up, then settle
+  // back on the UI.
   const walkedRef = useRef(false);
   const walkTimersRef = useRef<number[]>([]);
   // One caption line under the tabs narrating the walk, so the auto-advance
@@ -181,21 +136,13 @@ export function AppDetail({
     walkedRef.current = true;
     walkTimersRef.current = [
       window.setTimeout(() => {
-        setTab("workflow");
-        setWalkNote("Its routines: the schedule it runs your workflow on.");
-      }, 900),
-      window.setTimeout(() => {
         setTab("data");
         setWalkNote("Its own database. It fills up as it works.");
-      }, 3200),
-      window.setTimeout(() => {
-        setTab("knowledge");
-        setWalkNote("What it learns, written down with citations.");
-      }, 5500),
+      }, 900),
       window.setTimeout(() => {
         setTab("ui");
         setWalkNote(null);
-      }, 8000),
+      }, 3200),
     ];
     return () => {
       walkTimersRef.current.forEach((t) => window.clearTimeout(t));
@@ -221,361 +168,130 @@ export function AppDetail({
   }
 
   return (
-    // Key the provider on the loaded identity: it mounts before the app query
-    // resolves, so remount once the real agent arrives instead of keeping
-    // tools/purpose state seeded from the "This app" placeholder.
-    <ToolsProvider
-      key={app?.id ?? "loading"}
-      appName={app?.name ?? "This app"}
-      agentId={app?.id}
-    >
-      <div
-        className={`opr-detail-wrap${
-          chatOpen && panelSize !== "modal" ? ` is-chat-${panelSize}` : ""
-        }`}
-      >
-        <div className="app-detail opr-surface-wide opr-app-detail">
-          {onBack ? (
-            <button type="button" className="opr-back" onClick={onBack}>
-              <ArrowLeft size={13} strokeWidth={1.9} aria-hidden={true} />
-              All agents
-            </button>
-          ) : null}
+    <div className="opr-detail-wrap">
+      <div className="app-detail opr-surface-wide opr-app-detail">
+        {onBack ? (
+          <button type="button" className="opr-back" onClick={onBack}>
+            <ArrowLeft size={13} strokeWidth={1.9} aria-hidden={true} />
+            All agents
+          </button>
+        ) : null}
 
-          <div className="opr-detail-head">
-            <div className="opr-detail-titles">
-              <div className="opr-detail-name">
-                {app ? (
-                  <AgentName id={app.id} fallback={app.name} />
-                ) : (
-                  "Loading app…"
-                )}
-              </div>
-              <div className="opr-tool-meta">
-                <span
-                  className={`opr-pill ${failed ? "opr-pill-bad" : "opr-pill-muted"}`}
-                >
-                  <span
-                    className={`opr-led ${
-                      failed
-                        ? "opr-led-bad"
-                        : ready
-                          ? "opr-led-live"
-                          : "opr-led-draft"
-                    }`}
-                  />
-                  {failed
-                    ? "Stopped"
-                    : ready
-                      ? "Live"
-                      : state === "building"
-                        ? "Building"
-                        : "Loading…"}
-                </span>
-                {app ? (
-                  <span className="opr-meta-dot">v{app.version}</span>
-                ) : null}
-              </div>
+        <div className="opr-detail-head">
+          <div className="opr-detail-titles">
+            <div className="opr-detail-name">
+              {app ? (
+                <AgentName id={app.id} fallback={app.name} />
+              ) : (
+                "Loading app…"
+              )}
             </div>
-            {ready ? (
-              <div className="opr-detail-actions">
-                {app && onEditApp ? (
-                  <button
-                    type="button"
-                    className="opr-btn opr-btn-sm"
-                    onClick={() => onEditApp({ id: app.id, name: app.name })}
-                  >
-                    <Pencil size={13} strokeWidth={1.9} aria-hidden={true} />
-                    Edit app
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="opr-btn opr-btn-sm"
-                  onClick={() => setChatOpen(true)}
-                >
-                  <Sparkles size={13} strokeWidth={1.9} aria-hidden={true} />
-                  Ask Agent
-                </button>
-              </div>
-            ) : failed ? (
-              <div className="opr-detail-actions">
-                <button
-                  type="button"
-                  className="opr-btn opr-btn-sm"
-                  onClick={removeAndBack}
-                  disabled={remove.isPending}
-                >
-                  <Trash2 size={13} strokeWidth={1.9} aria-hidden={true} />
-                  Remove
-                </button>
-              </div>
-            ) : null}
-          </div>
-
-          <AgentPurpose summary={app?.summary} />
-
-          <Tabs tabs={TABS} active={tab} onSelect={selectTab} />
-          {walkNote ? (
-            <p className="opr-scoped-note" aria-hidden={true}>
-              {walkNote}
-            </p>
-          ) : null}
-
-          <div
-            role="tabpanel"
-            id={`opr-panel-${tab}`}
-            aria-labelledby={`opr-tab-${tab}`}
-          >
-            {/* The UI tab (hosting the live app frame) stays MOUNTED across
-                tab switches — hidden, not unmounted — so returning to it does
-                NOT reload the iframe and re-run the app every time. The other
-                tabs mount only while active. */}
-            <div style={tab === "ui" ? undefined : { display: "none" }}>
-              <UiTab
-                query={query}
-                failed={failed}
-                onRemove={removeAndBack}
-                removing={remove.isPending}
-              />
-              {/* The artifacts the agent's runs produced, under its one app. */}
-              {remoteArtifacts.length > 0 ? (
-                <div className="opr-ui-artifacts">
-                  <Eyebrow>Artifacts</Eyebrow>
-                  <ArtifactsTab
-                    agentName={app?.name ?? "This agent"}
-                    artifacts={remoteArtifacts}
-                  />
-                </div>
+            <div className="opr-tool-meta">
+              <span
+                className={`opr-pill ${failed ? "opr-pill-bad" : "opr-pill-muted"}`}
+              >
+                <span
+                  className={`opr-led ${
+                    failed
+                      ? "opr-led-bad"
+                      : ready
+                        ? "opr-led-live"
+                        : "opr-led-draft"
+                  }`}
+                />
+                {failed
+                  ? "Stopped"
+                  : ready
+                    ? "Live"
+                    : state === "building"
+                      ? "Building"
+                      : "Loading…"}
+              </span>
+              {app ? (
+                <span className="opr-meta-dot">v{app.version}</span>
               ) : null}
             </div>
-            {tab !== "ui" ? (
-              <TabBody
-                tab={tab}
-                appId={appId}
-                query={query}
-                onOpenRoutineSession={(sessionId) => {
-                  setRequestedSession(sessionId);
-                  setChatOpen(true);
-                }}
-                onOpenChat={() => setChatOpen(true)}
-                onDemoHandoff={(seed) => {
-                  setDemoHandoff((prev) => ({
-                    seed,
-                    nonce: (prev?.nonce ?? 0) + 1,
-                  }));
-                  setChatOpen(true);
-                }}
-              />
+          </div>
+          {/* "Edit app" is the app's whole conversational surface: it hands the
+              change request to the App Builder that owns this build. */}
+          {ready && app && onEditApp ? (
+            <div className="opr-detail-actions">
+              <button
+                type="button"
+                className="opr-btn opr-btn-sm"
+                onClick={() => onEditApp({ id: app.id, name: app.name })}
+              >
+                <Pencil size={13} strokeWidth={1.9} aria-hidden={true} />
+                Edit app
+              </button>
+            </div>
+          ) : failed ? (
+            <div className="opr-detail-actions">
+              <button
+                type="button"
+                className="opr-btn opr-btn-sm"
+                onClick={removeAndBack}
+                disabled={remove.isPending}
+              >
+                <Trash2 size={13} strokeWidth={1.9} aria-hidden={true} />
+                Remove
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <AgentPurpose summary={app?.summary} />
+
+        <Tabs tabs={TABS} active={tab} onSelect={selectTab} />
+        {walkNote ? (
+          <p className="opr-scoped-note" aria-hidden={true}>
+            {walkNote}
+          </p>
+        ) : null}
+
+        <div
+          role="tabpanel"
+          id={`opr-panel-${tab}`}
+          aria-labelledby={`opr-tab-${tab}`}
+        >
+          {/* The UI tab (hosting the live app frame) stays MOUNTED across
+              tab switches — hidden, not unmounted — so returning to it does
+              NOT reload the iframe and re-run the app every time. The other
+              tabs mount only while active. */}
+          <div style={tab === "ui" ? undefined : { display: "none" }}>
+            <UiTab
+              query={query}
+              failed={failed}
+              onRemove={removeAndBack}
+              removing={remove.isPending}
+            />
+            {/* The artifacts the agent's runs produced, under its one app. */}
+            {remoteArtifacts.length > 0 ? (
+              <div className="opr-ui-artifacts">
+                <Eyebrow>Artifacts</Eyebrow>
+                <ArtifactsTab
+                  agentName={app?.name ?? "This agent"}
+                  artifacts={remoteArtifacts}
+                />
+              </div>
             ) : null}
           </div>
+          {tab !== "ui" ? <TabBody tab={tab} query={query} /> : null}
         </div>
-
-        {/* Ask AI — floating bubble + docked drawer, openable from any tab.
-          During the build experience the build chat is already docked, so the
-          floating bubble stays suppressed — but an EXPLICIT open (the header
-          button, "Teach a tool in chat", a routine's "Open its chat") must
-          still work: those buttons silently no-opped during the walk
-          (2026-08-16 audit). */}
-        {app && ready && (!buildWalk || chatOpen) ? (
-          <AskAiDock
-            app={app}
-            open={chatOpen}
-            size={panelSize}
-            onOpenChange={setChatOpen}
-            onSizeChange={setPanelSize}
-            requestedSessionId={requestedSession}
-            demoHandoff={demoHandoff}
-          />
-        ) : null}
       </div>
-    </ToolsProvider>
-  );
-}
-
-// ── Ask AI dock: floating bubble + right-side docked drawer (dock/wide/modal) ──
-
-function AskAiDock({
-  app,
-  open,
-  size,
-  onOpenChange,
-  onSizeChange,
-  requestedSessionId,
-  demoHandoff,
-}: {
-  app: CustomApp;
-  open: boolean;
-  size: PanelSize;
-  onOpenChange: (open: boolean) => void;
-  onSizeChange: (next: (s: PanelSize) => PanelSize) => void;
-  requestedSessionId?: string | null;
-  /** A Demo-tab capture to open the chat with. `nonce` changes per hand-off. */
-  demoHandoff?: { seed: string; nonce: number } | null;
-}) {
-  const panelRef = useRef<HTMLElement>(null);
-
-  // a11y: close on Escape, move focus into the panel on open, and restore it
-  // on close, matching the shell's overlay keyboard grammar (see CallModal).
-  // Escape originating inside the chat composer (input/textarea/
-  // contentEditable) is left alone: closing unmounts the composer, and a
-  // mid-composition Escape must never destroy an un-sent draft.
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.activeElement as HTMLElement | null;
-    panelRef.current?.focus();
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== "Escape" || e.defaultPrevented) return;
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-      onOpenChange(false);
-    }
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      prev?.focus();
-    };
-  }, [open, onOpenChange]);
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        className="opr-ask-fab"
-        onClick={() => onOpenChange(true)}
-        aria-label={`Ask gawkbot about ${app.name}`}
-      >
-        <Sparkles size={16} strokeWidth={2} aria-hidden={true} />
-        Ask Agent
-      </button>
-    );
-  }
-  return (
-    <>
-      {size === "modal" ? (
-        <button
-          type="button"
-          className="opr-ask-backdrop"
-          aria-label="Close chat"
-          onClick={() => onOpenChange(false)}
-        />
-      ) : null}
-      <aside
-        ref={panelRef}
-        tabIndex={-1}
-        className={`opr-ask-panel is-${size}`}
-        aria-label={`Ask gawkbot about ${app.name}`}
-      >
-        <div className="opr-ask-bar">
-          <span className="opr-ask-bar-title">
-            <Sparkles size={13} strokeWidth={2} aria-hidden={true} />
-            Ask Agent · {app.name}
-          </span>
-          <div className="opr-ask-bar-controls">
-            <button
-              type="button"
-              className="opr-icon-btn"
-              onClick={() =>
-                onSizeChange((s) => (s === "wide" ? "dock" : "wide"))
-              }
-              aria-label={size === "wide" ? "Narrow panel" : "Widen panel"}
-              title={size === "wide" ? "Narrow" : "Widen"}
-            >
-              {size === "wide" ? (
-                <ChevronsRight size={15} strokeWidth={1.9} aria-hidden={true} />
-              ) : (
-                <ChevronsLeft size={15} strokeWidth={1.9} aria-hidden={true} />
-              )}
-            </button>
-            <button
-              type="button"
-              className="opr-icon-btn"
-              onClick={() =>
-                onSizeChange((s) => (s === "modal" ? "dock" : "modal"))
-              }
-              aria-label={size === "modal" ? "Exit full screen" : "Full screen"}
-              title={size === "modal" ? "Exit full screen" : "Full screen"}
-            >
-              {size === "modal" ? (
-                <Minimize2 size={14} strokeWidth={1.9} aria-hidden={true} />
-              ) : (
-                <Maximize2 size={14} strokeWidth={1.9} aria-hidden={true} />
-              )}
-            </button>
-            <button
-              type="button"
-              className="opr-icon-btn"
-              onClick={() => onOpenChange(false)}
-              aria-label="Close chat"
-              title="Close"
-            >
-              <X size={15} strokeWidth={1.9} aria-hidden={true} />
-            </button>
-          </div>
-        </div>
-        <div className="opr-ask-body">
-          <AgentSessions
-            // Remount on each Demo hand-off: AppToolsChat fires a seed once per
-            // mount, so a second demo would otherwise land silently. Sessions
-            // and transcripts are server-side, so a remount re-reads them.
-            key={demoHandoff?.nonce ?? 0}
-            agentName={app.name}
-            agentId={app.id}
-            requestedSessionId={requestedSessionId}
-            seed={demoHandoff?.seed}
-          />
-        </div>
-      </aside>
-    </>
+    </div>
   );
 }
 
 function TabBody({
   tab,
-  appId,
   query,
-  onOpenRoutineSession,
-  onOpenChat,
-  onDemoHandoff,
 }: {
   tab: AppTab;
-  appId: string;
   query: UseQueryResult<CustomAppDetail>;
-  onOpenRoutineSession?: (sessionId: string) => void;
-  /** Open the Ask Agent dock — the Tools tab's teach affordance. */
-  onOpenChat?: () => void;
-  /** Send a Demo-tab capture into the chat, which authors the tool from it. */
-  onDemoHandoff?: (seed: string) => void;
 }) {
   const app = query.data?.app;
   switch (tab) {
-    case "workflow":
-      return (
-        <RoutinesTab
-          agentName={app?.name ?? "This agent"}
-          agentId={app?.id}
-          onOpenSession={(sessionId) => onOpenRoutineSession?.(sessionId)}
-        />
-      );
-    case "tools":
-      return (
-        <AppToolsTab appName={app?.name ?? "This app"} onTeach={onOpenChat} />
-      );
-    case "demo":
-      return (
-        <AppDemoTab
-          appName={app?.name ?? "This app"}
-          onHandoff={onDemoHandoff}
-          onTeach={onOpenChat}
-        />
-      );
     case "data":
       return app ? (
         <AppDataTab appId={app.id} />
@@ -588,18 +304,6 @@ function TabBody({
       );
     case "integrations":
       return <AppIntegrationsTab />;
-    case "knowledge":
-      // The gbrain-backed, Wikipedia-style reader with cited claims — backed by
-      // the agent's REAL synthesized pages (grounded in its own artifacts).
-      return app ? (
-        <KnowledgeSurface appId={app.id} />
-      ) : (
-        <EmptyState
-          glyph="📖"
-          title="No knowledge yet"
-          hint="Your AI writes cited pages about this app once it has finished building."
-        />
-      );
     default:
       return null;
   }

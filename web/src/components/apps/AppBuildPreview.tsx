@@ -25,11 +25,35 @@ export function parseAppNameFromTaskTitle(title: string): string | null {
   return match ? match[1] : null;
 }
 
-/** Pick the app a build task is producing: exact name match, newest wins. */
+/**
+ * Pick the app a build task is producing.
+ *
+ * The task's CHANNEL is the exact key and is tried first: the broker binds an
+ * app-build task to its app's own `editChannel`
+ * (stampAppEditChannelForTaskLocked) and correlates the same way in the other
+ * direction (appBuilderRunTaskID). It is stable across a rename and survives
+ * the task's details being rewritten with a completion summary.
+ *
+ * The name is the fallback, and it is a heuristic. It holds on the IMPROVE path
+ * by construction — composeAppBrief takes the name FROM the app being improved,
+ * so title and manifest cannot disagree. On the CREATE path the title carries
+ * the name the human asked for and the App Builder registers under whatever
+ * name it picks, so any drift used to leave the pane bound to nothing forever.
+ * Exact match only, newest wins; never a fuzzy match, because binding the wrong
+ * app would put another tool's live preview inside this build.
+ */
 export function resolveAppForTask(
   apps: CustomApp[],
   appName: string | null,
+  taskChannel?: string,
 ): CustomApp | undefined {
+  const channel = taskChannel?.trim();
+  if (channel) {
+    // `editChannel` is absent on html-only and legacy apps, so an empty channel
+    // must never match — it would hand this task an arbitrary unbound app.
+    const bound = apps.find((a) => a.editChannel?.trim() === channel);
+    if (bound) return bound;
+  }
   if (!appName) return undefined;
   const wanted = appName.trim().toLowerCase();
   const matches = apps.filter((a) => a.name.trim().toLowerCase() === wanted);
@@ -39,11 +63,59 @@ export function resolveAppForTask(
   )[0];
 }
 
+/** What the pane says while no app is bound to the task. */
+export interface BuildPreviewPlaceholder {
+  kind: "waiting" | "building" | "unbound";
+  title: string;
+  detail: string;
+}
+
+/**
+ * Decide the honest placeholder for a task with no app bound yet.
+ *
+ * "building" promises a preview, so it is only used when the title actually
+ * names an app that is on its way. A task that identifies no app at all — a
+ * chat-born build, where an agent minted the task with a prose title and the
+ * broker therefore never pre-scaffolded an app — has nothing coming, and must
+ * not keep promising a first version that already shipped somewhere else.
+ */
+export function buildPreviewPlaceholder(
+  appName: string | null,
+  appsLoaded: boolean,
+): BuildPreviewPlaceholder {
+  if (appName) {
+    return {
+      kind: "building",
+      title: `Building ${appName}…`,
+      detail:
+        "The live preview appears here the moment the App Builder publishes its first version.",
+    };
+  }
+  if (!appsLoaded) {
+    return {
+      kind: "waiting",
+      title: "Waiting for the App Builder…",
+      detail: "Looking for the app this task is building.",
+    };
+  }
+  return {
+    kind: "unbound",
+    title: "No app is linked to this task",
+    detail:
+      "Nothing here names the app this task built, so there is no preview to show. If the build finished, the app is in the sidebar under Apps.",
+  };
+}
+
 interface AppBuildPreviewProps {
   /** The task title — the app name is parsed from it. */
   taskTitle: string;
   /** The task id — scopes the live build-activity feed to this build. */
   taskId?: string;
+  /**
+   * The task's conversation home. For an app-build task this IS the app's
+   * `editChannel`, which is how the preview binds to the app it is building.
+   */
+  taskChannel?: string;
 }
 
 /**
@@ -54,7 +126,11 @@ interface AppBuildPreviewProps {
  * surface, refreshing as new versions are published. Until the first version
  * lands it shows a building placeholder, so the 20–60s build is never dead air.
  */
-export function AppBuildPreview({ taskTitle, taskId }: AppBuildPreviewProps) {
+export function AppBuildPreview({
+  taskTitle,
+  taskId,
+  taskChannel,
+}: AppBuildPreviewProps) {
   const appName = useMemo(
     () => parseAppNameFromTaskTitle(taskTitle),
     [taskTitle],
@@ -67,8 +143,8 @@ export function AppBuildPreview({ taskTitle, taskId }: AppBuildPreviewProps) {
   });
 
   const app = useMemo(
-    () => resolveAppForTask(appsQuery.data ?? [], appName),
-    [appsQuery.data, appName],
+    () => resolveAppForTask(appsQuery.data ?? [], appName, taskChannel),
+    [appsQuery.data, appName, taskChannel],
   );
 
   const detail = useQuery({
@@ -80,21 +156,23 @@ export function AppBuildPreview({ taskTitle, taskId }: AppBuildPreviewProps) {
 
   const preview = (() => {
     if (!(app && detail.data)) {
+      const placeholder = buildPreviewPlaceholder(appName, appsQuery.isSuccess);
       return (
         <section className="app-build-preview" aria-label="App preview">
           <div className="app-build-preview__header">
             <span className="app-build-preview__title">Preview</span>
           </div>
           <div className="app-build-preview__state" role="status">
-            <span className="app-build-preview__spinner" aria-hidden="true" />
+            {/* No spinner once we know nothing is coming — a spinner IS a
+                promise of progress. */}
+            {placeholder.kind === "unbound" ? null : (
+              <span className="app-build-preview__spinner" aria-hidden="true" />
+            )}
             <p className="app-build-preview__state-title">
-              {appName
-                ? `Building ${appName}…`
-                : "Waiting for the App Builder…"}
+              {placeholder.title}
             </p>
             <p className="app-build-preview__state-detail">
-              The live preview appears here the moment the App Builder publishes
-              its first version.
+              {placeholder.detail}
             </p>
           </div>
         </section>

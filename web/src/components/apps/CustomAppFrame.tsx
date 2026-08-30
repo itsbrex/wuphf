@@ -1,6 +1,8 @@
 import { type RefObject, useEffect, useMemo, useRef } from "react";
 
 import { get, post } from "../../api/client";
+import { directChannelSlug } from "../../lib/channels";
+import { APP_BUILDER_SLUG } from "../../lib/constants";
 import { confirm } from "../ui/ConfirmDialog";
 import { showNotice } from "../ui/Toast";
 
@@ -592,9 +594,19 @@ function serviceCreateTask(
       window.clearTimeout(release);
       createTaskPending = false;
       try {
+        // The App Builder's DM. This sent the literal "general", which stopped
+        // existing when the shared room was retired, so every task an app
+        // asked for died with 404 "channel not found".
+        //
+        // Channel only — NOT owner. An app must not be able to set the owner
+        // or any other privileged field (asserted in CustomAppFrame.test.ts),
+        // and it does not need to: the task just needs a conversation to live
+        // in, and the agent that builds and maintains apps is the honest home
+        // for work an app asked for. The broker cannot resolve one itself here
+        // because created_by is "human", who is not a roster member.
         const res = await post<{ task?: { id?: string } }>("/tasks", {
           action: "create",
-          channel: "general",
+          channel: directChannelSlug(APP_BUILDER_SLUG),
           title,
           details,
           created_by: "human",

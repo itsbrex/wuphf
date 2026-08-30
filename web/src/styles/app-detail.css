@@ -1264,10 +1264,6 @@
   border: 1px solid var(--t-line-2);
   border-radius: var(--t-r-sm);
 }
-.opr-msg-ai {
-  align-self: flex-start;
-  background: color-mix(in srgb, var(--t-surface) 86%, transparent);
-}
 .opr-builder-scroll .opr-edit-msgwrap,
 .opr-chat-scroll .opr-msg {
   animation: opr-step-in var(--duration-base) cubic-bezier(0.22, 1, 0.36, 1);
@@ -1279,37 +1275,11 @@
     scroll-behavior: smooth;
   }
 }
-/* AI bubbles carry the agent's face — "Every agent has a face" extends into
-   the conversation itself (2026-08-16 delight audit). The portrait replaces
-   the mono "Nex" label; both at once would double-identify. */
-.opr-msgwrap-ai .opr-msg-ai::before {
-  display: none;
-}
 .opr-msgwrap-ai {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
   gap: var(--space-2);
-}
-.opr-msg-face {
-  flex: 0 0 auto;
-  margin-bottom: 2px;
-}
-.opr-msg-ai::before {
-  content: "Nex";
-  display: block;
-  color: var(--t-accent-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 3px;
-}
-.opr-msg-you {
-  align-self: flex-end;
-  background: color-mix(in srgb, var(--t-accent-2) 9%, var(--t-surface));
-  border-color: color-mix(in srgb, var(--t-accent-2) 45%, var(--t-line-2));
 }
 .opr-msg-meta {
   font-size: 10px;
@@ -2538,22 +2508,6 @@
   gap: var(--space-2);
   flex-wrap: wrap;
 }
-
-/* ───────────────────────────── Chat-to-build authoring */
-
-.opr-builder {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(380px, 1fr) minmax(360px, 1.05fr);
-}
-.opr-builder-chat {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  border-right: 1px dotted var(--t-line);
-}
 .opr-builder-head {
   display: flex;
   align-items: flex-start;
@@ -2566,17 +2520,6 @@
   font-weight: 700;
   font-size: 15px;
   margin-top: 3px;
-}
-.opr-builder-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: var(--space-5) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3-5);
-}
-.opr-builder-scroll .opr-msg {
-  max-width: 86%;
 }
 
 /* AI thinking indicator */
@@ -2757,10 +2700,6 @@
 }
 .opr-work-dots span:nth-child(3) {
   animation-delay: 0.32s;
-}
-.opr-work-phrase {
-  font-variant-numeric: tabular-nums;
-  animation: opr-work-fade 0.36s ease-out;
 }
 /* Claude-Code telemetry: elapsed · tokens · esc hint, quiet and mono. */
 .opr-work-meta {
@@ -3183,14 +3122,6 @@
 }
 
 @media (max-width: 900px) {
-  .opr-builder {
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr auto;
-  }
-  .opr-builder-chat {
-    border-right: none;
-    border-bottom: 1px dotted var(--t-line);
-  }
   .opr-builder-canvas {
     max-height: 42vh;
   }
@@ -3449,41 +3380,6 @@
   border-color: transparent;
 }
 
-/* Ask-AI FAB — pop the tool's chat open from any tab */
-.opr-ask-fab {
-  position: fixed;
-  right: var(--space-5);
-  bottom: var(--space-5);
-  z-index: 40;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 9px 15px;
-  border-radius: 999px;
-  border: 1px solid var(--t-line-2);
-  background: color-mix(in srgb, var(--t-ink) 9%, var(--t-surface));
-  color: var(--t-ink);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 6px 18px color-mix(in srgb, #000 42%, transparent);
-  transition:
-    transform 140ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    border-color 140ms ease;
-}
-.opr-ask-fab:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--t-accent) 60%, var(--t-line-2));
-}
-.opr-ask-fab:focus-visible {
-  outline: 2px solid var(--t-accent);
-  outline-offset: 2px;
-}
-.opr-ask-fab svg {
-  color: var(--t-accent);
-}
-
 /* Bottom-right cluster holding the two peer affordances (Demo to Nex + Ask AI).
    The container owns the fixed position; the fabs inside lay out in a row. */
 .opr-detail-fabs {
@@ -3493,9 +3389,6 @@
   z-index: 40;
   display: inline-flex;
   gap: var(--space-2);
-}
-.opr-detail-fabs .opr-ask-fab {
-  position: static;
 }
 
 /* Port the shared ConnectIntegrationCard (eac-*, defined in global.css with
@@ -3575,88 +3468,6 @@
 .opr-builder-panel {
   grid-template-columns: 1fr;
 }
-.opr-builder-panel .opr-builder-chat {
-  border-right: none;
-}
-
-.opr-detail-wrap.is-chat-dock,
-.opr-detail-wrap.is-chat-wide {
-  transition: padding-right 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-.opr-detail-wrap.is-chat-dock {
-  padding-right: 440px;
-}
-.opr-detail-wrap.is-chat-wide {
-  padding-right: min(760px, 62vw);
-}
-
-.opr-ask-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 44;
-  border: none;
-  cursor: pointer;
-  background: color-mix(in srgb, #000 55%, transparent);
-  animation: opr-fade-in 140ms ease both;
-}
-
-.opr-ask-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 45;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--t-paper);
-  border-left: 1px solid var(--t-line-2);
-  box-shadow: -14px 0 36px color-mix(in srgb, #000 42%, transparent);
-  transition: width 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  animation: opr-slide-in-right 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.opr-ask-panel.is-dock {
-  width: 440px;
-}
-.opr-ask-panel.is-wide {
-  width: min(760px, 62vw);
-}
-.opr-ask-panel.is-modal {
-  top: 50%;
-  right: 50%;
-  bottom: auto;
-  transform: translate(50%, -50%);
-  width: min(1080px, 92vw);
-  height: 88vh;
-  border: 1px solid var(--t-line-2);
-  border-radius: var(--t-r);
-  box-shadow: 0 26px 70px color-mix(in srgb, #000 58%, transparent);
-  animation: opr-pop-in 180ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-
-.opr-ask-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-2-5) var(--space-2-5) var(--space-2-5) var(--space-3-5);
-  border-bottom: 1px solid var(--t-line-2);
-  flex-shrink: 0;
-}
-.opr-ask-bar-title {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--t-ink);
-}
-.opr-ask-bar-title svg {
-  color: var(--t-accent);
-}
-.opr-ask-bar-controls {
-  display: inline-flex;
-  gap: 2px;
-}
 .opr-icon-btn {
   display: grid;
   place-items: center;
@@ -3678,15 +3489,6 @@
 .opr-icon-btn:focus-visible {
   outline: 2px solid var(--t-accent);
   outline-offset: 1px;
-}
-.opr-ask-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-}
-.opr-ask-body .opr-builder {
-  flex: 1;
-  min-height: 0;
 }
 
 @keyframes opr-slide-in-right {
@@ -3839,32 +3641,6 @@
   flex-direction: column;
   gap: var(--space-2);
   margin-top: var(--space-3);
-}
-.opr-browser-ask {
-  border: 1px solid color-mix(in srgb, var(--t-cyan) 32%, transparent);
-  background: color-mix(in srgb, var(--t-cyan) 8%, transparent);
-  border-radius: var(--t-r-md);
-  padding: var(--space-3);
-}
-.opr-browser-ask-head {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--t-cyan);
-}
-.opr-browser-ask-body {
-  margin: var(--space-2) 0 var(--space-3);
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--t-text);
-}
-.opr-browser-ask-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
 }
 
 /* ── Auto-surfaced approval prompt (human-in-the-loop for app actions) ─────── */
@@ -4199,16 +3975,6 @@
   font-size: 12px;
   color: var(--t-faint);
 }
-.opr-conn-select {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--t-ink);
-  background: var(--t-paper);
-  border: 1px solid var(--t-line-2);
-  border-radius: var(--t-r-sm);
-  padding: var(--space-1) var(--space-2);
-  max-width: 60%;
-}
 
 /* ── Build experience: describe chat → docked chat + live preview ────────── */
 .opr-build-exp {
@@ -4248,12 +4014,6 @@
   min-height: 0;
   border-left: 1px solid var(--t-line-2);
   background: var(--t-surface);
-}
-.opr-build-exp.is-live .opr-build-exp-chat .opr-ask-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
 }
 @media (max-width: 880px) {
   .opr-build-exp.is-live {
@@ -4313,21 +4073,6 @@
   color: var(--t-dim);
 }
 
-/* ── App Tools tab: plain-language tools + the built-in create-a-tool tool ──── */
-/* Non-technical first: a readable title + what it does; code behind a toggle.
-   Additive to the app tab model (Workflow tab unchanged). Tokens only. See
-   docs/specs/operator-workflows-as-tools.md. */
-.opr-app-tools {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-.opr-tool-catalog {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
 .opr-tool-card {
   border: 1px solid var(--t-line);
   border-radius: var(--t-r-md);
@@ -4339,108 +4084,12 @@
   align-items: center;
   gap: var(--space-2);
 }
-.opr-tool-glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--t-accent);
-}
 /* Plain-language title — the primary, non-technical heading of a tool. */
 .opr-tool-title {
   font-size: 14px;
   font-weight: 650;
   color: var(--t-text);
   letter-spacing: -0.01em;
-}
-.opr-tool-agentonly {
-  margin-left: auto;
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--t-faint);
-}
-.opr-tool-purpose {
-  margin: var(--space-2) 0 0;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--t-text-2);
-}
-.opr-tool-needs {
-  margin: var(--space-1-5) 0 0;
-  font-size: 11.5px;
-  color: var(--t-faint);
-}
-.opr-tool-needs span {
-  font-family: var(--font-mono);
-  color: var(--t-text-2);
-}
-
-/* Last-run readout (plain). */
-.opr-toolcall {
-  border-left: 2px solid var(--t-cyan);
-  background: color-mix(in srgb, var(--t-cyan) 6%, transparent);
-  border-radius: 0 var(--t-r-sm) var(--t-r-sm) 0;
-  padding: var(--space-2) var(--space-3);
-  margin-top: var(--space-2);
-}
-.opr-toolcall-line {
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--t-faint);
-}
-.opr-toolcall-result {
-  margin-top: 2px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--t-text);
-}
-
-/* Code view — hidden by default; for whoever wants the technical detail. */
-.opr-tool-code-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  margin-top: var(--space-2);
-  padding: 2px 0;
-  background: none;
-  border: 0;
-  cursor: pointer;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--t-text-2);
-}
-.opr-tool-code-toggle:hover {
-  color: var(--t-text);
-}
-.opr-tool-code-toggle .is-open {
-  transform: rotate(180deg);
-}
-.opr-tool-code {
-  margin-top: var(--space-2);
-}
-.opr-tool-sig {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--t-text-2);
-  margin-bottom: var(--space-1-5);
-}
-.opr-tool-script {
-  margin: 0;
-  padding: var(--space-2) var(--space-3);
-  background: var(--t-surface);
-  border: 1px solid var(--t-line-2);
-  border-radius: var(--t-r-sm);
-  overflow-x: auto;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.55;
-  color: var(--t-text-2);
-  white-space: pre;
 }
 
 /* What the tool did: the capability calls a run recorded (toolRuntime actions),
@@ -4450,11 +4099,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-}
-.opr-toolcall-actions code {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--t-faint);
 }
 
 /* A knowledge page's attached artifacts (preserved legacy HTML briefs/PDFs). */
@@ -4721,15 +4365,6 @@
   color: var(--t-text-2);
   flex: 1;
 }
-.opr-agent-purpose-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  white-space: nowrap;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--t-cyan);
-}
 
 /* ── Routines: scheduled prompts run in the agent's chat ────────────────────── */
 /* Disable / Publish belong to each routine, not the agent. Tokens only. See
@@ -4739,11 +4374,6 @@
   flex-direction: column;
   gap: var(--space-4);
 }
-.opr-routine-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
 .opr-routine {
   border: 1px solid var(--t-line);
   border-radius: var(--t-r-md);
@@ -4752,58 +4382,6 @@
 }
 .opr-routine.is-disabled {
   opacity: 0.62;
-}
-.opr-routine-head {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-.opr-routine-name {
-  font-size: 13.5px;
-  font-weight: 650;
-  color: var(--t-text);
-}
-.opr-routine-version {
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  color: var(--t-faint);
-}
-.opr-routine-schedule {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--t-cyan);
-}
-.opr-routine-lastrun {
-  margin-left: auto;
-  font-size: 10.5px;
-  color: var(--t-faint);
-}
-.opr-routine-prompt {
-  width: 100%;
-  margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--t-surface);
-  border: 1px solid var(--t-line-2);
-  border-radius: var(--t-r-sm);
-  color: var(--t-text);
-  font: inherit;
-  font-size: 12.5px;
-  line-height: 1.5;
-  resize: vertical;
-}
-.opr-routine-actions {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-/* Recent-runs disclosure: a per-routine collapsible list of run history. */
-.opr-routine-runs {
-  margin-top: var(--space-2-5);
 }
 .opr-routine-runs-toggle {
   display: inline-flex;
@@ -4825,21 +4403,6 @@
 .opr-routine-runs-toggle.is-open svg {
   transform: rotate(90deg);
 }
-.opr-routine-runs-list {
-  list-style: none;
-  margin: var(--space-2) 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1-5);
-}
-.opr-routine-run {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: 11.5px;
-  color: var(--t-dim);
-}
 .opr-run-led {
   width: 6px;
   height: 6px;
@@ -4853,84 +4416,6 @@
 .opr-run-led.is-bad {
   background: var(--t-red);
 }
-.opr-routine-run-when {
-  color: var(--t-faint);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.opr-routine-run-summary {
-  color: var(--t-ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.opr-routine-new {
-  border-top: 1px solid var(--t-line-2);
-  padding-top: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.opr-routine-new-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px;
-  gap: var(--space-2);
-}
-
-/* ── Agent chat sessions: strip atop the Ask Agent dock ─────────────────────── */
-.opr-agent-sessions {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-.opr-session-strip {
-  display: flex;
-  gap: var(--space-1-5);
-  overflow-x: auto;
-  padding: var(--space-2) var(--space-2) var(--space-2) 0;
-  border-bottom: 1px solid var(--t-line-2);
-  flex-shrink: 0;
-}
-.opr-session-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  padding: 3px 9px;
-  border: 1px solid var(--t-line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--t-dim);
-  font-size: 11px;
-  white-space: nowrap;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.opr-session-chip:hover {
-  color: var(--t-text);
-  border-color: var(--t-line-2);
-}
-.opr-session-chip.is-active {
-  color: var(--t-text);
-  border-color: color-mix(in srgb, var(--t-cyan) 45%, transparent);
-  background: color-mix(in srgb, var(--t-cyan) 8%, transparent);
-}
-.opr-session-chip-title {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.opr-session-new {
-  border-style: dashed;
-}
-.opr-session-panes {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-.opr-session-panes > div {
-  height: 100%;
-}
 
 /* ── Agent portraits ──────────────────────────────────────────────────────
    Every agent has a face. The portraits are the same pixel sprite sheet the
@@ -4943,10 +4428,6 @@
   overflow: hidden;
   padding: 0;
   background: var(--t-figure-bg);
-}
-.opr-portrait-frame canvas {
-  display: block;
-  image-rendering: pixelated;
 }
 .opr-agent-rail-avatar {
   width: 18px;

@@ -32,13 +32,13 @@ vi.mock("../apps/useOperatorApps", () => ({
   appBuildState: (app: { status?: string }) =>
     app.status === "building" ? "building" : "ready",
   useDeleteApp: () => ({ mutate: vi.fn(), isPending: false }),
-  // Real-id check used by the agent-service wiring (tools/routines/sessions).
+  // Real-id check used by the agent-service wiring.
   isRealAppId: (id: string | null | undefined) =>
     typeof id === "string" && id.startsWith("app_"),
 }));
 
-// Stub the sandbox frame (real iframe), the integrations tab (fetches the
-// catalog), and the Ask AI chat (React Query) so the test stays unit-scoped.
+// Stub the sandbox frame (real iframe) and the integrations tab (fetches the
+// catalog) so the test stays unit-scoped.
 vi.mock("../../components/apps/CustomAppFrame", () => ({
   CustomAppFrame: ({ appId, html }: { appId: string; html: string }) => (
     <div data-testid="app-frame" data-app-id={appId}>
@@ -55,14 +55,6 @@ vi.mock("../../components/apps/AppLivePreview", () => ({
 }));
 vi.mock("./ToolIntegrations", () => ({
   ToolIntegrations: () => <div data-testid="tool-integrations" />,
-}));
-vi.mock("./AppToolsChat", () => ({
-  AppToolsChat: ({ appName }: { appName: string }) => (
-    <div data-testid="ask-ai-chat">
-      tools:{appName}
-      <input data-testid="chat-input" />
-    </div>
-  ),
 }));
 
 function detail(
@@ -87,6 +79,13 @@ function detail(
   };
 }
 
+function ready() {
+  useOperatorAppMock.mockReturnValue({
+    data: detail({ status: "ready" }, "<html>hi</html>"),
+    isError: false,
+  });
+}
+
 describe("AppDetail", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -109,10 +108,7 @@ describe("AppDetail", () => {
   });
 
   it("renders the live app in the UI tab once ready", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     const { getByTestId } = render(
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
@@ -121,53 +117,8 @@ describe("AppDetail", () => {
     expect(frame.textContent).toContain("<html>hi</html>");
   });
 
-  it("routes the Routines tab to the agent's scheduled routines", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
-    const { getByRole, getByText, getAllByText } = render(
-      <AppDetail appId="app_abc" onBack={() => {}} />,
-    );
-    fireEvent.click(getByRole("tab", { name: "Routines" }));
-    // Routines start EMPTY (no fabricated seeds) — the tab shows the honest
-    // empty state plus the create form.
-    expect(getByText(/No routines yet/)).toBeTruthy();
-    expect(getAllByText("Add routine").length).toBeGreaterThan(0);
-  });
-
-  it("shows the Ask AI header button and floating bubble for a ready app", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
-    const { getByRole } = render(
-      <AppDetail appId="app_abc" onBack={() => {}} />,
-    );
-    // Header action button (exact name "Ask AI").
-    expect(getByRole("button", { name: /^ask agent$/i })).toBeTruthy();
-    // Floating bubble (aria-label "Ask AI about <app>").
-    expect(
-      getByRole("button", { name: /ask gawkbot about open tasks/i }),
-    ).toBeTruthy();
-  });
-
-  it("hides the Ask AI affordances while the app is still building", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "building" }, ""),
-      isError: false,
-    });
-    const { queryByRole } = render(
-      <AppDetail appId="app_abc" onBack={() => {}} />,
-    );
-    expect(queryByRole("button", { name: /ask agent/i })).toBeNull();
-  });
-
   it("collects the agent service's artifacts under the live app on the UI tab", async () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     const fetchMock = vi.fn(async (url: string) => {
       if (url === "/agent/artifacts?agent=app_abc") {
         return {
@@ -186,7 +137,6 @@ describe("AppDetail", () => {
           }),
         };
       }
-      // Any other call (e.g. the tools hydration) degrades gracefully.
       return { ok: false, status: 404, json: async () => ({}) };
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -204,10 +154,7 @@ describe("AppDetail", () => {
   });
 
   it("shows no artifacts section when the agent has produced nothing", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     // The agent service is unreachable: the UI tab is just the app.
     vi.stubGlobal(
       "fetch",
@@ -219,68 +166,72 @@ describe("AppDetail", () => {
     expect(getByTestId("app-frame")).toBeTruthy();
     expect(queryByText("Artifacts")).toBeNull();
   });
+});
 
-  it("opens Ask AI as a docked drawer (not full screen) when clicked", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
-    const { getByRole, getByTestId, queryByTestId } = render(
+// An app is a surface, not a place you talk to an agent. The tab set is
+// deliberately three: what it looks like, what it stores, what it is plugged
+// into. Routines moved to the global Scheduled Tasks nav, Knowledge moved to
+// the agent scope, and tool authoring + the Demo capture are gone from apps
+// entirely — so a regression that quietly re-adds one of them fails here.
+describe("AppDetail tab set", () => {
+  it("offers exactly UI, Data and Integrations", () => {
+    ready();
+    const { getAllByRole } = render(
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
-    // Drawer closed: only the floating bubble exists, no chat yet.
-    expect(queryByTestId("ask-ai-chat")).toBeNull();
-    fireEvent.click(
-      getByRole("button", { name: /ask gawkbot about open tasks/i }),
-    );
-    // Drawer open: the tools chat is mounted inside the docked panel.
-    expect(getByTestId("ask-ai-chat").textContent).toContain(
-      "tools:Open Tasks",
-    );
+    expect(getAllByRole("tab").map((t) => t.textContent)).toEqual([
+      "UI",
+      "Data",
+      "Integrations",
+    ]);
   });
 
-  it("moves focus into the Ask Agent panel on open and closes it on Escape", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
-    const { container, getByRole, queryByTestId } = render(
+  it("has no Routines, Tools, Demo or Knowledge tab", () => {
+    ready();
+    const { queryByRole } = render(
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
-    fireEvent.click(
-      getByRole("button", { name: /ask gawkbot about open tasks/i }),
-    );
-    // The panel takes focus on open (overlay keyboard grammar, as CallModal).
-    const panel = container.querySelector(".opr-ask-panel");
-    expect(panel).toBeTruthy();
-    expect(document.activeElement).toBe(panel);
-    // Escape anywhere outside the composer closes the drawer.
-    fireEvent.keyDown(document.body, { key: "Escape" });
-    expect(queryByTestId("ask-ai-chat")).toBeNull();
-    // The floating bubble is back.
-    expect(
-      getByRole("button", { name: /ask gawkbot about open tasks/i }),
-    ).toBeTruthy();
+    for (const name of [/^routines$/i, /^tools$/i, /^demo$/i, /^knowledge$/i]) {
+      expect(queryByRole("tab", { name })).toBeNull();
+    }
   });
 
-  it("ignores Escape pressed inside the chat composer (draft protection)", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
-    const { getByRole, getByTestId, queryByTestId } = render(
+  it("routes the Integrations tab to the workspace catalog", () => {
+    ready();
+    const { getByRole, getByTestId } = render(
       <AppDetail appId="app_abc" onBack={() => {}} />,
     );
-    fireEvent.click(
-      getByRole("button", { name: /ask gawkbot about open tasks/i }),
+    fireEvent.click(getByRole("tab", { name: "Integrations" }));
+    expect(getByTestId("tool-integrations")).toBeTruthy();
+  });
+});
+
+// The founder's rule: you chat with an agent in its DM, nowhere else. An app
+// carries no chat pane, no floating "Ask Agent" bubble, and no docked drawer.
+const ASK_AGENT = /ask (agent|ai|gawkbot)/i;
+
+describe("AppDetail has no agent chat", () => {
+  it("offers no Ask Agent affordance on a ready app", () => {
+    ready();
+    const { container, queryByRole } = render(
+      <AppDetail appId="app_abc" onBack={() => {}} />,
     );
-    // Escape from the composer input (e.g. cancelling IME composition or an
-    // autocomplete) must NOT unmount the chat and discard the draft.
-    fireEvent.keyDown(getByTestId("chat-input"), { key: "Escape" });
-    expect(queryByTestId("ask-ai-chat")).not.toBeNull();
-    // Escape outside the composer still closes.
-    fireEvent.keyDown(document.body, { key: "Escape" });
-    expect(queryByTestId("ask-ai-chat")).toBeNull();
+    // Not a bare /ask/ — the app is named "Open Tasks", which contains it.
+    expect(queryByRole("button", { name: ASK_AGENT })).toBeNull();
+    expect(container.querySelector(".opr-ask-panel")).toBeNull();
+    expect(container.querySelector(".opr-ask-fab")).toBeNull();
+  });
+
+  it("offers no Ask Agent affordance while the app is building", () => {
+    useOperatorAppMock.mockReturnValue({
+      data: detail({ status: "building" }, ""),
+      isError: false,
+    });
+    const { container, queryByRole } = render(
+      <AppDetail appId="app_abc" onBack={() => {}} />,
+    );
+    expect(queryByRole("button", { name: ASK_AGENT })).toBeNull();
+    expect(container.querySelector(".opr-ask-fab")).toBeNull();
   });
 });
 
@@ -291,10 +242,7 @@ describe("AppDetail build walk narration", () => {
   });
 
   function renderWalk() {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => ({ ok: false, status: 404, json: async () => ({}) })),
@@ -304,36 +252,36 @@ describe("AppDetail build walk narration", () => {
     );
   }
 
-  it("captions each walked tab, then falls silent when the walk settles", () => {
+  it("captions the Data step, then falls silent when the walk settles", () => {
     vi.useFakeTimers();
     const { getByText, queryByText } = renderWalk();
     // Before the walk starts: no caption.
-    expect(queryByText(/Its routines/)).toBeNull();
+    expect(queryByText(/Its own database/)).toBeNull();
     act(() => {
       vi.advanceTimersByTime(900);
     });
     expect(
-      getByText("Its routines: the schedule it runs your workflow on."),
-    ).toBeTruthy();
-    act(() => {
-      vi.advanceTimersByTime(2300);
-    });
-    expect(
       getByText("Its own database. It fills up as it works."),
-    ).toBeTruthy();
-    act(() => {
-      vi.advanceTimersByTime(2300);
-    });
-    expect(
-      getByText("What it learns, written down with citations."),
     ).toBeTruthy();
     // The walk settles back on the UI tab and the narration goes away.
     act(() => {
       vi.advanceTimersByTime(2500);
     });
-    expect(
-      queryByText(/Its routines|Its own database|What it learns/),
-    ).toBeNull();
+    expect(queryByText(/Its own database/)).toBeNull();
+  });
+
+  it("only ever selects tabs that still exist", () => {
+    vi.useFakeTimers();
+    const { container } = renderWalk();
+    // Run the whole walk and assert the panel never lands on a removed tab id
+    // — a setTab pointing at a deleted tab renders a blank pane, not an error.
+    for (const _ of [0, 1, 2, 3]) {
+      act(() => {
+        vi.advanceTimersByTime(900);
+      });
+      const panel = container.querySelector("[role='tabpanel']");
+      expect(panel?.id).toMatch(/^opr-panel-(ui|data|integrations)$/);
+    }
   });
 
   it("clears the caption the moment the operator clicks a tab themselves", () => {
@@ -343,29 +291,24 @@ describe("AppDetail build walk narration", () => {
       vi.advanceTimersByTime(900);
     });
     expect(
-      getByText("Its routines: the schedule it runs your workflow on."),
+      getByText("Its own database. It fills up as it works."),
     ).toBeTruthy();
     // A manual click cancels the walk AND its narration.
-    fireEvent.click(getByRole("tab", { name: "Data" }));
-    expect(
-      queryByText(/Its routines|Its own database|What it learns/),
-    ).toBeNull();
+    fireEvent.click(getByRole("tab", { name: "Integrations" }));
+    expect(queryByText(/Its own database/)).toBeNull();
     // The cancelled timers never resurrect a caption.
     act(() => {
       vi.advanceTimersByTime(10000);
     });
-    expect(
-      queryByText(/Its routines|Its own database|What it learns/),
-    ).toBeNull();
+    expect(queryByText(/Its own database/)).toBeNull();
   });
 });
 
+// The app's ONE conversational affordance, and the founder's stated replacement
+// for the removed chat: an edit request that goes to the agent building the app.
 describe("AppDetail edit affordance", () => {
   it("offers Edit app on a ready agent and hands back the app identity", () => {
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     const onEditApp = vi.fn();
     const { getByRole } = render(
       <AppDetail appId="app_abc" onBack={() => {}} onEditApp={onEditApp} />,
@@ -388,10 +331,7 @@ describe("AppDetail edit affordance", () => {
     expect(queryByRole("button", { name: /edit app/i })).toBeNull();
 
     // Ready but no handler (e.g. inside the build experience): no dead button.
-    useOperatorAppMock.mockReturnValue({
-      data: detail({ status: "ready" }, "<html>hi</html>"),
-      isError: false,
-    });
+    ready();
     rerender(<AppDetail appId="app_abc" onBack={() => {}} />);
     expect(queryByRole("button", { name: /edit app/i })).toBeNull();
   });

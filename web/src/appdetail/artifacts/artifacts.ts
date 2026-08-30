@@ -13,7 +13,7 @@ export interface Artifact {
   type: ArtifactType;
   /** Filename-ish display title, e.g. "weekly-pipeline-summary.md". */
   title: string;
-  /** What produced it, e.g. "weeklyPipelineSummary" or "built by Nex". */
+  /** What produced it, e.g. "weeklyPipelineSummary" or "built by an agent". */
   producedBy: string;
   at: string;
   /** Inline content for md/html; absent for pdf (file-ish, download only). */

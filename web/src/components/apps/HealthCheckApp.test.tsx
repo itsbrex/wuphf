@@ -72,7 +72,6 @@ beforeEach(() => {
     memory_backend: "markdown",
     memory_backend_active: "markdown",
     memory_backend_ready: true,
-    nex_connected: false,
     build: {
       version: "0.114.1",
       build_timestamp: "2026-05-04T18:12:38Z",

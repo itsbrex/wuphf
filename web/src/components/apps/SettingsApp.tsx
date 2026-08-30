@@ -28,7 +28,6 @@ import {
 } from "../ui/ShredWarning";
 import { showNotice } from "../ui/Toast";
 import { WipeModal } from "../ui/WipeModal";
-import { NexConnectPanel } from "./NexConnectPanel";
 import { ImageGenSection } from "./SettingsApp.imageGen";
 import { Field, KeyField, SaveButton } from "./settings/components";
 import { SECTION_GROUPS } from "./settings/constants";
@@ -57,11 +56,9 @@ function useShredAction() {
         return false;
       }
       queryClient.clear();
-      void router.navigate({
-        to: "/channels/$channelSlug",
-        params: { channelSlug: "general" },
-        replace: true,
-      });
+      // Home, not the retired #general: post-shred there is no shared room to
+      // land in, and onboarding takes over from the home route anyway.
+      void router.navigate({ to: "/", replace: true });
       resetForOnboarding();
       showNotice("Workspace shredded. Onboarding reopened.", "success");
       return true;
@@ -143,7 +140,6 @@ function GeneralSection({ cfg, save }: SectionProps) {
   );
   const [blueprint, setBlueprint] = useState(cfg.blueprint ?? "");
   const [email, setEmail] = useState(cfg.email ?? "");
-  const [devUrl, setDevUrl] = useState(cfg.dev_url ?? "");
   const [connectedProviders, setConnectedProviders] = useState<
     LLMRuntimeKind[] | null
   >(null);
@@ -160,7 +156,6 @@ function GeneralSection({ cfg, save }: SectionProps) {
       default_format: format,
       blueprint,
       email,
-      dev_url: devUrl,
       team_lead_slug: teamLead,
     };
     if (maxConcurrent)
@@ -235,14 +230,6 @@ function GeneralSection({ cfg, save }: SectionProps) {
           placeholder="you@company.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-        />
-      </Field>
-      <Field label="Dev URL" hint="API base URL override">
-        <input
-          style={styles.input}
-          placeholder="https://app.nex.ai"
-          value={devUrl}
-          onChange={(e) => setDevUrl(e.target.value)}
         />
       </Field>
 
@@ -748,13 +735,6 @@ interface KeyDef {
 
 const KEY_DEFS: KeyDef[] = [
   {
-    field: "api_key",
-    flag: "api_key_set",
-    label: "Nex API Key",
-    placeholder: "nex_...",
-    env: "WUPHF_API_KEY",
-  },
-  {
     field: "anthropic_api_key",
     flag: "anthropic_key_set",
     label: "Anthropic",
@@ -898,7 +878,7 @@ function IntegrationsSection({ cfg, save }: SectionProps) {
           <input
             style={{ ...styles.input, opacity: 0.6, cursor: "default" }}
             readOnly={true}
-            placeholder="(set via Nex registration)"
+            placeholder="(not set)"
             value={cfg.workspace_id ?? ""}
           />
         </Field>
@@ -906,26 +886,10 @@ function IntegrationsSection({ cfg, save }: SectionProps) {
           <input
             style={{ ...styles.input, opacity: 0.6, cursor: "default" }}
             readOnly={true}
-            placeholder="(set via Nex registration)"
+            placeholder="(not set)"
             value={cfg.workspace_slug ?? ""}
           />
         </Field>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <div style={styles.groupTitle}>Nex</div>
-        <p
-          style={{
-            fontSize: 12,
-            color: "var(--text-secondary)",
-            margin: "4px 0 0",
-          }}
-        >
-          Nex is a context graph platform for AI agents. Register to enable
-          shared memory, entity briefs, and integrations. Once registered, paste
-          your API key in the API Keys section.
-        </p>
-        <NexConnectPanel />
       </div>
 
       <div style={{ marginTop: 20 }}>
@@ -1024,24 +988,20 @@ const CLI_FLAGS: [string, string][] = [
   ["--collab", "Collaborative mode (all agents see all messages)"],
   ["--1o1", "Direct 1:1 session with a single agent"],
   ["--unsafe", "Bypass agent permission checks (dev only)"],
-  ["--no-nex", "Disable Nex for this session"],
   ["--no-open", "Skip auto-opening browser on launch"],
   ["--from-scratch", "Start without saved blueprint"],
   ["--threads-collapsed", "Start with threads collapsed"],
   ["--cmd <command>", "Run a slash command non-interactively"],
   ["--format <fmt>", "Output format (text, json)"],
-  ["--api-key <key>", "Nex API key override"],
   ["--version", "Print version and exit"],
   ["--help-all", "Show all flags including internal ones"],
 ];
 
 const ENV_VARS: [string, string][] = [
   ["WUPHF_LLM_PROVIDER", "LLM provider override"],
-  ["WUPHF_API_KEY", "Nex API key"],
   ["WUPHF_BROKER_PORT", "Broker port"],
   ["WUPHF_CONFIG_PATH", "Config file path override"],
   ["WUPHF_RUNTIME_HOME", "Runtime state directory"],
-  ["WUPHF_NO_NEX", "Disable Nex (1/true/yes)"],
   ["WUPHF_START_FROM_SCRATCH", "Start without blueprint (1)"],
   ["WUPHF_ONE_ON_ONE", "Enable 1:1 mode (1)"],
   ["WUPHF_HEADLESS_PROVIDER", "Headless provider override"],

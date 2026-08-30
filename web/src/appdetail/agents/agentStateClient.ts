@@ -9,7 +9,7 @@
 //   - TOOLS, SESSIONS (pi SessionManager JSONL), and ARTIFACTS live on the
 //     agent service, reached via the /agent vite proxy.
 //
-// House pattern (see ../tools/toolAgentClient.ts): every agent-service call
+// House pattern: every agent-service call
 // carries an AbortSignal.timeout and throws on !ok; the try* wrappers resolve
 // null on ANY failure so callers can fall back to the local seeded state and
 // the FE keeps working offline. All agent POST bodies carry schema_version.

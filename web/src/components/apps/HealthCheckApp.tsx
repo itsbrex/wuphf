@@ -840,11 +840,6 @@ function runtimeItems(data: HealthResponse | undefined): RuntimeItem[] {
       active: Boolean(data?.memory_backend_ready),
     },
     {
-      label: "Nex",
-      value: data?.nex_connected ? "connected" : "disconnected",
-      active: Boolean(data?.nex_connected),
-    },
-    {
       label: "Build",
       value: data?.build?.version ?? "unknown",
       active: Boolean(data?.build?.version),
