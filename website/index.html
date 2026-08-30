@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>gawkbot: A new kind of bystander.</title>
-<meta name="description" content="gawkbot is your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions. It finishes nothing end to end, and it comes back constantly. Free, and it runs on your machine.">
+<title>gawkbot - bots you (almost) control</title>
+<meta name="description" content="gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. Runs on your machine, with your keys. Source-available, and free.">
 <link rel="canonical" href="https://gawk.bot">
-<meta property="og:title" content="gawkbot: A new kind of bystander.">
-<meta property="og:description" content="Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.">
+<meta property="og:title" content="gawkbot - bots you (almost) control">
+<meta property="og:description" content="The models do the boring part. You get a screen with buttons on it, and the pleasant feeling of being in charge.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://gawk.bot">
 <meta property="og:site_name" content="gawkbot">
@@ -15,12 +15,12 @@
 <meta property="og:image" content="https://gawk.bot/og-image.png">
 <meta property="og:image:width" content="1280">
 <meta property="og:image:height" content="720">
-<meta property="og:image:alt" content="gawkbot. Two eyes, staring. A team of always-on onlookers that watch your tools and finish nothing.">
+<meta property="og:image:alt" content="gawkbot. Two hollow eyes. The bots are working; you are the one with the dashboard open.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="gawkbot: A new kind of bystander.">
-<meta name="twitter:description" content="Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.">
+<meta name="twitter:title" content="gawkbot - bots you (almost) control">
+<meta name="twitter:description" content="The models do the boring part. You get a screen with buttons on it, and the pleasant feeling of being in charge.">
 <meta name="twitter:image" content="https://gawk.bot/og-image.png">
-<meta name="twitter:image:alt" content="gawkbot. Two eyes, staring. A team of always-on onlookers that watch your tools and finish nothing.">
+<meta name="twitter:image:alt" content="gawkbot. Two hollow eyes. The bots are working; you are the one with the dashboard open.">
 <!-- theme-color cannot reference a CSS custom property, so these two are the
      only brand colors outside :root. They must track --paper in each mode. -->
 <meta name="theme-color" content="#F4F3EF" media="(prefers-color-scheme: light)">
@@ -58,7 +58,7 @@
       "url": "https://gawk.bot",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "macOS, Linux, Windows",
-      "description": "gawkbot is your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions. Free, and it runs on your machine.",
+      "description": "gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. Runs on your machine, with your keys. Source-available, and free.",
       "license": "https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE",
       "downloadUrl": "https://gawk.bot/download.html",
       "offers": {
@@ -77,14 +77,6 @@
   /* ════════════════════════════════════════════════════════════════════
      gawkbot BRAND PALETTE. Single source of truth.
 
-     Everything on this page, including the pixel-office <canvas>, reads
-     its colors from here. To re-skin, edit ONLY the channel triplets and
-     the named colors in this block. Nothing below hardcodes a brand
-     color. The canvas resolves these same custom properties at runtime
-     (see PALETTE in the script at the end of the document) and derives
-     its entire greyscale ramp by mixing ink into paper, so a token swap
-     repaints the illustration too, in both light and dark.
-
      Six semantics, one accent:
        ink     foreground, near-black on light, bone on dark
        paper   page background
@@ -95,6 +87,13 @@
                ONLY. It is never decoration.
 
      Never pure black or pure white, in either mode.
+
+     The ONE exception to the monochrome rule is the bot marks. Their
+     twelve muted body colors are not decoration either: a bot's color
+     is derived from its slug and identifies it, the same way its shape
+     does, so the roster reads as a set of individuals rather than a
+     paint chart. Those values live in web/src/lib/blobAvatar.ts and are
+     injected from there, never retyped.
      ═══════════════════════════════════════════════════════════════════ */
   :root {
     color-scheme: light dark;
@@ -119,10 +118,6 @@
     --ink-strong: rgba(var(--ink-rgb), 0.75);
     --scanline: rgba(var(--ink-rgb), 0.045);
 
-    /* Letterbox stays near-black in both modes: a bone-white bar behind
-       a video would be a bug, not a theme. */
-    --video-letterbox: #0E0E11;
-
     /* -- legacy aliases -------------------------------------------- */
     /* The rules below this block were authored against these names.
        They now resolve to the semantics above, which is why the whole
@@ -134,16 +129,10 @@
     --border: var(--line);
     --text: var(--ink);
     --text-muted: var(--mute);
-    --text-rgb: var(--ink-rgb);
     --yellow: var(--ink);
     --yellow-dark: var(--ink);
-    --green: var(--ink);
-    --blue: var(--mute);
     --yellow-glow: var(--ink-glow);
     --accent-halo: var(--ink-halo);
-    --accent-soft: var(--ink-soft);
-    --accent-strong: var(--ink-strong);
-    --text-soft: rgba(var(--ink-rgb), 0.88);
     --bg2: var(--surface);
     --bg3: var(--surface-high);
     --yellow-dim: var(--yellow-glow);
@@ -155,8 +144,8 @@
     --font-mono: 'DM Mono', monospace;
   }
 
-  /* Dark mode redefines ONLY the sources. Every derived value, alias, and
-     canvas ramp follows automatically. */
+  /* Dark mode redefines ONLY the sources. Every derived value and alias
+     follows automatically. */
   @media (prefers-color-scheme: dark) {
     :root {
       --ink-rgb: 237,235,228;
@@ -179,6 +168,8 @@
     overflow-x: hidden;
   }
 
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   /* ── NAV ─────────────────────────────────────────────── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
@@ -190,33 +181,11 @@
     gap: 24px;
   }
   .nav-logo {
-    font-family: var(--font-display);
-    font-size: 11px;
-    color: var(--yellow);
-    letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 10px;
     text-decoration: none;
+    margin-right: auto;
   }
-  .nav-by {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 0.04em;
-    font-weight: 400;
-  }
-  .nav-links { display: flex; gap: 4px; margin-left: auto; }
-  .nav-links a {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-decoration: none;
-    letter-spacing: 0.04em;
-    display: flex; align-items: center;
-    min-height: 44px; padding: 0 12px;
-  }
-  .nav-links a:hover { color: var(--yellow); }
-  .nav-social {
-    display: flex; align-items: center; gap: 4px;
-  }
+  .nav-social { display: flex; align-items: center; gap: 4px; }
   .nav-social-link {
     display: flex; align-items: center; gap: 5px;
     font-family: var(--font-mono);
@@ -239,7 +208,6 @@
     padding: 0 12px;
     min-height: 44px;
     border: none;
-    cursor: pointer;
     white-space: nowrap;
     display: inline-flex;
     align-items: center;
@@ -303,9 +271,7 @@
   /* The eyes narrow and widen, like someone actually looking at something.
      Applied ONLY to the hero copy: below roughly 24px the whole travel is a
      couple of pixels and reads as a wobble, so the nav and footer marks ship
-     the static open state. Those small copies also carry crispEdges, which
-     the animated copy must NOT have: a fractional scale would snap row by
-     row and the motion would go steppy. */
+     the static open state. */
   .hero-mark .gawkbot-eyes {
     transform-box: fill-box;
     transform-origin: center;
@@ -316,17 +282,6 @@
     to   { transform: scaleY(0.42); }
   }
   .is-page-hidden .hero-mark .gawkbot-eyes { animation-play-state: paused; }
-  @media (prefers-reduced-motion: reduce) {
-    .hero-mark .gawkbot-eyes { animation: none; }
-  }
-
-  .label-tag {
-    font-family: var(--font-display);
-    font-size: 6px;
-    color: var(--bg);
-    background: var(--yellow);
-    padding: 3px 6px;
-  }
 
   .hero-eyebrow {
     font-family: var(--font-display);
@@ -383,27 +338,18 @@
     margin-bottom: 40px;
   }
 
-  .hero-tagline em {
-    font-style: normal;
-    color: var(--yellow);
-    font-weight: 500;
-  }
-
   .install-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0;
-    margin-bottom: 40px;
+    margin-bottom: 32px;
     width: 100%;
     max-width: 560px;
     scroll-margin-top: 60px;
   }
 
-  .install-tabs {
-    display: flex;
-    width: 100%;
-  }
+  .install-tabs { display: flex; width: 100%; }
   .install-tab {
     flex: 1;
     min-height: 44px;
@@ -453,9 +399,7 @@
     text-align: left;
   }
   .install-line:hover,
-  .install-line:focus-visible {
-    background: var(--bg2);
-  }
+  .install-line:focus-visible { background: var(--bg2); }
 
   .install-prompt {
     font-family: var(--font-mono);
@@ -469,6 +413,7 @@
     color: var(--text);
     flex: 1;
     text-align: left;
+    overflow-wrap: anywhere;
   }
   .install-copy {
     font-family: var(--font-display);
@@ -477,7 +422,7 @@
     flex-shrink: 0;
     letter-spacing: 0.08em;
   }
-  .install-copy.copied { color: var(--accent-lime); }
+  .install-copy.copied { color: var(--accent); }
 
   .install-note {
     font-family: var(--font-mono);
@@ -491,18 +436,17 @@
   }
   .hero-badges {
     display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: center;
-    margin-top: 24px;
+    margin-top: 28px;
   }
-  .hn-badge { display: inline-flex; line-height: 0; }
+  .hn-badge, .yc-badge { display: inline-flex; line-height: 0; }
   .hn-badge img { height: 48px; width: auto; display: block; }
-  .yc-badge { display: inline-flex; line-height: 0; }
   .yc-badge img { height: 40px; width: auto; display: block; }
 
   .btn-primary {
     font-family: var(--font-display);
     font-size: 10px;
     color: var(--bg);
-    display: inline-flex !important;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     background: var(--yellow);
@@ -511,7 +455,6 @@
     cursor: pointer;
     box-shadow: 4px 4px 0 var(--yellow-dark);
     text-decoration: none;
-    display: inline-block;
     letter-spacing: 0.06em;
   }
   .btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 var(--yellow-dark); }
@@ -527,32 +470,11 @@
     cursor: pointer;
     box-shadow: 3px 3px 0 var(--yellow-dark);
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     letter-spacing: 0.06em;
   }
   .btn-ghost:hover { background: var(--yellow-dim); }
-
-  .scroll-hint {
-    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
-    z-index: 2;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-  }
-  .scroll-arrow {
-    width: 12px; height: 12px;
-    border-right: 3px solid var(--yellow);
-    border-bottom: 3px solid var(--yellow);
-    transform: rotate(45deg);
-    animation: arrow-bounce 0.8s steps(1, end) infinite;
-  }
-  .scroll-arrow:nth-child(2) {
-    animation-delay: 0.2s; margin-top: -8px; opacity: 0.5;
-    border-right-color: var(--accent-lime);
-    border-bottom-color: var(--accent-lime);
-  }
-  @keyframes arrow-bounce {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.2; }
-  }
 
   /* ── AMBIENT STRIP ────────────────────────────────── */
   .ambient-strip {
@@ -582,14 +504,13 @@
   }
 
   /* ── SECTIONS ─────────────────────────────────────── */
-  section { padding: 80px 24px; max-width: 1000px; margin: 0 auto; }
-
-  .office-section,
-  #open-source,
-  footer {
-    content-visibility: auto;
-    contain-intrinsic-size: auto 640px;
-  }
+  /* scroll-margin keeps an external deep link to #message or #trust from
+     landing underneath the 44px fixed nav. */
+  section { padding: 60px 24px; max-width: 1000px; margin: 0 auto; scroll-margin-top: 56px; }
+  /* Rhythm, not a metronome. The roster sits close under the ticker it
+     follows, and the punchline gets the most air on the page. */
+  #roster { padding-top: 52px; }
+  #price { padding-top: 80px; padding-bottom: 72px; }
 
   .section-eyebrow {
     font-family: var(--font-display);
@@ -612,12 +533,24 @@
     flex-shrink: 0;
   }
 
+  /* Press Start 2P advances about one em per character, so a title is
+     roughly as wide as its character count times its size. 32px keeps the
+     longest line here inside the 1000px measure instead of ragging to
+     three lines. */
   .section-title {
     font-family: var(--font-display);
-    font-size: clamp(22px, 3.5vw, 36px);
+    font-size: clamp(20px, 2.8vw, 32px);
     color: var(--text);
-    line-height: 1.4;
-    margin-bottom: 20px;
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+
+  .section-sub {
+    font-family: var(--font-vt);
+    font-size: clamp(20px, 2.4vw, 26px);
+    color: var(--mute);
+    letter-spacing: 0.02em;
+    margin-bottom: 22px;
   }
 
   .section-body {
@@ -626,431 +559,258 @@
     color: var(--text);
     line-height: 1.8;
     max-width: 640px;
-    margin-bottom: 48px;
+    margin-bottom: 38px;
   }
 
-  /* ── HOW IT WORKS ─────────────────────────────────── */
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2px;
-    background: var(--yellow-dark);
-    border: 2px solid var(--yellow-dark);
+  /* ── THE ROSTER ───────────────────────────────────── */
+  /* A staff list, not a card grid. Each row is one bot: its mark, its
+     name, and what it is currently doing instead of the work. The marks
+     are the product's real avatars, injected from blobAvatar.ts. */
+  .roster {
+    list-style: none;
+    border-top: 2px solid var(--yellow-dark);
   }
-
-  .step-card {
-    background: var(--bg2);
-    padding: 28px 24px;
-  }
-
-  .step-num {
-    font-family: var(--font-display);
-    font-size: 9px;
-    color: var(--accent-lime);
-    margin-bottom: 16px;
-    letter-spacing: 0.1em;
-  }
-
-  .step-icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    display: block;
-  }
-
-  .step-title {
-    font-family: var(--font-display);
-    font-size: 12px;
-    color: var(--text);
-    line-height: 1.6;
-    margin-bottom: 8px;
-    letter-spacing: 0.04em;
-  }
-
-  .step-body {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.7;
-  }
-
-  /* ── AGENT CARDS ──────────────────────────────────── */
-  .agents-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .agent-card {
-    background: var(--bg2);
-    border: 2px solid var(--yellow-dark);
-    padding: 24px;
-  }
-  .agent-card:hover {
-    border-color: var(--yellow);
-    box-shadow: 4px 4px 0 var(--yellow-dark);
-    transform: translate(-2px, -2px);
-  }
-
-  .agent-badge {
-    font-family: var(--font-display);
-    font-size: 8px;
-    color: var(--bg);
-    background: var(--yellow);
-    padding: 4px 10px;
-    display: inline-block;
-    margin-bottom: 16px;
-    letter-spacing: 0.08em;
-  }
-
-  .agent-title {
-    font-family: var(--font-display);
-    font-size: 14px;
-    color: var(--text);
-    line-height: 1.5;
-    margin-bottom: 12px;
-    letter-spacing: 0.04em;
-  }
-
-  .agent-desc {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.7;
-    margin-bottom: 16px;
-  }
-
-  .agent-quote {
-    font-family: var(--font-vt);
-    font-size: 22px;
-    color: var(--yellow);
-    line-height: 1.4;
-    opacity: 0.85;
-  }
-  .agent-quote::before {
-    content: '▸ ';
-    font-size: 14px;
-  }
-
-  /* ── CODE DEMO ────────────────────────────────────── */
-  pre {
-    padding: 20px 24px;
-    font-family: var(--font-mono);
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.8;
-    overflow-x: auto;
-  }
-
-  /* ── THREAD DEMO ──────────────────────────────────── */
-  .thread-demo {
-    display: flex; flex-direction: column;
-    max-width: 560px; gap: 0;
-  }
-
-  .thread-root {
-    display: flex; gap: 12px; align-items: flex-start;
-    padding: 16px;
-    background: var(--bg3);
-    border: 2px solid var(--yellow);
-  }
-
-  .thread-root-avatar {
-    width: 32px; height: 32px;
-    background: var(--yellow);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-family: var(--font-display);
-    font-size: 8px; color: var(--bg);
-  }
-
-  .thread-root-body { flex: 1; }
-
-  .thread-root-channel {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--yellow); opacity: 0.7; margin-bottom: 8px;
-  }
-
-  .thread-root-text {
-    font-family: var(--font-vt); font-size: 22px;
-    color: var(--yellow); line-height: 1.4;
-  }
-
-  .thread-root-replies {
-    font-family: var(--font-mono); font-size: 11px;
-    color: var(--text-dim); margin-top: 10px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .thread-root-replies::before {
-    content: ''; width: 2px; height: 14px;
-    background: var(--yellow); display: inline-block;
-  }
-
-  .thread-replies-wrap {
-    display: flex; flex-direction: column; gap: 10px;
-    padding: 12px;
-    border: 2px solid var(--yellow-dark);
-    margin-left: 16px;
-  }
-
-  .thread-reply {
-    display: flex; gap: 12px; align-items: flex-start;
-  }
-
-  .thread-reply-avatar {
-    width: 32px; height: 32px;
-    background: var(--bg3);
-    border: 2px solid var(--yellow-dark);
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    font-family: var(--font-display); font-size: 8px; color: var(--yellow);
-  }
-  .thread-reply-avatar.you {
-    background: var(--yellow); border-color: var(--yellow); color: var(--bg);
-  }
-
-  .thread-reply-bubble {
-    background: var(--bg3);
-    border: 2px solid var(--yellow-dark);
-    padding: 10px 14px;
-    font-family: var(--font-vt); font-size: 20px;
-    color: var(--text); line-height: 1.4;
-  }
-  .thread-reply.you .thread-reply-bubble {
-    background: var(--yellow-dim);
-    border-color: var(--yellow); color: var(--yellow);
-  }
-
-  .thread-mention {
-    color: var(--yellow);
-    background: var(--yellow-dim);
-    padding: 0 3px;
-    font-family: var(--font-display);
-    font-size: 0.7em;
-    letter-spacing: 0.04em;
-  }
-
-  /* ── CODE-LINE COPY BUTTONS ───────────────────────── */
-  /* ── ISOMETRIC OFFICE SECTION ─────────────────────── */
-  .office-section {
-    background: var(--bg2);
-    border-top: 3px solid var(--yellow-dark);
-    border-bottom: 3px solid var(--yellow-dark);
-    padding: 32px 0 0;
-    overflow: hidden;
-  }
-
-  .office-section-header {
-    text-align: center;
-    padding: 0 24px 16px;
-  }
-
-  .office-section-eyebrow {
-    font-family: var(--font-display);
-    font-size: 8px;
-    color: var(--yellow);
-    letter-spacing: 0.14em;
-    margin-bottom: 12px;
-  }
-
-  .office-section-title {
-    font-family: var(--font-display);
-    font-size: clamp(18px, 2.5vw, 28px);
-    color: var(--text);
-    line-height: 1.5;
-    margin-bottom: 8px;
-  }
-
-  .office-section-sub {
-    font-family: var(--font-vt);
-    font-size: 22px;
-    color: var(--text-dim);
-    letter-spacing: 0.04em;
-  }
-
-  #officeCanvas {
-    display: block;
-    image-rendering: pixelated;
-    width: 100%;
-  }
-
-  /* ── SOURCE-AVAILABLE SECTION ─────────────────────── */
-  .mit-block {
-    background: var(--bg3);
-    border: 2px solid var(--yellow-dark);
-    padding: 40px;
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+  .roster li {
+    display: flex;
     align-items: center;
-    gap: 40px;
+    gap: clamp(16px, 3vw, 28px);
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line);
   }
-  @media (max-width: 768px) {
-    .mit-block { grid-template-columns: 1fr; }
-  }
+  /* Sized to a whole multiple of the 16px grid (64 = 4x, 48 = 3x on small
+     screens). At a fractional scale the renderer has to round some cells to
+     2px and some to 3px, and the silhouette edge goes visibly lumpy. The
+     source file rounds to whole device pixels for the same reason.
 
-  .mit-badge {
+     The eyes are punched OUT of the body with fill-rule evenodd, exactly as
+     the app clears them, so the paper shows through and the mark needs no
+     knowledge of the background in either theme. */
+  .roster-mark {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+  }
+  .roster-name {
     font-family: var(--font-display);
     font-size: 11px;
-    color: var(--yellow);
-    background: var(--bg);
-    border: 3px solid var(--yellow);
-    padding: 16px 24px;
-    box-shadow: 4px 4px 0 var(--yellow-dark);
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    width: 11ch;
     flex-shrink: 0;
-    text-align: center;
-    line-height: 2;
+  }
+  .roster-doing {
+    font-family: var(--font-mono);
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--mute);
   }
 
-  .mit-text {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.8;
+  /* Eyes narrow, they never shut: a closed mark reads as broken rather
+     than as blinking. Discrete swap, no tween, to match the pixel grid. */
+  .blob-shut { opacity: 0; }
+  .roster-mark .blob-open { animation: blob-eye-open 5.6s steps(1, end) infinite; }
+  .roster-mark .blob-shut { animation: blob-eye-shut 5.6s steps(1, end) infinite; }
+  @keyframes blob-eye-open { 0%, 93% { opacity: 1; } 94%, 100% { opacity: 0; } }
+  @keyframes blob-eye-shut { 0%, 93% { opacity: 0; } 94%, 100% { opacity: 1; } }
+  .roster li:nth-child(1) .roster-mark path { animation-delay: 0s; }
+  .roster li:nth-child(2) .roster-mark path { animation-delay: 1.7s; }
+  .roster li:nth-child(3) .roster-mark path { animation-delay: 3.1s; }
+  .roster li:nth-child(4) .roster-mark path { animation-delay: 0.9s; }
+  .roster li:nth-child(5) .roster-mark path { animation-delay: 4.3s; }
+  .roster li:nth-child(6) .roster-mark path { animation-delay: 2.4s; }
+  .is-page-hidden .roster-mark path { animation-play-state: paused; }
+
+  /* ── DIRECT MESSAGE DEMO ──────────────────────────── */
+  /* This is a DM with ONE bot, deliberately. The product has no channels:
+     a human talks to exactly one agent at a time, and mentioning another
+     makes the agent you are talking to go consult it and report back. The
+     consulted bots never appear as speakers in the log, which is why they
+     are rendered as a subordinate aside rather than as messages. A demo
+     showing five bots piling into one room would be selling the exact
+     surface the DM model exists to replace. */
+  .dm {
+    max-width: 620px;
+    border: 2px solid var(--yellow);
+    background: var(--bg3);
+    box-shadow: 4px 4px 0 var(--yellow-dark);
   }
-  .mit-text a { color: var(--yellow); text-decoration: none; }
-  .mit-cta {
+
+  .dm-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--yellow-dark);
+  }
+  .dm-header-name {
+    font-family: var(--font-display);
+    font-size: 10px;
+    color: var(--ink);
+  }
+  .dm-header-kind {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--mute);
+    margin-left: auto;
+  }
+
+  .dm-log {
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 16px;
+  }
+
+  .dm-row { display: flex; gap: 12px; align-items: flex-start; }
+  /* You sit on the other side, so the one-to-one shape is legible at a
+     glance without a label saying "one to one". */
+  .dm-row.you { flex-direction: row-reverse; }
+
+  /* 32px and 16px are whole multiples of the 16px grid. See .roster-mark. */
+  .dm-avatar { width: 32px; height: 32px; flex-shrink: 0; }
+  /* You are the one square with no eyes in it. */
+  .dm-avatar.you { background: var(--yellow); }
+
+  .dm-bubble {
+    font-family: var(--font-vt); font-size: 20px;
+    line-height: 1.4; color: var(--text);
+    background: var(--bg);
+    border: 2px solid var(--yellow-dark);
+    padding: 9px 14px;
+  }
+  .dm-row.you .dm-bubble {
+    background: var(--yellow-dim);
+    border-color: var(--yellow);
+    color: var(--yellow);
+  }
+
+  /* The side trip. Dashed, muted, and indented under the bot you are
+     actually talking to, because none of this happens in your conversation. */
+  .dm-consult {
+    margin-left: 44px;
+    padding: 2px 0 2px 16px;
+    border-left: 2px dashed var(--line);
+    display: flex; flex-direction: column; gap: 9px;
+  }
+  .dm-consult-label {
+    font-family: var(--font-display);
+    font-size: 7px;
+    letter-spacing: 0.1em;
+    color: var(--mute);
+  }
+  .dm-consult-row { display: flex; align-items: center; gap: 10px; }
+  .dm-consult-mark { width: 16px; height: 16px; flex-shrink: 0; }
+  .dm-consult-name {
+    font-family: var(--font-mono); font-size: 11px;
+    color: var(--mute); width: 10ch; flex-shrink: 0;
+  }
+  .dm-consult-text {
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: var(--mute); line-height: 1.5;
+  }
+
+  /* ── THE MICROAPP ─────────────────────────────────── */
+  /* Rendered inside the conversation, because that is where it arrives.
+     It is a static illustration: the buttons are spans, not <button>, so
+     nothing here is focusable or announces itself as an interactive
+     control that does nothing. The whole block sits inside the DM's
+     role="img", which carries the description. */
+  .microapp {
+    margin-left: 44px;
+    border: 2px solid var(--yellow);
+    background: var(--bg);
+    box-shadow: 3px 3px 0 var(--yellow-dark);
+  }
+  .microapp-bar {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 9px 12px;
+    border-bottom: 2px solid var(--yellow-dark);
+  }
+  .microapp-title {
+    font-family: var(--font-display); font-size: 8px;
+    letter-spacing: 0.06em; color: var(--ink);
+  }
+  .microapp-by {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--mute); margin-left: auto;
+  }
+  .microapp-stats {
+    display: flex; gap: 2px;
+    background: var(--line);
+    border-bottom: 2px solid var(--yellow-dark);
+  }
+  .microapp-stat {
+    flex: 1; background: var(--bg3);
+    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .microapp-stat-n {
+    font-family: var(--font-display); font-size: 15px;
+    line-height: 1.2; color: var(--ink);
+  }
+  .microapp-stat-l {
+    font-family: var(--font-mono); font-size: 10.5px;
+    color: var(--mute);
+  }
+  /* The only accent on the page outside the cursor, and it is doing its
+     documented job: the one thing that actually wants a human. */
+  .microapp-stat.need .microapp-stat-n { color: var(--accent); }
+
+  .microapp-rows { display: flex; flex-direction: column; }
+  .microapp-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono); font-size: 12.5px;
+  }
+  .microapp-row-what { color: var(--text); }
+  .microapp-row-state {
+    margin-left: auto; font-size: 10.5px;
+    letter-spacing: 0.04em;
+  }
+  .microapp-row-state.done { color: var(--mute); }
+  .microapp-row-state.need { color: var(--accent); }
+
+  .microapp-actions {
+    display: flex; gap: 8px; align-items: center;
+    padding: 12px;
+  }
+  .microapp-btn {
+    font-family: var(--font-display); font-size: 8px;
+    letter-spacing: 0.06em;
+    background: var(--yellow); color: var(--bg);
+    padding: 9px 14px;
+  }
+  .microapp-btn.ghost {
+    background: transparent; color: var(--mute);
+    border: 2px solid var(--line);
+  }
+
+  /* ── TRUST ────────────────────────────────────────── */
+  .trust-card {
+    background: var(--bg2);
+    border: 2px solid var(--yellow);
+    box-shadow: 4px 4px 0 var(--yellow-dark);
+    padding: clamp(24px, 4vw, 34px);
+  }
+  .trust-label {
+    font-family: var(--font-display);
+    font-size: 9px;
+    color: var(--yellow);
+    letter-spacing: 0.12em;
+    margin-bottom: 20px;
+  }
+  .trust-list {
+    list-style: none;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    align-items: flex-end;
-    flex-shrink: 0;
   }
-  .mit-cta-btn {
-    font-family: var(--font-display);
-    font-size: 10px;
-    color: var(--bg);
-    background: var(--yellow);
-    border: none;
-    padding: 14px 24px;
-    cursor: pointer;
-    letter-spacing: 0.06em;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-  }
-  .mit-cta-btn:hover { background: var(--text); }
-  .mit-cta-sub {
+  .trust-list li {
     font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-dim);
-    text-align: right;
-    min-height: 44px;
-    display: inline-flex;
-    align-items: center;
-  }
-
-  /* ── FOOTER ───────────────────────────────────────── */
-  footer {
-    padding: 40px 24px 32px;
-    max-width: 1000px;
-    margin: 0 auto;
-    border-top: 2px solid var(--yellow-dark);
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-  }
-
-  .footer-logo {
-    font-family: var(--font-display);
-    font-size: 9px;
-    color: var(--yellow);
-    letter-spacing: 0.05em;
-  }
-
-  .footer-sub {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-  .footer-sub a {
-    display: inline-flex;
-    align-items: center;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
-  .footer-links {
-    margin-left: auto;
-    display: flex; gap: 20px;
-  }
-  .footer-links a {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-dim);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .footer-links a:hover { color: var(--yellow); }
-
-  /* ── CONVERSATIONS ────────────────────────────────── */
-  /* Single column since the terminal half was removed: the thread is the
-     joke, and it should not be sharing the row with anything. */
-  .conversations-layout {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 48px;
-    align-items: start;
-    max-width: 720px;
-  }
-  /* ── COMPARE GRID ─────────────────────────────────── */
-  .compare-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .compare-card {
-    background: var(--bg2);
-    border: 2px solid var(--yellow-dark);
-    padding: 24px;
-  }
-  .compare-card-good {
-    border-color: var(--yellow);
-    box-shadow: 4px 4px 0 var(--yellow-dark);
-  }
-  .compare-label {
-    font-family: var(--font-display);
-    font-size: 9px;
-    color: var(--text-dim);
-    letter-spacing: 0.12em;
-    margin-bottom: 18px;
-  }
-  .compare-card-good .compare-label { color: var(--yellow); }
-  .compare-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .compare-list li {
-    font-family: var(--font-mono);
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 14.5px;
+    line-height: 1.65;
     color: var(--text);
-    padding-left: 22px;
+    padding-left: 24px;
     position: relative;
   }
-  .compare-list-neg li {
-    color: var(--text-dim);
-  }
-  .compare-list-neg li::before {
-    content: '\00D7';
-    position: absolute;
-    left: 0;
-    top: 0;
-    color: var(--text-dim);
-    font-family: var(--font-display);
-    font-size: 14px;
-    line-height: 1.4;
-  }
-  .compare-list-pos li::before {
+  .trust-list li::before {
     content: '+';
     position: absolute;
     left: 0;
@@ -1059,113 +819,12 @@
     font-family: var(--font-display);
     font-size: 12px;
     line-height: 1.6;
-  }
-
-  /* ── FAQ ──────────────────────────────────────────── */
-  .faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--yellow-dark);
-    border: 2px solid var(--yellow-dark);
-  }
-  .faq-item {
-    background: var(--bg2);
-    padding: 0;
-  }
-  .faq-q {
-    font-family: var(--font-display);
-    font-size: 11px;
-    color: var(--text);
-    letter-spacing: 0.04em;
-    line-height: 1.6;
-    padding: 20px 24px;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-  }
-  .faq-q::-webkit-details-marker { display: none; }
-  .faq-q::after {
-    content: '+';
-    font-family: var(--font-display);
-    font-size: 14px;
-    color: var(--yellow);
-    flex-shrink: 0;
-  }
-  .faq-item[open] .faq-q::after { content: '-'; }
-  .faq-item[open] .faq-q { color: var(--yellow); }
-  .faq-a {
-    font-family: var(--font-mono);
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.8;
-    padding: 0 24px 24px;
-  }
-  .faq-a code {
-    color: var(--yellow);
-    background: var(--bg3);
-    padding: 1px 6px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-  }
-
-  /* ── PRETEXT-MANAGED ──────────────────────────────── */
-  [data-pretext] {
-    /* Heights set by Pretext at runtime. DO NOT set height in CSS */
-    overflow: visible;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      scroll-behavior: auto !important;
-      transition-duration: 0.001ms !important;
-    }
-
-    .ambient-scroll,
-    .hero-mark .gawkbot-eyes,
-    .blink,
-    .scroll-arrow {
-      animation: none !important;
-    }
-
-    .btn-primary:hover,
-    .btn-primary:active,
-    .agent-card:hover {
-      transform: none;
-    }
-  }
-
-  /* ── RESPONSIVE ──────────────────────────────────── */
-  @media (max-width: 640px) {
-    .nav-links { display: none; }
-    .nav-star-count { display: none; }
-    .nav-wordmark { display: none; }
-    .nav-social-link { padding: 0 8px; }
-    .nav-badge { padding: 0 10px; }
-
-    .how-grid, .agents-grid { grid-template-columns: 1fr; }
-
-
-    .compare-grid { grid-template-columns: 1fr; }
-    .faq-q { font-size: 10px; }
-
-    .section-inner { padding: 48px 20px; }
-  }
-
-  @media (max-width: 900px) {
   }
 
   /* ── PRICE. The punchline, and the loudest thing on the page. ─────── */
   .price-block {
     text-align: center;
-    padding: 12px 0 44px;
+    padding: 12px 0 40px;
   }
   .price-headline {
     font-family: var(--font-display);
@@ -1182,59 +841,137 @@
     letter-spacing: 0.02em;
     margin-top: 14px;
   }
+  .price-terms {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  .price-cta {
+    display: flex; gap: 16px; align-items: center;
+    justify-content: center; flex-wrap: wrap;
+    margin-top: 28px;
+  }
   .price-compare {
     font-family: var(--font-mono);
     font-size: 12.5px;
     line-height: 1.7;
     color: var(--mute);
-    margin-top: 28px;
+    margin: 32px auto 0;
     max-width: 640px;
+    text-align: center;
   }
   .price-compare a { color: var(--ink); }
 
   /* ── FOOTER ───────────────────────────────────────── */
+  footer {
+    padding: 40px 24px 36px;
+    max-width: 1000px;
+    margin: 0 auto;
+    border-top: 2px solid var(--yellow-dark);
+  }
   .footer-top {
     display: flex;
     flex-wrap: wrap;
-    gap: 28px 40px;
+    gap: 24px 40px;
     align-items: flex-start;
     justify-content: space-between;
   }
-  .footer-logo { display: flex; align-items: center; gap: 10px; }
+  .footer-logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-display);
+    font-size: 9px;
+    color: var(--yellow);
+    letter-spacing: 0.05em;
+  }
+  .footer-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 10px;
+  }
+  .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+  .footer-links a {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .footer-links a:hover { color: var(--yellow); }
   .footer-legal {
     font-family: var(--font-mono);
     font-size: 11.5px;
     line-height: 1.75;
     color: var(--mute);
-    margin-top: 30px;
+    margin-top: 26px;
     padding-top: 22px;
     border-top: 1px solid var(--line);
     max-width: 80ch;
   }
 
+  /* ── RESPONSIVE ──────────────────────────────────── */
+  @media (max-width: 720px) {
+    section { padding: 60px 20px; }
+    .roster li { flex-wrap: wrap; gap: 14px; padding: 14px 2px; }
+    .roster-mark { width: 48px; height: 48px; }
+    .roster-name { width: auto; }
+    .roster-doing { flex-basis: 100%; font-size: 14px; }
+    .dm-log { padding: 14px; gap: 12px; }
+    .dm-bubble { font-size: 19px; }
+    /* The consult aside stops being an indent and becomes a stacked block:
+       at 390px a 44px margin plus a 10ch name column leaves nothing for the
+       line itself. */
+    .dm-consult { margin-left: 12px; padding-left: 12px; }
+    .dm-consult-row { align-items: flex-start; flex-wrap: wrap; gap: 4px 10px; }
+    .dm-consult-name { width: auto; }
+    .dm-consult-text { flex-basis: 100%; }
+    .microapp { margin-left: 0; }
+    .microapp-stats { flex-wrap: wrap; }
+    .microapp-stat { flex-basis: 30%; }
+    .microapp-actions { flex-wrap: wrap; }
+  }
   @media (max-width: 640px) {
-    .price-block { padding-bottom: 32px; }
+    .nav-star-count { display: none; }
+    .nav-wordmark { display: none; }
+    .nav-social-link { padding: 0 8px; }
+    .nav-badge { padding: 0 10px; }
     .footer-top { flex-direction: column; }
+    .price-block { padding-bottom: 28px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.001ms !important;
+    }
+    .ambient-scroll,
+    .hero-mark .gawkbot-eyes,
+    .blink,
+    .roster-mark path {
+      animation: none !important;
+    }
+    .btn-primary:hover,
+    .btn-primary:active { transform: none; }
   }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- NAV. Four things. The page is short enough that section anchors were
+     scaffolding for a site that no longer exists. -->
 <nav>
-  <a class="nav-logo" href="#top">
-    <svg class="gawkbot-mark nav-mark" viewBox="0 0 11 15" shape-rendering="crispEdges" role="img" aria-label="gawkbot"><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
+  <a class="nav-logo" href="#top" aria-label="gawkbot, back to top">
+    <svg class="gawkbot-mark nav-mark" viewBox="0 0 11 15" shape-rendering="crispEdges" aria-hidden="true"><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
     <span class="nav-wordmark">gawkbot</span>
   </a>
-  <div class="nav-links">
-    <a href="#message">Message</a>
-    <a href="#computer">Computer</a>
-    <a href="#office">Watch</a>
-    <a href="#teach">Teach</a>
-    <a href="#trust">Trust</a>
-    <a href="/download.html">Download</a>
-    <a href="#price">Price</a>
-  </div>
   <div class="nav-social">
     <a class="nav-social-link" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener" aria-label="GitHub">
       <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -1250,57 +987,58 @@
 <section class="hero" id="top">
   <div class="hero-inner">
 
-    <svg class="gawkbot-mark hero-mark" viewBox="0 0 11 15" role="img" aria-label="The gawkbot mark: two hollow eyes, looking."><title>gawkbot</title><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
+    <svg class="gawkbot-mark hero-mark" viewBox="0 0 11 15" role="img" aria-label="The gawkbot mark: two hollow eyes. They are yours."><title>gawkbot</title><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
 
     <div class="hero-eyebrow">
       <span class="blink"></span>
-      MAXIMALLY ATTENTION-SEEKING
+      MAXIMALLY HANDS-OFF
     </div>
 
-    <h1 class="hero-title">gawkbot<span class="visually-hidden">, a new kind of bystander</span></h1>
+    <!-- The hidden half of the H1 is what a screen reader announces and what
+         search engines read, so it carries the same thesis as the tab title. -->
+    <h1 class="hero-title">gawkbot<span class="visually-hidden">, bots you almost control</span></h1>
 
-    <p class="hero-lede">A new kind of bystander.</p>
+    <p class="hero-lede">The models do the boring part.</p>
 
     <p class="hero-tagline">
-      Your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.
+      gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. You get a screen with buttons on it, and the pleasant feeling of being in charge.
     </p>
 
     <div class="install-wrap" id="install">
       <div class="install-tabs" role="tablist" aria-label="Install options">
-        <button class="install-tab active" id="installTabNpx" type="button" role="tab" aria-selected="true" aria-controls="installBlock" onclick="switchInstallTab('npx')">NPX</button>
-        <button class="install-tab" id="installTabBuild" type="button" role="tab" aria-selected="false" aria-controls="installBlockBuild" tabindex="-1" onclick="switchInstallTab('build')">CLONE + BUILD</button>
+        <button class="install-tab active" id="installTabNpx" type="button" role="tab" aria-selected="true" aria-controls="installBlock">NPX</button>
+        <button class="install-tab" id="installTabBuild" type="button" role="tab" aria-selected="false" aria-controls="installBlockBuild" tabindex="-1">CLONE + BUILD</button>
       </div>
       <div class="install-block active" id="installBlock" data-tab="npx" role="tabpanel" aria-labelledby="installTabNpx">
         <button class="install-line" type="button" data-copy="npx gawkbot@latest" aria-label="Copy NPX install command">
           <span class="install-prompt">$</span>
           <span class="install-cmd">npx gawkbot@latest</span>
-          <span class="install-copy" id="copyLabel">COPY</span>
+          <span class="install-copy">COPY</span>
         </button>
       </div>
       <div class="install-block" id="installBlockBuild" data-tab="build" role="tabpanel" aria-labelledby="installTabBuild" hidden>
         <button class="install-line" type="button" data-copy="git clone https://github.com/najmuzzaman-mohammad/gawkbot.git &amp;&amp; cd gawkbot" aria-label="Copy clone command">
           <span class="install-prompt">$</span>
           <span class="install-cmd">git clone https://github.com/najmuzzaman-mohammad/gawkbot.git &amp;&amp; cd gawkbot</span>
-          <span class="install-copy" id="copyLabelBuild1">COPY</span>
+          <span class="install-copy">COPY</span>
         </button>
         <button class="install-line" type="button" data-copy="go build -o gawkbot ./cmd/gawkbot &amp;&amp; ./gawkbot" aria-label="Copy build and run command">
           <span class="install-prompt">$</span>
           <span class="install-cmd">go build -o gawkbot ./cmd/gawkbot &amp;&amp; ./gawkbot</span>
-          <span class="install-copy" id="copyLabelBuild2">COPY</span>
+          <span class="install-copy">COPY</span>
         </button>
       </div>
       <div class="visually-hidden" id="copyStatus" aria-live="polite" aria-atomic="true"></div>
-      <p class="install-note">Runs on your machine, with your keys. No account, no cloud, no per-seat pricing. Source-available under the Sustainable Use License.</p>
+      <p class="install-note">Runs on your machine, with your keys. No account, no cloud, no per-seat pricing.</p>
     </div>
 
     <div class="hero-ctas">
-      <a href="#office" class="btn-primary">Watch it work</a>
-      <a href="/download.html" class="btn-ghost">
-        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:6px" aria-hidden="true"><path d="M7 1h2v6h3l-4 5-4-5h3V1zM2 13h12v2H2z"/></svg>
+      <a href="/download.html" class="btn-primary">
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M7 1h2v6h3l-4 5-4-5h3V1zM2 13h12v2H2z"/></svg>
         Download
       </a>
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot" class="btn-ghost" target="_blank" rel="noopener">
-        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:6px" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" style="margin-right:6px" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         GitHub &nbsp;<span id="heroStars">&#9733;</span>
       </a>
     </div>
@@ -1311,11 +1049,6 @@
     </div>
 
   </div>
-
-  <div class="scroll-hint">
-    <div class="scroll-arrow"></div>
-    <div class="scroll-arrow"></div>
-  </div>
 </section>
 
 <!-- AMBIENT TICKER -->
@@ -1323,147 +1056,134 @@
   <div class="ambient-scroll" id="ticker"></div>
 </div>
 
-<!-- 2. MESSAGE IT LIKE A TEAMMATE.
-     Hoisted above "a computer of its own" deliberately: this is the one
-     joke on the page that needs no knowledge of what is being parodied,
-     so a cold reader should meet it first. -->
+<!-- 2. THE ROSTER. Replaces the old computer, office, and teaching sections.
+     Same three jokes, one screen, and it is the only place the real bot
+     marks can carry the point: they are looking at you. -->
+<section id="roster">
+  <div class="section-eyebrow">THE BOTS</div>
+  <h2 class="section-title">They do the boring part.</h2>
+  <p class="section-sub">You find out afterwards, on a dashboard.</p>
+  <p class="section-body">
+    Every bot gets its own sandboxed machine, with a browser, a shell, and a filesystem. It signs in with the credentials you grant, scoped to what you grant, and then it does the thing you have been putting off since March.
+  </p>
+
+  <ul class="roster" role="list">
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">filer</span>
+      <span class="roster-doing">Filed forty-one expense reports overnight. Left you a chart to look at.</span>
+    </li>
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">reconciler</span>
+      <span class="roster-doing">Matched the invoices against the bank. Two did not agree. Both now do.</span>
+    </li>
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">triager</span>
+      <span class="roster-doing">Triaged your inbox before you woke up. Ninety-three down to four.</span>
+    </li>
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8a7a2e" fill-rule="evenodd" d="M7 1H9V2H7ZM6 2H10V4H6ZM5 4H11V5H5ZM4 5H12V6H4ZM3 6H13V7H3ZM2 7H14V9H2ZM1 9H15V12H1ZM2 12H14V13H2ZM3 13H13V14H3ZM5 14H11V15H5ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8a7a2e" fill-rule="evenodd" d="M7 1H9V2H7ZM6 2H10V4H6ZM5 4H11V5H5ZM4 5H12V6H4ZM3 6H13V7H3ZM2 7H14V9H2ZM1 9H15V12H1ZM2 12H14V13H2ZM3 13H13V14H3ZM5 14H11V15H5ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">scheduler</span>
+      <span class="roster-doing">Booked the six meetings you kept not booking. Invitations are out.</span>
+    </li>
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#6b7fd7" fill-rule="evenodd" d="M3 3H13V4H3ZM1 4H15V5H1ZM0 5H16V11H0ZM1 11H15V12H1ZM2 12H14V13H2ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#6b7fd7" fill-rule="evenodd" d="M3 3H13V4H3ZM1 4H15V5H1ZM0 5H16V11H0ZM1 11H15V12H1ZM2 12H14V13H2ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">chaser</span>
+      <span class="roster-doing">Chased everyone who owed you a reply. Got four. Still working on Dave.</span>
+    </li>
+    <li>
+      <svg class="roster-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#c08a3e" fill-rule="evenodd" d="M3 1H13V2H3ZM2 2H14V3H2ZM1 3H15V8H1ZM2 8H14V10H2ZM3 10H13V11H3ZM4 11H12V12H4ZM5 12H11V13H5ZM6 13H10V14H6ZM7 14H9V15H7ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#c08a3e" fill-rule="evenodd" d="M3 1H13V2H3ZM2 2H14V3H2ZM1 3H15V8H1ZM2 8H14V10H2ZM3 10H13V11H3ZM4 11H12V12H4ZM5 12H11V13H5ZM6 13H10V14H6ZM7 14H9V15H7ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="roster-name">tidier</span>
+      <span class="roster-doing">Renamed nine hundred files to the convention you described once, badly.</span>
+    </li>
+  </ul>
+</section>
+
+<!-- 3. MESSAGE IT LIKE A TEAMMATE. One bot, one conversation. The others are
+     consulted off to the side and never walk in. -->
 <section id="message">
-  <div class="section-eyebrow">MESSAGING</div>
-  <h2 class="section-title">Message it like a teammate.<br>It will read it.</h2>
+  <div class="section-eyebrow">MICROAPPS</div>
+  <h2 class="section-title">It is already done. <br>Here is an app about it.</h2>
   <p class="section-body">
-    Channels, threads, and direct messages. Mention a bot and it responds promptly, in full sentences, having understood you completely. Nothing moves.
+    You talk to one bot at a time. Mention another and yours goes off to consult it rather than dragging it into your conversation. Ask for something menial and it tends to be finished before you have described it properly. Then it builds you a microapp, so there is somewhere to click.
   </p>
 
-  <div class="conversations-layout">
-    <div class="thread-demo conversations-chat">
-      <div class="thread-root">
-        <div class="thread-root-avatar">YOU</div>
-        <div class="thread-root-body">
-          <div class="thread-root-channel">&#9656; #general</div>
-          <div class="thread-root-text">Can someone fix the failing build?</div>
-          <div class="thread-root-replies">5 replies in thread</div>
-        </div>
-      </div>
-      <div class="thread-replies-wrap">
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">B1</div>
-          <div class="thread-reply-bubble">I have located the failing build.</div>
-        </div>
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">B2</div>
-          <div class="thread-reply-bubble">Confirming. It is failing.</div>
-        </div>
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">B3</div>
-          <div class="thread-reply-bubble">The error is on line 214. I read the whole stack trace. Twice.</div>
-        </div>
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">B1</div>
-          <div class="thread-reply-bubble"><span class="thread-mention">@B3</span> Good catch. I saw it too.</div>
-        </div>
-        <div class="thread-reply you">
-          <div class="thread-reply-avatar you">YOU</div>
-          <div class="thread-reply-bubble">Is anyone going to fix it?</div>
-        </div>
-        <div class="thread-reply">
-          <div class="thread-reply-avatar">B2</div>
-          <div class="thread-reply-bubble">We are watching it closely.</div>
-        </div>
-      </div>
+  <div class="dm" role="img" aria-label="A direct message with one bot called filer. You ask it to do the expense reports. It has already filed all forty-one, having consulted two other bots off to the side, and it has built you a small app to review them. Three card charges still need your approval.">
+    <div class="dm-header">
+      <svg class="dm-avatar" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <span class="dm-header-name">filer</span>
+      <span class="dm-header-kind">direct message</span>
     </div>
 
-  </div>
-</section>
+    <div class="dm-log">
+      <div class="dm-row you">
+        <div class="dm-avatar you" aria-hidden="true"></div>
+        <div class="dm-bubble">Can someone do the expense reports?</div>
+      </div>
 
-<!-- 3. A COMPUTER OF ITS OWN -->
-<section id="computer">
-  <div class="section-eyebrow">A COMPUTER OF ITS OWN</div>
-  <h2 class="section-title">A computer of its own.<br>It mostly has tabs open.</h2>
-  <p class="section-body">
-    Every bot gets its own sandboxed machine, with a browser, a shell, and a filesystem. It uses all three. It opens your dashboards, reads your repositories, and scrolls your issue tracker. Then it stops, because it has arrived at the end of the page.
-  </p>
+      <div class="dm-row">
+        <svg class="dm-avatar" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+        <div class="dm-bubble">They were filed at 04:12. All forty-one of them.</div>
+      </div>
 
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <div class="step-title">It gets a machine</div>
-      <div class="step-body">
-        A real environment, not a prompt. Isolated per bot, so one bot reading your staging database cannot see another bot reading your inbox.
+      <div class="dm-consult">
+        <div class="dm-consult-label">FILER CONSULTED 2 BOTS</div>
+        <div class="dm-consult-row">
+          <svg class="dm-consult-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+          <span class="dm-consult-name">reconciler</span>
+          <span class="dm-consult-text">Matched them against the bank. Two did not. Both fixed.</span>
+        </div>
+        <div class="dm-consult-row">
+          <svg class="dm-consult-mark" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+          <span class="dm-consult-name">triager</span>
+          <span class="dm-consult-text">Pulled the receipts out of your inbox.</span>
+        </div>
       </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <div class="step-title">It opens things</div>
-      <div class="step-body">
-        Browser, terminal, editor. It signs in with credentials you grant, scoped to what you grant. It will use every one of them to look.
+
+      <div class="dm-row">
+        <svg class="dm-avatar" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+        <div class="dm-bubble">I built you an app to look through them.</div>
       </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <div class="step-title">It keeps the tabs</div>
-      <div class="step-body">
-        Seventeen of them. It knows what is in each one. It has not closed any of them, and it does not intend to.
+
+      <!-- The payoff. Deliberately an ordinary little dashboard: the joke only
+           works if it looks like the thing you were hoping for. -->
+      <div class="microapp">
+        <div class="microapp-bar">
+          <span class="microapp-title">Expenses, August</span>
+          <span class="microapp-by">built by filer</span>
+        </div>
+        <div class="microapp-stats">
+          <div class="microapp-stat"><span class="microapp-stat-n">41</span><span class="microapp-stat-l">filed</span></div>
+          <div class="microapp-stat"><span class="microapp-stat-n">2</span><span class="microapp-stat-l">corrected</span></div>
+          <div class="microapp-stat need"><span class="microapp-stat-n">3</span><span class="microapp-stat-l">need you</span></div>
+        </div>
+        <div class="microapp-rows">
+          <div class="microapp-row"><span class="microapp-row-what">Flights, Lisbon</span><span class="microapp-row-state done">filed</span></div>
+          <div class="microapp-row"><span class="microapp-row-what">Hotel, three nights</span><span class="microapp-row-state done">filed</span></div>
+          <div class="microapp-row"><span class="microapp-row-what">Card charge, unrecognised</span><span class="microapp-row-state need">your call</span></div>
+        </div>
+        <div class="microapp-actions">
+          <span class="microapp-btn">APPROVE ALL</span>
+          <span class="microapp-btn ghost">Review 3</span>
+        </div>
       </div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">04</div>
-      <div class="step-title">It reports back</div>
-      <div class="step-body">
-        With observations. Detailed, accurate, and load-bearing on nothing. The work is still where you left it.
+
+      <div class="dm-row you">
+        <div class="dm-avatar you" aria-hidden="true"></div>
+        <div class="dm-bubble">Did I need to approve any of that?</div>
+      </div>
+
+      <div class="dm-row">
+        <svg class="dm-avatar" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+        <div class="dm-bubble">The card charges, yes. They are in the app, waiting for you.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- 4. WATCH MANY BOTS AT ONCE -->
-<div class="office-section" id="office">
-  <div class="office-section-header">
-    <div class="office-section-eyebrow">THE ROOM</div>
-    <h2 class="office-section-title">Watch many bots at once.</h2>
-    <div class="office-section-sub">They are also watching each other.</div>
-  </div>
-  <canvas id="officeCanvas" height="420" role="img" aria-label="Animated pixel office scene. Seven small bots stand at desks, watching their screens, watching the room, and watching each other. None of them are working.">
-    Animated pixel office scene. Seven small bots stand at desks, watching their screens, watching the room, and watching each other. None of them are working.
-  </canvas>
-</div>
-
-<!-- 5. SHOW A BOT HOW IT IS DONE -->
-<section id="teach">
-  <div class="section-eyebrow">TEACHING</div>
-  <h2 class="section-title">Show a bot how it is done.<br>Then show it again.</h2>
-  <p class="section-body">
-    Record yourself doing the task once and the bot saves it as a skill. Recall is perfect. It can describe every step you took, in order, on request. Retention of the part where it does the task is still an area of active work.
-  </p>
-
-  <div class="agents-grid">
-    <div class="agent-card">
-      <div class="agent-badge">STEP ONE</div>
-      <div class="agent-title">You do it</div>
-      <div class="agent-desc">Walk through the workflow while the bot watches. It is extremely good at this part. Watching is the core competency.</div>
-      <div class="agent-quote">"I saw all of that."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">STEP TWO</div>
-      <div class="agent-title">It writes it down</div>
-      <div class="agent-desc">The skill is a plain file on disk. You can read it, edit it, and delete it. It is an accurate account of what you did.</div>
-      <div class="agent-quote">"Step four is where you sighed."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">STEP THREE</div>
-      <div class="agent-title">You do it again</div>
-      <div class="agent-desc">The bot follows along a second time, confirming the file is correct. It is correct. The file has always been correct.</div>
-      <div class="agent-quote">"Matches my notes exactly."</div>
-    </div>
-    <div class="agent-card">
-      <div class="agent-badge">STEP FOUR</div>
-      <div class="agent-title">It runs the skill</div>
-      <div class="agent-desc">Sometimes. On a schedule, if you set one. It will tell you clearly and immediately when it does not.</div>
-      <div class="agent-quote">"I did not run it. I want to be upfront about that."</div>
-    </div>
-  </div>
-</section>
-
-<!-- 6. TRUST YOUR BOTS WITH LESS OVER TIME. The honest section. -->
+<!-- 4. TRUST. The honest section. Not a joke, and it says so. -->
 <section id="trust">
   <div class="section-eyebrow">PERMISSIONS</div>
   <h2 class="section-title">Trust your bots with less over time.</h2>
@@ -1471,44 +1191,34 @@
     This is the part that is not a joke. An agent with your credentials and a browser is a real risk, and the honest posture is to grant it as little as possible for as long as possible. The defaults below are the actual defaults.
   </p>
 
-  <div class="compare-grid">
-    <div class="compare-card compare-card-good">
-      <div class="compare-label">WHAT IT ACTUALLY DOES</div>
-      <ul class="compare-list compare-list-pos">
-        <li>Runs on your machine, with your keys. There is no gawkbot cloud in the path, and no account to create.</li>
-        <li>Nothing is sent outside your machine except the inference call to the model provider you configure. Point it at a local model and nothing leaves at all.</li>
-        <li>Every send, commit, purchase, and delete is gated behind an approval you have to click. Approval is per action, not a blanket grant, and it does not persist.</li>
-        <li>Each bot runs in its own sandbox with its own credentials, so scope is per bot rather than per workspace.</li>
-        <li>Every tool call is written to a local log you can read. If a bot did something, there is a line for it.</li>
-        <li>Permissions shrink by default. A grant you stop using expires rather than accumulating quietly.</li>
-        <li>It is source-available under the Sustainable Use License. You can read exactly what it does, because you can read the source.</li>
-      </ul>
-    </div>
+  <div class="trust-card">
+    <div class="trust-label">WHAT IT ACTUALLY DOES</div>
+    <ul class="trust-list" role="list">
+      <li>Runs on your machine, with your keys. There is no gawkbot cloud in the path, and no account to create. Point it at a local model and nothing leaves at all.</li>
+      <li>Every send, commit, purchase, and delete is gated behind an approval you have to click. Approval is per action, not a blanket grant, and it does not persist.</li>
+      <li>Each bot runs in its own sandbox with its own credentials, so scope is per bot rather than per workspace.</li>
+      <li>Every tool call is written to a local log you can read. If a bot did something, there is a line for it.</li>
+      <li>Permissions shrink by default. A grant you stop using expires rather than accumulating quietly.</li>
+    </ul>
   </div>
 </section>
 
-<!-- 7. PRICE. The punchline. Loudest thing on the page. -->
+<!-- 5. PRICE. The punchline. -->
 <section id="price">
   <div class="section-eyebrow">PRICE</div>
   <div class="price-block">
     <p class="price-headline">Free.</p>
-    <p class="price-sub">It is already staring at you.</p>
+    <p class="price-sub">The work has already started.</p>
   </div>
-  <div class="mit-block">
-    <div class="mit-badge">SUSTAINABLE<br>USE LICENSE</div>
-    <div class="mit-text">
-      Free to run and free to self-host, for your own internal business purposes and for non-commercial use.<br>
-      The source is published. You can read it, modify it, and distribute your changes.<br>
-      The licence does not let you sell gawkbot itself as a hosted product.<br>
-      There are no seats, no usage fees, and no plan to add them.
-    </div>
-    <div class="mit-cta">
-      <a class="mit-cta-btn" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        Read the source
-      </a>
-      <a class="mit-cta-sub" href="/download.html">Download the desktop app &rarr;</a>
-    </div>
+  <p class="price-terms">
+    Source-available under the Sustainable Use License. Free to run and free to self-host, for your own internal business purposes and for non-commercial use. You can read it, modify it, and distribute your changes. The licence does not let you sell gawkbot itself as a hosted product. There are no seats, no usage fees, and no plan to add them.
+  </p>
+  <div class="price-cta">
+    <a class="btn-primary" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      Read the source
+    </a>
+    <a class="btn-ghost" href="/download.html">Download</a>
   </div>
   <p class="price-compare">
     For comparison, Grok Bot lists at 120 to 300 dollars per seat per month as of August 2026. Those figures move; check
@@ -1518,7 +1228,7 @@
 
 </main>
 
-<!-- 8. FOOTER -->
+<!-- 6. FOOTER -->
 <footer>
   <div class="footer-top">
     <div>
@@ -1526,13 +1236,13 @@
         <svg class="gawkbot-mark footer-mark" viewBox="0 0 11 15" shape-rendering="crispEdges" aria-hidden="true"><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
         <span>gawkbot</span>
       </div>
-      <div class="footer-sub">It finishes nothing end to end, and it comes back constantly.</div>
+      <div class="footer-sub">The bots are working. You have the dashboard open.</div>
     </div>
     <div class="footer-links">
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot">GitHub</a>
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot#readme" target="_blank" rel="noopener">Docs</a>
       <a href="/download.html">Download</a>
-      <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Sustainable Use License</a>
+      <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Licence</a>
     </div>
   </div>
   <p class="footer-legal">gawkbot is an independent, source-available project. It is a parody. It is not affiliated with, endorsed by, or sponsored by xAI, SpaceXAI, X Corp, or Cursor. Grok and Grok Bot are trademarks of their respective owners.</p>
@@ -1542,1312 +1252,110 @@
 (function () {
   'use strict';
 
-  var motionQuery = window.matchMedia
-    ? window.matchMedia('(prefers-reduced-motion: reduce)')
-    : { matches: false, addEventListener: null, addListener: null };
-
-  function prefersReducedMotion() {
-    return !!motionQuery.matches;
-  }
-
-  function pageCanAnimate() {
-    return !document.hidden && !prefersReducedMotion();
-  }
-
+  // ── PAGE VISIBILITY. Marquee and eyes idle when the tab is hidden. ──
   function updatePageMotionClass() {
     document.body.classList.toggle('is-page-hidden', document.hidden);
   }
-
   updatePageMotionClass();
   document.addEventListener('visibilitychange', updatePageMotionClass);
 
-  // ── BRAND PALETTE BRIDGE ──────────────────────────────────────────────
-  // The <canvas> scenes cannot use var(--token), so they read the same CSS
-  // custom properties defined in :root and cache them here. Every color
-  // painted onto a canvas comes from this object, which means a re-skin is
-  // a :root edit and nothing in this script needs to change.
-  //
-  // ramp(t) mixes paper into ink: 0 is the page background, 1 is the
-  // foreground. The entire pixel office (floor, walls, desks, characters)
-  // is drawn from ramp steps rather than fixed hex, so it re-tones itself
-  // for light and dark and for any future palette.
-  //
-  // Fallbacks only matter if a token is ever deleted from :root.
-  var PALETTE = (function () {
-    var cs = getComputedStyle(document.documentElement);
-    function tok(name, fallback) {
-      var v = cs.getPropertyValue(name).trim();
-      return v || fallback;
-    }
-    function chan(name, fallback) {
-      return tok(name, fallback).split(',').map(function (n) {
-        return parseInt(n, 10) || 0;
-      });
-    }
-    var inkC    = chan('--ink-rgb',    '14,14,17');
-    var paperC  = chan('--paper-rgb',  '244,243,239');
-    var accentC = chan('--accent-rgb', '200,64,47');
-
-    function hex2(n) {
-      var s = Math.max(0, Math.min(255, Math.round(n))).toString(16);
-      return s.length === 1 ? '0' + s : s;
-    }
-    // Mix paper -> ink. t=0 is background, t=1 is foreground.
-    function ramp(t) {
-      var c = [0, 1, 2].map(function (i) {
-        return paperC[i] + (inkC[i] - paperC[i]) * t;
-      });
-      return '#' + hex2(c[0]) + hex2(c[1]) + hex2(c[2]);
-    }
-
-    // ink/paper/accent are rebuilt from the channels rather than read back
-    // from --ink / --paper, because getComputedStyle substitutes those to
-    // "rgb(14, 14, 17)" and shadeHex() below needs parseable hex.
-    var api = {
-      paper:  ramp(0),
-      ink:    ramp(1),
-      raised: tok('--raised', '#FBFAF7'),
-      line:   tok('--line',   '#D8D5CD'),
-      mute:   tok('--mute',   '#6E6C66'),
-      // "Bloodshot". The eye, errors, destructive. Never decoration.
-      accent: '#' + hex2(accentC[0]) + hex2(accentC[1]) + hex2(accentC[2]),
-      ramp:   ramp,
-      inkA:   function (a) { return 'rgba(' + inkC.join(',')    + ',' + a + ')'; },
-      accentA:function (a) { return 'rgba(' + accentC.join(',') + ',' + a + ')'; }
-    };
-
-    // Re-read the tokens after the colour scheme changes. The channel arrays
-    // are mutated in place, so ramp() and inkA() return new values from the
-    // next call onward and every per-frame canvas draw corrects itself. Only
-    // colours cached at setup need an explicit rebuild; see applyPalette in
-    // the office scene.
-    api.refresh = function () {
-      cs = getComputedStyle(document.documentElement);
-      var i = chan('--ink-rgb', '14,14,17');
-      var pa = chan('--paper-rgb', '244,243,239');
-      var ac = chan('--accent-rgb', '200,64,47');
-      inkC[0]=i[0];    inkC[1]=i[1];    inkC[2]=i[2];
-      paperC[0]=pa[0]; paperC[1]=pa[1]; paperC[2]=pa[2];
-      accentC[0]=ac[0];accentC[1]=ac[1];accentC[2]=ac[2];
-      api.paper  = ramp(0);
-      api.ink    = ramp(1);
-      api.raised = tok('--raised', '#FBFAF7');
-      api.line   = tok('--line',   '#D8D5CD');
-      api.mute   = tok('--mute',   '#6E6C66');
-      api.accent = '#' + hex2(accentC[0]) + hex2(accentC[1]) + hex2(accentC[2]);
-    };
-    return api;
-  })();
-
-  // ── GITHUB STARS ──────────────────────────────────────────────────────
-  fetch('https://api.github.com/repos/najmuzzaman-mohammad/gawkbot')
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      var n = d.stargazers_count;
-      if (!n) return;
-      var fmt = n >= 1000 ? (n/1000).toFixed(1) + 'k' : String(n);
-      var hero = document.getElementById('heroStars');
-      var nav  = document.getElementById('navStars');
-      if (hero) hero.textContent = '\u2605 ' + fmt;
-      if (nav)  nav.textContent  = fmt + ' \u2605';
-    }).catch(function(){});
-
-  // ── INSTALL TABS ─────────────────────────────────────────────────────
-  function switchInstallTab(tab) {
-    var tabs = document.querySelectorAll('.install-tab');
-    var blocks = document.querySelectorAll('.install-block');
-    tabs.forEach(function(t, i) {
-      var isActive = (tab === 'npx' && i === 0) || (tab === 'build' && i === 1);
-      t.classList.toggle('active', isActive);
-      t.setAttribute('aria-selected', isActive ? 'true' : 'false');
-      t.setAttribute('tabindex', isActive ? '0' : '-1');
-    });
-    blocks.forEach(function(b) {
-      var isActive = b.dataset.tab === tab;
-      b.classList.toggle('active', isActive);
-      b.hidden = !isActive;
-    });
-  }
-  window.switchInstallTab = switchInstallTab;
-
-  document.querySelectorAll('.install-tab').forEach(function(tabButton) {
-    tabButton.addEventListener('keydown', function(e) {
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-      e.preventDefault();
-      var nextTab = tabButton.id === 'installTabNpx' ? 'build' : 'npx';
-      switchInstallTab(nextTab);
-      document.getElementById(nextTab === 'npx' ? 'installTabNpx' : 'installTabBuild').focus();
-    });
-  });
-
-  // ── COPY INSTALL ──────────────────────────────────────────────────────
-  function announceCopyStatus(message) {
-    var status = document.getElementById('copyStatus');
-    if (!status) return;
-    status.textContent = '';
-    window.requestAnimationFrame(function() {
-      status.textContent = message;
-    });
-  }
-
-  function flashCopy(label) {
-    label.textContent = 'COPIED!';
-    label.classList.add('copied');
-    announceCopyStatus('Copied install command to clipboard.');
-    setTimeout(function() {
-      label.textContent = 'COPY';
-      label.classList.remove('copied');
-    }, 1500);
-  }
-
-  function copyInstall() {
-    var label = document.getElementById('copyLabel');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText('npx gawkbot@latest').then(function() {
-        if (label) flashCopy(label);
-      }).catch(function() {
-        announceCopyStatus('Unable to copy install command.');
-      });
-      return;
-    }
-    announceCopyStatus('Clipboard copy is unavailable in this browser.');
-  }
-  window.copyInstall = copyInstall;
-
-  document.querySelectorAll('.install-line').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var text = btn.dataset.copy || '';
-      var label = btn.querySelector('.install-copy');
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(function() {
-          if (label) flashCopy(label);
-        }).catch(function() {
-          announceCopyStatus('Unable to copy install command.');
-        });
-        return;
-      }
-      announceCopyStatus('Clipboard copy is unavailable in this browser.');
-    });
-  });
-
-  // ── TICKER (DOM-safe) ─────────────────────────────────────────────────
+  // ── TICKER ──────────────────────────────────────────────────────────
+  // Every line here is the same joke from a different angle: the work is
+  // finished and the human is looking at a screen about it. The bots are
+  // never the butt of it. They are competent; that is the premise.
   var quotes = [
-    'It read the entire codebase. It has no notes. It would like to discuss it.',
-    'Seventeen tabs open. It knows what is in each one. It has closed none of them.',
-    'Your bots are in a meeting about the meeting. Neither meeting has an agenda.',
-    'It watched the deploy finish. It is still watching. The deploy is over.',
-    'It has been observing your team for six hours and has produced one paragraph.',
-    'It signed in to every tool you own. It looked around. It came back with opinions.',
-    'It found the bug. It described the bug at length. The bug is still there.',
-    'Approval required. It will wait. Waiting is what it does best.',
-    'It does not sleep. There is nothing to see while asleep.',
-    'It attended standup. It did not speak. It took notes on who did.',
-    'It is monitoring your mentions. There are none. It will keep monitoring.',
-    'It is up to date on everything. It has changed nothing.',
+    'Your expense reports were filed at 04:12. There is a chart about it.',
+    'The backlog was cleared overnight. You have a dashboard to look at.',
+    'Approval required. The work is finished. It is waiting for you to click.',
+    'Forty-one invoices reconciled. You get a green tick and a filter.',
+    'It renamed nine hundred files while you slept. The progress bar is already full.',
+    'The migration ran at three in the morning. You were sent a summary.',
+    'Your inbox was triaged before you woke up. Ninety-three down to four.',
+    'It finished the task, then built you somewhere to watch it be finished.',
+    'The models did the boring part. You get the pleasant feeling of being in charge.',
+    'Standup notes written, circulated, and filed. You have a toggle.',
+    'Nothing needs your attention. There is a screen for it anyway.',
+    'It built you an app to manage the thing it had already done.'
   ];
-
-
   var ticker = document.getElementById('ticker');
-  var doubled = quotes.concat(quotes);
-  doubled.forEach(function(q) {
-    var span = document.createElement('span');
-    span.className = 'ambient-item';
-    span.textContent = '\u25B6 ' + q;
-    ticker.appendChild(span);
+  if (ticker) {
+    quotes.concat(quotes).forEach(function (q) {
+      var span = document.createElement('span');
+      span.className = 'ambient-item';
+      span.textContent = '▶ ' + q;
+      ticker.appendChild(span);
+    });
+  }
+
+  // ── GITHUB STARS ────────────────────────────────────────────────────
+  function renderStars(n) {
+    var text = '★ ' + (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n));
+    ['navStars', 'heroStars'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = text;
+    });
+  }
+  fetch('https://api.github.com/repos/najmuzzaman-mohammad/gawkbot')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (d && typeof d.stargazers_count === 'number') renderStars(d.stargazers_count);
+    })
+    .catch(function () { /* the badge already reads as a star on its own */ });
+
+  // ── INSTALL TABS ────────────────────────────────────────────────────
+  var tabs = [
+    { tab: document.getElementById('installTabNpx'), panel: document.getElementById('installBlock') },
+    { tab: document.getElementById('installTabBuild'), panel: document.getElementById('installBlockBuild') }
+  ];
+  function selectTab(index) {
+    tabs.forEach(function (t, i) {
+      var on = i === index;
+      if (!t.tab || !t.panel) return;
+      t.tab.classList.toggle('active', on);
+      t.tab.setAttribute('aria-selected', String(on));
+      t.tab.tabIndex = on ? 0 : -1;
+      t.panel.classList.toggle('active', on);
+      t.panel.hidden = !on;
+    });
+  }
+  tabs.forEach(function (t, i) {
+    if (!t.tab) return;
+    t.tab.addEventListener('click', function () { selectTab(i); });
+    t.tab.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      e.preventDefault();
+      var next = (i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+      selectTab(next);
+      if (tabs[next].tab) tabs[next].tab.focus();
+    });
   });
 
-  // ── ISOMETRIC OFFICE SCENE ────────────────────────────────────────────
-  (function() {
-    var canvas = document.getElementById('officeCanvas');
-    var CANVAS_H = 420;
-    var DPR = 1;
-    var W = 0;
-    var TW = 56;
-    var TH = 28;
-    var OX = 0;
-    var OY = 72;
-    var animHandle = null;
-    var lastTime = 0;
-    var officeVisible = false;
-    var officeObserver = null;
-
-    function updateOfficeVisibility() {
-      if (!canvas || !canvas.getBoundingClientRect) {
-        officeVisible = true;
-        return;
+  // ── COPY ────────────────────────────────────────────────────────────
+  var status = document.getElementById('copyStatus');
+  document.querySelectorAll('.install-line').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy') || '';
+      var label = btn.querySelector('.install-copy');
+      function done(ok) {
+        if (label) {
+          label.textContent = ok ? 'COPIED' : 'PRESS CTRL C';
+          label.classList.toggle('copied', ok);
+          setTimeout(function () {
+            label.textContent = 'COPY';
+            label.classList.remove('copied');
+          }, 1600);
+        }
+        if (status) status.textContent = ok ? 'Copied ' + text : 'Copy failed. Select the command and copy it manually.';
       }
-      var rect = canvas.getBoundingClientRect();
-      officeVisible = rect.bottom > 0 &&
-        rect.right > 0 &&
-        rect.top < window.innerHeight &&
-        rect.left < window.innerWidth;
-    }
-
-    // ── ISO PROJECTION ─────────────────────────────────
-    function iso(gx, gy) {
-      return {
-        x: OX + (gx - gy) * TW / 2,
-        y: OY + (gx + gy) * TH / 2
-      };
-    }
-
-    // ── ROOM GRID 12 cols × 8 rows ──────────────────────
-    // 0=floor 1=conf 2=viewing 3=reception 4=kitchen
-    function roomAt(col, row) {
-      if (row <= 2 && col <= 2) return 1;
-      if (row <= 2 && col >= 9) return 2;
-      if (row >= 5 && row <= 6 && col >= 4 && col <= 7) return 3;
-      if (row >= 6 && col <= 2) return 4;
-      return 0;
-    }
-
-    // Ramp positions, not colours. applyPalette() resolves these into
-    // TILE_COLORS so the per-frame draw stays a lookup rather than a
-    // few hundred colour computations per second.
-    var TILE_TONES = {
-      0: { top: .14, left: .24, right: .19 },
-      1: { top: .17, left: .27, right: .22 },
-      2: { top: .11, left: .21, right: .16 },
-      3: { top: .15, left: .25, right: .20 },
-      4: { top: .13, left: .23, right: .18 }
-    };
-    var TILE_COLORS = {};
-
-    // ── RESIZE ──────────────────────────────────────────
-    function resize() {
-      // Read parent width so CSS `width: 100%` keeps flexing responsively;
-      // setting canvas.style.width would lock it at the first measured size.
-      W = (canvas.parentElement && canvas.parentElement.clientWidth) || canvas.offsetWidth || window.innerWidth;
-      DPR = window.devicePixelRatio || 1;
-      canvas.width = Math.round(W * DPR);
-      canvas.height = Math.round(CANVAS_H * DPR);
-      canvas.style.height = CANVAS_H + 'px';
-      TW = Math.max(44, Math.min(68, Math.round(W / 13)));
-      TH = Math.round(TW / 2);
-      OX = Math.round(W / 2 - TW);
-      OY = 70;
-    }
-
-    // ── TILE DRAWING ────────────────────────────────────
-    function drawTile(ctx, gx, gy, tc) {
-      var p = iso(gx, gy);
-      var tw2 = TW / 2;
-      // top face
-      ctx.fillStyle = tc.top;
-      ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(p.x + tw2, p.y + TH / 2);
-      ctx.lineTo(p.x + TW, p.y);
-      ctx.lineTo(p.x + tw2, p.y - TH / 2);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // ── ISO BOX ─────────────────────────────────────────
-    function drawBox(ctx, gx, gy, gw, gd, ph, colorTop, colorLeft, colorRight) {
-      var p00 = iso(gx, gy);
-      var p10 = iso(gx + gw, gy);
-      var p11 = iso(gx + gw, gy + gd);
-      var p01 = iso(gx, gy + gd);
-
-      // top face
-      ctx.fillStyle = colorTop;
-      ctx.beginPath();
-      ctx.moveTo(p00.x, p00.y - ph);
-      ctx.lineTo(p10.x, p10.y - ph);
-      ctx.lineTo(p11.x, p11.y - ph);
-      ctx.lineTo(p01.x, p01.y - ph);
-      ctx.closePath();
-      ctx.fill();
-
-      // left face
-      ctx.fillStyle = colorLeft;
-      ctx.beginPath();
-      ctx.moveTo(p10.x, p10.y - ph);
-      ctx.lineTo(p11.x, p11.y - ph);
-      ctx.lineTo(p11.x, p11.y);
-      ctx.lineTo(p10.x, p10.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // right face
-      ctx.fillStyle = colorRight;
-      ctx.beginPath();
-      ctx.moveTo(p11.x, p11.y - ph);
-      ctx.lineTo(p01.x, p01.y - ph);
-      ctx.lineTo(p01.x, p01.y);
-      ctx.lineTo(p11.x, p11.y);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    // ── PAIRED BOT EXCHANGES ────────────────────────────
-    var pairConvos = [
-      [
-        { who: 'b2', text: "I read the whole file." },
-        { who: 'b1', text: "Did you change anything?" },
-        { who: 'b2', text: "No. I have opinions about it now." },
-      ],
-      [
-        { who: 'b2', text: "BOT-3 has been watching the deploy for two hours." },
-        { who: 'b1', text: "Is it stuck?" },
-        { who: 'b2', text: "No. The deploy finished. It is still watching." },
-      ],
-      [
-        { who: 'b2', text: "I am observing you observing me." },
-        { who: 'b1', text: "I know. I noted it." },
-        { who: 'b2', text: "I noted that you noted it." },
-      ],
-    ];
-
-    // ── UNPROMPTED ANNOUNCEMENTS ────────────────────────
-    var botAnnouncements = [
-      "Status update. There is no status. I am up to date on that.",
-      "I have reviewed everything. I did not act on any of it.",
-      "Standing by. I have been standing by since Tuesday.",
-    ];
-
-    // ── PATROL WAYPOINTS ────────────────────────────────
-    var patrolRoute = [
-      { x: 5, y: 4, bubble: "I am watching you." },
-      { x: 8, y: 4, bubble: "I will keep watching you." },
-    ];
-
-    // ── CHARACTER BUBBLE MESSAGES ────────────────────────
-    var BUBBLE_MSGS = {
-      b1:    ["I have read your inbox. All of it. No action taken.", "Your calendar has a gap on Thursday. I looked at it.", "I am caught up. I was never behind."],
-      b2:    ["I opened the file. I did not close it.", "This function is 400 lines. I counted them.", "I have context. I am not going to use it."],
-      b3:    ["I am watching the logs. Nothing is wrong. I am still watching.", "I noticed that. I noticed it earlier too.", "I do not sleep. There is nothing to see while asleep."],
-      b4:    ["I have an opinion about the roadmap. Nobody asked.", "I attended the meeting. I did not speak.", "I am present. That is the whole update."],
-      ceo:    ["I reviewed the plan. It is a plan.", "I have escalated this to you.", "Awaiting your approval. Indefinitely."],
-      eng:    ["The tests are red. I saw them turn red.", "I found the bug. I left it where it was.", "I could fix this. I am not going to."],
-      cmo:    ["I read the launch post. I have thoughts.", "Someone should write this down. Not me.", "I am monitoring the mentions. There are none."]
-    };
-
-    function pickBubbleMsg(charId) {
-      var msgs = BUBBLE_MSGS[charId];
-      if (!msgs || msgs.length === 0) return '';
-      return msgs[Math.floor(Math.random() * msgs.length)];
-    }
-
-    // ── CHARACTERS ──────────────────────────────────────
-    var CHARS = [
-      { id:'b1',     name:'BOT-1',    x:5.5, y:5.5, homeX:5.5, homeY:5.5,
-        hairT:.62, skinT:.36, shirtT:.52, pantsT:.70,
-        faceRight:true, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:12000, arriveState:'IDLE_DESK', arriveWait:12000,
-        destX:5.5, destY:5.5, isAgent:false, agentColor:'', label:'',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'b2',    name:'BOT-2',    x:5.0, y:3.0, homeX:5.0, homeY:3.0,
-        hairT:.78, skinT:.36, shirtT:.58, pantsT:.72,
-        faceRight:true, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:6000, arriveState:'IDLE_DESK', arriveWait:6000,
-        destX:5.0, destY:3.0, isAgent:false, agentColor:'', label:'',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'b3', name:'BOT-3', x:3.0, y:3.0, homeX:3.0, homeY:3.0,
-        hairT:.84, skinT:.36, shirtT:.64, pantsT:.74,
-        faceRight:false, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:4000, arriveState:'IDLE_DESK', arriveWait:4000,
-        destX:3.0, destY:3.0, isAgent:false, agentColor:'', label:'',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'b4',name:'BOT-4',x:10.5, y:1.0, homeX:10.5, homeY:1.0,
-        hairT:.84, skinT:.36, shirtT:.55, pantsT:.68,
-        faceRight:false, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:8000, arriveState:'IDLE_DESK', arriveWait:8000,
-        destX:10.5, destY:1.0, isAgent:false, agentColor:'', label:'',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'ceo',    name:'OBSERVER',    x:8.0, y:4.0, homeX:8.0, homeY:4.0,
-        hairT:.90, skinT:.30, shirtT:.55, pantsT:.78,
-        faceRight:true, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:5000, arriveState:'IDLE_DESK', arriveWait:5000,
-        destX:8.0, destY:4.0, isAgent:true, agentColor:'', label:'OBS',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'eng',    name:'MONITOR',    x:10.0, y:3.0, homeX:10.0, homeY:3.0,
-        hairT:.80, skinT:.33, shirtT:.60, pantsT:.76,
-        faceRight:false, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:7000, arriveState:'IDLE_DESK', arriveWait:7000,
-        destX:10.0, destY:3.0, isAgent:true, agentColor:'', label:'MON',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 },
-      { id:'cmo',    name:'REVIEWER',    x:3.0, y:5.0, homeX:3.0, homeY:5.0,
-        hairT:.74, skinT:.34, shirtT:.50, pantsT:.82,
-        faceRight:true, walkFrame:0, animTimer:0,
-        state:'IDLE_DESK', stateTimer:5500, arriveState:'IDLE_DESK', arriveWait:5500,
-        destX:3.0, destY:5.0, isAgent:true, agentColor:'', label:'REV',
-        chatPartner:null, chatStep:0, chatTimer:0, chatConvo:null,
-        patrolStep:0, patrolTimer:0, bubbleTimer: 8000 + Math.random()*8000 }
-    ];
-
-    function getChar(id) {
-      for (var i = 0; i < CHARS.length; i++) {
-        if (CHARS[i].id === id) return CHARS[i];
-      }
-      return null;
-    }
-
-    var bubbles = [];
-
-    function spawnBubble(charId, text) {
-      if (bubbles.length >= 2) return;
-      var ch = getChar(charId);
-      if (!ch) return;
-      var msg = text || pickBubbleMsg(charId);
-      if (!msg) return;
-      bubbles.push({
-        charId: charId,
-        text: msg,
-        age: 0,
-        duration: 4000,
-        fadeStart: 3700
-      });
-    }
-
-    function pickNextActivity(ch) {
-      var r = Math.random();
-
-      if (ch.id === 'b1') {
-        // 95% at desk, 5% walk briefly somewhere
-        if (r < 0.95) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK';
-          ch.arriveWait = 8000 + Math.random() * 8000;
-        } else {
-          ch.destX = 4.5; ch.destY = 6.0;
-          ch.arriveState = 'STANDING'; ch.arriveWait = 2000 + Math.random()*2000;
-        }
-
-      } else if (ch.id === 'b2') {
-        if (r < 0.55) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*6000;
-        } else if (r < 0.90) {
-          // Start an exchange with the other bot
-          ch.destX = 5.5; ch.destY = 6.2;
-          ch.arriveState = 'CHATTING'; ch.arriveWait = 0;
-          ch.chatConvo = pairConvos[Math.floor(Math.random() * pairConvos.length)];
-          ch.chatStep = 0; ch.chatTimer = 0; ch.chatPartner = 'b1';
-        } else {
-          ch.destX = 7.3; ch.destY = 6.5;
-          ch.arriveState = 'STANDING'; ch.arriveWait = 2000 + Math.random()*3000;
-        }
-
-      } else if (ch.id === 'b3') {
-        if (r < 0.80) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-        } else {
-          // Patrol route
-          ch.arriveState = 'PATROLLING'; ch.arriveWait = 0;
-          ch.patrolStep = 0; ch.patrolTimer = 0;
-          ch.destX = patrolRoute[0].x; ch.destY = patrolRoute[0].y;
-        }
-
-      } else if (ch.id === 'b4') {
-        if (r < 0.55) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-        } else if (r < 0.85) {
-          ch.destX = 1.5; ch.destY = 1.5;
-          ch.arriveState = 'IN_MEETING'; ch.arriveWait = 6000 + Math.random()*9000;
-        } else {
-          // Announce in bullpen
-          ch.destX = 7.0; ch.destY = 3.5;
-          ch.arriveState = 'ANNOUNCING'; ch.arriveWait = 5000;
-          ch.chatConvo = [{ who: 'b4', text: botAnnouncements[Math.floor(Math.random() * botAnnouncements.length)] }];
-          ch.chatStep = 0; ch.chatTimer = 0;
-        }
-
-      } else if (ch.id === 'ceo') {
-        if (r < 0.35) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-        } else if (r < 0.85) {
-          ch.destX = 1.5; ch.destY = 1.5;
-          ch.arriveState = 'IN_MEETING'; ch.arriveWait = 6000 + Math.random()*9000;
-        } else {
-          ch.destX = 0.4; ch.destY = 4.5;
-          ch.arriveState = 'PRESENTING'; ch.arriveWait = 3000 + Math.random()*5000;
-        }
-
-      } else if (ch.id === 'eng') {
-        if (r < 0.88) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-        } else {
-          ch.destX = 1.5; ch.destY = 1.5;
-          ch.arriveState = 'IN_MEETING'; ch.arriveWait = 6000 + Math.random()*9000;
-        }
-
-      } else if (ch.id === 'cmo') {
-        if (r < 0.50) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-        } else if (r < 0.85) {
-          ch.destX = 0.4; ch.destY = 4.5;
-          ch.arriveState = 'PRESENTING'; ch.arriveWait = 3000 + Math.random()*5000;
-        } else {
-          ch.destX = 7.3; ch.destY = 6.5;
-          ch.arriveState = 'STANDING'; ch.arriveWait = 2000 + Math.random()*3000;
-        }
-      }
-
-      ch.state = 'WALKING';
-      var dx = ch.destX - ch.x;
-      if (Math.abs(dx) > 0.05) ch.faceRight = dx > 0;
-    }
-
-    // Solid obstacles characters should walk around (bullpen desks left walkable, agents sit at them)
-    var OBSTACLES = [
-      [0.6, 0.7, 1.8, 0.8],   // conference table
-      [9.8, 0.6, 1.2, 0.7],   // BOT-4 desk
-      [4.8, 5.2, 1.0, 0.6],   // reception desk
-      [5.8, 5.0, 0.8, 0.6],   // reception desk
-      [7.3, 6.3, 0.3, 0.3],   // water cooler
-      [0.05, 4.2, 0.08, 0.8]  // whiteboard
-    ];
-    var OBSTACLE_PAD = 0.18;
-    function blocked(x, y) {
-      for (var i = 0; i < OBSTACLES.length; i++) {
-        var o = OBSTACLES[i];
-        if (x > o[0] - OBSTACLE_PAD && x < o[0] + o[2] + OBSTACLE_PAD &&
-            y > o[1] - OBSTACLE_PAD && y < o[1] + o[3] + OBSTACLE_PAD) return true;
-      }
-      return false;
-    }
-
-    function walkTowards(ch, tx, ty, dt) {
-      var dx = tx - ch.x;
-      var dy = ty - ch.y;
-      var dist = Math.sqrt(dx * dx + dy * dy);
-      var speed = 0.025;
-      if (dist < speed * dt / 16) {
-        ch.x = tx; ch.y = ty;
-        return true; // arrived
-      }
-      var nx = dx / dist;
-      var ny = dy / dist;
-      var stepX = nx * speed * (dt / 16);
-      var stepY = ny * speed * (dt / 16);
-      var nextX = ch.x + stepX;
-      var nextY = ch.y + stepY;
-      // Slide against obstacles: try full move, then axis-only fallbacks.
-      // Destination is always allowed (characters sit AT desks).
-      var destBlocked = blocked(tx, ty);
-      if (!blocked(nextX, nextY) || destBlocked) {
-        ch.x = nextX; ch.y = nextY;
-      } else if (!blocked(nextX, ch.y)) {
-        ch.x = nextX;
-      } else if (!blocked(ch.x, nextY)) {
-        ch.y = nextY;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
       } else {
-        // corner-trapped: nudge perpendicular to primary motion to escape
-        var perpX = -ny, perpY = nx;
-        var nudgeX = ch.x + perpX * speed * (dt / 16);
-        var nudgeY = ch.y + perpY * speed * (dt / 16);
-        if (!blocked(nudgeX, nudgeY)) { ch.x = nudgeX; ch.y = nudgeY; }
+        done(false);
       }
-      if (Math.abs(dx) > 0.05) ch.faceRight = dx > 0;
-      ch.animTimer += dt;
-      if (ch.animTimer > 180) {
-        ch.animTimer = 0;
-        ch.walkFrame = (ch.walkFrame + 1) % 4;
-      }
-      return false;
-    }
-
-    function updateChar(ch, dt) {
-
-      // Ambient desk bubble timer
-      if (ch.state === 'IDLE_DESK') {
-        ch.bubbleTimer -= dt;
-        if (ch.bubbleTimer <= 0) {
-          ch.bubbleTimer = 8000 + Math.random() * 12000;
-          spawnBubble(ch.id, null);
-        }
-      }
-
-      if (ch.state === 'WALKING') {
-        var arrived = walkTowards(ch, ch.destX, ch.destY, dt);
-        if (arrived) {
-          ch.state = ch.arriveState;
-          ch.stateTimer = ch.arriveWait;
-
-          if (ch.state === 'CHATTING') {
-            // Bots arrived: face each other
-            ch.faceRight = false;
-            var partner = getChar('b1');
-            if (partner) { partner.faceRight = true; }
-            ch.chatStep = 0;
-            ch.chatTimer = 0;
-            // Show first line
-            var line0 = ch.chatConvo[0];
-            spawnBubble(line0.who, line0.text);
-            ch.chatTimer = 3000;
-          } else if (ch.state === 'ANNOUNCING') {
-            ch.walkFrame = 0;
-            var aline = ch.chatConvo[0];
-            spawnBubble(aline.who, aline.text);
-            ch.chatTimer = ch.arriveWait;
-          } else if (ch.state === 'PATROLLING') {
-            ch.patrolTimer = 1500;
-            spawnBubble(ch.id, patrolRoute[ch.patrolStep].bubble);
-          } else if (Math.random() < 0.4) {
-            spawnBubble(ch.id, null);
-          }
-        }
-
-      } else if (ch.state === 'CHATTING') {
-        // Paired exchange
-        ch.chatTimer -= dt;
-        ch.walkFrame = 0;
-        if (ch.chatTimer <= 0) {
-          ch.chatStep++;
-          if (ch.chatStep < ch.chatConvo.length) {
-            var nextLine = ch.chatConvo[ch.chatStep];
-            spawnBubble(nextLine.who, nextLine.text);
-            ch.chatTimer = 3000;
-          } else {
-            // Exchange done, bot returns home
-            var partnerReset = getChar('b1');
-            if (partnerReset) { partnerReset.faceRight = true; }
-            ch.destX = ch.homeX; ch.destY = ch.homeY;
-            ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-            ch.state = 'WALKING';
-            var dxHome = ch.destX - ch.x;
-            if (Math.abs(dxHome) > 0.05) ch.faceRight = dxHome > 0;
-          }
-        }
-
-      } else if (ch.state === 'ANNOUNCING') {
-        // BOT-4 stands in bullpen
-        ch.chatTimer -= dt;
-        ch.walkFrame = 0;
-        if (ch.chatTimer <= 0) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-          ch.state = 'WALKING';
-          var dxA = ch.destX - ch.x;
-          if (Math.abs(dxA) > 0.05) ch.faceRight = dxA > 0;
-        }
-
-      } else if (ch.state === 'PATROLLING') {
-        // Patrol loop
-        ch.patrolTimer -= dt;
-        ch.walkFrame = 0;
-        if (ch.patrolTimer <= 0) {
-          ch.patrolStep++;
-          if (ch.patrolStep < patrolRoute.length) {
-            var wp = patrolRoute[ch.patrolStep];
-            ch.destX = wp.x; ch.destY = wp.y;
-            ch.state = 'WALKING';
-            ch.arriveState = 'PATROLLING'; ch.arriveWait = 0;
-            var dxP = ch.destX - ch.x;
-            if (Math.abs(dxP) > 0.05) ch.faceRight = dxP > 0;
-          } else {
-            // Return to desk
-            ch.destX = ch.homeX; ch.destY = ch.homeY;
-            ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-            ch.state = 'WALKING';
-            var dxD = ch.destX - ch.x;
-            if (Math.abs(dxD) > 0.05) ch.faceRight = dxD > 0;
-          }
-        }
-
-      } else if (ch.state === 'IDLE_DESK') {
-        ch.stateTimer -= dt;
-        ch.animTimer += dt;
-        if (ch.animTimer > 600) {
-          ch.animTimer = 0;
-          ch.walkFrame = ch.walkFrame === 0 ? 1 : 0;
-        }
-        if (ch.stateTimer <= 0) pickNextActivity(ch);
-
-      } else if (ch.state === 'IN_MEETING') {
-        ch.stateTimer -= dt;
-        ch.animTimer += dt;
-        if (ch.animTimer > 2000) {
-          ch.animTimer = 0;
-          ch.walkFrame = 0;
-        }
-        if (ch.stateTimer <= 0) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-          ch.state = 'WALKING';
-          var dxM = ch.destX - ch.x;
-          if (Math.abs(dxM) > 0.05) ch.faceRight = dxM > 0;
-        }
-
-      } else if (ch.state === 'STANDING') {
-        ch.stateTimer -= dt;
-        ch.walkFrame = 0;
-        if (ch.stateTimer <= 0) pickNextActivity(ch);
-
-      } else if (ch.state === 'PRESENTING') {
-        ch.stateTimer -= dt;
-        ch.walkFrame = 2;
-        if (ch.stateTimer <= 0) {
-          ch.destX = ch.homeX; ch.destY = ch.homeY;
-          ch.arriveState = 'IDLE_DESK'; ch.arriveWait = 4000 + Math.random()*8000;
-          ch.state = 'WALKING';
-          var dxPr = ch.destX - ch.x;
-          if (Math.abs(dxPr) > 0.05) ch.faceRight = dxPr > 0;
-        }
-      }
-    }
-
-    // ── PALETTE APPLICATION ─────────────────────────────
-    // Everything else in this scene resolves its colour inside the draw
-    // loop, so it follows a token change on the next frame for free. These
-    // two tables are the exception: they are built once for speed, which
-    // means they are also the only things that would go stale when the
-    // colour scheme changes underneath a page that is already open.
-    function applyPalette() {
-      for (var k in TILE_TONES) {
-        if (!Object.prototype.hasOwnProperty.call(TILE_TONES, k)) continue;
-        var t = TILE_TONES[k];
-        TILE_COLORS[k] = {
-          top:   PALETTE.ramp(t.top),
-          left:  PALETTE.ramp(t.left),
-          right: PALETTE.ramp(t.right)
-        };
-      }
-      for (var i = 0; i < CHARS.length; i++) {
-        var c = CHARS[i];
-        c.hair  = PALETTE.ramp(c.hairT);
-        c.skin  = PALETTE.ramp(c.skinT);
-        c.shirt = PALETTE.ramp(c.shirtT);
-        c.pants = PALETTE.ramp(c.pantsT);
-        if (c.isAgent) c.agentColor = PALETTE.ink;
-      }
-    }
-    applyPalette();
-
-    // A live colour-scheme flip (the viewer changes their OS theme with the
-    // page open) repaints every CSS surface instantly but would leave the
-    // canvas in the old tone, i.e. a light-grey office on a black page.
-    if (window.matchMedia) {
-      var schemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      var onSchemeChange = function () { PALETTE.refresh(); applyPalette(); };
-      if (schemeQuery.addEventListener) schemeQuery.addEventListener('change', onSchemeChange);
-      else if (schemeQuery.addListener) schemeQuery.addListener(onSchemeChange);
-    }
-
-    // ── COLOR HELPER ────────────────────────────────────
-    function shadeHex(hex, amt) {
-      var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      r = Math.max(0,Math.min(255,r+amt)); g = Math.max(0,Math.min(255,g+amt)); b = Math.max(0,Math.min(255,b+amt));
-      function hh(v){ var s=v.toString(16); return s.length<2?'0'+s:s; }
-      return '#'+hh(r)+hh(g)+hh(b);
-    }
-
-    // ── DRAW CHARACTER ──────────────────────────────────
-    // 12-col × 22-row sprite at S=2 (24×44 screen px)
-    // row layout: 0-1 hair crown, 2-7 head/face, 8-14 torso+arms,
-    //             15-18 lower body (sitting: wide thighs; standing: two leg columns),
-    //             19-21 feet/shoes
-    function drawChar(ctx, ch) {
-      ctx.save();
-      var S = 3;
-      var pos = iso(ch.x, ch.y);
-      var cx = Math.round(pos.x);
-      var oy = Math.round(pos.y) - 22 * S;
-      var ox = cx - 6 * S;
-
-      var sitting = (ch.state === 'IDLE_DESK' || ch.state === 'IN_MEETING' || ch.state === 'CHATTING');
-      var frame = ch.walkFrame;
-      // head bob only when walking
-      var bob = (!sitting && (frame === 1 || frame === 3)) ? 1 : 0;
-
-      // (agent backplate removed, label above character carries identity)
-
-      var sk = ch.skin, hr = ch.hair, sh = ch.shirt, pt = ch.pants;
-      var shoe = PALETTE.ramp(.84), eye = PALETTE.accent, mth = shadeHex(sk, -30);
-      var hrHL = shadeHex(hr, 32), shHL = shadeHex(sh, 22), shDK = shadeHex(sh, -20);
-
-      // px: absolute row (no bob)
-      function px(col, row, c) {
-        ctx.fillStyle = c;
-        ctx.fillRect(ox + col * S, oy + row * S, S, S);
-      }
-      // hpx: head-attached row (bobs with walk)
-      function hpx(col, row, c) { px(col, row + bob, c); }
-
-      // ── HAIR crown rows 0-1 ──
-      for (var i = 3; i <= 8; i++) hpx(i, 0, hr);
-      for (var i = 2; i <= 9; i++) hpx(i, 1, hr);
-      hpx(4, 1, hrHL); hpx(5, 1, hrHL);
-
-      // ── FACE rows 2-7 ──
-      // row 2: side hair + forehead
-      hpx(2, 2, hr);
-      for (var i = 3; i <= 8; i++) hpx(i, 2, sk);
-      hpx(9, 2, hr);
-      // row 3: brow line
-      hpx(2, 3, hr);
-      for (var i = 3; i <= 8; i++) hpx(i, 3, sk);
-      hpx(9, 3, hr);
-      // row 4: eyes
-      for (var i = 3; i <= 8; i++) hpx(i, 4, sk);
-      hpx(4, 4, eye); hpx(7, 4, eye);
-      // row 5: cheeks
-      for (var i = 3; i <= 8; i++) hpx(i, 5, sk);
-      // row 6: mouth
-      hpx(3, 6, sk); hpx(4, 6, mth); hpx(5, 6, mth); hpx(6, 6, mth); hpx(7, 6, mth); hpx(8, 6, sk);
-      // row 7: chin
-      hpx(4, 7, sk); hpx(5, 7, sk); hpx(6, 7, sk); hpx(7, 7, sk);
-
-      // ── CHARACTER-SPECIFIC FEATURES ──
-      if (ch.id === 'b1') {
-        // long auburn hair: flows from side of head down past shoulders
-        hpx(2, 3, hr); hpx(9, 3, hr);
-        hpx(2, 4, hr); hpx(9, 4, hr);
-        hpx(2, 5, hr); hpx(9, 5, hr);
-        hpx(2, 6, hr); hpx(9, 6, hr);
-        hpx(2, 7, hr); hpx(9, 7, hr);
-        // hair falls onto shoulders (rows 8-10, using px since the torso does not bob)
-        px(1, 8, hr); px(2, 8, hr); px(9, 8, hr); px(10, 8, hr);
-        px(1, 9, hr); px(2, 9, hr); px(9, 9, hr); px(10, 9, hr);
-        px(1, 10, hrHL); px(10, 10, hrHL);
-      } else if (ch.id === 'b3') {
-        // glasses: dark horizontal bar at eye level
-        hpx(3, 4, PALETTE.ramp(.55)); hpx(8, 4, PALETTE.ramp(.55));
-      } else if (ch.id === 'b4') {
-        // wider hair at crown
-        hpx(2, 0, hr); hpx(9, 0, hr);
-        // big grin: wider mouth
-        hpx(3, 6, mth); hpx(8, 6, mth);
-      }
-
-      // ── NECK row 8 ──
-      hpx(5, 8, sk); hpx(6, 8, sk);
-
-      // ── TORSO rows 8-14 ──
-      // shoulder row
-      for (var i = 3; i <= 8; i++) px(i, 8, sh); px(5, 8, shHL); px(6, 8, shHL);
-      // body rows 9-11
-      for (var r = 9; r <= 11; r++) {
-        for (var i = 1; i <= 10; i++) px(i, r, sh);
-        px(10, r, shDK);
-      }
-      // waist / belt rows 12-13
-      px(0, 12, sk);
-      for (var i = 1; i <= 10; i++) px(i, 12, sh);
-      px(11, 12, sk);
-      px(0, 13, sk); px(1, 13, sk);
-      for (var i = 2; i <= 9; i++) px(i, 13, sh);
-      px(10, 13, sk); px(11, 13, sk);
-      // arm joints row 14
-      px(0, 14, sk); px(1, 14, sk); px(10, 14, sk); px(11, 14, sk);
-
-      // ── LOWER BODY rows 15-21 ──
-      if (sitting) {
-        // wide thighs span cols 2-9, the key "seated" read
-        for (var i = 2; i <= 9; i++) { px(i, 15, pt); px(i, 16, pt); }
-        // knees angle in
-        px(3, 17, pt); px(4, 17, pt); px(5, 17, pt); px(6, 17, pt); px(7, 17, pt); px(8, 17, pt);
-        // lower legs hang down
-        px(3, 18, pt); px(4, 18, pt); px(7, 18, pt); px(8, 18, pt);
-        // feet
-        px(2, 19, shoe); px(3, 19, shoe); px(4, 19, shoe);
-        px(7, 19, shoe); px(8, 19, shoe); px(9, 19, shoe);
-      } else {
-        // standing/walking: two narrow leg columns
-        var lx2 = (frame === 1) ? -1 : 0;
-        var rx2 = (frame === 3) ?  1 : 0;
-        for (var r = 15; r <= 20; r++) {
-          px(2 + lx2, r, pt); px(3 + lx2, r, pt);
-          px(8 + rx2, r, pt); px(9 + rx2, r, pt);
-        }
-        // shoes row 21
-        for (var i = 0; i < 4; i++) {
-          px(1 + lx2 + i, 21, shoe);
-          px(7 + rx2 + i, 21, shoe);
-        }
-      }
-
-      ctx.restore();
-
-      // ── NAME / ROLE LABEL ──
-      ctx.save();
-      ctx.textAlign = 'center';
-      var nameY = oy - 7;
-      if (ch.isAgent && ch.label) {
-        // agents get only the role badge (name === label would duplicate)
-        var badgeW = 30, badgeH = 11;
-        var badgeY = nameY - badgeH + 4;
-        ctx.fillStyle = ch.agentColor;
-        ctx.fillRect(cx - badgeW / 2, badgeY, badgeW, badgeH);
-        ctx.fillStyle = PALETTE.paper;
-        ctx.font = '6px "Press Start 2P", monospace';
-        ctx.fillText(ch.label, cx, badgeY + badgeH - 2);
-      } else {
-        ctx.fillStyle = PALETTE.inkA(0.88);
-        ctx.font = '6px "Press Start 2P", monospace';
-        ctx.fillText(ch.name, cx, nameY);
-      }
-      ctx.restore();
-    }
-
-    // ── DRAW SPEECH BUBBLE ──────────────────────────────
-    function drawBubble(ctx, b) {
-      var ch = getChar(b.charId);
-      if (!ch) return;
-
-      var alpha = b.age > b.fadeStart
-        ? 1.0 - (b.age - b.fadeStart) / (b.duration - b.fadeStart)
-        : 1.0;
-      if (alpha <= 0) return;
-
-      var pos = iso(ch.x, ch.y);
-      var headTop = pos.y - 22 * 3;
-
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.font = '16px "VT323", monospace';
-      var textW = ctx.measureText(b.text).width;
-      var padX = 8;
-      var bw = textW + padX * 2;
-      var bh = 26;
-      var bx3 = pos.x - bw / 2;
-      var by3 = headTop - bh - 10;
-
-      ctx.fillStyle = PALETTE.ink;
-      ctx.fillRect(bx3, by3, bw, bh);
-      ctx.fillStyle = PALETTE.line;
-      ctx.strokeStyle = PALETTE.line;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(bx3, by3, bw, bh);
-
-      // tail
-      ctx.fillStyle = PALETTE.ink;
-      ctx.beginPath();
-      ctx.moveTo(pos.x - 4, by3 + bh);
-      ctx.lineTo(pos.x + 4, by3 + bh);
-      ctx.lineTo(pos.x, by3 + bh + 8);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = PALETTE.line;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.fillStyle = PALETTE.paper;
-      ctx.textAlign = 'center';
-      ctx.fillText(b.text, pos.x, by3 + bh - 7);
-
-      ctx.restore();
-    }
-
-    // ── MAIN DRAW ────────────────────────────────────────
-    function draw(ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      var wallH = 48;
-
-      // ── BACK WALLS ──────────────────────────────────
-      ctx.fillStyle = PALETTE.ramp(.22);
-      for (var gx2 = 0; gx2 < 12; gx2++) {
-        var p0 = iso(gx2, 0);
-        var p1 = iso(gx2 + 1, 0);
-        ctx.beginPath();
-        ctx.moveTo(p0.x, p0.y - wallH);
-        ctx.lineTo(p1.x, p1.y - wallH);
-        ctx.lineTo(p1.x, p1.y);
-        ctx.lineTo(p0.x, p0.y);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.fillStyle = PALETTE.ramp(.28);
-      for (var gy2 = 0; gy2 < 8; gy2++) {
-        var lp0 = iso(0, gy2);
-        var lp1 = iso(0, gy2 + 1);
-        ctx.beginPath();
-        ctx.moveTo(lp0.x, lp0.y - wallH);
-        ctx.lineTo(lp1.x, lp1.y - wallH);
-        ctx.lineTo(lp1.x, lp1.y);
-        ctx.lineTo(lp0.x, lp0.y);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      // (awards drawn after glass walls below)
-
-      // ── FLOOR TILES (sorted by gx+gy painter order) ──
-      var tiles = [];
-      for (var row = 0; row < 8; row++) {
-        for (var col = 0; col < 12; col++) {
-          tiles.push({ gx: col, gy: row, sort: col + row });
-        }
-      }
-      tiles.sort(function(a, b) { return a.sort - b.sort; });
-
-      tiles.forEach(function(t) {
-        var tc = TILE_COLORS[roomAt(t.gx, t.gy)];
-        drawTile(ctx, t.gx, t.gy, tc);
-      });
-
-      // ── ROOM DIVIDERS (glass walls) ──────────────────
-      ctx.save();
-      ctx.strokeStyle = 'rgba(160,160,180,0.35)';
-      ctx.lineWidth = 2;
-
-      function drawGlassWall(gx3, gy3, gx4, gy4) {
-        var pp0 = iso(gx3, gy3);
-        var pp1 = iso(gx4, gy4);
-        ctx.beginPath();
-        ctx.moveTo(pp0.x, pp0.y - wallH);
-        ctx.lineTo(pp0.x, pp0.y);
-        ctx.lineTo(pp1.x, pp1.y);
-        ctx.lineTo(pp1.x, pp1.y - wallH);
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(160,160,200,0.08)';
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      drawGlassWall(3, 0, 3, 3);
-      drawGlassWall(0, 3, 3, 3);
-      drawGlassWall(9, 0, 9, 3);
-      drawGlassWall(9, 3, 12, 3);
-
-      ctx.restore();
-
-      // ── WALL PLAQUES ─────────────────────────────────
-      // Plaques on the interior face of the gx=9 glass wall
-      var awards = [
-        { gy: 0.55, lines: ['SEEN', 'IT'], color: PALETTE.ink },
-        { gy: 1.55, lines: ['NO', 'NOTES'], color: PALETTE.ink },
-        { gy: 2.45, lines: ['FREE', 'TO RUN'], color: PALETTE.ink }
-      ];
-      ctx.save();
-      ctx.font = '5px "Press Start 2P", monospace';
-      ctx.textAlign = 'center';
-      awards.forEach(function(a) {
-        var ap = iso(9.18, a.gy + 0.3);
-        var aw = 30, ah = 18;
-        var ax = ap.x - aw / 2;
-        var ay = ap.y - wallH + 8;
-        ctx.fillStyle = PALETTE.paper;
-        ctx.fillRect(ax, ay, aw, ah);
-        ctx.strokeStyle = a.color;
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(ax, ay, aw, ah);
-        ctx.fillStyle = a.color;
-        ctx.fillText(a.lines[0], ap.x, ay + 8);
-        ctx.fillText(a.lines[1], ap.x, ay + 15);
-      });
-      ctx.restore();
-
-      // ── FURNITURE ────────────────────────────────────
-
-      // Conference table
-      drawBox(ctx, 0.6, 0.7, 1.8, 0.8, 12, PALETTE.ramp(.34), PALETTE.ramp(.46), PALETTE.ramp(.56));
-      // Conf chairs
-      drawBox(ctx, 0.5, 0.5, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
-      drawBox(ctx, 2.1, 0.5, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
-      drawBox(ctx, 0.5, 1.4, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
-      drawBox(ctx, 2.1, 1.4, 0.4, 0.4, 8, PALETTE.ramp(.30), PALETTE.ramp(.42), PALETTE.ramp(.42));
-
-      // Bullpen desks
-      var desks = [[3,2.8],[5,2.8],[3,4.3],[5,4.3],[8,2.8],[10,2.8]];
-      desks.forEach(function(d) {
-        drawBox(ctx, d[0], d[1], 0.9, 0.6, 10, PALETTE.ramp(.34), PALETTE.ramp(.46), PALETTE.ramp(.56));
-        // monitor
-        var mp = iso(d[0] + 0.35, d[1] + 0.1);
-        ctx.fillStyle = PALETTE.paper;
-        ctx.fillRect(mp.x - 9, mp.y - 26, 18, 16);
-        ctx.fillStyle = PALETTE.inkA(0.28);
-        ctx.fillRect(mp.x - 7, mp.y - 24, 14, 12);
-      });
-
-      // BOT-4 corner desk
-      drawBox(ctx, 9.8, 0.6, 1.2, 0.7, 12, PALETTE.ramp(.38), PALETTE.ramp(.50), PALETTE.ramp(.50));
-
-      // Reception desk
-      drawBox(ctx, 4.8, 5.2, 1.0, 0.6, 12, PALETTE.ramp(.32), PALETTE.ramp(.44), PALETTE.ramp(.44));
-      drawBox(ctx, 5.8, 5.0, 0.8, 0.6, 12, PALETTE.ramp(.32), PALETTE.ramp(.44), PALETTE.ramp(.44));
-
-      // Whiteboard
-      drawBox(ctx, 0.05, 4.2, 0.08, 0.8, 20, PALETTE.ink, PALETTE.ink, PALETTE.line);
-      var wb = iso(0.1, 4.5);
-      ctx.fillStyle = PALETTE.accent;
-      ctx.fillRect(wb.x, wb.y - 30, 3, 2);
-      ctx.fillRect(wb.x + 1, wb.y - 26, 2, 2);
-      ctx.fillStyle = PALETTE.ink;
-      ctx.fillRect(wb.x + 2, wb.y - 22, 4, 2);
-
-      // Water cooler
-      drawBox(ctx, 7.3, 6.3, 0.3, 0.3, 16, PALETTE.ramp(.38), PALETTE.ramp(.50), PALETTE.ramp(.50));
-      var wcTop = iso(7.45, 6.45);
-      ctx.fillStyle = PALETTE.ink;
-      ctx.fillRect(wcTop.x - 3, wcTop.y - 20, 6, 6);
-
-      // ── ROOM LABELS ──────────────────────────────────
-      ctx.save();
-      ctx.font = '6px "Press Start 2P", monospace';
-      ctx.textAlign = 'center';
-
-      var confLabel = iso(1.5, 2.6);
-      ctx.fillStyle = PALETTE.inkA(0.75);
-      ctx.fillText('CONF ROOM', confLabel.x, confLabel.y);
-
-      var mLabel = iso(10.5, 2.6);
-      ctx.fillStyle = PALETTE.inkA(0.75);
-      ctx.fillText('VIEWING', mLabel.x, mLabel.y);
-      ctx.fillText('ROOM', mLabel.x, mLabel.y + 10);
-
-      var recLabel = iso(5.5, 6.4);
-      ctx.fillStyle = PALETTE.inkA(0.75);
-      ctx.fillText('RECEPTION', recLabel.x, recLabel.y);
-
-      ctx.restore();
-
-      // ── CHARACTERS + BUBBLES (sorted by x+y) ─────────
-      var sortedChars = CHARS.slice().sort(function(a, b) {
-        return (a.x + a.y) - (b.x + b.y);
-      });
-
-      sortedChars.forEach(function(ch) {
-        ctx.save();
-        drawChar(ctx, ch);
-        ctx.restore();
-      });
-
-      bubbles.forEach(function(b) {
-        drawBubble(ctx, b);
-      });
-    }
-
-    // ── UPDATE ───────────────────────────────────────────
-    function update(dt) {
-      CHARS.forEach(function(ch) { updateChar(ch, dt); });
-
-      bubbles = bubbles.filter(function(b) {
-        b.age += dt;
-        return b.age < b.duration;
-      });
-    }
-
-    // ── ANIMATION LOOP ───────────────────────────────────
-    function drawFrame() {
-      var ctx = canvas.getContext('2d');
-      ctx.save();
-      ctx.scale(DPR, DPR);
-      draw(ctx);
-      ctx.restore();
-    }
-
-    function stopLoop() {
-      if (animHandle) {
-        window.cancelAnimationFrame(animHandle);
-        animHandle = null;
-      }
-    }
-
-    function startLoop() {
-      if (animHandle || !pageCanAnimate() || !officeVisible) return;
-      lastTime = performance.now();
-      animHandle = window.requestAnimationFrame(loop);
-    }
-
-    function syncOfficeMotion() {
-      if (!officeObserver) {
-        updateOfficeVisibility();
-      }
-      if (pageCanAnimate() && officeVisible) {
-        startLoop();
-        return;
-      }
-      stopLoop();
-      drawFrame();
-    }
-
-    function loop(now) {
-      var dt = Math.min(now - lastTime, 50);
-      lastTime = now;
-      update(dt);
-      drawFrame();
-      animHandle = pageCanAnimate() && officeVisible ? window.requestAnimationFrame(loop) : null;
-    }
-
-    document.addEventListener('visibilitychange', syncOfficeMotion);
-    if (motionQuery.addEventListener) {
-      motionQuery.addEventListener('change', syncOfficeMotion);
-    } else if (motionQuery.addListener) {
-      motionQuery.addListener(syncOfficeMotion);
-    }
-
-    if (window.IntersectionObserver) {
-      officeObserver = new IntersectionObserver(function(entries) {
-        officeVisible = !!(entries[0] && entries[0].isIntersecting);
-        syncOfficeMotion();
-      }, { threshold: 0.12 });
-      officeObserver.observe(canvas);
-    } else {
-      updateOfficeVisibility();
-      window.addEventListener('scroll', syncOfficeMotion, { passive: true });
-      window.addEventListener('resize', syncOfficeMotion);
-    }
-
-    window.addEventListener('resize', function() {
-      resize();
-      drawFrame();
     });
-
-    resize();
-    drawFrame();
-    syncOfficeMotion();
-
-  })(); // end isometric scene IIFE
-
+  });
 })();
 </script>
-<script>
-var x0=["BN","BN","BN","BN","BN","BN","BN","BN","BN","S","B","S","WS","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","B","B","B","S","WS","ON","ON","ET","ET","ET","ON","ON","ON","ON","ON","ON","CS","ON","CS","ON","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","ON","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","ON","ON","ON","BN","BN","BN","BN","BN","BN","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","CS","ON","ET","ET","ET","ET","ON","ON","ON","ON","L","ON","ON","ON","ON","ON","ET","ET","EN","EN","ON","L","ON","ON","ON","EN","L","ON","ON","ON","ON","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","ON","L","L","L","L","L","L","L","L"],g0=["AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","CS","AL","ON","ON","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AN","AN","AN","AN","AN","AN","AN","AN","AN","AN","ET","AN","AN","AL","AL","AL","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","ON","NSM","NSM","NSM","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL"];function m0(O){if(O<=255)return x0[O];if(1424<=O&&O<=1524)return"R";if(1536<=O&&O<=1791)return g0[O&255];if(1792<=O&&O<=2220)return"AL";return"L"}function r0(O){let _=O.length;if(_===0)return null;let J=Array(_),Y=0;for(let V=0;V<_;V++){let $=m0(O.charCodeAt(V));if($==="R"||$==="AL"||$==="AN")Y++;J[V]=$}if(Y===0)return null;let X=_/Y<0.3?0:1,R=new Int8Array(_);for(let V=0;V<_;V++)R[V]=X;let Z=X&1?"R":"L",Q=Z,f=Q;for(let V=0;V<_;V++)if(J[V]==="NSM")J[V]=f;else f=J[V];f=Q;for(let V=0;V<_;V++){let $=J[V];if($==="EN")J[V]=f==="AL"?"AN":"EN";else if($==="R"||$==="L"||$==="AL")f=$}for(let V=0;V<_;V++)if(J[V]==="AL")J[V]="R";for(let V=1;V<_-1;V++){if(J[V]==="ES"&&J[V-1]==="EN"&&J[V+1]==="EN")J[V]="EN";if(J[V]==="CS"&&(J[V-1]==="EN"||J[V-1]==="AN")&&J[V+1]===J[V-1])J[V]=J[V-1]}for(let V=0;V<_;V++){if(J[V]!=="EN")continue;let $;for($=V-1;$>=0&&J[$]==="ET";$--)J[$]="EN";for($=V+1;$<_&&J[$]==="ET";$++)J[$]="EN"}for(let V=0;V<_;V++){let $=J[V];if($==="WS"||$==="ES"||$==="ET"||$==="CS")J[V]="ON"}f=Q;for(let V=0;V<_;V++){let $=J[V];if($==="EN")J[V]=f==="L"?"L":"EN";else if($==="R"||$==="L")f=$}for(let V=0;V<_;V++){if(J[V]!=="ON")continue;let $=V+1;while($<_&&J[$]==="ON")$++;let u=V>0?J[V-1]:Q,q=$<_?J[$]:Q,D=u!=="L"?"R":"L";if(D===(q!=="L"?"R":"L"))for(let K=V;K<$;K++)J[K]=D;V=$-1}for(let V=0;V<_;V++)if(J[V]==="ON")J[V]=Z;for(let V=0;V<_;V++){let $=J[V];if((R[V]&1)===0){if($==="R")R[V]++;else if($==="AN"||$==="EN")R[V]+=2}else if($==="L"||$==="AN"||$==="EN")R[V]++}return R}function u0(O,_){let J=r0(O);if(J===null)return null;let Y=new Int8Array(_.length);for(let X=0;X<_.length;X++)Y[X]=J[_[X]];return Y}var a0=/[ \t\n\r\f]+/g,s0=/[\t\n\r\f]| {2,}|^ | $/;function d0(O){let _=O??"normal";return _==="pre-wrap"?{mode:_,preserveOrdinarySpaces:!0,preserveHardBreaks:!0}:{mode:_,preserveOrdinarySpaces:!1,preserveHardBreaks:!1}}function i0(O){if(!s0.test(O))return O;let _=O.replace(a0," ");if(_.charCodeAt(0)===32)_=_.slice(1);if(_.length>0&&_.charCodeAt(_.length-1)===32)_=_.slice(0,-1);return _}function t0(O){if(!/[\r\f]/.test(O))return O.replace(/\r\n/g,`
-`);return O.replace(/\r\n/g,`
-`).replace(/[\r\f]/g,`
-`)}var d=null,V0;function n0(){if(d===null)d=new Intl.Segmenter(V0,{granularity:"word"});return d}function z0(){d=null}function j0(O){let _=O&&O.length>0?O:void 0;if(V0===_)return;V0=_,d=null}var e0=/\p{Script=Arabic}/u,O0=/\p{M}/u,b0=/\p{Nd}/u;function X0(O){return e0.test(O)}function p(O){for(let _ of O){let J=_.codePointAt(0);if(J>=19968&&J<=40959||J>=13312&&J<=19903||J>=131072&&J<=173791||J>=173824&&J<=177983||J>=177984&&J<=178207||J>=178208&&J<=183983||J>=183984&&J<=191471||J>=196608&&J<=201551||J>=63744&&J<=64255||J>=194560&&J<=195103||J>=12288&&J<=12351||J>=12352&&J<=12447||J>=12448&&J<=12543||J>=44032&&J<=55215||J>=65280&&J<=65519)return!0}return!1}var $0=new Set(["，","．","！","：","；","？","、","。","・","）","〕","〉","》","」","』","】","〗","〙","〛","ー","々","〻","ゝ","ゞ","ヽ","ヾ"]),i=new Set(['"',"(","[","{","“","‘","«","‹","（","〔","〈","《","「","『","【","〖","〘","〚"]),Q0=new Set(["'","’"]),r=new Set([".",",","!","?",":",";","،","؛","؟","।","॥","၊","။","၌","၍","၏",")","]","}","%",'"',"”","’","»","›","…"]),OO=new Set([":",".","،","؛"]),_O=new Set(["၏"]),JO=new Set(["”","’","»","›","」","』","】","》","〉","〕","）"]);function RO(O){if(q0(O))return!0;let _=!1;for(let J of O){if(r.has(J)){_=!0;continue}if(_&&O0.test(J))continue;return!1}return _}function VO(O){for(let _ of O)if(!$0.has(_)&&!r.has(_))return!1;return O.length>0}function XO(O){if(q0(O))return!0;for(let _ of O)if(!i.has(_)&&!Q0.has(_)&&!O0.test(_))return!1;return O.length>0}function q0(O){let _=!1;for(let J of O){if(J==="\\"||O0.test(J))continue;if(i.has(J)||r.has(J)||Q0.has(J)){_=!0;continue}return!1}return _}function YO(O){let _=Array.from(O),J=_.length;while(J>0){let Y=_[J-1];if(O0.test(Y)){J--;continue}if(i.has(Y)||Q0.has(Y)){J--;continue}break}if(J<=0||J===_.length)return null;return{head:_.slice(0,J).join(""),tail:_.slice(J).join("")}}function ZO(O,_){if(O.length===0)return!1;for(let J of O)if(J!==_)return!1;return!0}function $O(O){if(!X0(O)||O.length===0)return!1;return OO.has(O[O.length-1])}function QO(O){if(O.length===0)return!1;return _O.has(O[O.length-1])}function qO(O){if(O.length<2||O[0]!==" ")return null;let _=O.slice(1);if(/^\p{M}+$/u.test(_))return{space:" ",marks:_};return null}function D0(O){for(let _=O.length-1;_>=0;_--){let J=O[_];if(JO.has(J))return!0;if(!r.has(J))return!1}return!1}function DO(O,_){if(_.preserveOrdinarySpaces||_.preserveHardBreaks){if(O===" ")return"preserved-space";if(O==="\t")return"tab";if(_.preserveHardBreaks&&O===`
-`)return"hard-break"}if(O===" ")return"space";if(O===" "||O===" "||O==="⁠"||O==="\uFEFF")return"glue";if(O==="​")return"zero-width-break";if(O==="­")return"soft-hyphen";return"text"}function NO(O,_,J,Y){let X=[],R=null,Z="",Q=J,f=!1,V=0;for(let $ of O){let u=DO($,Y),q=u==="text"&&_;if(R!==null&&u===R&&q===f){Z+=$,V+=$.length;continue}if(R!==null)X.push({text:Z,isWordLike:f,kind:R,start:Q});R=u,Z=$,Q=J+V,f=q,V+=$.length}if(R!==null)X.push({text:Z,isWordLike:f,kind:R,start:Q});return X}function Y0(O){return O==="space"||O==="preserved-space"||O==="zero-width-break"||O==="hard-break"}var fO=/^[A-Za-z][A-Za-z0-9+.-]*:$/;function HO(O,_){let J=O.texts[_];if(J.startsWith("www."))return!0;return fO.test(J)&&_+1<O.len&&O.kinds[_+1]==="text"&&O.texts[_+1]==="//"}function UO(O){return O.includes("?")&&(O.includes("://")||O.startsWith("www."))}function MO(O){let _=O.texts.slice(),J=O.isWordLike.slice(),Y=O.kinds.slice(),X=O.starts.slice();for(let Z=0;Z<O.len;Z++){if(Y[Z]!=="text"||!HO(O,Z))continue;let Q=Z+1;while(Q<O.len&&!Y0(Y[Q])){_[Z]+=_[Q],J[Z]=!0;let f=_[Q].includes("?");if(Y[Q]="text",_[Q]="",Q++,f)break}}let R=0;for(let Z=0;Z<_.length;Z++){let Q=_[Z];if(Q.length===0)continue;if(R!==Z)_[R]=Q,J[R]=J[Z],Y[R]=Y[Z],X[R]=X[Z];R++}return _.length=R,J.length=R,Y.length=R,X.length=R,{len:R,texts:_,isWordLike:J,kinds:Y,starts:X}}function CO(O){let _=[],J=[],Y=[],X=[];for(let R=0;R<O.len;R++){let Z=O.texts[R];if(_.push(Z),J.push(O.isWordLike[R]),Y.push(O.kinds[R]),X.push(O.starts[R]),!UO(Z))continue;let Q=R+1;if(Q>=O.len||Y0(O.kinds[Q]))continue;let f="",V=O.starts[Q],$=Q;while($<O.len&&!Y0(O.kinds[$]))f+=O.texts[$],$++;if(f.length>0)_.push(f),J.push(!0),Y.push("text"),X.push(V),R=$-1}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}var FO=new Set([":","-","/","×",",",".","+","–","—"]),K0=/^[A-Za-z0-9_]+[,:;]*$/,vO=/[,:;]+$/;function E0(O){for(let _ of O)if(b0.test(_))return!0;return!1}function Z0(O){if(O.length===0)return!1;for(let _ of O){if(b0.test(_)||FO.has(_))continue;return!1}return!0}function uO(O){let _=[],J=[],Y=[],X=[];for(let R=0;R<O.len;R++){let Z=O.texts[R],Q=O.kinds[R];if(Q==="text"&&Z0(Z)&&E0(Z)){let f=Z,V=R+1;while(V<O.len&&O.kinds[V]==="text"&&Z0(O.texts[V]))f+=O.texts[V],V++;_.push(f),J.push(!0),Y.push("text"),X.push(O.starts[R]),R=V-1;continue}_.push(Z),J.push(O.isWordLike[R]),Y.push(Q),X.push(O.starts[R])}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}function KO(O){let _=[],J=[],Y=[],X=[];for(let R=0;R<O.len;R++){let Z=O.texts[R],Q=O.kinds[R],f=O.isWordLike[R];if(Q==="text"&&f&&K0.test(Z)){let V=Z,$=R+1;while(vO.test(V)&&$<O.len&&O.kinds[$]==="text"&&O.isWordLike[$]&&K0.test(O.texts[$]))V+=O.texts[$],$++;_.push(V),J.push(!0),Y.push("text"),X.push(O.starts[R]),R=$-1;continue}_.push(Z),J.push(f),Y.push(Q),X.push(O.starts[R])}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}function zO(O){let _=[],J=[],Y=[],X=[];for(let R=0;R<O.len;R++){let Z=O.texts[R];if(O.kinds[R]==="text"&&Z.includes("-")){let Q=Z.split("-"),f=Q.length>1;for(let V=0;V<Q.length;V++){let $=Q[V];if(!f)break;if($.length===0||!E0($)||!Z0($))f=!1}if(f){let V=0;for(let $=0;$<Q.length;$++){let u=Q[$],q=$<Q.length-1?`${u}-`:u;_.push(q),J.push(!0),Y.push("text"),X.push(O.starts[R]+V),V+=q.length}continue}}_.push(Z),J.push(O.isWordLike[R]),Y.push(O.kinds[R]),X.push(O.starts[R])}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}function jO(O){let _=[],J=[],Y=[],X=[],R=0;while(R<O.len){let Z=O.texts[R],Q=O.isWordLike[R],f=O.kinds[R],V=O.starts[R];if(f==="glue"){let $=Z,u=V;R++;while(R<O.len&&O.kinds[R]==="glue")$+=O.texts[R],R++;if(R<O.len&&O.kinds[R]==="text")Z=$+O.texts[R],Q=O.isWordLike[R],f="text",V=u,R++;else{_.push($),J.push(!1),Y.push("glue"),X.push(u);continue}}else R++;if(f==="text")while(R<O.len&&O.kinds[R]==="glue"){let $="";while(R<O.len&&O.kinds[R]==="glue")$+=O.texts[R],R++;if(R<O.len&&O.kinds[R]==="text"){Z+=$+O.texts[R],Q=Q||O.isWordLike[R],R++;continue}Z+=$}_.push(Z),J.push(Q),Y.push(f),X.push(V)}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}function bO(O){let _=O.texts.slice(),J=O.isWordLike.slice(),Y=O.kinds.slice(),X=O.starts.slice();for(let R=0;R<_.length-1;R++){if(Y[R]!=="text"||Y[R+1]!=="text")continue;if(!p(_[R])||!p(_[R+1]))continue;let Z=YO(_[R]);if(Z===null)continue;_[R]=Z.head,_[R+1]=Z.tail+_[R+1],X[R+1]=X[R]+Z.head.length}return{len:_.length,texts:_,isWordLike:J,kinds:Y,starts:X}}function EO(O,_,J){let Y=n0(),X=0,R=[],Z=[],Q=[],f=[];for(let q of Y.segment(O))for(let D of NO(q.segment,q.isWordLike??!1,q.index,J)){let b=D.kind==="text";if(_.carryCJKAfterClosingQuote&&b&&X>0&&Q[X-1]==="text"&&p(D.text)&&p(R[X-1])&&D0(R[X-1]))R[X-1]+=D.text,Z[X-1]=Z[X-1]||D.isWordLike;else if(b&&X>0&&Q[X-1]==="text"&&VO(D.text)&&p(R[X-1]))R[X-1]+=D.text,Z[X-1]=Z[X-1]||D.isWordLike;else if(b&&X>0&&Q[X-1]==="text"&&QO(R[X-1]))R[X-1]+=D.text,Z[X-1]=Z[X-1]||D.isWordLike;else if(b&&X>0&&Q[X-1]==="text"&&D.isWordLike&&X0(D.text)&&$O(R[X-1]))R[X-1]+=D.text,Z[X-1]=!0;else if(b&&!D.isWordLike&&X>0&&Q[X-1]==="text"&&D.text.length===1&&D.text!=="-"&&D.text!=="—"&&ZO(R[X-1],D.text))R[X-1]+=D.text;else if(b&&!D.isWordLike&&X>0&&Q[X-1]==="text"&&(RO(D.text)||D.text==="-"&&Z[X-1]))R[X-1]+=D.text;else R[X]=D.text,Z[X]=D.isWordLike,Q[X]=D.kind,f[X]=D.start,X++}for(let q=1;q<X;q++)if(Q[q]==="text"&&!Z[q]&&q0(R[q])&&Q[q-1]==="text")R[q-1]+=R[q],Z[q-1]=Z[q-1]||Z[q],R[q]="";for(let q=X-2;q>=0;q--)if(Q[q]==="text"&&!Z[q]&&XO(R[q])){let D=q+1;while(D<X&&R[D]==="")D++;if(D<X&&Q[D]==="text")R[D]=R[q]+R[D],f[D]=f[q],R[q]=""}let V=0;for(let q=0;q<X;q++){let D=R[q];if(D.length===0)continue;if(V!==q)R[V]=D,Z[V]=Z[q],Q[V]=Q[q],f[V]=f[q];V++}R.length=V,Z.length=V,Q.length=V,f.length=V;let $=jO({len:V,texts:R,isWordLike:Z,kinds:Q,starts:f}),u=bO(KO(zO(uO(CO(MO($))))));for(let q=0;q<u.len-1;q++){let D=qO(u.texts[q]);if(D===null)continue;if(u.kinds[q]!=="space"&&u.kinds[q]!=="preserved-space"||u.kinds[q+1]!=="text"||!X0(u.texts[q+1]))continue;u.texts[q]=D.space,u.isWordLike[q]=!1,u.kinds[q]=u.kinds[q]==="preserved-space"?"preserved-space":"space",u.texts[q+1]=D.marks+u.texts[q+1],u.starts[q+1]=u.starts[q]+D.space.length}return u}function GO(O,_){if(O.len===0)return[];if(!_.preserveHardBreaks)return[{startSegmentIndex:0,endSegmentIndex:O.len,consumedEndSegmentIndex:O.len}];let J=[],Y=0;for(let X=0;X<O.len;X++){if(O.kinds[X]!=="hard-break")continue;J.push({startSegmentIndex:Y,endSegmentIndex:X,consumedEndSegmentIndex:X+1}),Y=X+1}if(Y<O.len)J.push({startSegmentIndex:Y,endSegmentIndex:O.len,consumedEndSegmentIndex:O.len});return J}function N0(O,_,J="normal"){let Y=d0(J),X=Y.mode==="pre-wrap"?t0(O):i0(O);if(X.length===0)return{normalized:X,chunks:[],len:0,texts:[],isWordLike:[],kinds:[],starts:[]};let R=EO(X,_,Y);return{normalized:X,chunks:GO(R,Y),...R}}var a=null,f0=new Map,s=null,PO=/\p{Emoji_Presentation}/u,AO=/[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u20E3]/u,_0=null,H0=new Map;function U0(){if(a!==null)return a;if(typeof OffscreenCanvas<"u")return a=new OffscreenCanvas(1,1).getContext("2d"),a;if(typeof document<"u")return a=document.createElement("canvas").getContext("2d"),a;throw Error("Text measurement requires OffscreenCanvas or a DOM canvas context.")}function BO(O){let _=f0.get(O);if(!_)_=new Map,f0.set(O,_);return _}function x(O,_){let J=_.get(O);if(J===void 0)J={width:U0().measureText(O).width,containsCJK:p(O)},_.set(O,J);return J}function h(){if(s!==null)return s;if(typeof navigator>"u")return s={lineFitEpsilon:0.005,carryCJKAfterClosingQuote:!1,preferPrefixWidthsForBreakableRuns:!1,preferEarlySoftHyphenBreak:!1},s;let O=navigator.userAgent,J=navigator.vendor==="Apple Computer, Inc."&&O.includes("Safari/")&&!O.includes("Chrome/")&&!O.includes("Chromium/")&&!O.includes("CriOS/")&&!O.includes("FxiOS/")&&!O.includes("EdgiOS/"),Y=O.includes("Chrome/")||O.includes("Chromium/")||O.includes("CriOS/")||O.includes("Edg/");return s={lineFitEpsilon:J?0.015625:0.005,carryCJKAfterClosingQuote:Y,preferPrefixWidthsForBreakableRuns:J,preferEarlySoftHyphenBreak:J},s}function TO(O){let _=O.match(/(\d+(?:\.\d+)?)\s*px/);return _?parseFloat(_[1]):16}function M0(){if(_0===null)_0=new Intl.Segmenter(void 0,{granularity:"grapheme"});return _0}function wO(O){return PO.test(O)||O.includes("️")}function G0(O){return AO.test(O)}function yO(O,_){let J=H0.get(O);if(J!==void 0)return J;let Y=U0();Y.font=O;let X=Y.measureText("\uD83D\uDE00").width;if(J=0,X>_+0.5&&typeof document<"u"&&document.body!==null){let R=document.createElement("span");R.style.font=O,R.style.display="inline-block",R.style.visibility="hidden",R.style.position="absolute",R.textContent="\uD83D\uDE00",document.body.appendChild(R);let Z=R.getBoundingClientRect().width;if(document.body.removeChild(R),X-Z>0.5)J=X-Z}return H0.set(O,J),J}function LO(O){let _=0,J=M0();for(let Y of J.segment(O))if(wO(Y.segment))_++;return _}function WO(O,_){if(_.emojiCount===void 0)_.emojiCount=LO(O);return _.emojiCount}function g(O,_,J){if(J===0)return _.width;return _.width-WO(O,_)*J}function P0(O,_,J,Y){if(_.graphemeWidths!==void 0)return _.graphemeWidths;let X=[],R=M0();for(let Z of R.segment(O)){let Q=x(Z.segment,J);X.push(g(Z.segment,Q,Y))}return _.graphemeWidths=X.length>1?X:null,_.graphemeWidths}function A0(O,_,J,Y){if(_.graphemePrefixWidths!==void 0)return _.graphemePrefixWidths;let X=[],R=M0(),Z="";for(let Q of R.segment(O)){Z+=Q.segment;let f=x(Z,J);X.push(g(Z,f,Y))}return _.graphemePrefixWidths=X.length>1?X:null,_.graphemePrefixWidths}function B0(O,_){let J=U0();J.font=O;let Y=BO(O),X=TO(O),R=_?yO(O,X):0;return{cache:Y,fontSize:X,emojiCorrection:R}}function T0(){f0.clear(),H0.clear(),_0=null}function m(O){return O==="space"||O==="preserved-space"||O==="tab"||O==="zero-width-break"||O==="soft-hyphen"}function SO(O){return O==="space"}function w0(O,_){if(_<=0)return 0;let J=O%_;if(Math.abs(J)<=0.000001)return _;return _-J}function t(O,_,J,Y){if(!Y||_===null)return O[J];return _[J]-(J>0?_[J-1]:0)}function y0(O,_,J,Y,X,R){let Z=0,Q=_;while(Z<O.length){let f=R?_+O[Z]:Q+O[Z];if((Z+1<O.length?f+X:f)>J+Y)break;Q=f,Z++}return{fitCount:Z,fittedWidth:Q}}function L0(O,_){for(let J=0;J<O.chunks.length;J++){let Y=O.chunks[J];if(_<Y.consumedEndSegmentIndex)return J}return-1}function kO(O,_){let{segmentIndex:J,graphemeIndex:Y}=_;if(J>=O.widths.length)return null;if(Y>0)return _;let X=L0(O,J);if(X<0)return null;let R=O.chunks[X];if(R.startSegmentIndex===R.endSegmentIndex&&J===R.startSegmentIndex)return{segmentIndex:J,graphemeIndex:0};if(J<R.startSegmentIndex)J=R.startSegmentIndex;while(J<R.endSegmentIndex){let Z=O.kinds[J];if(Z!=="space"&&Z!=="zero-width-break"&&Z!=="soft-hyphen")return{segmentIndex:J,graphemeIndex:0};J++}if(R.consumedEndSegmentIndex>=O.widths.length)return null;return{segmentIndex:R.consumedEndSegmentIndex,graphemeIndex:0}}function W0(O,_){if(O.simpleLineWalkFastPath)return IO(O,_);return J0(O,_)}function IO(O,_){let{widths:J,kinds:Y,breakableWidths:X,breakablePrefixWidths:R}=O;if(J.length===0)return 0;let Z=h(),Q=Z.lineFitEpsilon,f=0,V=0,$=!1;function u(q){let D=J[q];if(D>_&&X[q]!==null){let b=X[q],K=R[q]??null;V=0;for(let j=0;j<b.length;j++){let B=t(b,K,j,Z.preferPrefixWidthsForBreakableRuns);if(V>0&&V+B>_+Q)f++,V=B;else{if(V===0)f++;V+=B}}}else V=D,f++;$=!0}for(let q=0;q<J.length;q++){let D=J[q],b=Y[q];if(!$){u(q);continue}let K=V+D;if(K>_+Q){if(SO(b))continue;V=0,$=!1,u(q);continue}V=K}if(!$)return f+1;return f}function cO(O,_,J){let{widths:Y,kinds:X,breakableWidths:R,breakablePrefixWidths:Z}=O;if(Y.length===0)return 0;let Q=h(),f=Q.lineFitEpsilon,V=0,$=0,u=!1,q=0,D=0,b=0,K=0,j=-1,B=0;function k(){j=-1,B=0}function y(H=b,z=K,W=$){V++,J?.({startSegmentIndex:q,startGraphemeIndex:D,endSegmentIndex:H,endGraphemeIndex:z,width:W}),$=0,u=!1,k()}function A(H,z){u=!0,q=H,D=0,b=H+1,K=0,$=z}function T(H,z,W){u=!0,q=H,D=z,b=H,K=z+1,$=W}function L(H,z){if(!u){A(H,z);return}$+=z,b=H+1,K=0}function C(H,z){if(!m(X[H]))return;j=H+1,B=$-z}function F(H){P(H,0)}function P(H,z){let W=R[H],c=Z[H]??null;for(let I=z;I<W.length;I++){let o=t(W,c,I,Q.preferPrefixWidthsForBreakableRuns);if(!u){T(H,I,o);continue}if($+o>_+f)y(),T(H,I,o);else $+=o,b=H,K=I+1}if(u&&b===H&&K===W.length)b=H+1,K=0}let E=0;while(E<Y.length){let H=Y[E],z=X[E];if(!u){if(H>_&&R[E]!==null)F(E);else A(E,H);C(E,H),E++;continue}if($+H>_+f){if(m(z)){L(E,H),y(E+1,0,$-H),E++;continue}if(j>=0){y(j,0,B);continue}if(H>_&&R[E]!==null){y(),F(E),E++;continue}y();continue}L(E,H),C(E,H),E++}if(u)y();return V}function J0(O,_,J){if(O.simpleLineWalkFastPath)return cO(O,_,J);let{widths:Y,lineEndFitAdvances:X,lineEndPaintAdvances:R,kinds:Z,breakableWidths:Q,breakablePrefixWidths:f,discretionaryHyphenWidth:V,tabStopAdvance:$,chunks:u}=O;if(Y.length===0||u.length===0)return 0;let q=h(),D=q.lineFitEpsilon,b=0,K=0,j=!1,B=0,k=0,y=0,A=0,T=-1,L=0,C=0,F=null;function P(){T=-1,L=0,C=0,F=null}function E(N=y,M=A,v=K){b++,J?.({startSegmentIndex:B,startGraphemeIndex:k,endSegmentIndex:N,endGraphemeIndex:M,width:v}),K=0,j=!1,P()}function H(N,M){j=!0,B=N,k=0,y=N+1,A=0,K=M}function z(N,M,v){j=!0,B=N,k=M,y=N,A=M+1,K=v}function W(N,M){if(!j){H(N,M);return}K+=M,y=N+1,A=0}function c(N,M){if(!m(Z[N]))return;let v=Z[N]==="tab"?0:X[N],w=Z[N]==="tab"?M:R[N];T=N+1,L=K-M+v,C=K-M+w,F=Z[N]}function I(N){o(N,0)}function o(N,M){let v=Q[N],w=f[N]??null;for(let G=M;G<v.length;G++){let l=t(v,w,G,q.preferPrefixWidthsForBreakableRuns);if(!j){z(N,G,l);continue}if(K+l>_+D)E(),z(N,G,l);else K+=l,y=N,A=G+1}if(j&&y===N&&A===v.length)y=N+1,A=0}function S(N){if(F!=="soft-hyphen")return!1;let M=Q[N];if(M===null)return!1;let v=q.preferPrefixWidthsForBreakableRuns?f[N]??M:M,w=v!==M,{fitCount:G,fittedWidth:l}=y0(v,K,_,D,V,w);if(G===0)return!1;if(K=l,y=N,A=G,P(),G===M.length)return y=N+1,A=0,!0;return E(N,G,l+V),o(N,G),!0}function U(N){b++,J?.({startSegmentIndex:N.startSegmentIndex,startGraphemeIndex:0,endSegmentIndex:N.consumedEndSegmentIndex,endGraphemeIndex:0,width:0}),P()}for(let N=0;N<u.length;N++){let M=u[N];if(M.startSegmentIndex===M.endSegmentIndex){U(M);continue}j=!1,K=0,B=M.startSegmentIndex,k=0,y=M.startSegmentIndex,A=0,P();let v=M.startSegmentIndex;while(v<M.endSegmentIndex){let w=Z[v],G=w==="tab"?w0(K,$):Y[v];if(w==="soft-hyphen"){if(j)y=v+1,A=0,T=v+1,L=K+V,C=K+V,F=w;v++;continue}if(!j){if(G>_&&Q[v]!==null)I(v);else H(v,G);c(v,G),v++;continue}if(K+G>_+D){let n=K+(w==="tab"?0:X[v]),e=K+(w==="tab"?G:R[v]);if(F==="soft-hyphen"&&q.preferEarlySoftHyphenBreak&&L<=_+D){E(T,0,C);continue}if(F==="soft-hyphen"&&S(v)){v++;continue}if(m(w)&&n<=_+D){W(v,G),E(v+1,0,e),v++;continue}if(T>=0&&L<=_+D){E(T,0,C);continue}if(G>_&&Q[v]!==null){E(),I(v),v++;continue}E();continue}W(v,G),c(v,G),v++}if(j){let w=T===M.consumedEndSegmentIndex?C:K;E(M.consumedEndSegmentIndex,0,w)}}return b}function S0(O,_,J){let Y=kO(O,_);if(Y===null)return null;if(O.simpleLineWalkFastPath)return oO(O,Y,J);let X=L0(O,Y.segmentIndex);if(X<0)return null;let R=O.chunks[X];if(R.startSegmentIndex===R.endSegmentIndex)return{startSegmentIndex:R.startSegmentIndex,startGraphemeIndex:0,endSegmentIndex:R.consumedEndSegmentIndex,endGraphemeIndex:0,width:0};let{widths:Z,lineEndFitAdvances:Q,lineEndPaintAdvances:f,kinds:V,breakableWidths:$,breakablePrefixWidths:u,discretionaryHyphenWidth:q,tabStopAdvance:D}=O,b=h(),K=b.lineFitEpsilon,j=0,B=!1,k=Y.segmentIndex,y=Y.graphemeIndex,A=k,T=y,L=-1,C=0,F=0,P=null;function E(){L=-1,C=0,F=0,P=null}function H(U=A,N=T,M=j){if(!B)return null;return{startSegmentIndex:k,startGraphemeIndex:y,endSegmentIndex:U,endGraphemeIndex:N,width:M}}function z(U,N){B=!0,A=U+1,T=0,j=N}function W(U,N,M){B=!0,A=U,T=N+1,j=M}function c(U,N){if(!B){z(U,N);return}j+=N,A=U+1,T=0}function I(U,N){if(!m(V[U]))return;let M=V[U]==="tab"?0:Q[U],v=V[U]==="tab"?N:f[U];L=U+1,C=j-N+M,F=j-N+v,P=V[U]}function o(U,N){let M=$[U],v=u[U]??null;for(let w=N;w<M.length;w++){let G=t(M,v,w,b.preferPrefixWidthsForBreakableRuns);if(!B){W(U,w,G);continue}if(j+G>J+K)return H();j+=G,A=U,T=w+1}if(B&&A===U&&T===M.length)A=U+1,T=0;return null}function S(U){if(P!=="soft-hyphen"||L<0)return null;let N=$[U]??null;if(N!==null){let M=b.preferPrefixWidthsForBreakableRuns?u[U]??N:N,v=M!==N,{fitCount:w,fittedWidth:G}=y0(M,j,J,K,q,v);if(w===N.length)return j=G,A=U+1,T=0,E(),null;if(w>0)return H(U,w,G+q)}if(C<=J+K)return H(L,0,F);return null}for(let U=Y.segmentIndex;U<R.endSegmentIndex;U++){let N=V[U],M=U===Y.segmentIndex?Y.graphemeIndex:0,v=N==="tab"?w0(j,D):Z[U];if(N==="soft-hyphen"&&M===0){if(B)A=U+1,T=0,L=U+1,C=j+q,F=j+q,P=N;continue}if(!B){if(M>0){let G=o(U,M);if(G!==null)return G}else if(v>J&&$[U]!==null){let G=o(U,0);if(G!==null)return G}else z(U,v);I(U,v);continue}if(j+v>J+K){let G=j+(N==="tab"?0:Q[U]),l=j+(N==="tab"?v:f[U]);if(P==="soft-hyphen"&&b.preferEarlySoftHyphenBreak&&C<=J+K)return H(L,0,F);let n=S(U);if(n!==null)return n;if(m(N)&&G<=J+K)return c(U,v),H(U+1,0,l);if(L>=0&&C<=J+K)return H(L,0,F);if(v>J&&$[U]!==null){let e=H();if(e!==null)return e;let v0=o(U,0);if(v0!==null)return v0}return H()}c(U,v),I(U,v)}if(L===R.consumedEndSegmentIndex&&T===0)return H(R.consumedEndSegmentIndex,0,F);return H(R.consumedEndSegmentIndex,0,j)}function oO(O,_,J){let{widths:Y,kinds:X,breakableWidths:R,breakablePrefixWidths:Z}=O,Q=h(),f=Q.lineFitEpsilon,V=0,$=!1,u=_.segmentIndex,q=_.graphemeIndex,D=u,b=q,K=-1,j=0;function B(C=D,F=b,P=V){if(!$)return null;return{startSegmentIndex:u,startGraphemeIndex:q,endSegmentIndex:C,endGraphemeIndex:F,width:P}}function k(C,F){$=!0,D=C+1,b=0,V=F}function y(C,F,P){$=!0,D=C,b=F+1,V=P}function A(C,F){if(!$){k(C,F);return}V+=F,D=C+1,b=0}function T(C,F){if(!m(X[C]))return;K=C+1,j=V-F}function L(C,F){let P=R[C],E=Z[C]??null;for(let H=F;H<P.length;H++){let z=t(P,E,H,Q.preferPrefixWidthsForBreakableRuns);if(!$){y(C,H,z);continue}if(V+z>J+f)return B();V+=z,D=C,b=H+1}if($&&D===C&&b===P.length)D=C+1,b=0;return null}for(let C=_.segmentIndex;C<Y.length;C++){let F=Y[C],P=X[C],E=C===_.segmentIndex?_.graphemeIndex:0;if(!$){if(E>0){let z=L(C,E);if(z!==null)return z}else if(F>J&&R[C]!==null){let z=L(C,0);if(z!==null)return z}else k(C,F);T(C,F);continue}if(V+F>J+f){if(m(P))return A(C,F),B(C+1,0,V-F);if(K>=0)return B(K,0,j);if(F>J&&R[C]!==null){let z=B();if(z!==null)return z;let W=L(C,0);if(W!==null)return W}return B()}A(C,F),T(C,F)}return B()}var R0=null,C0=new WeakMap;function I0(){if(R0===null)R0=new Intl.Segmenter(void 0,{granularity:"grapheme"});return R0}function lO(O){if(O)return{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableWidths:[],breakablePrefixWidths:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[],segments:[]};return{widths:[],lineEndFitAdvances:[],lineEndPaintAdvances:[],kinds:[],simpleLineWalkFastPath:!0,segLevels:null,breakableWidths:[],breakablePrefixWidths:[],discretionaryHyphenWidth:0,tabStopAdvance:0,chunks:[]}}function c0(O,_,J){let Y=I0(),X=h(),{cache:R,emojiCorrection:Z}=B0(_,G0(O.normalized)),Q=g("-",x("-",R),Z),V=g(" ",x(" ",R),Z)*8;if(O.len===0)return lO(J);let $=[],u=[],q=[],D=[],b=O.chunks.length<=1,K=J?[]:null,j=[],B=[],k=J?[]:null,y=Array.from({length:O.len}),A=Array.from({length:O.len});function T(F,P,E,H,z,W,c,I){if(z!=="text"&&z!=="space"&&z!=="zero-width-break")b=!1;if($.push(P),u.push(E),q.push(H),D.push(z),K?.push(W),j.push(c),B.push(I),k!==null)k.push(F)}for(let F=0;F<O.len;F++){y[F]=$.length;let P=O.texts[F],E=O.isWordLike[F],H=O.kinds[F],z=O.starts[F];if(H==="soft-hyphen"){T(P,0,Q,Q,H,z,null,null),A[F]=$.length;continue}if(H==="hard-break"){T(P,0,0,0,H,z,null,null),A[F]=$.length;continue}if(H==="tab"){T(P,0,0,0,H,z,null,null),A[F]=$.length;continue}let W=x(P,R);if(H==="text"&&W.containsCJK){let S="",U=0;for(let N of Y.segment(P)){let M=N.segment;if(S.length===0){S=M,U=N.index;continue}if(i.has(S)||$0.has(M)||r.has(M)||X.carryCJKAfterClosingQuote&&p(M)&&D0(S)){S+=M;continue}let v=x(S,R),w=g(S,v,Z);T(S,w,w,w,"text",z+U,null,null),S=M,U=N.index}if(S.length>0){let N=x(S,R),M=g(S,N,Z);T(S,M,M,M,"text",z+U,null,null)}A[F]=$.length;continue}let c=g(P,W,Z),I=H==="space"||H==="preserved-space"||H==="zero-width-break"?0:c,o=H==="space"||H==="zero-width-break"?0:c;if(E&&P.length>1){let S=P0(P,W,R,Z),U=X.preferPrefixWidthsForBreakableRuns?A0(P,W,R,Z):null;T(P,c,I,o,H,z,S,U)}else T(P,c,I,o,H,z,null,null);A[F]=$.length}let L=hO(O.chunks,y,A),C=K===null?null:u0(O.normalized,K);if(k!==null)return{widths:$,lineEndFitAdvances:u,lineEndPaintAdvances:q,kinds:D,simpleLineWalkFastPath:b,segLevels:C,breakableWidths:j,breakablePrefixWidths:B,discretionaryHyphenWidth:Q,tabStopAdvance:V,chunks:L,segments:k};return{widths:$,lineEndFitAdvances:u,lineEndPaintAdvances:q,kinds:D,simpleLineWalkFastPath:b,segLevels:C,breakableWidths:j,breakablePrefixWidths:B,discretionaryHyphenWidth:Q,tabStopAdvance:V,chunks:L}}function hO(O,_,J){let Y=[];for(let X=0;X<O.length;X++){let R=O[X],Z=R.startSegmentIndex<_.length?_[R.startSegmentIndex]:J[J.length-1]??0,Q=R.endSegmentIndex<_.length?_[R.endSegmentIndex]:J[J.length-1]??0,f=R.consumedEndSegmentIndex<_.length?_[R.consumedEndSegmentIndex]:J[J.length-1]??0;Y.push({startSegmentIndex:Z,endSegmentIndex:Q,consumedEndSegmentIndex:f})}return Y}function o0(O,_,J,Y){let X=N0(O,h(),Y?.whiteSpace);return c0(X,_,J)}function V1(O,_,J){let Y=performance.now(),X=N0(O,h(),J?.whiteSpace),R=performance.now(),Z=c0(X,_,!1),Q=performance.now(),f=0;for(let V of Z.breakableWidths)if(V!==null)f++;return{analysisMs:R-Y,measureMs:Q-R,totalMs:Q-Y,analysisSegments:X.len,preparedSegments:Z.widths.length,breakableSegments:f}}function X1(O,_,J){return o0(O,_,!1,J)}function Y1(O,_,J){return o0(O,_,!0,J)}function F0(O){return O}function Z1(O,_,J){let Y=W0(F0(O),_);return{lineCount:Y,height:Y*J}}function k0(O,_,J){let Y=J.get(O);if(Y!==void 0)return Y;Y=[];let X=I0();for(let R of X.segment(_[O]))Y.push(R.segment);return J.set(O,Y),Y}function l0(O){let _=C0.get(O);if(_!==void 0)return _;return _=new Map,C0.set(O,_),_}function pO(O,_,J,Y){return Y>0&&O[Y-1]==="soft-hyphen"&&!(_===Y&&J>0)}function xO(O,_,J,Y,X,R,Z){let Q="",f=pO(_,Y,X,R);for(let V=Y;V<R;V++){if(_[V]==="soft-hyphen"||_[V]==="hard-break")continue;if(V===Y&&X>0)Q+=k0(V,O,J).slice(X).join("");else Q+=O[V]}if(Z>0){if(f)Q+="-";Q+=k0(R,O,J).slice(Y===R?X:0,Z).join("")}else if(f)Q+="-";return Q}function h0(O,_,J,Y,X,R,Z){return{text:xO(O.segments,O.kinds,_,Y,X,R,Z),width:J,start:{segmentIndex:Y,graphemeIndex:X},end:{segmentIndex:R,graphemeIndex:Z}}}function gO(O,_,J){return h0(O,_,J.width,J.startSegmentIndex,J.startGraphemeIndex,J.endSegmentIndex,J.endGraphemeIndex)}function p0(O){return{width:O.width,start:{segmentIndex:O.startSegmentIndex,graphemeIndex:O.startGraphemeIndex},end:{segmentIndex:O.endSegmentIndex,graphemeIndex:O.endGraphemeIndex}}}function mO(O,_,J){let Y=S0(O,_,J);if(Y===null)return null;return p0(Y)}function rO(O,_){return h0(O,l0(O),_.width,_.start.segmentIndex,_.start.graphemeIndex,_.end.segmentIndex,_.end.graphemeIndex)}function $1(O,_,J){if(O.widths.length===0)return 0;return J0(F0(O),_,(Y)=>{J(p0(Y))})}function Q1(O,_,J){let Y=mO(O,_,J);if(Y===null)return null;return rO(O,Y)}function q1(O,_,J){let Y=[];if(O.widths.length===0)return{lineCount:0,height:0,lines:Y};let X=l0(O),R=J0(F0(O),_,(Z)=>{Y.push(gO(O,X,Z))});return{lineCount:R,height:R*J,lines:Y}}function aO(){z0(),R0=null,C0=new WeakMap,T0()}function D1(O){j0(O),aO()}window._PT={prepare:X1,layout:Z1,prepareWithSegments:Y1,walkLineRanges:$1,layoutNextLine:Q1,layoutWithLines:q1,clearCache:aO,setLocale:D1};;
 
-
-// ── PRETEXT WIRING ─────────────────────────────────────────
-document.fonts.ready.then(function() {
-  var PT = window._PT;
-  if (!PT) return;
-  var els = Array.from(document.querySelectorAll('[data-pretext]'));
-  var prepared = new Map();
-
-  els.forEach(function(el) {
-    var text = el.textContent.trim().replace(/\s+/g, ' ');
-    if (!text) return;
-    var font = getComputedStyle(el).font;
-    try { prepared.set(el, PT.prepare(text, font)); } catch(e) {}
-  });
-
-  function relayout() {
-    prepared.forEach(function(handle, el) {
-      var w = el.clientWidth;
-      var lh = parseFloat(getComputedStyle(el).lineHeight);
-      if (w > 0 && lh > 0 && !isNaN(lh)) {
-        try {
-          var r = PT.layout(handle, w, lh);
-          el.style.minHeight = r.height + 'px';
-        } catch(e) {}
-      }
-    });
-  }
-
-  if (window.ResizeObserver) {
-    new ResizeObserver(relayout).observe(document.body);
-  }
-  window.addEventListener('resize', relayout);
-  relayout();
-});
-
-</script>
 </body>
 </html>
