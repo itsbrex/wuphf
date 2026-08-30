@@ -1,0 +1,217 @@
+package gbrain
+
+// pages.go — graph + page-lifecycle calls the wiki context layer needs on top
+// of the Client surface in mcp.go.
+//
+// mcp.go already covers query/search/get_page/list_pages/put_page/add_link/
+// get_links. This file adds only the gaps the FactStore implementation hit:
+//
+//	Traverse    — traverse_graph, the typed directed walk that replaces the
+//	              SQLite triplet indexes. get_links is undirected and untyped,
+//	              so it cannot answer "who champions X".
+//	RemoveLink  — required by the set-REPLACE semantics of the category layer.
+//	DeletePage  — the only path that retires a fact; FactStore has no
+//	              DeleteFact, so TextIndex.Delete carries it.
+//
+// It also extends ListOptions with the slug-prefix and offset filters that a
+// full corpus scan needs. Those live here rather than in mcp.go so the diff
+// against upstream mcp.go stays reviewable.
+//
+// Contract notes verified against gbrain 0.42.58.0 by direct probe:
+//   - traverse_graph returns EDGES ([]GraphEdge) only when link_type AND
+//     direction are supplied; without them it returns nodes. Both are therefore
+//     required here.
+//   - add_link takes `from`/`to`, not `from_slug`/`to_slug`, and round-trips an
+//     arbitrary `context` string verbatim — which is what lets an IndexEdge
+//     carry its timestamp and source SHA without a column of its own.
+//   - put_page REWRITES the title (it title-cases) and COERCES an unknown type
+//     to "concept". Nothing may depend on either round-tripping. Frontmatter is
+//     preserved verbatim as JSONB and is the only safe carrier for structured
+//     data.
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+)
+
+const (
+	toolTraverseGraph = "traverse_graph"
+	toolRemoveLink    = "remove_link"
+	toolDeletePage    = "delete_page"
+	toolRestorePage   = "restore_page"
+)
+
+// BulkTimeout is the deadline for calls that touch many rows (list_pages over a
+// large brain, traversals at depth). The Client's default call timeout is tuned
+// for single-page reads and is too tight for these.
+const BulkTimeout = 60 * time.Second
+
+// PageTypeAtom is gbrain's "smallest extractable claim unit" type. It is the
+// carrier for a WUPHF TypedFact: one atom page per fact. Verified to survive
+// put_page/get_page without coercion on 0.42.58.0.
+const PageTypeAtom = "atom"
+
+// GraphEdge is one edge returned by traverse_graph when link_type and direction
+// are supplied.
+type GraphEdge struct {
+	FromSlug string `json:"from_slug"`
+	ToSlug   string `json:"to_slug"`
+	LinkType string `json:"link_type"`
+	Context  string `json:"context"`
+	Depth    int    `json:"depth"`
+}
+
+// Traverse walks the link graph from slug under exactly one link type.
+// direction is "in", "out", or "both". Supplying linkType is what makes gbrain
+// return edges rather than nodes, so an empty linkType yields no results rather
+// than silently switching result shapes.
+func (c *Client) Traverse(ctx context.Context, slug, linkType, direction string, depth int) ([]GraphEdge, error) {
+	slug = strings.TrimSpace(slug)
+	linkType = strings.TrimSpace(linkType)
+	if slug == "" || linkType == "" {
+		return nil, nil
+	}
+	if direction == "" {
+		direction = "both"
+	}
+	if depth <= 0 {
+		depth = 1
+	}
+	raw, err := c.CallTool(ctx, toolTraverseGraph, map[string]any{
+		"slug":      slug,
+		"link_type": linkType,
+		"direction": direction,
+		"depth":     depth,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("gbrain traverse_graph %s/%s: %w", slug, linkType, err)
+	}
+	if isEmptyResult(raw) {
+		return nil, nil
+	}
+	var edges []GraphEdge
+	if err := decodeJSON(raw, &edges); err != nil {
+		return nil, fmt.Errorf("decode gbrain traverse_graph %s: %w", slug, err)
+	}
+	return edges, nil
+}
+
+// RemoveLink deletes a typed edge. An empty linkType removes every edge between
+// the pair, matching the CLI's unlink semantics.
+func (c *Client) RemoveLink(ctx context.Context, from, to, linkType string) error {
+	from, to = strings.TrimSpace(from), strings.TrimSpace(to)
+	if from == "" || to == "" {
+		return fmt.Errorf("gbrain remove_link: from and to are required")
+	}
+	args := map[string]any{"from": from, "to": to}
+	if s := strings.TrimSpace(linkType); s != "" {
+		args["link_type"] = s
+	}
+	if _, err := c.CallTool(ctx, toolRemoveLink, args); err != nil {
+		return fmt.Errorf("gbrain remove_link %s->%s: %w", from, to, err)
+	}
+	return nil
+}
+
+// DeletePage soft-deletes a page. gbrain keeps it recoverable inside its
+// retention window, which is what makes this safe to call from a reconcile
+// loop that may be acting on stale input.
+func (c *Client) DeletePage(ctx context.Context, slug string) error {
+	slug = strings.TrimSpace(slug)
+	if slug == "" {
+		return nil
+	}
+	if _, err := c.CallTool(ctx, toolDeletePage, map[string]any{"slug": slug}); err != nil {
+		return fmt.Errorf("gbrain delete_page %s: %w", slug, err)
+	}
+	return nil
+}
+
+// ListPageOptions extends ListOptions with the filters a full corpus scan
+// needs. ListOptions itself is left untouched so existing callers are
+// unaffected.
+type ListPageOptions struct {
+	Type           string
+	Tag            string
+	SlugPrefix     string
+	Limit          int
+	Offset         int
+	IncludeDeleted bool
+}
+
+// ListPagesFiltered is ListPages with slug-prefix and offset support.
+//
+// The slug prefix is ALSO re-applied client-side: older gbrain builds ignore
+// the filter rather than erroring on it, and a silently unfiltered listing
+// would let foreign pages into the fact corpus.
+func (c *Client) ListPagesFiltered(ctx context.Context, opts ListPageOptions) ([]PageMeta, error) {
+	args := map[string]any{}
+	if opts.Limit > 0 {
+		args["limit"] = opts.Limit
+	}
+	if opts.Offset > 0 {
+		args["offset"] = opts.Offset
+	}
+	if t := strings.TrimSpace(opts.Type); t != "" {
+		args["type"] = t
+	}
+	if tag := strings.TrimSpace(opts.Tag); tag != "" {
+		args["tag"] = tag
+	}
+	if p := strings.TrimSpace(opts.SlugPrefix); p != "" {
+		args["slug_prefix"] = p
+	}
+	if opts.IncludeDeleted {
+		args["include_deleted"] = true
+	}
+	raw, err := c.CallTool(ctx, toolListPages, args)
+	if err != nil {
+		return nil, err
+	}
+	if isEmptyResult(raw) {
+		return nil, nil
+	}
+	var pages []PageMeta
+	if err := decodeJSON(raw, &pages); err != nil {
+		return nil, fmt.Errorf("decode gbrain list_pages: %w", err)
+	}
+	if prefix := strings.TrimSpace(opts.SlugPrefix); prefix != "" {
+		filtered := pages[:0]
+		for _, p := range pages {
+			if strings.HasPrefix(p.Slug, prefix) {
+				filtered = append(filtered, p)
+			}
+		}
+		pages = filtered
+	}
+	return pages, nil
+}
+
+// isEmptyResult reports whether a tool result carries no rows. gbrain signals
+// absence with an empty body or a JSON null rather than an error.
+func isEmptyResult(raw string) bool {
+	raw = strings.TrimSpace(raw)
+	return raw == "" || raw == "null" || raw == "[]"
+}
+
+// RestorePage clears a page's soft-delete tombstone.
+//
+// This exists because put_page does NOT clear deleted_at: writing to a
+// soft-deleted slug updates the row but leaves it invisible to get_page and to
+// search. Verified against gbrain 0.42.58.0. Any upsert path that can target a
+// previously deleted slug must call this, or the write silently disappears.
+//
+// It is idempotent on a live page ("already_active") and returns a not-found
+// error for a slug that never existed, which callers may ignore.
+func (c *Client) RestorePage(ctx context.Context, slug string) error {
+	slug = strings.TrimSpace(slug)
+	if slug == "" {
+		return nil
+	}
+	if _, err := c.CallTool(ctx, toolRestorePage, map[string]any{"slug": slug}); err != nil {
+		return fmt.Errorf("gbrain restore_page %s: %w", slug, err)
+	}
+	return nil
+}

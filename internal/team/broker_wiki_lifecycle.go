@@ -104,7 +104,15 @@ func (b *Broker) initWikiWorker() {
 		}
 	}
 
-	idx := NewWikiIndex(repo.Root())
+	idx, idxErr := newWikiIndexForBackend(lifecycleCtx, repo.Root())
+	if idxErr != nil {
+		// Only reachable when the operator pinned WUPHF_WIKI_BACKEND=gbrain and
+		// the brain is unreachable. Leave the worker un-initialized so writes
+		// fail cleanly with ErrWorkerStopped, matching the git-missing path.
+		b.wikiInitErr = idxErr
+		log.Printf("wiki: index init failed: %v", idxErr)
+		return
+	}
 
 	worker := NewWikiWorkerWithIndex(repo, b, idx)
 	worker.Start(lifecycleCtx)
