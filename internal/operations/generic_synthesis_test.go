@@ -1,7 +1,6 @@
 package operations
 
 import (
-	"github.com/nex-crm/wuphf/internal/channel"
 	"testing"
 )
 
@@ -41,14 +40,32 @@ func TestSynthesizeBlueprintDerivesGenericPlanFromDirectiveProfileAndCapabilitie
 	if blueprint.Starter.LeadSlug != "operator" {
 		t.Fatalf("unexpected lead slug: %+v", blueprint.Starter)
 	}
-	if len(blueprint.Starter.Agents) < 5 {
-		t.Fatalf("expected baseline agents plus integration owners, got %+v", blueprint.Starter.Agents)
+	// The lead plus one owner per connected integration. It used to be "at
+	// least 5" because planner/executor/reviewer were seeded on every
+	// blueprint; that trio is retired, so the only agents left are the lead
+	// and the ones the integrations actually justify.
+	if len(blueprint.Starter.Agents) < 2 {
+		t.Fatalf("expected the lead plus integration owners, got %+v", blueprint.Starter.Agents)
 	}
-	if len(blueprint.Starter.Channels) < 4 {
-		t.Fatalf("expected baseline channels, got %+v", blueprint.Starter.Channels)
+	for _, agent := range blueprint.Starter.Agents {
+		switch agent.Slug {
+		case "planner", "executor", "reviewer":
+			t.Fatalf("blueprint resurrected the retired built-in %q: %+v", agent.Slug, blueprint.Starter.Agents)
+		}
 	}
-	if len(blueprint.Starter.Tasks) < 4 {
+	// No channels: every room type is retired, so a blueprint declares none.
+	if len(blueprint.Starter.Channels) != 0 {
+		t.Fatalf("expected no channels while rooms are retired, got %+v", blueprint.Starter.Channels)
+	}
+	if len(blueprint.Starter.Tasks) < 2 {
 		t.Fatalf("expected baseline starter tasks, got %+v", blueprint.Starter.Tasks)
+	}
+	// Homeless on purpose: the broker routes a task with no channel to its
+	// owner's DM, which is the only conversation that exists now.
+	for _, task := range blueprint.Starter.Tasks {
+		if task.Channel != "" {
+			t.Fatalf("starter task %q names a channel %q; blueprints no longer have rooms", task.Title, task.Channel)
+		}
 	}
 	if blueprint.BootstrapConfig.ChannelSlug != "acme-labs" {
 		t.Fatalf("unexpected channel slug: %+v", blueprint.BootstrapConfig)
@@ -97,16 +114,11 @@ func TestSynthesizeBlueprintFallsBackToBlankOperationsShape(t *testing.T) {
 	if blueprint.Starter.LeadSlug != "operator" {
 		t.Fatalf("unexpected fallback lead slug: %+v", blueprint.Starter)
 	}
-	// Three, not four. #general used to be prepended to every blueprint's
-	// channel set; with the lobby retired a blueprint declares only its own
-	// working lanes (planning, execution, review).
-	if len(blueprint.Starter.Channels) < 3 {
-		t.Fatalf("expected baseline channels in fallback blueprint, got %+v", blueprint.Starter.Channels)
-	}
-	for _, ch := range blueprint.Starter.Channels {
-		if ch.Slug == "general" && !channel.GeneralEnabled() {
-			t.Fatalf("#general is retired but the fallback blueprint declares it: %+v", blueprint.Starter.Channels)
-		}
+	// None, not three. #general went first, then the named working lanes
+	// (planning, execution, review) followed it into retirement, so the
+	// fallback blueprint declares no rooms at all.
+	if len(blueprint.Starter.Channels) != 0 {
+		t.Fatalf("expected no channels in fallback blueprint while rooms are retired, got %+v", blueprint.Starter.Channels)
 	}
 	if len(blueprint.Stages) != 5 {
 		t.Fatalf("expected 5 generic stages in fallback blueprint, got %+v", blueprint.Stages)

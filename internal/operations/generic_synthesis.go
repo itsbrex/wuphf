@@ -153,12 +153,20 @@ func genericStarterPlan(kind, name, objective string, input SynthesisInput, inte
 	leadSlug := "operator"
 	channels := genericDefaultChannels(integrations)
 	tasks := genericDefaultTasks(objective, integrations)
-	plannerName, executorName, reviewerName := genericKindAgentNames(kind)
+	// The LEAD, and whatever real integrations are connected. Nothing else.
+	//
+	// This used to also mint planner / executor / reviewer as BuiltIn
+	// assistants on every synthesized blueprint, which is why they "always
+	// show up as default in a workspace". That trio is retired: not renamed,
+	// not replaced, removed. A blueprint no longer invents a roster.
+	//
+	// The lead stays because it is not a fabricated specialist — it is the one
+	// agent the human actually talks to, and a workspace with zero agents has
+	// nobody to address. Integration owners below stay for the same reason in
+	// reverse: they are derived from integrations that genuinely exist, so
+	// they are evidence, not padding.
 	agents := []StarterAgent{
 		{Slug: leadSlug, Name: "Operator", Role: "lead", Checked: true, Type: "human", BuiltIn: true, Expertise: []string{"scope-setting", "execution", "approvals"}},
-		{Slug: "planner", Name: plannerName, Role: "planning", Checked: true, Type: "assistant", BuiltIn: true, Expertise: []string{"decomposition", "sequencing", "risks"}},
-		{Slug: "executor", Name: executorName, Role: "execution", Checked: true, Type: "assistant", BuiltIn: true, Expertise: []string{"delivery", "instrumentation", "evidence"}},
-		{Slug: "reviewer", Name: reviewerName, Role: "review", Checked: true, Type: "assistant", BuiltIn: true, Expertise: []string{"quality", "approval", "handoff"}},
 	}
 	for _, integration := range integrations {
 		provider := genericIntegrationKey(integration)
@@ -555,7 +563,10 @@ func genericDefaultChannels(integrations []RuntimeIntegration) []StarterChannel 
 		channels = append(channels, StarterChannel{
 			Slug: channel.GeneralSlug, Name: channel.GeneralSlug,
 			Description: "Primary coordination channel.",
-			Members:     []string{"operator", "planner", "executor", "reviewer"},
+			// The lead only. The retired planner/executor/reviewer trio used to
+			// be listed here, which seeded a room populated with agents that no
+			// longer exist.
+			Members: []string{"operator"},
 		})
 	}
 	// Named-channel retirement: #planning / #execution / #review are ordinary
@@ -566,12 +577,12 @@ func genericDefaultChannels(integrations []RuntimeIntegration) []StarterChannel 
 		return channels
 	}
 	channels = append(channels,
-		StarterChannel{Slug: "planning", Name: "planning", Description: "Scope, decomposition, and approvals.", Members: []string{"operator", "planner", "reviewer"}},
-		StarterChannel{Slug: "execution", Name: "execution", Description: "Active work lane for the current operation.", Members: []string{"operator", "executor"}},
-		StarterChannel{Slug: "review", Name: "review", Description: "Evidence, decisions, and handoff.", Members: []string{"operator", "reviewer"}},
+		StarterChannel{Slug: "planning", Name: "planning", Description: "Scope, decomposition, and approvals.", Members: []string{"operator"}},
+		StarterChannel{Slug: "execution", Name: "execution", Description: "Active work lane for the current operation.", Members: []string{"operator"}},
+		StarterChannel{Slug: "review", Name: "review", Description: "Evidence, decisions, and handoff.", Members: []string{"operator"}},
 	)
 	if len(integrations) > 0 {
-		members := []string{"operator", "executor"}
+		members := []string{"operator"}
 		for _, integration := range integrations {
 			provider := genericIntegrationKey(integration)
 			if provider == "" {
@@ -590,11 +601,24 @@ func genericDefaultChannels(integrations []RuntimeIntegration) []StarterChannel 
 }
 
 func genericDefaultTasks(objective string, integrations []RuntimeIntegration) []StarterTask {
+	// Every starter task is owned by the LEAD and carries NO channel.
+	//
+	// Both halves changed. The owners were planner / executor / reviewer, who
+	// no longer exist, so those tasks would have been filed to agents that are
+	// never seeded. The channels were general / planning / execution / review,
+	// none of which a workspace has any more, so the task would have been
+	// addressed to a room the broker cannot find.
+	//
+	// An empty Channel is the correct value, not a gap: the broker resolves a
+	// homeless task to its OWNER's DM (preferredTaskChannelLocked), so these
+	// land in the lead's conversation, which is where the human is.
+	//
+	// The four lanes collapse into two real pieces of work. Splitting one
+	// objective across four agents was the artifact of having four agents;
+	// with one lead, "plan it" and "run it and report" is the honest shape.
 	tasks := []StarterTask{
-		{Channel: "general", Owner: "operator", Title: "Translate the directive into the first execution plan", Details: genericTruncateText(objective, 160)},
-		{Channel: "planning", Owner: "planner", Title: "Inventory capabilities and approvals", Details: "List the available runtime integrations and the gates required before live action."},
-		{Channel: "execution", Owner: "executor", Title: "Launch the first execution loop", Details: "Run the first concrete step and record evidence."},
-		{Channel: "review", Owner: "reviewer", Title: "Review evidence and pick the next loop", Details: "Confirm what happened and whether the next step is approved."},
+		{Owner: "operator", Title: "Translate the directive into the first execution plan", Details: genericTruncateText(objective, 160)},
+		{Owner: "operator", Title: "Run the first execution loop and record evidence", Details: "Run the first concrete step, capture what happened, and decide whether the next step needs approval."},
 	}
 	for _, integration := range integrations {
 		if integration.Connected {
@@ -602,7 +626,6 @@ func genericDefaultTasks(objective string, integrations []RuntimeIntegration) []
 		}
 		label := genericIntegrationLabel(integration)
 		tasks = append(tasks, StarterTask{
-			Channel: "planning",
 			Owner:   "operator",
 			Title:   fmt.Sprintf("Connect %s before live use", label),
 			Details: fmt.Sprintf("The blueprint can only use %s live after it is connected.", label),
@@ -789,23 +812,4 @@ func genericDedupeStrings(values []string) []string {
 		out = append(out, value)
 	}
 	return out
-}
-
-func genericKindAgentNames(kind string) (planner, executor, reviewer string) {
-	switch kind {
-	case "content":
-		return "Research Lead", "Content Producer", "Analytics Lead"
-	case "gtm":
-		return "Pipeline Lead", "Campaign Builder", "Revenue Analyst"
-	case "product":
-		return "Discovery Lead", "Builder", "QA Lead"
-	case "commerce":
-		return "Catalog Lead", "Fulfillment Builder", "Conversion Analyst"
-	case "support":
-		return "Triage Lead", "Resolution Builder", "Quality Analyst"
-	case "research":
-		return "Research Lead", "Synthesis Builder", "Evidence Analyst"
-	default:
-		return "Planner", "Executor", "Reviewer"
-	}
 }

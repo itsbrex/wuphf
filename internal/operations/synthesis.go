@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 type SynthesisInput struct {
@@ -157,26 +159,55 @@ func synthesizeStarterPlan(name string, input SynthesisInput, workstreams []stri
 		LeadSlug:                  leadSlug,
 		GeneralChannelDescription: fmt.Sprintf("Command deck for %s. Use this room to steer the operation, approve risky actions, and unblock the specialists.", name),
 		KickoffPrompt:             fmt.Sprintf("Stand up %s from scratch. Use the starter lanes, turn the objective into a repeatable operating system, create the first durable tasks, and keep external side effects behind human approval.", name),
+		// The Chief of Staff, and nobody else.
+		//
+		// This used to seed four more BuiltIn "specialists" — planner, builder,
+		// operator, analyst — on every synthesized operation. The founder
+		// retired that concept by name for planner/executor/reviewer, and the
+		// remaining three are the same fabricated-default-roster idea wearing
+		// different labels: keeping them while deleting the others would be
+		// replacing the trio, not removing it.
+		//
+		// `workstreams` now shapes the LEAD's expertise instead of a planner's,
+		// so the synthesis still carries what it learned about the operation.
 		Agents: []StarterAgent{
-			{Slug: "ceo", Emoji: "👔", Name: "Chief of Staff", Role: "Owns priorities, approvals, and escalation decisions", Checked: true, Type: "lead", BuiltIn: true},
-			{Slug: "planner", Emoji: "🧭", Name: "Planner", Role: "Turns objectives into workstreams, milestones, and task plans", Checked: true, Type: "specialist", BuiltIn: true, Expertise: workstreams, Personality: "Clarifies scope quickly and turns ambiguity into an operating plan."},
-			{Slug: "builder", Emoji: "🛠️", Name: "Builder", Role: "Implements the first deliverables and workflow assets", Checked: true, Type: "specialist", BuiltIn: true, Expertise: []string{"Execution packets", "Workflow setup", "Deliverable assembly"}, Personality: "Biases toward shipping real artifacts, not commentary."},
-			{Slug: "operator", Emoji: "⚙️", Name: "Operator", Role: "Owns operational handoffs, runbooks, and automation hygiene", Checked: true, Type: "specialist", BuiltIn: true, Expertise: []string{"Runbooks", "Approvals", "Automation loops"}, Personality: "Keeps the system durable and visible."},
-			{Slug: "analyst", Emoji: "📊", Name: "Analyst", Role: "Owns scorecards, metrics, and review loops", Checked: true, Type: "specialist", BuiltIn: true, Expertise: []string{"KPIs", "Review cadence", "Operational feedback"}, Personality: "Turns activity into measurable outcomes and next-step signals."},
+			{Slug: leadSlug, Emoji: "👔", Name: "Chief of Staff", Role: "Owns priorities, approvals, and escalation decisions", Checked: true, Type: "lead", BuiltIn: true, Expertise: workstreams},
 		},
-		Channels: []StarterChannel{
-			{Slug: "command", Name: "command", Description: fmt.Sprintf("Executive control room for %s.", name), Members: []string{"planner", "analyst", "operator"}},
-			{Slug: "planning", Name: "planning", Description: "Scope the workstreams, milestones, and artifact plan.", Members: []string{"planner", "analyst"}},
-			{Slug: "delivery", Name: "delivery", Description: "Build the first deliverables and execution bundles.", Members: []string{"builder", "operator"}},
-			{Slug: "systems", Name: "systems", Description: "Wire integrations, approvals, and repeatable workflow loops.", Members: []string{"operator", "builder"}},
-			{Slug: "review", Name: "review", Description: "Track metrics, review outcomes, and update the scorecard.", Members: []string{"analyst", "planner"}},
-		},
+		// No channels. Named rooms are retired (channel.NamedChannelsEnabled),
+		// so command / planning / delivery / systems / review would each be a
+		// room the workspace refuses to create. A synthesized operation
+		// describes an office of one lead and their DM, and declaring rooms it
+		// cannot have would only produce seeding errors downstream.
+		Channels: synthesizedStarterChannels(name),
+		// Owned by the lead, with NO channel. An empty Channel is deliberate:
+		// the broker resolves a homeless task to its owner's DM, so these land
+		// in the conversation the human is actually in. The four lane-scoped
+		// tasks collapse into three because there are no longer four agents to
+		// split them across — but the work itself is unchanged.
 		Tasks: []StarterTask{
-			{Channel: "planning", Owner: "planner", Title: "Turn the directive into an operating plan", Details: firstOperationValue(input.Priority, input.Goals, input.Description, "Clarify scope, outcomes, constraints, and workstreams.")},
-			{Channel: "delivery", Owner: "builder", Title: "Ship the first execution packet", Details: fmt.Sprintf("Create the first durable artifact bundle for %s.", name)},
-			{Channel: "systems", Owner: "operator", Title: "Define the approval and automation loop", Details: "Map what can run automatically, what requires approval, and where workflow evidence should persist."},
-			{Channel: "review", Owner: "analyst", Title: "Set the scorecard and review cadence", Details: "Define success metrics, review rhythm, and feedback loops for the first iteration."},
+			{Owner: leadSlug, Title: "Turn the directive into an operating plan", Details: firstOperationValue(input.Priority, input.Goals, input.Description, "Clarify scope, outcomes, constraints, and workstreams.")},
+			{Owner: leadSlug, Title: "Ship the first execution packet", Details: fmt.Sprintf("Create the first durable artifact bundle for %s.", name)},
+			{Owner: leadSlug, Title: "Define the approval and automation loop", Details: "Map what can run automatically, what requires approval, and where workflow evidence should persist."},
 		},
+	}
+}
+
+// synthesizedStarterChannels returns the rooms a synthesized operation declares.
+//
+// Empty while named channels are retired, which is the whole story today. It
+// stays a function rather than a bare nil so the switch has ONE place to be
+// read from in this file, and so reviving named channels is an edit here rather
+// than an archaeology exercise across five struct literals.
+func synthesizedStarterChannels(name string) []StarterChannel {
+	if !channel.NamedChannelsEnabled() {
+		return nil
+	}
+	return []StarterChannel{
+		{Slug: "command", Name: "command", Description: fmt.Sprintf("Executive control room for %s.", name), Members: []string{"ceo"}},
+		{Slug: "planning", Name: "planning", Description: "Scope the workstreams, milestones, and artifact plan.", Members: []string{"ceo"}},
+		{Slug: "delivery", Name: "delivery", Description: "Build the first deliverables and execution bundles.", Members: []string{"ceo"}},
+		{Slug: "systems", Name: "systems", Description: "Wire integrations, approvals, and repeatable workflow loops.", Members: []string{"ceo"}},
+		{Slug: "review", Name: "review", Description: "Track metrics, review outcomes, and update the scorecard.", Members: []string{"ceo"}},
 	}
 }
 
