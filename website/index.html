@@ -58,7 +58,7 @@
       "url": "https://gawk.bot",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "macOS, Linux, Windows",
-      "description": "gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. Runs on your machine, with your keys. Source-available, and free.",
+      "description": "gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.",
       "license": "https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE",
       "downloadUrl": "https://gawk.bot/download.html",
       "offers": {
@@ -299,24 +299,6 @@
   }
   .is-page-hidden .hero-mark .gawkbot-eyes { animation-play-state: paused; }
 
-  .hero-eyebrow {
-    font-family: var(--font-display);
-    font-size: 9px;
-    color: var(--yellow);
-    letter-spacing: 0.12em;
-    margin-bottom: 24px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .blink {
-    width: 8px; height: 12px;
-    background: var(--accent);
-    display: inline-block;
-    animation: blink-cursor 1s steps(1, end) infinite;
-  }
-  @keyframes blink-cursor {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
-  }
 
   .hero-title {
     font-family: var(--font-display);
@@ -959,7 +941,6 @@
     .ambient-scroll,
     .hero-mark .gawkbot-eyes,
     .hero-bot path,
-    .blink,
     .roster-mark path {
       animation: none !important;
     }
@@ -1006,11 +987,6 @@
     </div>
 
 
-    <div class="hero-eyebrow">
-      <span class="blink"></span>
-      MAXIMALLY HANDS-OFF
-    </div>
-
     <!-- The hidden half of the H1 is what a screen reader announces and what
          search engines read, so it carries the same thesis as the tab title. -->
     <h1 class="hero-title">gawkbot<span class="visually-hidden">, bots you almost control</span></h1>
@@ -1018,7 +994,7 @@
     <p class="hero-lede">open source bots that (almost) serve you</p>
 
     <p class="hero-tagline">
-      gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. You get a screen with buttons on it, and the pleasant feeling of being in charge.
+      gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.
     </p>
 
     <div class="install-wrap" id="install">
