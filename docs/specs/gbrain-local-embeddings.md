@@ -1,6 +1,7 @@
 # Plan: use the selected local LLM for embeddings, not an extra OpenAI key
 
-Status: PLAN. Not implemented. Written 2026-08-31.
+Status: chain IMPLEMENTED 2026-08-31. Two follow-ups remain (local-runtime
+probing beyond Ollama, and the subscription-only chat shim).
 
 ## The ask
 
@@ -38,20 +39,18 @@ endpoint can serve embeddings.
 
 ## The four gaps
 
-**1. Precedence is backwards for this goal.** OpenAI wins whenever a key is
-present, even when the user selected a local provider. The user's ask is the
-opposite: prefer what is already configured.
+**1. ~~Precedence~~ RESOLVED.** The founder settled this: a supplied hosted key
+wins, local is the fallback. See Decision below.
 
 **2. Only Ollama is detected.** `internal/provider/binding.go` defines
 `KindOllama`, and `internal/config/config.go:116` documents "compatible local
 runtimes (mlx-lm, ollama, exo)". vLLM, exo, mlx-lm, and generic
 `openai-compatible` bindings are all invisible to the embedding chain.
 
-**3. The wiki backend never calls `EnsureBrain`.** `newWikiIndexForBackend`
-connects and, on failure, falls back to the in-memory index with a warning. A
-user with a local model and no brain yet gets the fallback, never an offer to
-create one. The memory backend and `/init` do this properly; the wiki path
-does not.
+**3. ~~The wiki backend never calls `EnsureBrain`~~ FIXED.**
+`newWikiIndexForBackend` now calls it (idempotent, never re-inits over a working
+brain) and logs `RetrievalMode()`, so a local user gets a brain created rather
+than silently landing on the in-memory fallback.
 
 **4. Chat endpoint ≠ embedding endpoint.** This is the substantive risk. A
 local runtime serving a chat model usually does NOT serve `/v1/embeddings`, and
@@ -136,40 +135,22 @@ is bundling a small ONNX embedder (bge-small-en-v1.5, 384d, ~130MB) in-process,
 which is the route supermemory takes. It is the only path to real vectors with
 zero external dependencies, and it costs binary size plus an ONNX runtime.
 
-## Proposed design
+## Remaining work
 
-### Selection chain
+### Probe local runtimes beyond Ollama (gap 2 + gap 4)
 
-Replace the current chain with one that consults the configured provider first:
+`internal/provider/binding.go` defines `KindOllama`, and config documents
+"compatible local runtimes (mlx-lm, ollama, exo)", but only Ollama is detected.
+Extending to vLLM / exo / mlx-lm / generic `openai-compatible` bindings requires
+a PROBE, because a chat endpoint does not imply an embeddings endpoint:
 
-```
-1. Selected provider is a local runtime AND its endpoint serves embeddings
-     -> openai-compatible:<model> + provider_base_urls entry
-2. Ollama is on PATH with a pulled embedding model
-     -> ollama:<model>                       (works today)
-3. An OpenAI key is configured
-     -> openai:text-embedding-3-large        (best quality, costs a key)
-4. Nothing
-     -> keyword-only, stated once at startup, not silently
-```
-
-Rationale for putting the local runtime above OpenAI: the user explicitly asked
-not to need a second credential. A user who WANTS OpenAI embeddings can still
-force them, so this is a default change, not a capability removal.
-
-### Probing (gap 4)
-
-Before selecting a local endpoint, confirm it actually embeds:
-
-1. `GET {base}/v1/models` — cheap, and lists whether an embedding model is
-   loaded.
+1. `GET {base}/v1/models` — cheap, lists whether an embedding model is loaded.
 2. `POST {base}/v1/embeddings` with a one-token input — the only conclusive
    test, since some runtimes list models they will not embed with.
 
-Cache the result per (base URL, model) for the process lifetime. Bound it with
-the same 3s budget as `detectOllamaEmbeddingModel`, and treat any error as "no
-embeddings here" rather than failing the boot. A wedged local runtime must
-never block the office from starting.
+Cache per (base URL, model) for the process lifetime, bound it with the same 3s
+budget as `detectOllamaEmbeddingModel`, and treat any error as "no embeddings
+here". A wedged local runtime must never block the office from starting.
 
 ### Dimensions and the migration trap
 
