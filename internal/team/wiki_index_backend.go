@@ -29,6 +29,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/nex-crm/wuphf/internal/gbrain"
 )
@@ -45,6 +46,18 @@ const (
 // resolveWikiBackend returns the configured backend and whether the operator
 // named it explicitly. An unrecognised value is treated as unset so a typo
 // degrades to the default rather than disabling the wiki.
+//
+// Under `go test` the default flips to the in-memory index. gbrain is a
+// USER-GLOBAL resource: with no GBRAIN_HOME override it resolves to the
+// developer's real brain at ~/.gbrain, so defaulting tests to gbrain made the
+// broker suite spawn `gbrain serve` and read and write the developer's actual
+// knowledge base. It also paid a 30s connect timeout per broker construction,
+// which kept background goroutines alive past t.TempDir() cleanup and produced
+// "directory not empty" flakes with no visible cause.
+//
+// A test that WANTS the gbrain backend still gets it by setting
+// WUPHF_WIKI_BACKEND=gbrain explicitly, which is what the live contract tests
+// do alongside an isolated GBRAIN_HOME.
 func resolveWikiBackend() (backend string, explicit bool) {
 	switch strings.ToLower(strings.TrimSpace(os.Getenv(WikiBackendEnv))) {
 	case WikiBackendGBrain:
@@ -52,6 +65,9 @@ func resolveWikiBackend() (backend string, explicit bool) {
 	case WikiBackendMemory:
 		return WikiBackendMemory, true
 	default:
+		if testing.Testing() {
+			return WikiBackendMemory, false
+		}
 		return WikiBackendGBrain, false
 	}
 }
@@ -65,7 +81,9 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 	backend, explicit := resolveWikiBackend()
 
 	if backend == WikiBackendMemory {
-		log.Printf("wiki: using in-memory index (%s=%s)", WikiBackendEnv, WikiBackendMemory)
+		if explicit {
+			log.Printf("wiki: using in-memory index (%s=%s)", WikiBackendEnv, WikiBackendMemory)
+		}
 		return NewWikiIndex(root), nil
 	}
 
