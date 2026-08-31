@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -22,14 +23,34 @@ const ollamaListTimeout = 3 * time.Second
 // it is the strongest available embedder.
 const openAIEmbeddingModel = "openai:text-embedding-3-large"
 
+// voyageEmbeddingModel is the gbrain `--embedding-model` value used when a
+// Voyage key is configured.
+//
+// This matters specifically for Claude users. Anthropic ships NO embeddings
+// endpoint (their docs name Voyage as the recommended companion), so an
+// Anthropic key alone cannot produce vectors. Voyage is therefore the path to
+// real semantic retrieval WITHOUT demanding an OpenAI key, and both gbrain and
+// WUPHF's own internal/embedding package already support it.
+const voyageEmbeddingModel = "voyage:voyage-3-large"
+
 // Test seams. These default to the real implementations and are overridden in
 // unit tests so embedding selection can be exercised without a live ollama
 // binary, OpenAI credentials, or a real gbrain subprocess.
 var (
 	selectOpenAIKey      = config.ResolveOpenAIAPIKey
+	selectVoyageKey      = resolveVoyageAPIKey
 	ollamaEmbeddingModel = detectOllamaEmbeddingModel
 	runGBrain            = Run
 )
+
+// resolveVoyageAPIKey reads the Voyage key. Deliberately env-only and never
+// falls back to ANTHROPIC_API_KEY: Voyage is a separate company, and sending
+// the user's Anthropic key to api.voyageai.com would be a cross-provider
+// credential leak. This mirrors the rule already enforced in
+// internal/embedding/anthropic.go.
+func resolveVoyageAPIKey() string {
+	return strings.TrimSpace(os.Getenv("VOYAGE_API_KEY"))
+}
 
 // OllamaEmbeddingModel returns the name of a locally-pulled Ollama embedding
 // model suitable for gbrain, or "" when ollama is not on PATH or no embedding
@@ -81,20 +102,72 @@ func parseOllamaEmbeddingModel(listing string) string {
 
 // SelectEmbeddingModel returns the best available gbrain `--embedding-model`
 // value, in precedence order:
-//  1. OpenAI key configured -> "openai:text-embedding-3-large".
-//  2. A local Ollama embedding model pulled -> "ollama:<model>".
-//  3. Otherwise "" -> no embedding provider (gbrain runs keyword-only).
 //
-// An Anthropic key alone yields "": Anthropic has no embeddings API, so it
-// cannot serve semantic retrieval.
+//  1. OpenAI key         -> "openai:text-embedding-3-large" (1536d)
+//  2. Voyage key         -> "voyage:voyage-3-large"         (1024d)
+//  3. Local Ollama model -> "ollama:<model>"                (typically 768d)
+//  4. Otherwise ""       -> keyword-only, no vector arm
+//
+// A hosted key outranks the local model deliberately: a user who has already
+// supplied one has paid for the stronger embedder, and silently substituting a
+// smaller local model would quietly degrade their retrieval. The local model is
+// the FALLBACK that removes the need for a dedicated key, not the default.
+//
+// An Anthropic key alone still yields "" at this layer. Anthropic ships no
+// embeddings endpoint, so it cannot produce vectors — but it is NOT useless
+// here: gbrain's query expansion defaults to anthropic:claude-haiku and runs
+// off the same key, which recovers much of what the vector arm provides. See
+// ExpansionAvailable.
 func SelectEmbeddingModel() string {
 	if strings.TrimSpace(selectOpenAIKey()) != "" {
 		return openAIEmbeddingModel
+	}
+	if strings.TrimSpace(selectVoyageKey()) != "" {
+		return voyageEmbeddingModel
 	}
 	if model := strings.TrimSpace(OllamaEmbeddingModel()); model != "" {
 		return "ollama:" + model
 	}
 	return ""
+}
+
+// ExpansionAvailable reports whether gbrain can run LLM query expansion, which
+// is the meaningful fallback when no embedder is configured.
+//
+// Why this is the answer to "can Claude or Codex generate embeddings"
+// ==================================================================
+// They cannot. Anthropic publishes no embeddings endpoint at all, and prompting
+// any chat model to emit a vector produces numbers with no metric structure —
+// cosine similarity over them is meaningless, so it would be worse than
+// keyword search while looking like it worked.
+//
+// What a chat model CAN do is the job the vector arm actually performs for
+// retrieval: bridging vocabulary mismatch between the query and the documents.
+// gbrain already implements this as multi-query expansion, and crucially it is
+// gated ONLY on a chat model being reachable, independent of embeddings
+// (core/search/expansion.ts returns the bare query when the gateway is
+// unavailable). Its default expansion model is anthropic:claude-haiku, and
+// WUPHF's gbrainEnv already forwards ANTHROPIC_API_KEY — so for a Claude user
+// with an API key this path needs no new wiring.
+//
+// The gap this does NOT cover is a subscription-only CLI user with no API key
+// of any kind; reaching those requires an OpenAI-compatible chat shim. See
+// docs/specs/gbrain-local-embeddings.md.
+func ExpansionAvailable() bool {
+	return strings.TrimSpace(config.ResolveAnthropicAPIKey()) != "" ||
+		strings.TrimSpace(selectOpenAIKey()) != ""
+}
+
+// RetrievalMode names the retrieval capability actually available, for a
+// single honest startup line rather than silent degradation.
+func RetrievalMode() string {
+	if model := SelectEmbeddingModel(); model != "" {
+		return "semantic (" + model + ")"
+	}
+	if ExpansionAvailable() {
+		return "keyword + LLM query expansion (no embedder configured)"
+	}
+	return "keyword only (no embedder, no expansion model)"
 }
 
 // EmbeddingAvailable reports whether gbrain can perform semantic (vector)

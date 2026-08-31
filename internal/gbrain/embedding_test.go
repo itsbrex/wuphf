@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -197,4 +198,65 @@ func containsCall(calls [][]string, want []string) bool {
 		}
 	}
 	return false
+}
+
+// withEmbedKeys installs all three selection seams for one case.
+func withEmbedKeys(t *testing.T, openAIKey, voyageKey, ollamaModel string) {
+	t.Helper()
+	prevOpenAI, prevVoyage, prevOllama := selectOpenAIKey, selectVoyageKey, ollamaEmbeddingModel
+	selectOpenAIKey = func() string { return openAIKey }
+	selectVoyageKey = func() string { return voyageKey }
+	ollamaEmbeddingModel = func() string { return ollamaModel }
+	t.Cleanup(func() {
+		selectOpenAIKey, selectVoyageKey, ollamaEmbeddingModel = prevOpenAI, prevVoyage, prevOllama
+	})
+}
+
+// TestSelectEmbeddingModelPrecedence pins the founder's decision: a supplied
+// hosted key always wins, and the local model is the fallback that removes the
+// need for a dedicated key — never a silent substitute for one.
+func TestSelectEmbeddingModelPrecedence(t *testing.T) {
+	cases := []struct {
+		name                        string
+		openAI, voyage, ollamaModel string
+		want                        string
+	}{
+		{"openai wins over everything", "sk-x", "pa-x", "nomic-embed-text", openAIEmbeddingModel},
+		{"openai wins over voyage", "sk-x", "pa-x", "", openAIEmbeddingModel},
+		{"openai wins over local", "sk-x", "", "nomic-embed-text", openAIEmbeddingModel},
+		{"voyage when no openai", "", "pa-x", "nomic-embed-text", voyageEmbeddingModel},
+		{"local when no hosted key", "", "", "nomic-embed-text", "ollama:nomic-embed-text"},
+		{"nothing configured", "", "", "", ""},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			withEmbedKeys(t, tc.openAI, tc.voyage, tc.ollamaModel)
+			if got := SelectEmbeddingModel(); got != tc.want {
+				t.Errorf("SelectEmbeddingModel() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// TestRetrievalModeNamesTheActualCapability guards against the failure this
+// whole area invites: silently degrading to keyword-only while looking healthy.
+func TestRetrievalModeNamesTheActualCapability(t *testing.T) {
+	t.Run("semantic when an embedder is configured", func(t *testing.T) {
+		withEmbedKeys(t, "sk-x", "", "")
+		if got := RetrievalMode(); !strings.Contains(got, "semantic") {
+			t.Errorf("RetrievalMode() = %q, want a semantic mode", got)
+		}
+	})
+	t.Run("keyword-only is stated, not hidden", func(t *testing.T) {
+		withEmbedKeys(t, "", "", "")
+		t.Setenv("ANTHROPIC_API_KEY", "")
+		t.Setenv("WUPHF_ANTHROPIC_API_KEY", "")
+		got := RetrievalMode()
+		if !strings.Contains(got, "keyword") {
+			t.Errorf("RetrievalMode() = %q, want it to name keyword-only", got)
+		}
+		if strings.Contains(got, "semantic") {
+			t.Errorf("RetrievalMode() = %q claims semantic with no embedder", got)
+		}
+	})
 }

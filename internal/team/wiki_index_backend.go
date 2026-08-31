@@ -29,6 +29,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/nex-crm/wuphf/internal/gbrain"
 )
 
 // WikiBackendEnv selects the wiki index backend.
@@ -67,9 +69,21 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 		return NewWikiIndex(root), nil
 	}
 
+	// Create the brain if none exists yet, selecting the best available
+	// embedder (hosted key > local model > none). Without this a user with a
+	// local model and no brain silently got the in-memory fallback and never
+	// learned a brain could have been created. EnsureBrain is idempotent and
+	// never re-inits over a working brain, so this is safe on every boot.
+	if _, err := gbrain.EnsureBrain(ctx); err != nil {
+		log.Printf("wiki: gbrain brain init skipped: %v", err)
+	}
+
 	idx, err := NewGBrainEntityIndex(ctx, root)
 	if err == nil {
-		log.Printf("wiki: context layer backed by gbrain")
+		// State the retrieval capability that is ACTUALLY active. Silent
+		// degradation to keyword-only is the failure mode this area invites:
+		// retrieval keeps answering, just worse, with nothing in the logs.
+		log.Printf("wiki: context layer backed by gbrain — retrieval: %s", gbrain.RetrievalMode())
 		return idx, nil
 	}
 	if explicit {

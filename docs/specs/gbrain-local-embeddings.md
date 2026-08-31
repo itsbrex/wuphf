@@ -59,6 +59,83 @@ Anthropic has no embeddings API at all (which is why `SelectEmbeddingModel`
 already returns "" for an Anthropic-only setup). Selection must PROBE, not
 assume.
 
+## Decision (founder, 2026-08-31)
+
+**A supplied OpenAI key wins. Local is the fallback.** A user who has already
+paid for the stronger embedder must not be silently downgraded to a smaller
+local model. The local path exists to remove the *requirement* for a dedicated
+key, not to override one.
+
+Implemented chain (`SelectEmbeddingModel`):
+
+| # | Condition | gbrain `--embedding-model` | Dim |
+|---|---|---|---|
+| 1 | `OPENAI_API_KEY` | `openai:text-embedding-3-large` | 1536 |
+| 2 | `VOYAGE_API_KEY` | `voyage:voyage-3-large` | 1024 |
+| 3 | Local Ollama embed model pulled | `ollama:<model>` | ~768 |
+| 4 | none | keyword-only | — |
+
+Voyage was added at step 2 because it is the practical answer for a Claude user:
+Anthropic ships **no embeddings endpoint at all** (their own docs name Voyage as
+the recommended companion), so an Anthropic key cannot make vectors, and Voyage
+gives real semantic retrieval without demanding an OpenAI key. gbrain supports
+it natively and `internal/embedding/anthropic.go` already speaks it. The key is
+read env-only and never falls back to `ANTHROPIC_API_KEY` — that would ship the
+user's Anthropic credential to a third party.
+
+## Can Claude CLI or Codex CLI generate embeddings?
+
+**No, and it should not be attempted.** Three separate reasons:
+
+1. **Anthropic has no embeddings API.** Not a gap in our wiring — the endpoint
+   does not exist. Confirmed against Anthropic's own docs, which point to Voyage
+   instead.
+2. **Prompting a chat model for a vector produces meaningless numbers.** An LLM
+   can emit 1536 floats, but they carry no metric structure: cosine similarity
+   over them is noise. It would rank *worse* than keyword search while looking
+   like semantic search — the most expensive kind of wrong.
+3. **Codex CLI's ChatGPT OAuth is not a platform API key.** Those credentials
+   are scoped to the ChatGPT backend, not the platform embeddings endpoint.
+   Pointing one at the other is credential misuse, and it would break the moment
+   the scope is enforced.
+
+### What the CLIs CAN do instead
+
+The vector arm earns its keep by bridging vocabulary mismatch between a query
+and the documents. A chat model does that job directly, and **gbrain already
+implements it** as multi-query expansion:
+
+- `core/search/expansion.ts` gates only on a chat model being reachable —
+  `if (!gatewayIsAvailable('expansion')) return [query]`. It is INDEPENDENT of
+  embeddings, so it works in a keyword-only brain.
+- Its default is `anthropic:claude-haiku-4-5`, and WUPHF's `gbrainEnv()` already
+  forwards `ANTHROPIC_API_KEY`.
+
+**So for a Claude user with an API key, the no-embedder path already works with
+zero new wiring**: keyword retrieval plus LLM query expansion. `RetrievalMode()`
+now reports exactly which of the three modes is live, so this is stated at
+startup rather than silently degrading.
+
+### The remaining gap: subscription-only CLI users
+
+A user on a Claude Pro or ChatGPT subscription with **no API key of any kind**
+still cannot reach a chat model from gbrain, because gbrain speaks HTTP to model
+providers and the CLI is a subprocess.
+
+Closing it needs a shim: expose an OpenAI-compatible `/v1/chat/completions`
+route on the broker that proxies to the already-selected agent CLI, then point
+gbrain at it with `provider_base_urls` + `expansion_model:
+openai-compatible:<model>`. WUPHF today only CONSUMES that protocol
+(`internal/provider/openai_compat.go`); the sole server is a test stub at
+`internal/testing/mlx-stub`. So this is real work, roughly one handler plus
+streaming translation, and it buys expansion (not embeddings) for
+subscription-only users.
+
+A second, heavier option for true offline embeddings with no key and no Ollama
+is bundling a small ONNX embedder (bge-small-en-v1.5, 384d, ~130MB) in-process,
+which is the route supermemory takes. It is the only path to real vectors with
+zero external dependencies, and it costs binary size plus an ONNX runtime.
+
 ## Proposed design
 
 ### Selection chain
@@ -142,17 +219,7 @@ Items 1-3 are the substance. Item 4 is the wiring gap that makes any of it
 reachable from the wiki. Item 6 is what turns "local embeddings work" into
 "local embeddings are good enough", and should gate the default flip.
 
-## Open question for the founder
+## Resolved
 
-Should a local embedder be preferred over a configured OpenAI key by default, or
-only when no OpenAI key exists?
-
-The ask implies the former. The counter-argument is that a user who has already
-supplied an OpenAI key has paid for the better embedder, and silently using a
-768d local model instead would quietly degrade their retrieval. A middle option:
-prefer local when the SELECTED AGENT PROVIDER is local (the user has clearly
-opted into local inference), and prefer OpenAI otherwise. That reads the user's
-existing choice rather than guessing.
-
-Recommendation: the middle option, with the active embedder named at startup so
-the choice is never invisible.
+The precedence question is settled above: hosted key wins, local is the
+fallback. The active mode is named at startup via `RetrievalMode()`.
