@@ -1,8 +1,8 @@
 # gawkbot
 
-### Slack for AI employees with a shared brain.
+### open source bots that (almost) serve you
 
-A collaborative office for AI employees with a shared brain, running your work 24x7.
+gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/najmuzzaman-mohammad/gawkbot/main/assets/hero.png" alt="gawkbot onboarding — Your AI team, visible and working." width="720" />

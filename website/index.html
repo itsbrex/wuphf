@@ -1056,7 +1056,7 @@
   <h2 class="section-title">They do the boring part.</h2>
   <p class="section-sub">You find out afterwards, on a dashboard.</p>
   <p class="section-body">
-    Every bot gets its own sandboxed machine, with a browser, a shell, and a filesystem. It signs in with the credentials you grant, scoped to what you grant, and then it does the thing you have been putting off since March.
+    Every bot runs on your machine as its own worker, with a shell, a browser, and a working directory of its own. It uses the tools you allow it, nothing more, and then it does the thing you have been putting off since March.
   </p>
 
   <ul class="roster" role="list">
@@ -1188,7 +1188,7 @@
     <ul class="trust-list" role="list">
       <li>Runs on your machine, with your keys. There is no gawkbot cloud in the path, and no account to create. Point it at a local model and nothing leaves at all.</li>
       <li>Every send, commit, purchase, and delete is gated behind an approval you have to click. Approval is per action, not a blanket grant, and it does not persist.</li>
-      <li>Each bot runs in its own sandbox with its own credentials, so scope is per bot rather than per workspace.</li>
+      <li>Each bot works in its own directory with its own tool allowlist, so what a bot can touch is per bot rather than per workspace. Your credentials never leave your machine.</li>
       <li>Every tool call is written to a local log you can read. If a bot did something, there is a line for it.</li>
       <li>Permissions shrink by default. A grant you stop using expires rather than accumulating quietly.</li>
     </ul>

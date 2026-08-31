@@ -18,8 +18,8 @@ a call — and your AI builds the agent that runs it: its own screen, its own
 schedule, its own tools, with a human approval gate on everything it sends.
 Runs local, on your machine, on your account.
 
-The models do the boring part. You get a screen with buttons on it, and the
-pleasant feeling of being in charge.
+gawkbots automate your menial work via AI models and build you microapps to
+manage the outcome, so that you have a false sense of control.
 
 > **grok** *(verb)* — to understand something profoundly and intuitively.
 > **gawk** *(verb)* — to stare openly and stupidly.
