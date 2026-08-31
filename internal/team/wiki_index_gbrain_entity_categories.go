@@ -186,15 +186,12 @@ func (s *gbrainEntityStore) ListCategoriesForArticle(ctx context.Context, articl
 // categoryPages lists the concepts/ pages that are categories (they carry the
 // wuphf_category frontmatter key).
 func (s *gbrainEntityStore) categoryPages(ctx context.Context) ([]string, error) {
-	kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+	kept, err := s.client.ListAllPages(ctx, gbrain.ListPageOptions{
 		SlugPrefix: gbrainDirConcepts,
 		Limit:      gbrainListPageSize,
 	})
 	if err != nil {
 		return nil, err
-	}
-	if raw >= gbrainListPageCap {
-		return nil, errCorpusExceedsListCap
 	}
 	var out []string
 	for _, meta := range kept {

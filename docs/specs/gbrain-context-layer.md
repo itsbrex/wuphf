@@ -193,33 +193,42 @@ is precisely what its schema doc argues against.
 Latency remains ~2500x the in-process index. That is structural (an MCP
 round-trip per query) and no page shape changes it.
 
-## The pagination blocker largely dissolves at this shape
+## Pagination: FIXED with an updated_after cursor
 
-gbrain's `list_pages` caps at 100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
+gbrain's `list_pages` caps at ~100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
 (`core/operations.ts` calls `engine.listPages({type, updated_after, limit,
-...scope})` — no offset parameter exists; verified offset=0 and offset=2 return
-byte-identical rows). Full scans therefore cannot paginate, and the store
-returns `errCorpusExceedsListCap` rather than a silently truncated result.
+...scope})` — no offset parameter exists; offset=0 and offset=2 return
+byte-identical rows). Both naive loops are wrong: stopping on a short batch
+truncates at the cap, looping until empty never terminates.
 
-Under the atom shape that was fatal: 475 facts meant 475 pages, so every full
-scan was over the cap. Under the recommended shape the same corpus is ~38 entity
-pages, comfortably under it. The ceiling is now ~100 ENTITIES rather than ~100
-FACTS, which is a different order of problem — but it is still a ceiling, and a
-real deployment will cross it. Fixing it needs an `updated_after` cursor (lossy
-on tied timestamps) or upstream support.
+`Client.ListAllPages` walks a real cursor instead. Two gbrain arguments ARE
+honoured and together they paginate:
 
-## Original blocker note (atom shape)
+- `sort=updated_asc` — the default is descending, against which no forward
+  cursor can walk.
+- `updated_after` — strictly greater-than.
 
-gbrain's `list_pages` caps at 100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
-(`core/operations.ts` calls `engine.listPages({type, updated_after, limit,
-...scope})` — no offset parameter exists). Verified: offset=0 and offset=2
-return byte-identical rows.
+Because the comparison is strict, advancing to the batch MAXIMUM would drop rows
+sharing that timestamp that did not fit. The cursor advances to the
+SECOND-LARGEST DISTINCT timestamp, so boundary rows are deliberately re-fetched
+and deduplicated by slug. The cursor strictly increases each round, so it
+terminates. The one unrepresentable case — a full batch whose rows all share one
+timestamp, a tie cluster larger than the page size — returns an error rather
+than silently skipping rows.
 
-So `ListAllFacts`, `CountFacts`, `IterateEntities`, and both canonical hashes
-cannot enumerate a corpus above 100 rows. They now return
-`errCorpusExceedsListCap` rather than a truncated result, because a short fact
-list or a wrong hash would corrupt reconcile decisions silently. Fixing this
-needs an `updated_after` cursor (lossy on tied timestamps) or upstream support.
+Verified live: `TestGBrainFactStore_FullScanPastListCap` writes 120 entity pages
+(past the cap) and asserts CountFacts, ListAllFacts, and IterateEntities all see
+the full set. Before the cursor, CountFacts returned 100 for a 120-fact corpus.
+
+There is deliberately NO exported non-paginating list helper: one would silently
+truncate, which is the defect this package exists to hide from callers.
+
+### Prerequisite bug fixed alongside it
+
+`PageMeta` declared `json:"updated"` but gbrain emits `updated_at`, so the field
+silently decoded EMPTY. That blanked `LastEditedTs` on every wiki page in
+`wiki_gbrain_adapter.go` and left the cursor with nothing to advance on.
+`PageMeta.UnmarshalJSON` now accepts either spelling.
 
 ## Known latency defect in this adapter (not gbrain's fault)
 

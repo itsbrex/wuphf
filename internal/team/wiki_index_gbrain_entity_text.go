@@ -82,7 +82,13 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 		topK = 10
 	}
 
-	results, err := t.store.client.Query(ctx, query, gbrainChunkFetch(topK))
+	// gbrain's `query` ACCEPTS a `type` argument and silently IGNORES it
+	// (verified on 0.42.58.0: passing type:"atom" returns byte-identical rows).
+	// So non-entity pages — category pages, article stubs, anything a human put
+	// in the same brain — cannot be excluded server-side; they are filtered
+	// below by slug prefix, but they still consume slots in the ranked result.
+	// The fetch is widened to compensate.
+	results, err := t.store.client.Query(ctx, query, gbrainChunkFetch(topK)*gbrainNonEntityOverfetch)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +99,8 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 	for _, r := range results {
 		entity := entitySlugFromPageSlug(r.Slug)
 		if entity == "" {
-			continue // not one of our entity pages
+			// Client-side stand-in for the `type` filter gbrain ignores.
+			continue
 		}
 
 		// Anchored facts first: these are the exact evidence lines the chunk
@@ -166,6 +173,12 @@ func factMap(facts []TypedFact) map[string]TypedFact {
 	}
 	return out
 }
+
+// gbrainNonEntityOverfetch widens the chunk fetch to absorb rows that the
+// ignored server-side `type` filter lets through and that are then dropped
+// client-side. 2x is empirically ample: on the bench corpus non-entity pages
+// are a small minority of any result set.
+const gbrainNonEntityOverfetch = 2
 
 // gbrainChunkFetch converts a desired fact count into a chunk fetch size.
 //

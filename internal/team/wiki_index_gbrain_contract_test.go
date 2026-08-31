@@ -29,7 +29,6 @@ package team
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -75,12 +74,9 @@ func newGBrainTestStore(t *testing.T) FactStore {
 
 // purgeGBrainNamespaces deletes every page WUPHF owns in the brain.
 //
-// Drains in passes rather than listing once: allPageMetas deliberately refuses
-// to enumerate past gbrain's 100-row list_pages cap (see errCorpusExceedsListCap),
-// and a brain left dirty by a previous run or by the bench is routinely over it.
-// Each pass lists what it can and deletes it, which shrinks the live set, so
-// repeating drains the namespace without needing pagination that gbrain does
-// not offer.
+// Uses the cursor-paginated listing so a brain left dirty by the bench (which
+// can hold far more than gbrain's ~100-row list_pages cap) is fully drained.
+// Repeats until a pass finds nothing, since deleting shrinks the live set.
 func purgeGBrainNamespaces(t *testing.T, ctx context.Context, client *gbrain.Client) {
 	t.Helper()
 	prefixes := append([]string{
@@ -88,27 +84,22 @@ func purgeGBrainNamespaces(t *testing.T, ctx context.Context, client *gbrain.Cli
 	}, allEntityDirs()...)
 	for _, prefix := range prefixes {
 		for pass := 0; ; pass++ {
-			if pass > 200 { // bounded: 200 passes * 100 rows is far past any test corpus
+			if pass > 50 {
 				t.Fatalf("purge %s: still draining after %d passes", prefix, pass)
 			}
-			kept, raw, err := client.ListPageBatch(ctx, gbrain.ListPageOptions{
+			pages, err := client.ListAllPages(ctx, gbrain.ListPageOptions{
 				SlugPrefix: prefix,
 				Limit:      gbrainListPageSize,
 			})
 			if err != nil {
 				t.Fatalf("purge list %s: %v", prefix, err)
 			}
-			if len(kept) == 0 {
-				// Nothing of ours left. A non-zero raw count here just means the
-				// page budget was spent on other namespaces' rows.
-				if raw < gbrainListPageCap {
-					break
-				}
+			if len(pages) == 0 {
 				break
 			}
-			for _, m := range kept {
-				if err := client.DeletePage(ctx, m.Slug); err != nil {
-					t.Fatalf("purge delete %s: %v", m.Slug, err)
+			for _, p := range pages {
+				if err := client.DeletePage(ctx, p.Slug); err != nil {
+					t.Fatalf("purge delete %s: %v", p.Slug, err)
 				}
 			}
 		}
@@ -446,38 +437,56 @@ func TestGBrainFactStore_LinksWithoutPreexistingEntities(t *testing.T) {
 	}
 }
 
-// TestGBrainFactStore_FullScanExceedsListCap pins the documented limit: a
-// corpus larger than gbrain's list_pages cap cannot be enumerated, and the
-// store must say so rather than return a truncated result.
+// TestGBrainFactStore_FullScanPastListCap is the cursor regression test.
 //
-// gbrain caps list_pages at 100 rows and silently drops the `offset` argument
-// (verified: offset=0 and offset=2 return identical rows), so pagination is
-// impossible through this API. Silent truncation would corrupt reconcile
-// decisions — CountFacts reported 100 for a 120-fact corpus before this — so
-// full scans fail loudly instead.
+// gbrain caps list_pages at ~100 rows and silently drops `offset`, so a naive
+// scan truncated at the cap and reported, for instance, CountFacts=100 for a
+// 120-fact corpus — a wrong answer that looks like a right one. Client
+// .ListAllPages now walks an ascending `updated_after` cursor instead.
 //
-// Writes 120 facts, so it is slow. Skipped in short mode.
-func TestGBrainFactStore_FullScanExceedsListCap(t *testing.T) {
+// This writes more ENTITIES than the cap, because under the one-page-per-entity
+// shape it is entities, not facts, that occupy list_pages rows.
+//
+// Slow by design (120 page writes); skipped in short mode.
+func TestGBrainFactStore_FullScanPastListCap(t *testing.T) {
 	if testing.Short() {
-		t.Skip("writes 120 facts; skipped in short mode")
+		t.Skip("writes 120 entity pages; skipped in short mode")
 	}
 	store := newGBrainTestStore(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
 	defer cancel()
 
-	const total = 120 // > gbrain's 100-row list_pages cap
+	const total = 120 // > gbrain's ~100-row list_pages cap
 	for i := 0; i < total; i++ {
-		f := seedTriplet(fmt.Sprintf("f-cap-%03d", i), "cap-person", "role_at", "company:cap-co")
+		slug := fmt.Sprintf("cap-person-%03d", i)
+		f := seedTriplet(fmt.Sprintf("f-cap-%03d", i), slug, "role_at", "company:cap-co")
 		if err := store.UpsertFact(ctx, f); err != nil {
 			t.Fatalf("UpsertFact %d: %v", i, err)
 		}
 	}
 
-	// Must be an explicit error, never a plausible-looking short answer.
-	if n, err := store.CountFacts(ctx); !errors.Is(err, errCorpusExceedsListCap) {
-		t.Errorf("CountFacts = (%d, %v), want errCorpusExceedsListCap; a truncated count corrupts reconcile", n, err)
+	n, err := store.CountFacts(ctx)
+	if err != nil {
+		t.Fatalf("CountFacts: %v", err)
 	}
-	if all, err := store.ListAllFacts(ctx); !errors.Is(err, errCorpusExceedsListCap) {
-		t.Errorf("ListAllFacts returned %d facts and err %v, want errCorpusExceedsListCap", len(all), err)
+	if n < total {
+		t.Errorf("CountFacts = %d, want >= %d — the cursor truncated the scan at the list_pages cap", n, total)
+	}
+
+	all, err := store.ListAllFacts(ctx)
+	if err != nil {
+		t.Fatalf("ListAllFacts: %v", err)
+	}
+	if len(all) < total {
+		t.Errorf("ListAllFacts returned %d, want >= %d", len(all), total)
+	}
+
+	// Entity enumeration must clear the cap too.
+	seen := 0
+	if err := store.IterateEntities(ctx, func(IndexEntity) error { seen++; return nil }); err != nil {
+		t.Fatalf("IterateEntities: %v", err)
+	}
+	if seen < total {
+		t.Errorf("IterateEntities saw %d entities, want >= %d", seen, total)
 	}
 }

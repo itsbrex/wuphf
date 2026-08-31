@@ -343,15 +343,15 @@ func (s *gbrainEntityStore) GetFact(ctx context.Context, id string) (TypedFact, 
 // scanAllLocked loads every entity page into the cache. Callers must hold mu.
 func (s *gbrainEntityStore) scanAllLocked(ctx context.Context) error {
 	for _, dir := range allEntityDirs() {
-		kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+		// Cursor-paginated: gbrain cannot paginate by offset, so ListAllPages
+		// walks `updated_after` ascending. Without it this scan silently
+		// truncated at ~100 pages.
+		kept, err := s.client.ListAllPages(ctx, gbrain.ListPageOptions{
 			SlugPrefix: dir,
 			Limit:      gbrainListPageSize,
 		})
 		if err != nil {
 			return err
-		}
-		if raw >= gbrainListPageCap {
-			return fmt.Errorf("%w (dir %q hit the %d-row cap)", errCorpusExceedsListCap, dir, gbrainListPageCap)
 		}
 		for _, meta := range kept {
 			slug := entitySlugFromPageSlug(meta.Slug)

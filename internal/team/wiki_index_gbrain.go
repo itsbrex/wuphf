@@ -622,54 +622,18 @@ func (s *gbrainFactStore) CountFacts(ctx context.Context) (int, error) {
 	return len(metas), nil
 }
 
-// gbrainListPageCap is the server-side row cap gbrain applies to list_pages
-// (100 on 0.42.58.0) regardless of the limit requested.
-const gbrainListPageCap = 100
-
-// errCorpusExceedsListCap reports that a full scan cannot be completed.
-var errCorpusExceedsListCap = errors.New(
-	"wiki_index_gbrain: corpus exceeds gbrain's list_pages cap and cannot be enumerated")
-
-// allPageMetas lists pages for a slug prefix.
+// allPageMetas lists every page under a slug prefix, cursor-paginated.
 //
-// THIS CANNOT PAGINATE, and that is a hard limit of the upstream API, not a
-// shortcut taken here. gbrain's list_pages caps at gbrainListPageCap rows and
-// its `offset` argument is ACCEPTED AND SILENTLY DROPPED — core/operations.ts
-// calls engine.listPages({type, updated_after, limit, ...scope}) with no offset
-// parameter at all. Verified on 0.42.58.0: offset=0 and offset=2 return
-// byte-identical rows.
-//
-// So there are exactly three possible behaviours, and two of them are bugs:
-//
-//  1. stop when a batch is short  → SILENT TRUNCATION at 100 rows. Every full
-//     scan returns a wrong answer that looks like a right one. This is what the
-//     first implementation did, and it made CountFacts report 100 for a
-//     120-fact corpus.
-//  2. loop until an empty batch    → INFINITE LOOP, because offset is ignored
-//     and every request returns the same first page.
-//  3. fail loudly above the cap    → what this does.
-//
-// Callers that scan the whole corpus (ListAllFacts, CountFacts,
-// IterateEntities, both canonical hashes) therefore return an error rather than
-// a truncated result once the corpus outgrows the cap. A wrong hash or a short
-// fact list would corrupt reconcile decisions silently; an error stops them.
-//
-// Fixing this properly needs either a cursor built on `updated_after` (ties on
-// equal timestamps make that lossy) or an upstream offset/cursor parameter.
+// gbrain's list_pages caps at ~100 rows and silently drops `offset`, so this
+// delegates to Client.ListAllPages, which walks `updated_after` ascending. The
+// earlier version of this function returned an error above the cap because no
+// cursor existed yet.
 func (s *gbrainFactStore) allPageMetas(ctx context.Context, prefix, pageType string) ([]gbrain.PageMeta, error) {
-	kept, raw, err := s.client.ListPageBatch(ctx, gbrain.ListPageOptions{
+	return s.client.ListAllPages(ctx, gbrain.ListPageOptions{
 		Type:       pageType,
 		SlugPrefix: prefix,
 		Limit:      gbrainListPageSize,
 	})
-	if err != nil {
-		return nil, err
-	}
-	if raw >= gbrainListPageCap {
-		return nil, fmt.Errorf("%w (prefix %q: got %d rows, the cap): full scans are unavailable on this corpus size",
-			errCorpusExceedsListCap, prefix, raw)
-	}
-	return kept, nil
 }
 
 // ResolveRedirect follows a redirect link, if one exists.

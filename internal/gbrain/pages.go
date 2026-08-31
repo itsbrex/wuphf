@@ -13,9 +13,11 @@ package gbrain
 //	DeletePage  — the only path that retires a fact; FactStore has no
 //	              DeleteFact, so TextIndex.Delete carries it.
 //
-// It also extends ListOptions with the slug-prefix and offset filters that a
-// full corpus scan needs. Those live here rather than in mcp.go so the diff
-// against upstream mcp.go stays reviewable.
+// It also adds ListAllPages: the cursor-paginated full scan. gbrain's
+// list_pages caps at ~100 rows and silently drops `offset`, so a correct full
+// enumeration needs an `updated_after` cursor. Deliberately there is NO
+// exported non-paginating list helper — one would silently truncate, which is
+// the defect this package exists to hide from callers.
 //
 // Contract notes verified against gbrain 0.42.58.0 by direct probe:
 //   - traverse_graph returns EDGES ([]GraphEdge) only when link_type AND
@@ -32,6 +34,7 @@ package gbrain
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 )
@@ -141,69 +144,117 @@ type ListPageOptions struct {
 	IncludeDeleted bool
 }
 
-// ListPagesFiltered is ListPages with slug-prefix and offset support.
-//
-// The slug prefix is ALSO re-applied client-side: older gbrain builds ignore
-// the filter rather than erroring on it, and a silently unfiltered listing
-// would let foreign pages into the fact corpus.
-func (c *Client) ListPagesFiltered(ctx context.Context, opts ListPageOptions) ([]PageMeta, error) {
-	args := map[string]any{}
-	if opts.Limit > 0 {
-		args["limit"] = opts.Limit
-	}
-	if opts.Offset > 0 {
-		args["offset"] = opts.Offset
-	}
-	if t := strings.TrimSpace(opts.Type); t != "" {
-		args["type"] = t
-	}
-	if tag := strings.TrimSpace(opts.Tag); tag != "" {
-		args["tag"] = tag
-	}
-	if p := strings.TrimSpace(opts.SlugPrefix); p != "" {
-		args["slug_prefix"] = p
-	}
-	if opts.IncludeDeleted {
-		args["include_deleted"] = true
-	}
-	raw, err := c.CallTool(ctx, toolListPages, args)
-	if err != nil {
-		return nil, err
-	}
-	if isEmptyResult(raw) {
-		return nil, nil
-	}
-	var pages []PageMeta
-	if err := decodeJSON(raw, &pages); err != nil {
-		return nil, fmt.Errorf("decode gbrain list_pages: %w", err)
-	}
-	if prefix := strings.TrimSpace(opts.SlugPrefix); prefix != "" {
-		filtered := pages[:0]
-		for _, p := range pages {
-			if strings.HasPrefix(p.Slug, prefix) {
-				filtered = append(filtered, p)
-			}
-		}
-		pages = filtered
-	}
-	return pages, nil
+// isEmptyResult reports whether a tool result carries no rows. gbrain signals
+// absence with an empty body or a JSON null rather than an error.
+func isEmptyResult(raw string) bool {
+	raw = strings.TrimSpace(raw)
+	return raw == "" || raw == "null" || raw == "[]"
 }
 
-// ListPageBatch is ListPagesFiltered plus the RAW row count gbrain returned
-// before the client-side prefix filter.
+// RestorePage clears a page's soft-delete tombstone.
 //
-// Callers paginating a full scan need the raw count: gbrain caps list_pages
-// server-side regardless of the requested limit, so "fewer rows than asked for"
-// does not mean end-of-pages, and the prefix filter can shrink a batch further.
-// Advancing the offset by the raw count and stopping only on a raw count of
-// zero is the only correct termination.
-func (c *Client) ListPageBatch(ctx context.Context, opts ListPageOptions) (kept []PageMeta, raw int, err error) {
-	args := map[string]any{}
-	if opts.Limit > 0 {
-		args["limit"] = opts.Limit
+// This exists because put_page does NOT clear deleted_at: writing to a
+// soft-deleted slug updates the row but leaves it invisible to get_page and to
+// search. Verified against gbrain 0.42.58.0. Any upsert path that can target a
+// previously deleted slug must call this, or the write silently disappears.
+//
+// It is idempotent on a live page ("already_active") and returns a not-found
+// error for a slug that never existed, which callers may ignore.
+func (c *Client) RestorePage(ctx context.Context, slug string) error {
+	slug = strings.TrimSpace(slug)
+	if slug == "" {
+		return nil
 	}
-	if opts.Offset > 0 {
-		args["offset"] = opts.Offset
+	if _, err := c.CallTool(ctx, toolRestorePage, map[string]any{"slug": slug}); err != nil {
+		return fmt.Errorf("gbrain restore_page %s: %w", slug, err)
+	}
+	return nil
+}
+
+// ListAllPages enumerates EVERY page matching opts, working around the fact
+// that gbrain's list_pages cannot paginate by offset.
+//
+// The problem
+// ===========
+// list_pages caps at ~100 rows server-side and ACCEPTS BUT SILENTLY DROPS
+// `offset` — core/operations.ts calls engine.listPages({type, updated_after,
+// limit, ...scope}) and there is no offset parameter at all (verified: offset=0
+// and offset=2 return byte-identical rows). So the two obvious loops are both
+// wrong: stopping on a short batch truncates at the cap, and looping until an
+// empty batch never terminates.
+//
+// The cursor
+// ==========
+// `updated_after` IS honoured, and so is `sort=updated_asc`. Together they give
+// a forward cursor: sort ascending, remember the batch's newest timestamp, ask
+// for everything after it.
+//
+// `updated_after` is STRICTLY greater-than, so advancing the cursor to the
+// batch maximum would drop any rows sharing that exact timestamp that did not
+// fit in the batch. The cursor therefore advances only to the SECOND-largest
+// distinct timestamp in the batch, so the boundary rows are deliberately
+// re-fetched next round and deduplicated by slug. That trades a little repeated
+// work for not losing rows.
+//
+// Termination: the cursor strictly increases every iteration, because the next
+// batch's second-largest timestamp is at least the previous batch's maximum.
+// The one unrepresentable case is a batch whose rows ALL share one timestamp
+// and which fills the cap — a tie cluster larger than the page size, where no
+// cursor value can advance without loss. That returns an error rather than
+// silently skipping rows.
+func (c *Client) ListAllPages(ctx context.Context, opts ListPageOptions) ([]PageMeta, error) {
+	if opts.Limit <= 0 {
+		opts.Limit = 100
+	}
+	seen := map[string]bool{}
+	var out []PageMeta
+	cursor := ""
+
+	for iter := 0; ; iter++ {
+		if iter > maxListPageIterations {
+			return nil, fmt.Errorf("gbrain list_pages: cursor did not terminate after %d pages", maxListPageIterations)
+		}
+		batch, raw, err := c.listPageBatchCursor(ctx, opts, cursor)
+		if err != nil {
+			return nil, err
+		}
+		if raw == 0 {
+			return out, nil
+		}
+		for _, p := range batch {
+			if !seen[p.Slug] {
+				seen[p.Slug] = true
+				out = append(out, p)
+			}
+		}
+		// A short batch means the cursor reached the end.
+		if raw < opts.Limit {
+			return out, nil
+		}
+		next, ok := penultimateTimestamp(batch)
+		if !ok {
+			return nil, fmt.Errorf(
+				"gbrain list_pages: %d rows share one updated_at timestamp, which exceeds the page size; cannot advance the cursor without dropping rows",
+				raw)
+		}
+		cursor = next
+	}
+}
+
+// maxListPageIterations bounds ListAllPages. At 100 rows a page this allows a
+// 100k-page brain while still failing fast on a cursor that cannot advance.
+const maxListPageIterations = 1000
+
+// listPageBatchCursor fetches one ascending page starting after `cursor`.
+func (c *Client) listPageBatchCursor(ctx context.Context, opts ListPageOptions, cursor string) (kept []PageMeta, raw int, err error) {
+	args := map[string]any{
+		"limit": opts.Limit,
+		// Ascending order is what makes updated_after a forward cursor; the
+		// default is descending, against which the cursor cannot walk.
+		"sort": "updated_asc",
+	}
+	if cursor != "" {
+		args["updated_after"] = cursor
 	}
 	if t := strings.TrimSpace(opts.Type); t != "" {
 		args["type"] = t
@@ -241,29 +292,25 @@ func (c *Client) ListPageBatch(ctx context.Context, opts ListPageOptions) (kept 
 	return pages, raw, nil
 }
 
-// isEmptyResult reports whether a tool result carries no rows. gbrain signals
-// absence with an empty body or a JSON null rather than an error.
-func isEmptyResult(raw string) bool {
-	raw = strings.TrimSpace(raw)
-	return raw == "" || raw == "null" || raw == "[]"
-}
-
-// RestorePage clears a page's soft-delete tombstone.
-//
-// This exists because put_page does NOT clear deleted_at: writing to a
-// soft-deleted slug updates the row but leaves it invisible to get_page and to
-// search. Verified against gbrain 0.42.58.0. Any upsert path that can target a
-// previously deleted slug must call this, or the write silently disappears.
-//
-// It is idempotent on a live page ("already_active") and returns a not-found
-// error for a slug that never existed, which callers may ignore.
-func (c *Client) RestorePage(ctx context.Context, slug string) error {
-	slug = strings.TrimSpace(slug)
-	if slug == "" {
-		return nil
+// penultimateTimestamp returns the second-largest DISTINCT updated_at in a
+// batch — the safe cursor value, since rows at the maximum may be incomplete.
+// Reports false when the batch has fewer than two distinct timestamps.
+func penultimateTimestamp(batch []PageMeta) (string, bool) {
+	distinct := map[string]bool{}
+	for _, p := range batch {
+		if ts := strings.TrimSpace(p.Updated); ts != "" {
+			distinct[ts] = true
+		}
 	}
-	if _, err := c.CallTool(ctx, toolRestorePage, map[string]any{"slug": slug}); err != nil {
-		return fmt.Errorf("gbrain restore_page %s: %w", slug, err)
+	if len(distinct) < 2 {
+		return "", false
 	}
-	return nil
+	all := make([]string, 0, len(distinct))
+	for ts := range distinct {
+		all = append(all, ts)
+	}
+	// RFC3339 with a fixed offset sorts correctly as a string, which is the
+	// format gbrain emits (…Z).
+	sort.Strings(all)
+	return all[len(all)-2], true
 }

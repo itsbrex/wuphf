@@ -316,13 +316,40 @@ type Page struct {
 }
 
 // PageMeta is page metadata as returned by list_pages (no body).
+//
+// Updated accepts BOTH `updated_at` (what gbrain 0.42.58.0 actually emits) and
+// the legacy `updated` key. The struct originally declared only `updated`, so
+// the field silently decoded empty on current gbrain — which left
+// LastEditedTs blank on every wiki page in the adapter, and left no usable
+// cursor for pagination. See UnmarshalJSON.
 type PageMeta struct {
 	Slug    string   `json:"slug"`
 	Title   string   `json:"title"`
 	Type    string   `json:"type"`
 	Tags    []string `json:"tags"`
-	Updated string   `json:"updated"`
+	Updated string   `json:"-"`
 	Stale   bool     `json:"stale"`
+}
+
+// UnmarshalJSON decodes a page-metadata row, tolerating either spelling of the
+// updated timestamp. Tolerating both means a gbrain upgrade that renames the
+// key cannot silently blank the field again.
+func (p *PageMeta) UnmarshalJSON(data []byte) error {
+	type alias PageMeta // avoids recursing into this method
+	var raw struct {
+		alias
+		UpdatedAt string `json:"updated_at"`
+		Updated   string `json:"updated"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*p = PageMeta(raw.alias)
+	p.Updated = strings.TrimSpace(raw.UpdatedAt)
+	if p.Updated == "" {
+		p.Updated = strings.TrimSpace(raw.Updated)
+	}
+	return nil
 }
 
 // ListOptions filters list_pages. Zero values are omitted from the call.
