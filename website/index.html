@@ -257,7 +257,23 @@
      for free in dark mode and on ink-filled surfaces. */
   .gawkbot-mark { width: auto; color: var(--ink); display: block; }
   .nav-mark { height: 18px; flex-shrink: 0; }
-  .hero-mark { height: clamp(76px, 13vw, 124px); margin: 0 auto 30px; }
+  .hero-mark { height: clamp(76px, 13vw, 124px); margin: 0 auto 14px; }
+  .hero-bots {
+    display: flex;
+    justify-content: center;
+    gap: clamp(8px, 1.6vw, 16px);
+    margin: 0 auto 26px;
+  }
+  .hero-bot { height: clamp(26px, 4vw, 40px); width: auto; display: block; }
+  /* Same discrete blink as the roster marks; eyes narrow, never fully shut. */
+  .hero-bot .blob-open { animation: blob-eye-open 5.6s steps(1, end) infinite; }
+  .hero-bot .blob-shut { animation: blob-eye-shut 5.6s steps(1, end) infinite; }
+  .hero-bot-1 path { animation-delay: 0.7s; }
+  .hero-bot-2 path { animation-delay: 2.1s; }
+  .hero-bot-3 path { animation-delay: 3.4s; }
+  .hero-bot-4 path { animation-delay: 1.3s; }
+  .hero-bot-5 path { animation-delay: 4.6s; }
+  .is-page-hidden .hero-bot path { animation-play-state: paused; }
   .footer-mark { height: 16px; flex-shrink: 0; }
 
   .nav-wordmark {
@@ -942,6 +958,7 @@
     }
     .ambient-scroll,
     .hero-mark .gawkbot-eyes,
+    .hero-bot path,
     .blink,
     .roster-mark path {
       animation: none !important;
@@ -976,6 +993,18 @@
   <div class="hero-inner">
 
     <svg class="gawkbot-mark hero-mark" viewBox="0 0 11 15" role="img" aria-label="The gawkbot mark: two hollow eyes. They are yours."><title>gawkbot</title><g class="gawkbot-eyes" fill="currentColor"><rect x="1" y="1" width="2" height="1"/><rect x="0" y="2" width="1" height="11"/><rect x="3" y="2" width="1" height="11"/><rect x="1" y="13" width="2" height="1"/><rect x="8" y="1" width="2" height="1"/><rect x="7" y="2" width="1" height="11"/><rect x="10" y="2" width="1" height="11"/><rect x="8" y="13" width="2" height="1"/></g></svg>
+    <!-- The five bots, already at work under the mark. Same silhouettes and
+         colours as the roster below (generated from web/src/lib/blobAvatar.ts,
+         so they cannot drift from what the app renders), same never-fully-shut
+         blink, staggered so they read as individuals rather than a chorus. -->
+    <div class="hero-bots" aria-label="Five gawkbots: filer, reconciler, triager, scheduler, and chaser" role="img">
+      <svg class="hero-bot hero-bot-1" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8b6bb1" fill-rule="evenodd" d="M3 2H6V3H3ZM2 3H7V4H2ZM2 4H14V5H2ZM1 5H15V11H1ZM2 11H14V13H2ZM4 13H12V14H4ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <svg class="hero-bot hero-bot-2" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#3f9c8f" fill-rule="evenodd" d="M5 1H10V2H5ZM3 2H12V3H3ZM2 3H13V4H2ZM2 4H14V5H2ZM1 5H14V6H1ZM1 6H15V10H1ZM2 10H15V11H2ZM2 11H14V12H2ZM3 12H14V13H3ZM4 13H12V14H4ZM6 14H10V15H6ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <svg class="hero-bot hero-bot-3" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#a8546b" fill-rule="evenodd" d="M6 1H10V2H6ZM4 2H12V3H4ZM3 3H13V4H3ZM2 4H14V6H2ZM1 6H15V15H1ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <svg class="hero-bot hero-bot-4" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#8a7a2e" fill-rule="evenodd" d="M7 1H9V2H7ZM6 2H10V4H6ZM5 4H11V5H5ZM4 5H12V6H4ZM3 6H13V7H3ZM2 7H14V9H2ZM1 9H15V12H1ZM2 12H14V13H2ZM3 13H13V14H3ZM5 14H11V15H5ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#8a7a2e" fill-rule="evenodd" d="M7 1H9V2H7ZM6 2H10V4H6ZM5 4H11V5H5ZM4 5H12V6H4ZM3 6H13V7H3ZM2 7H14V9H2ZM1 9H15V12H1ZM2 12H14V13H2ZM3 13H13V14H3ZM5 14H11V15H5ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+      <svg class="hero-bot hero-bot-5" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="blob-open" fill="#6b7fd7" fill-rule="evenodd" d="M3 3H13V4H3ZM1 4H15V5H1ZM0 5H16V11H0ZM1 11H15V12H1ZM2 12H14V13H2ZM5 5H7V9H5ZM9 5H11V9H9Z"/><path class="blob-shut" fill="#6b7fd7" fill-rule="evenodd" d="M3 3H13V4H3ZM1 4H15V5H1ZM0 5H16V11H0ZM1 11H15V12H1ZM2 12H14V13H2ZM5 5H7V7H5ZM9 5H11V7H9Z"/></svg>
+    </div>
+
 
     <div class="hero-eyebrow">
       <span class="blink"></span>
@@ -986,7 +1015,7 @@
          search engines read, so it carries the same thesis as the tab title. -->
     <h1 class="hero-title">gawkbot<span class="visually-hidden">, bots you almost control</span></h1>
 
-    <p class="hero-lede">The models do the boring part.</p>
+    <p class="hero-lede">open source bots that (almost) serve you</p>
 
     <p class="hero-tagline">
       gawkbot hands your menial work to AI models, then builds you a microapp to manage the outcome. You get a screen with buttons on it, and the pleasant feeling of being in charge.
