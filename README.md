@@ -49,11 +49,11 @@ npm install -g gawkbot && gawkbot
 Building from source (requires Go and Bun):
 
 ```bash
-git clone https://github.com/najmuzzaman-mohammad/wuphf.git
+git clone https://github.com/najmuzzaman-mohammad/gawkbot.git
 cd gawkbot
 cd web && bun install && bun run build && cd ..
 go build -o gawkbot ./cmd/wuphf
-./wuphf
+./gawkbot
 ```
 
 Routine execution runs on a small sidecar service (`agent/`). The broker
@@ -83,7 +83,7 @@ now, or hold while you connect. It never silently re-scopes your job.
 Paste this into Claude Code, Codex, or Cursor and let your agent drive the install:
 
 ```text
-Set up https://github.com/najmuzzaman-mohammad/wuphf for me. Read `README.md`
+Set up https://github.com/najmuzzaman-mohammad/gawkbot for me. Read `README.md`
 first, then run `npx gawkbot` — the web UI opens at http://localhost:7891.
 
 Walk the onboarding: verify the runtime, name the office, and start the first
