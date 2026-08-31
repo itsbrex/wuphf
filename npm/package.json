@@ -1,7 +1,7 @@
 {
   "name": "gawkbot",
-  "version": "0.0.0",
-  "description": "gawkbot \u2014 your team of always-on onlookers. They sign in to your tools, look around, and come back with opinions.",
+  "version": "0.236.2",
+  "description": "gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.",
   "bin": {
     "gawkbot": "bin/gawkbot.js"
   },
