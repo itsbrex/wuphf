@@ -121,28 +121,33 @@ A user on a Claude Pro or ChatGPT subscription with **no API key of any kind**
 still cannot reach a chat model from gbrain, because gbrain speaks HTTP to model
 providers and the CLI is a subprocess.
 
-**SHIPPED.** `internal/team/broker_openai_compat.go` serves
-`POST /v1/chat/completions` on the broker, proxying to the configured agent CLI
-via `provider.RunConfiguredOneShotCtx`.
+**SHIPPED, BUT NOT YET REACHABLE BY GBRAIN.** Read this before relying on it.
 
-Wire gbrain to it:
+`internal/team/broker_openai_compat.go` serves `POST /v1/chat/completions` on the
+broker, proxying to the configured agent CLI via
+`provider.RunConfiguredOneShotCtx`. It is behind the broker's Bearer auth, is
+non-streaming only, and is proven end-to-end by
+`TestOpenAIChatCompletionsLive_SuccessPath`: a real Claude CLI call returning a
+valid chat-completion body.
 
-```bash
-gbrain config set provider_base_urls '{"openai-compatible":"http://127.0.0.1:<broker-port>/v1"}'
-gbrain config set expansion_model 'openai-compatible:wuphf-configured-provider'
-```
+**What does not work is pointing gbrain at it.** On gbrain 0.42.58.0 there is no
+recipe whose `expansion` touchpoint can be redirected to a custom endpoint:
 
-The broker's Bearer token is the API key (the route sits behind `requireAuth`
-like every other mutating surface — it reaches a subprocess that spends tokens,
-so it must not be open).
+| Attempt | Why it fails |
+|---|---|
+| `expansion_model: openai-compatible:<model>` | No such provider recipe exists. gbrain names recipes by SERVICE (ollama, litellm, llama-server); `implementation: "openai-compatible"` is an internal detail, not a provider id. `resolveRecipe` throws "Unknown provider", `isAvailable` catches it, expansion silently degrades to the bare query with NO error surfaced. |
+| `litellm:` / `llama-server:` / `ollama:` | These declare only `embedding` (and reranker) touchpoints. `isAvailable` returns false on the missing touchpoint before auth is considered. |
+| `openai:` with `provider_base_urls` override | The openai recipe DOES declare expansion and its base URL IS overridable, but the touchpoint allowlists `['gpt-5.2','gpt-4o-mini']` with no `user_provided_models`. An arbitrary model name is rejected; an allowlisted name with the base URL redirected still produced no call. |
 
-Deliberately narrow, and it must stay that way: non-streaming only, no tool
-calls, no images, no n>1. `stream: true` is REFUSED rather than downgraded,
-because answering an SSE request with one JSON body leaves the client waiting
-for frames that never arrive — a hang is much harder to diagnose than a 400.
-Token usage is reported as zeros rather than invented, since the CLIs do not
-surface counts through the one-shot hook and fabricated numbers would silently
-corrupt a caller's cost accounting.
+An earlier version of this document gave the first row as working wiring. That
+was wrong and is corrected here.
+
+The route is kept because it is correct, tested, and costs nothing idle. Re-test
+when gbrain either adds `expansion` to an openai-compatible-implementation
+recipe or adds `user_provided_models` to one that already has it. Worth
+retrying on 0.48+, which is several minors ahead of what this was verified
+against. `TestGBrainConsumesTheShim` is skipped with the full reasoning and is
+the place to re-enable.
 
 This buys EXPANSION, not embeddings. Nothing here changes the fact that a chat
 model cannot produce a usable vector.
