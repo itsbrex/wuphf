@@ -49,6 +49,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/config"
@@ -1236,7 +1237,42 @@ func (r *Repo) runGitLockedAs(ctx context.Context, name, email string, args ...s
 		"GIT_TERMINAL_PROMPT=0",
 	)
 	out, err := cmd.CombinedOutput()
+	if err != nil && isTransientProcessKill(err) && ctx.Err() == nil {
+		// The OS reaped git under memory pressure rather than git failing.
+		// Retry once: the operation never ran, so this is not a semantic retry
+		// and cannot double-apply anything.
+		//
+		// This surfaced as flaky test failures whose messages named a git
+		// command and gave no hint the cause was environmental —
+		// "entity article: commit ...: git add ...: signal: killed" reads like
+		// a repo problem. Under `go test -race` on a loaded machine it hit
+		// often enough to fail unrelated assertions (t.TempDir cleanup racing
+		// a still-running write) and cost real bisection time.
+		retry := exec.CommandContext(ctx, "git", all...)
+		retry.Dir = cmd.Dir
+		retry.Env = cmd.Env
+		out, err = retry.CombinedOutput()
+	}
 	return string(out), err
+}
+
+// isTransientProcessKill reports whether err is the OS killing a subprocess
+// (SIGKILL) rather than the program exiting with a failure of its own.
+//
+// A SIGKILL here is nearly always the kernel reclaiming memory under load. It
+// says nothing about the git operation's validity, so it is worth one retry —
+// unlike a non-zero exit, which is git telling us the command was wrong and
+// which must propagate unchanged.
+func isTransientProcessKill(err error) bool {
+	var exitErr *exec.ExitError
+	if !errors.As(err, &exitErr) {
+		return false
+	}
+	status, ok := exitErr.Sys().(syscall.WaitStatus)
+	if !ok {
+		return false
+	}
+	return status.Signaled() && status.Signal() == syscall.SIGKILL
 }
 
 // WikiSearchHit is a literal substring match returned by the search API.
