@@ -8,9 +8,10 @@ package team
 
 import (
 	"fmt"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 
 	"github.com/nex-crm/wuphf/internal/agent"
 )

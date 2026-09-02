@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -15,6 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 // TestHandleGenerateMember_RejectsNonPostAndUnauth verifies the method

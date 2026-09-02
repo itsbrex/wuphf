@@ -2,7 +2,6 @@ package team
 
 import (
 	"encoding/json"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -11,6 +10,8 @@ import (
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 
 	"github.com/nex-crm/wuphf/internal/company"
 	"github.com/nex-crm/wuphf/internal/config"

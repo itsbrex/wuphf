@@ -265,11 +265,8 @@ func promotedWikiPathFor(root string, page appKnowledgePage) (string, bool) {
 		if !strings.EqualFold(filepath.Ext(info.Name()), ".md") {
 			return nil
 		}
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			return nil
-		}
-		if strings.Contains(string(raw), marker) {
+		// Unreadable notes are skipped, not fatal: the walk keeps searching.
+		if raw, err := os.ReadFile(path); err == nil && strings.Contains(string(raw), marker) {
 			rel := strings.TrimPrefix(path, root+string(filepath.Separator))
 			found = filepath.ToSlash(rel)
 		}
@@ -334,7 +331,7 @@ var errKnowledgeBadPath = errors.New("knowledge: invalid path")
 // own knowledge.
 func resolveAgentNotePath(root, agent, relPath string) (string, error) {
 	if err := validateNotebookSlug(agent); err != nil {
-		return "", fmt.Errorf("%w: %s", errKnowledgeBadPath, err)
+		return "", fmt.Errorf("%w: %w", errKnowledgeBadPath, err)
 	}
 	relPath = strings.TrimSpace(relPath)
 	if relPath == "" {

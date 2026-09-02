@@ -3,7 +3,6 @@ package company
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -11,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 
 	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/operations"

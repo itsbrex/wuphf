@@ -2,8 +2,9 @@ package team
 
 import (
 	"fmt"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"testing"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 )
 
 // The onboarding wizard hides the starter-pack step behind

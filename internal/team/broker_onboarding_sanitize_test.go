@@ -23,9 +23,10 @@ package team
 
 import (
 	"encoding/json"
-	"github.com/nex-crm/wuphf/internal/channel"
 	"strings"
 	"testing"
+
+	"github.com/nex-crm/wuphf/internal/channel"
 
 	"github.com/nex-crm/wuphf/internal/onboarding"
 )
