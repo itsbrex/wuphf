@@ -175,6 +175,12 @@ const (
 	// BackendGBrainAtoms is the first implementation: one page per fact. Kept
 	// addressable so the two shapes stay directly comparable on one corpus.
 	BackendGBrainAtoms = "gbrain-atoms"
+	// BackendMemory is the in-memory fact store + text index. This is what
+	// PRODUCTION actually ran before this branch: broker_wiki_lifecycle called
+	// NewWikiIndex directly, and NewPersistentWikiIndex (sqlite+bleve) was
+	// reachable ONLY from this bench. Benchmarking against sqlite therefore
+	// measured a code path no user ever exercised; this is the real baseline.
+	BackendMemory = "memory"
 )
 
 // Defaults returns the canonical runtime knobs for the Week 0 bench.
@@ -381,6 +387,8 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("new gbrain atom index: %w", err)
 		}
+	case BackendMemory:
+		idx = team.NewWikiIndex(tempRoot)
 	default:
 		idx, err = team.NewPersistentWikiIndex(tempRoot, indexDir)
 		if err != nil {
@@ -547,7 +555,7 @@ func Run(ctx context.Context, cfg Config) (*Aggregate, []QueryResult, error) {
 
 	// Index footprint. Only meaningful for the SQLite + bleve pairing; the
 	// gbrain store keeps its data in the brain, so both stay zero there.
-	if cfg.Backend != BackendGBrain && cfg.Backend != BackendGBrainAtoms {
+	if cfg.Backend == BackendSQLite || cfg.Backend == "" {
 		agg.IndexBytesSQLite = fileSize(filepath.Join(indexDir, "wiki.sqlite"))
 		agg.IndexBytesBleve = dirSize(filepath.Join(indexDir, "bleve"))
 	}
@@ -759,6 +767,8 @@ func backendLabel(backend string) string {
 		return BackendGBrain + " (one page per entity, recommended shape)"
 	case BackendGBrainAtoms:
 		return BackendGBrainAtoms + " (one page per fact)"
+	case BackendMemory:
+		return BackendMemory + " (in-memory — what production actually ran)"
 	default:
 		return BackendSQLite
 	}

@@ -151,47 +151,51 @@ the git markdown repo is the substrate, so the extractor repopulates it.
 
 ## Benchmark result
 
-`bench/slice-1` (500 artifacts, 475 facts, 50 queries). One corpus, one scorer,
-three backends via `--backend`. gbrain ran on a fresh brain with embeddings live.
+### The baseline correction that changes the verdict
 
-| Metric | SQLite + bleve | gbrain atoms (page per fact) | **gbrain entity (recommended)** |
+The first rounds of this comparison benchmarked gbrain against SQLite + bleve
+(`NewPersistentWikiIndex`). **That code path was never running.**
+`broker_wiki_lifecycle.go` called `NewWikiIndex` directly, and
+`NewPersistentWikiIndex` was reachable only from this bench. Production ran the
+IN-MEMORY store, rebuilt from markdown on every boot.
+
+Benchmarking against sqlite therefore measured a path no user ever exercised.
+`--backend=memory` measures the real one.
+
+| Metric | **memory (what production ran)** | sqlite+bleve (dead code) | **gbrain entity (new)** |
 |---|---|---|---|
-| Ship gate (recall@20) | 100% GREEN | 84% RED | **94% GREEN** |
-| Micro-recall | 99.73% | 92.57% | 97.61% |
-| nDCG@10 | 0.8091 | 0.5642 | 0.7201 |
-| **MRR** | 0.8023 | 0.5117 | **0.8578** |
-| **recall@1** | 0.1062 | 0.0590 | **0.1209** |
-| recall@10 | 0.8450 | 0.4555 | 0.7390 |
-| Retrieval p50 | 0.09 ms | 390 ms | 226 ms |
+| Ship gate (recall@20) | **60% RED** | 100% | **94% GREEN** |
+| status class pass rate | **0%** | 100% | 85% |
+| Micro-recall | **53.3%** | 99.7% | **97.6%** |
+| nDCG@10 | **0.466** | 0.809 | **0.720** |
+| MRR | **0.441** | 0.802 | **0.858** |
+| recall@1 | 0.069 | 0.106 | **0.121** |
+| recall@10 | 0.508 | 0.845 | **0.739** |
+| Retrieval p50 | 0.18 ms | 0.09 ms | 226 ms |
 
-Per class, the recommended shape:
+Against the real baseline gbrain is not a marginal trade, it is a large win:
+micro-recall roughly doubles (53% -> 98%), MRR nearly doubles (0.44 -> 0.86),
+and the ship gate goes RED to GREEN. Most starkly, **status queries scored 0%
+in production** — "What does Marcus Lee do?" returned nothing relevant, for 20
+of the 50 bench queries — and now pass at 85%.
 
-| Class | SQLite | atoms | entity |
-|---|---|---|---|
-| multi_hop | 100% | 100% | 100% |
-| relationship | 100% | 100% | 100% |
-| counterfactual | 100% | 100% | 100% |
-| general | 100% | 100% | 100% |
-| status | 100% | 60% | 85% |
+The in-memory store also lost every fact on restart. gbrain persists.
 
-### Reading the result
+The cost is latency: 0.18 ms to 226 ms, an MCP round-trip per query. That is
+structural. It only matters where retrieval sits in a tight loop; behind an LLM
+call it is noise.
 
-Adopting gbrain's own recommended page shape moved the gate from RED (84%) to
-GREEN (94%), and it **beats the SQLite baseline on MRR (0.858 vs 0.802) and
-recall@1 (0.121 vs 0.106)** — the rank of the first relevant fact is better than
-what WUPHF had. That is the pre-computed-synthesis effect the schema doc claims:
-matching a person's page surfaces their most relevant fact first.
+### Why the atom shape failed
 
-It still trails on recall@10 (0.739 vs 0.845) and nDCG@10 (0.720 vs 0.809),
-because deep in a result list the per-fact ranking of the atom/bleve shape
-orders better than "this entity's facts, newest first".
+One page per fact (the atom shape) scored 84% RED — worse than the recommended
+one-page-per-entity shape at 94% GREEN. Writing a page per fact turned gbrain
+into flat RAG over 475 fragments, which is exactly what its schema doc argues
+against. The implementation, not gbrain, was that gap.
 
-The honest read: **the first implementation, not gbrain, was most of the gap.**
-Writing one page per fact turned gbrain into flat RAG over 475 fragments, which
-is precisely what its schema doc argues against.
-
-Latency remains ~2500x the in-process index. That is structural (an MCP
-round-trip per query) and no page shape changes it.
+gbrain still trails the (never-running) sqlite path on deep-list ranking —
+recall@10 0.739 vs 0.845 — because "this entity's facts, newest first" orders
+worse deep in a list than per-fact BM25. That is the one place the dead code was
+genuinely better, and it is worth revisiting if deep recall starts mattering.
 
 ## Pagination: FIXED with an updated_after cursor
 
