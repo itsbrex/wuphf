@@ -2437,9 +2437,9 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   align-items: baseline;
   gap: 5px;
   max-width: 100%;
-  background: var(--task-pill-bg, var(--bg-elevated, #21262d));
-  color: var(--task-pill-fg, var(--text, #e6edf3));
-  border: 1px solid var(--task-pill-border, var(--border, #30363d));
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
   padding: 0 6px;
   border-radius: 4px;
   font: inherit;
@@ -2484,9 +2484,9 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   align-items: baseline;
   gap: 5px;
   max-width: 100%;
-  background: var(--app-pill-bg, var(--bg-elevated, #21262d));
-  color: var(--app-pill-fg, var(--accent, #6b7fd7));
-  border: 1px solid var(--app-pill-border, var(--border, #30363d));
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--border);
   padding: 0 6px;
   border-radius: 4px;
   font-size: 0.9em;
