@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Source Grok Bot: gawkbot vs Grok Bot, compared honestly</title>
+<meta name="description" content="gawkbot is the open source Grok Bot alternative: free, runs on your machine with Claude Code, Codex, or a local model, every send waits for your approval. Compared row by row.">
+<link rel="canonical" href="https://gawk.bot/open-source-grok-bot.html">
+<meta property="og:title" content="Open Source Grok Bot: gawkbot vs Grok Bot">
+<meta property="og:description" content="gawkbot is the open source Grok Bot alternative. Free, local, any model, approval on every action. Compared row by row.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://gawk.bot/open-source-grok-bot.html">
+<meta property="og:site_name" content="gawkbot">
+<meta property="og:image" content="https://gawk.bot/og-image.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta property="og:image:alt" content="gawkbot. Two hollow eyes. The bots are working; you are the one with the dashboard open.">
+<meta property="article:published_time" content="2026-09-01">
+<meta property="article:modified_time" content="2026-09-01">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Open Source Grok Bot: gawkbot vs Grok Bot">
+<meta name="twitter:description" content="gawkbot is the open source Grok Bot alternative. Free, local, any model, approval on every action. Compared row by row.">
+<meta name="twitter:image" content="https://gawk.bot/og-image.png">
+<meta name="theme-color" content="#F4F3EF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebPage",
+      "@id": "https://gawk.bot/open-source-grok-bot.html",
+      "url": "https://gawk.bot/open-source-grok-bot.html",
+      "name": "Open Source Grok Bot: gawkbot vs Grok Bot, compared honestly",
+      "description": "gawkbot is the open source Grok Bot alternative. Free, runs on your machine with Claude Code, Codex, or a local model, and every send waits for your approval.",
+      "datePublished": "2026-09-01",
+      "dateModified": "2026-09-01",
+      "inLanguage": "en",
+      "isPartOf": { "@id": "https://gawk.bot/#website" },
+      "about": { "@id": "https://gawk.bot/#app" },
+      "publisher": { "@id": "https://gawk.bot/#org" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "gawkbot", "item": "https://gawk.bot/" },
+        { "@type": "ListItem", "position": 2, "name": "Open source Grok Bot", "item": "https://gawk.bot/open-source-grok-bot.html" }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Grok Bot?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Grok Bot is xAI's team of always-on AI teammates, launched in early beta on 11 August 2026. Each bot gets a computer in xAI's cloud, signs into your tools and websites, and keeps working after you close your laptop. It is closed source and bundled with SuperGrok and Cursor paid plans." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is gawkbot an open source Grok Bot?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes, in the sense people mean when they search for one: the code is public, you can read every line, run it for free, modify it, and self-host it. The licence is the Sustainable Use License, which purists call source-available rather than open source: it allows internal business and non-commercial use but not selling gawkbot itself as a hosted product." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does gawkbot need a Grok or xAI subscription?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. gawkbot has no account and no cloud. It runs on your machine using an agent CLI you already have signed in: Claude Code by default, or Codex CLI, Opencode, Hermes, OpenClaw, or a local model. Your keys never leave your machine." }
+        },
+        {
+          "@type": "Question",
+          "name": "Do gawkbots get their own computer like Grok Bots do?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Not yet. Today each bot works on your machine in its own directory with its own tool allowlist. Per-bot sandboxed computers, local container or cloud VM, are planned and will be described here only once they ship." }
+        },
+        {
+          "@type": "Question",
+          "name": "How is gawkbot different from Rakazo, OpenBot, and OpenMausBot?",
+          "acceptedAnswer": { "@type": "Answer", "text": "All four are open source answers to Grok Bot. Rakazo and OpenMausBot focus on giving bots a sandbox or virtual machine; CopilotKit's OpenBot focuses on governance for any AG-UI agent. gawkbot focuses on the outcome: one bot per workflow, running on the coding agent you already pay for, that builds you a microapp to review what it did, with an approval gate on every external action." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I install gawkbot?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Run npx gawkbot@latest in a terminal with Claude Code or Codex CLI signed in. The browser opens, you verify your runtime, name your office, and describe the first workflow. Desktop installers for macOS and Windows are at gawk.bot/download.html." }
+        }
+      ]
+    }
+  ]
+}
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Same six semantics as the landing page. Edit the sources only. */
+  :root {
+    color-scheme: light dark;
+    --ink: #0E0E11; --paper: #F4F3EF; --raised: #FBFAF7;
+    --line: #D8D5CD; --mute: #6E6C66; --accent: #C8402F;
+    --bg: var(--paper); --surface: var(--raised);
+    --border: var(--line); --yellow: var(--ink); --yellow-dark: var(--ink);
+    --text: var(--ink); --text-muted: var(--mute);
+    --font-display: 'Press Start 2P', monospace;
+    --font-vt: 'VT323', monospace;
+    --font-mono: 'DM Mono', monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #EDEBE4; --paper: #121214; --raised: #191919;
+      --line: #2E2D2A; --mute: #8B8880; --accent: #E0563F;
+    }
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--font-mono);
+    font-size: 15px; line-height: 1.75; -webkit-font-smoothing: antialiased;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
+    min-height: 100vh;
+  }
+  a { color: var(--yellow); }
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; border-bottom: 2px solid var(--border);
+    position: sticky; top: 0; background: var(--bg); z-index: 10;
+  }
+  .nav-logo { font-family: var(--font-display); font-size: 13px; color: var(--text); text-decoration: none; }
+  .nav-logo .by { color: var(--text-muted); font-size: 8px; }
+  .nav-right { display: flex; align-items: center; gap: 18px; }
+  .nav-right a { font-size: 14px; text-decoration: none; color: var(--text-muted); }
+  .nav-right a:hover { color: var(--yellow); }
+  main { max-width: 920px; margin: 0 auto; padding: 56px 22px 96px; }
+  .crumbs { font-size: 12px; color: var(--text-muted); margin-bottom: 28px; }
+  .crumbs a { color: var(--text-muted); text-decoration: none; }
+  .crumbs a:hover { color: var(--yellow); }
+  .eyebrow {
+    font-family: var(--font-display); font-size: 8px; color: var(--yellow);
+    letter-spacing: 0.14em; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;
+  }
+  .eyebrow::after { content: ''; flex: 1; height: 2px; background: var(--yellow-dark); }
+  .eyebrow::before { content: ''; width: 8px; height: 8px; background: var(--yellow); flex-shrink: 0; }
+  h1 { font-family: var(--font-display); font-size: clamp(18px, 2.6vw, 26px); line-height: 1.5; color: var(--text); margin-bottom: 18px; }
+  h2 { font-family: var(--font-display); font-size: clamp(14px, 2vw, 18px); line-height: 1.5; color: var(--text); margin: 56px 0 16px; }
+  h3 { font-family: var(--font-display); font-size: 11px; line-height: 1.6; color: var(--text); margin: 0 0 8px; }
+  .lead { font-family: var(--font-vt); font-size: 24px; line-height: 1.35; color: var(--text-muted); max-width: 680px; margin-bottom: 22px; }
+  .updated { font-size: 12px; color: var(--text-muted); margin-bottom: 36px; }
+  p { max-width: 72ch; margin-bottom: 16px; }
+  .definition {
+    background: var(--surface); border: 2px solid var(--yellow); box-shadow: 4px 4px 0 var(--yellow-dark);
+    padding: 22px 24px; margin: 0 0 40px; max-width: none;
+  }
+  .definition strong { font-weight: 500; }
+  .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 14px; }
+  table.compare {
+    width: 100%; border-collapse: collapse; background: var(--surface);
+    border: 2px solid var(--yellow); box-shadow: 4px 4px 0 var(--yellow-dark); font-size: 14px; line-height: 1.6;
+  }
+  .compare th, .compare td { text-align: left; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  .compare thead th { font-family: var(--font-display); font-size: 8px; letter-spacing: 0.12em; color: var(--yellow); white-space: nowrap; }
+  .compare tbody th { color: var(--mute); font-size: 13px; width: 20%; font-weight: 400; }
+  .compare tbody tr:last-child td, .compare tbody tr:last-child th { border-bottom: 0; }
+  .note { font-size: 12.5px; color: var(--text-muted); max-width: 80ch; }
+  ul.plain { margin: 0 0 16px 20px; max-width: 72ch; }
+  ul.plain li { margin: 6px 0; }
+  ol.steps { list-style: none; counter-reset: s; margin: 18px 0 24px; max-width: 72ch; }
+  ol.steps li { counter-increment: s; position: relative; padding: 6px 0 6px 30px; font-size: 14px; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 8px;
+    font-family: var(--font-display); font-size: 9px; color: var(--bg); background: var(--yellow-dark);
+    width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
+  }
+  code { font-family: var(--font-mono); background: var(--surface); border: 1px solid var(--line); color: var(--text); padding: 1px 6px; font-size: 13px; }
+  .cmd { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--bg); border: 2px solid var(--yellow-dark); padding: 12px 14px; margin: 8px 0 24px; max-width: 560px; }
+  .cmd code { background: none; border: 0; font-size: 14px; }
+  .cmd button { font-family: var(--font-display); font-size: 8px; color: var(--yellow); background: transparent; border: 1px solid var(--yellow-dark); padding: 6px 9px; cursor: pointer; }
+  .faq details { border: 2px solid var(--border); background: var(--surface); margin-bottom: 10px; max-width: 80ch; }
+  .faq details[open] { border-color: var(--yellow); }
+  .faq summary { cursor: pointer; padding: 14px 16px; font-family: var(--font-display); font-size: 10px; line-height: 1.6; list-style: none; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::before { content: '+ '; color: var(--yellow); }
+  .faq details[open] summary::before { content: '- '; }
+  .faq details p { padding: 0 16px 14px; font-size: 14px; }
+  .btn-primary {
+    font-family: var(--font-display); font-size: 11px; color: var(--bg);
+    background: var(--yellow); border: none; padding: 16px 26px; cursor: pointer;
+    box-shadow: 4px 4px 0 var(--yellow-dark); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 10px; letter-spacing: 0.06em;
+    transition: transform .08s, box-shadow .08s;
+  }
+  .btn-primary:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--yellow-dark); }
+  .btn-ghost { font-family: var(--font-display); font-size: 11px; color: var(--yellow); background: transparent; border: 2px solid var(--yellow); padding: 14px 24px; text-decoration: none; display: inline-flex; align-items: center; letter-spacing: 0.06em; }
+  .ctas { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 28px; }
+  footer { border-top: 2px solid var(--border); padding: 28px 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
+  footer a { margin: 0 8px; text-decoration: none; }
+  .legal { margin: 18px auto 0; padding-top: 16px; border-top: 1px solid var(--line); max-width: 80ch; font-size: 11.5px; line-height: 1.75; text-align: left; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn-primary { transition: none; } }
+</style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/">gawkbot <span class="by">vs Grok Bot</span></a>
+  <div class="nav-right">
+    <a href="/">&larr; Home</a>
+    <a href="/download.html">Download</a>
+    <a href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</nav>
+
+<main>
+  <article>
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/">gawkbot</a> / Open source Grok Bot</nav>
+    <div class="eyebrow">OPEN SOURCE GROK BOT</div>
+    <h1>gawkbot is the open source Grok Bot. Here is how it compares.</h1>
+    <p class="lead">Grok Bot gives you always-on AI teammates in xAI's cloud. gawkbot gives you the same idea on your own machine, for free, on the agent you already pay for, with the honest caveats written down.</p>
+    <p class="updated">Last updated 1 September 2026. Maintained by the gawkbot team. Corrections: <a href="https://github.com/najmuzzaman-mohammad/gawkbot/issues">file an issue</a>.</p>
+
+    <p class="definition"><strong>gawkbot</strong> is an open source Grok Bot: a team of always-on AI bots that runs on your own machine instead of a vendor's cloud. It is free, it uses the coding agent you already have signed in (Claude Code, Codex, or a local model), every external action waits for your approval, and it builds you a microapp so you have something to look at while the work is already done.</p>
+
+    <h2>gawkbot vs Grok Bot</h2>
+    <div class="compare-wrap">
+      <table class="compare">
+        <caption class="note" style="text-align:left;padding-bottom:10px">Row by row. Grok Bot facts are from xAI's launch post and the early-beta reviews linked below; gawkbot facts are from the code.</caption>
+        <thead>
+          <tr><th scope="col"></th><th scope="col">GROK BOT (xAI)</th><th scope="col">GAWKBOT</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Price</th><td>Bundled with SuperGrok, SuperGrok Heavy, and Cursor Pro, Pro+, Ultra, and Teams plans. Enterprise is waitlisted.</td><td>Free. No account, no seats, no usage fees. You pay your model provider directly, or nothing with a local model.</td></tr>
+          <tr><th scope="row">Source</th><td>Closed.</td><td>Public on GitHub under the Sustainable Use License. Read it, modify it, self-host it.</td></tr>
+          <tr><th scope="row">Runs on</th><td>xAI's cloud. Bots keep working after you close your laptop.</td><td>Your machine, with your keys. Bots keep working while your machine is on.</td></tr>
+          <tr><th scope="row">Models</th><td>Grok, chosen for you.</td><td>Claude Code by default; Codex CLI, Opencode, local models, Hermes Agent, OpenClaw. Mix them per bot.</td></tr>
+          <tr><th scope="row">Bot computers</th><td>Each bot has a computer in the cloud with a browser, files, and signed-in tools.</td><td>Not yet. Each bot works in its own directory with its own tool allowlist on your machine. Per-bot sandboxes are planned and will be listed here only once they ship.</td></tr>
+          <tr><th scope="row">Approvals</th><td>Bots act on your accounts around the clock.</td><td>Every send, commit, purchase, and delete waits for your click. Per action, never a blanket grant.</td></tr>
+          <tr><th scope="row">Output</th><td>Finished work, delivered in chat.</td><td>Finished work, plus a microapp built to review it, with its own data tab and integrations.</td></tr>
+          <tr><th scope="row">Audit trail</th><td>In xAI's product.</td><td>Every tool call is a line in a local log you can <code>cat</code>.</td></tr>
+          <tr><th scope="row">Platforms</th><td>macOS and iOS apps.</td><td>macOS and Windows desktop apps; Linux via the CLI.</td></tr>
+          <tr><th scope="row">Integrations</th><td>Signs into websites and apps directly, no API needed.</td><td>1200+ integrations through connected accounts, plus whatever the agent CLI can reach.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Sources: <a href="https://x.ai/news/introducing-grok-bot" rel="nofollow noopener" target="_blank">xAI, Introducing Grok Bot</a> (11 August 2026); <a href="https://news.ycombinator.com/item?id=49261514" rel="nofollow noopener" target="_blank">Grok Bot on Hacker News</a>; <a href="https://natesnewsletter.substack.com/p/grok-bot-review" rel="nofollow noopener" target="_blank">Nate's early-beta review</a>, which notes all of his bots shared one cloud computer.</p>
+
+    <h2>Where Grok Bot is better</h2>
+    <p>Being honest about this is the whole point of the name. Grok Bot bots run in a cloud that never sleeps, so a job started on Friday is done on Monday without your laptop open. They also sign into websites with a real browser on their own computer, which is a cleaner story than an agent CLI on your desk. If you want zero setup and do not mind a subscription, xAI's product is the easier first hour.</p>
+
+    <h2>Where gawkbot is better</h2>
+    <ul class="plain">
+      <li><strong>It is free and it is yours.</strong> No subscription, no account, and no vendor in the path between you and the model. Point it at a local model and nothing leaves the machine.</li>
+      <li><strong>It uses the agent you already pay for.</strong> If you have Claude Code or Codex, you have gawkbot's brain. There is no second bill.</li>
+      <li><strong>Approval is per action.</strong> An agent with your credentials is a real risk. gawkbot's posture is to grant it as little as possible for as long as possible, and to shrink grants that go unused.</li>
+      <li><strong>You get a microapp, not a chat log.</strong> Each workflow becomes a small app with a screen, a schedule, and typed data, so reviewing the outcome takes a glance.</li>
+      <li><strong>You can read the code.</strong> Every claim on this page maps to a file in the repository, and the README keeps a claim-status table so the copy cannot drift from the product.</li>
+    </ul>
+
+    <h2>Other open source Grok Bot alternatives</h2>
+    <p>gawkbot is not the only one, and you should pick on fit. <a href="https://github.com/elie222/rakazo" rel="noopener" target="_blank">Rakazo</a> lets you choose any model and any sandbox and ships web, desktop, and mobile clients. <a href="https://github.com/milind-soni/OpenMausBot" rel="noopener" target="_blank">OpenMausBot</a> gives each bot a virtual machine, local-first. <a href="https://github.com/CopilotKit/OpenBot" rel="noopener" target="_blank">CopilotKit's OpenBot</a> is governance-first and works with any AG-UI agent harness. gawkbot's angle is narrower: one bot per manual workflow, on the coding agent you already have, with a microapp at the end.</p>
+
+    <h2>Install the open source Grok Bot</h2>
+    <ol class="steps">
+      <li>Sign in to one agent CLI: <a href="https://docs.anthropic.com/en/docs/claude-code" rel="noopener" target="_blank">Claude Code</a>, <a href="https://github.com/openai/codex" rel="noopener" target="_blank">Codex CLI</a>, or <a href="https://opencode.ai" rel="noopener" target="_blank">Opencode</a>.</li>
+      <li>Run the command below. The browser opens and verifies your runtime before anything else happens.</li>
+      <li>Name your office, describe one manual workflow in a sentence, and watch the first bot get built.</li>
+    </ol>
+    <div class="cmd">
+      <code>npx gawkbot@latest</code>
+      <button type="button" data-copy="npx gawkbot@latest" aria-label="Copy command">COPY</button>
+    </div>
+    <p class="note">Prefer a native window? <a href="/download.html">Download the desktop app</a> for macOS or Windows.</p>
+
+    <h2>Questions people ask</h2>
+    <div class="faq">
+      <details open>
+        <summary>What is Grok Bot?</summary>
+        <p>Grok Bot is xAI's team of always-on AI teammates, launched in early beta on 11 August 2026. Each bot gets a computer in xAI's cloud, signs into your tools and websites, and keeps working after you close your laptop. It is closed source and bundled with SuperGrok and Cursor paid plans.</p>
+      </details>
+      <details>
+        <summary>Is gawkbot an open source Grok Bot?</summary>
+        <p>Yes, in the sense people mean when they search for one: the code is public, you can read every line, run it for free, modify it, and self-host it. The licence is the Sustainable Use License, which purists call source-available rather than open source: it allows internal business and non-commercial use but not selling gawkbot itself as a hosted product.</p>
+      </details>
+      <details>
+        <summary>Does gawkbot need a Grok or xAI subscription?</summary>
+        <p>No. gawkbot has no account and no cloud. It runs on your machine using an agent CLI you already have signed in: Claude Code by default, or Codex CLI, Opencode, Hermes, OpenClaw, or a local model. Your keys never leave your machine.</p>
+      </details>
+      <details>
+        <summary>Do gawkbots get their own computer like Grok Bots do?</summary>
+        <p>Not yet. Today each bot works on your machine in its own directory with its own tool allowlist. Per-bot sandboxed computers, local container or cloud VM, are planned and will be described here only once they ship.</p>
+      </details>
+      <details>
+        <summary>How is gawkbot different from Rakazo, OpenBot, and OpenMausBot?</summary>
+        <p>All four are open source answers to Grok Bot. Rakazo and OpenMausBot focus on giving bots a sandbox or virtual machine; CopilotKit's OpenBot focuses on governance for any AG-UI agent. gawkbot focuses on the outcome: one bot per workflow, running on the coding agent you already pay for, that builds you a microapp to review what it did, with an approval gate on every external action.</p>
+      </details>
+      <details>
+        <summary>How do I install gawkbot?</summary>
+        <p>Run <code>npx gawkbot@latest</code> in a terminal with Claude Code or Codex CLI signed in. The browser opens, you verify your runtime, name your office, and describe the first workflow. Desktop installers for macOS and Windows are at <a href="/download.html">gawk.bot/download.html</a>.</p>
+      </details>
+    </div>
+
+    <div class="ctas">
+      <a class="btn-primary" href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">Read the source</a>
+      <a class="btn-ghost" href="/">Back to gawk.bot</a>
+    </div>
+  </article>
+</main>
+<footer>
+  <a href="/">Home</a>
+  <a href="/download.html">Download</a>
+  <a href="https://github.com/najmuzzaman-mohammad/gawkbot" target="_blank" rel="noopener">GitHub</a>
+  <a href="https://www.npmjs.com/package/gawkbot" target="_blank" rel="noopener">npm</a>
+  <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Sustainable Use License</a>
+  <div class="legal">gawkbot is an independent, source-available project. It is a parody. It is not affiliated with, endorsed by, or sponsored by xAI, SpaceXAI, X Corp, or Cursor. Grok and Grok Bot are trademarks of their respective owners. Rakazo, OpenMausBot, and OpenBot belong to their respective authors.</div>
+</footer>
+<script>
+  (function () {
+    document.querySelectorAll("[data-copy]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var done = function () { var t = b.textContent; b.textContent = "COPIED"; setTimeout(function () { b.textContent = t; }, 1400); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(b.getAttribute("data-copy")).then(done).catch(function () {});
+        }
+      });
+    });
+  })();
+</script>
+</body>
+</html>

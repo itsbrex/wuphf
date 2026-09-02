@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>gawkbot - bots you (almost) control</title>
-<meta name="description" content="gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.">
+<title>gawkbot: the open source Grok Bot, bots you (almost) control</title>
+<meta name="description" content="The open source Grok Bot. gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so you have a false sense of control.">
 <link rel="canonical" href="https://gawk.bot">
-<meta property="og:title" content="gawkbot - bots you (almost) control">
-<meta property="og:description" content="gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.">
+<meta property="og:title" content="gawkbot: the open source Grok Bot, bots you (almost) control">
+<meta property="og:description" content="gawkbot is the open source Grok Bot. gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://gawk.bot">
 <meta property="og:site_name" content="gawkbot">
@@ -17,8 +17,8 @@
 <meta property="og:image:height" content="720">
 <meta property="og:image:alt" content="gawkbot. Two hollow eyes. The bots are working; you are the one with the dashboard open.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="gawkbot - bots you (almost) control">
-<meta name="twitter:description" content="gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.">
+<meta name="twitter:title" content="gawkbot: the open source Grok Bot, bots you (almost) control">
+<meta name="twitter:description" content="gawkbot is the open source Grok Bot. gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.">
 <meta name="twitter:image" content="https://gawk.bot/og-image.png">
 <meta name="twitter:image:alt" content="gawkbot. Two hollow eyes. The bots are working; you are the one with the dashboard open.">
 <!-- theme-color cannot reference a CSS custom property, so these two are the
@@ -41,7 +41,10 @@
       "url": "https://gawk.bot",
       "logo": "https://gawk.bot/apple-touch-icon.png",
       "sameAs": [
-        "https://github.com/najmuzzaman-mohammad/gawkbot"
+        "https://github.com/najmuzzaman-mohammad/gawkbot",
+        "https://www.npmjs.com/package/gawkbot",
+        "https://discord.gg/gjSySC3PzV",
+        "https://news.ycombinator.com/item?id=47899844"
       ]
     },
     {
@@ -54,12 +57,20 @@
     },
     {
       "@type": "SoftwareApplication",
+      "@id": "https://gawk.bot/#app",
       "name": "gawkbot",
+      "alternateName": ["open source Grok Bot", "open source grokbot", "Grok Bot alternative"],
       "url": "https://gawk.bot",
       "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "AI agents",
       "operatingSystem": "macOS, Linux, Windows",
-      "description": "gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.",
+      "description": "gawkbot is the open source Grok Bot. gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control. Runs on your machine with Claude Code, Codex, or a local model.",
+      "keywords": "open source grok bot, grokbot alternative, self-hosted AI agents, AI teammates, microapps, Claude Code, Codex",
+      "isAccessibleForFree": true,
       "license": "https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE",
+      "codeRepository": "https://github.com/najmuzzaman-mohammad/gawkbot",
+      "installUrl": "https://www.npmjs.com/package/gawkbot",
+      "sameAs": ["https://github.com/najmuzzaman-mohammad/gawkbot", "https://www.npmjs.com/package/gawkbot"],
       "downloadUrl": "https://gawk.bot/download.html",
       "offers": {
         "@type": "Offer",
@@ -819,6 +830,47 @@
   }
 
   /* ── PRICE. The punchline, and the loudest thing on the page. ─────── */
+  /* Comparison strip. Same card language as the trust card, one table. */
+  .compare-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .compare {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg2);
+    border: 2px solid var(--yellow);
+    box-shadow: 4px 4px 0 var(--yellow-dark);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .compare th, .compare td {
+    text-align: left;
+    vertical-align: top;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .compare th {
+    font-family: var(--font-display);
+    font-size: 8px;
+    letter-spacing: 0.12em;
+    color: var(--yellow);
+    white-space: nowrap;
+  }
+  .compare tbody th { color: var(--mute); font-family: var(--font-mono); font-size: 13px; letter-spacing: 0; width: 22%; }
+  .compare tbody tr:last-child td, .compare tbody tr:last-child th { border-bottom: 0; }
+  .compare-more {
+    display: inline-block;
+    margin-top: 22px;
+    font-family: var(--font-display);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: var(--yellow);
+    text-decoration: none;
+    border-bottom: 2px solid var(--yellow-dark);
+    padding-bottom: 4px;
+  }
+  .compare-more:hover { border-bottom-color: var(--accent); }
+  .compare-updated { font-family: var(--font-mono); font-size: 12px; color: var(--mute); margin-top: 14px; }
+
   .price-block {
     text-align: center;
     padding: 12px 0 40px;
@@ -989,7 +1041,7 @@
 
     <!-- The hidden half of the H1 is what a screen reader announces and what
          search engines read, so it carries the same thesis as the tab title. -->
-    <h1 class="hero-title">gawkbot<span class="visually-hidden">, bots you almost control</span></h1>
+    <h1 class="hero-title">gawkbot<span class="visually-hidden">, the open source Grok Bot. Bots you almost control</span></h1>
 
     <p class="hero-lede">open source bots that (almost) serve you</p>
 
@@ -1195,7 +1247,34 @@
   </div>
 </section>
 
-<!-- 5. PRICE. The punchline. -->
+<!-- 5. THE OPEN SOURCE GROK BOT. Category anchor for search: one definition,
+     one honest table, one link to the full comparison page. -->
+<section id="grok-bot">
+  <div class="section-eyebrow">OPEN SOURCE GROK BOT</div>
+  <h2 class="section-title">The open source Grok Bot.</h2>
+  <p class="section-body">
+    gawkbot is an open source Grok Bot: a team of always-on AI bots that runs on your own machine instead of a vendor's cloud. It is free, it uses the coding agent you already pay for (Claude Code, Codex, or a local model), every external action waits for your approval, and it builds you a microapp so you have something to look at.
+  </p>
+  <div class="compare-wrap">
+    <table class="compare">
+      <caption class="visually-hidden">gawkbot compared with Grok Bot</caption>
+      <thead>
+        <tr><th scope="col"></th><th scope="col">GROK BOT (xAI)</th><th scope="col">GAWKBOT</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">Price</th><td>Bundled with SuperGrok and Cursor paid plans</td><td>Free. No account, no seats, no usage fees</td></tr>
+        <tr><th scope="row">Source</th><td>Closed</td><td>Public, Sustainable Use License</td></tr>
+        <tr><th scope="row">Runs on</th><td>xAI's cloud</td><td>Your machine, with your keys</td></tr>
+        <tr><th scope="row">Models</th><td>Grok, chosen for you</td><td>Claude Code, Codex, Opencode, local models, Hermes, OpenClaw</td></tr>
+        <tr><th scope="row">Approvals</th><td>Bots act on your accounts around the clock</td><td>Every send, commit, purchase, and delete waits for your click</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <a class="compare-more" href="/open-source-grok-bot.html">READ THE FULL GAWKBOT VS GROK BOT COMPARISON &rarr;</a>
+  <p class="compare-updated">Last updated 1 September 2026. If a row is wrong, <a href="https://github.com/najmuzzaman-mohammad/gawkbot/issues">file an issue</a> and it gets fixed.</p>
+</section>
+
+<!-- 6. PRICE. The punchline. -->
 <section id="price">
   <div class="section-eyebrow">PRICE</div>
   <div class="price-block">
@@ -1216,7 +1295,7 @@
 
 </main>
 
-<!-- 6. FOOTER -->
+<!-- 7. FOOTER -->
 <footer>
   <div class="footer-top">
     <div>
@@ -1230,6 +1309,7 @@
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot">GitHub</a>
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot#readme" target="_blank" rel="noopener">Docs</a>
       <a href="/download.html">Download</a>
+      <a href="/open-source-grok-bot.html">Open source Grok Bot</a>
       <a href="https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE" target="_blank" rel="noopener">Licence</a>
     </div>
   </div>

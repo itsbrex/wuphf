@@ -27,6 +27,26 @@ manage the outcome, so that you have a false sense of control.
 It is named after the second one. Not after the bots. The bots are working.
 You are the one with the dashboard open.
 
+## The open source Grok Bot
+
+gawkbot is an open source Grok Bot: always-on AI bots on your own machine
+instead of xAI's cloud, free, on the coding agent you already pay for, with
+an approval gate on every external action. The honest version, row by row:
+
+| | Grok Bot (xAI) | gawkbot |
+|---|---|---|
+| Price | Bundled with SuperGrok and Cursor paid plans | Free. No account, no seats, no usage fees |
+| Source | Closed | Public, Sustainable Use License |
+| Runs on | xAI's cloud | Your machine, with your keys |
+| Models | Grok, chosen for you | Claude Code, Codex, Opencode, local models, Hermes, OpenClaw |
+| Bot computers | One per bot, in the cloud | Not yet. Per-bot directory and tool allowlist on your machine |
+| Approvals | Bots act on your accounts around the clock | Every send, commit, purchase, and delete waits for your click |
+
+Full comparison, where Grok Bot is better, and the other open source
+alternatives (Rakazo, OpenMausBot, OpenBot):
+[gawk.bot/open-source-grok-bot](https://gawk.bot/open-source-grok-bot.html).
+Website: [gawk.bot](https://gawk.bot).
+
 ## Get Started
 
 **Prerequisites:** one agent CLI, signed in — [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
@@ -250,7 +270,7 @@ bad" is useless. Under 500 words.
 ```
 
 We run this ourselves before every release. If the AI finds something we
-missed, [file an issue](https://github.com/najmuzzaman-mohammad/wuphf/issues).
+missed, [file an issue](https://github.com/najmuzzaman-mohammad/gawkbot/issues).
 
 ## The Name
 
@@ -267,10 +287,10 @@ not see coming.
 
 ## Star History
 
-<a href="https://www.star-history.com/?repos=najmuzzaman-mohammad%2Fwuphf&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=najmuzzaman-mohammad%2Fgawkbot&type=date&legend=top-left">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/wuphf&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/wuphf&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/wuphf&type=date&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/gawkbot&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/gawkbot&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=najmuzzaman-mohammad/gawkbot&type=date&legend=top-left" />
  </picture>
 </a>

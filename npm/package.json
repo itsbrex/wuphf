@@ -1,7 +1,7 @@
 {
   "name": "gawkbot",
   "version": "0.236.2",
-  "description": "gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.",
+  "description": "The open source Grok Bot. gawkbots automate your menial work via AI models and build you microapps to manage the outcome, so that you have a false sense of control.",
   "bin": {
     "gawkbot": "bin/gawkbot.js"
   },
@@ -41,15 +41,19 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [
-    "wuphf",
+    "grokbot",
+    "grok-bot",
+    "open-source-grok-bot",
     "ai-agents",
-    "slack-for-ai",
+    "ai-teammates",
+    "microapps",
     "multi-agent",
     "agent-office",
     "claude-code",
     "codex",
     "openclaw",
+    "local-llm",
     "cli",
-    "nex"
+    "wuphf"
   ]
 }
