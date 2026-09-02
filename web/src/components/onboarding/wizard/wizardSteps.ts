@@ -26,6 +26,7 @@ export type OnboardingWizardStepId =
   | "wiki"
   | "team"
   | "ship"
+  | "computer"
   | "first-issue";
 
 /**
@@ -54,6 +55,7 @@ const ALL_ONBOARDING_WIZARD_STEP_IDS: OnboardingWizardStepId[] = [
   "wiki",
   "team",
   "ship",
+  "computer",
   "first-issue",
 ];
 
@@ -189,6 +191,11 @@ export const ONBOARDING_WIZARD_COPY: Record<
     headline: "File it. They ship it.",
     body: "Mention an agent with @, hand off a problem, and the work fans out into tasks across the team while you watch. The result lands back in the chat where you asked.",
   },
+  computer: {
+    eyebrow: "YOUR BOTS' HANDS",
+    headline: "Give your bots a computer.",
+    body: "Every bot can have its own Linux desktop: a browser, a terminal, and files, on a machine you can watch from the Computer tab. Run it free on this Mac with Docker or OrbStack, or rent one in the cloud from ascii.dev with your own key. Optional now, one click later.",
+  },
   "first-issue": {
     eyebrow: "WRITE YOUR FIRST ISSUE",
     headline: "Give your team something to do.",
@@ -299,6 +306,46 @@ export const ONBOARDING_EMBEDDING_COPY = {
     keywordFallback: "Using keyword search for now.",
     retry: "Try again",
   },
+} as const;
+
+/**
+ * Bot-computer copy for the computer step. Two honest paths: the free Local VM
+ * on this machine (needs a container runtime), and a cloud box from ascii.dev
+ * with the user's own key. Neither gates advancing. The key instructions are
+ * the literal steps on ascii.dev, kept here as the single source of truth.
+ */
+export const ONBOARDING_COMPUTER_COPY = {
+  localHeading: "On this machine, free",
+  localReady:
+    "Ready. A container runtime is running, so every bot gets its own desktop here.",
+  localMissing:
+    "No container runtime found. Install OrbStack or Docker Desktop and your bots get free desktops on this machine.",
+  localStopped:
+    "A container runtime is installed but not running. Start it and you are set.",
+  localInstallLabel: "Get OrbStack",
+  localInstallURL: "https://orbstack.dev",
+  cloudHeading: "In the cloud, with your own ascii.dev key",
+  cloudNote:
+    "A cloud box is a persistent Linux desktop that keeps its files and logins between sessions. You pay ascii.dev directly; gawkbot never sees a bill. Paste a key here or in Settings later.",
+  keyLabel: "ascii.dev Box API key",
+  keyPlaceholder: "box_…",
+  keyHint:
+    "Keys start with box_. We check the key with ascii.dev before saving it.",
+  keySet: "Cloud computers are on. Pick Cloud in any bot's Computer tab.",
+  saveKey: "Save key",
+  savingKey: "Checking…",
+  howToHeading: "Where to get the key",
+  howTo: [
+    "Create an ascii.dev account and start the Box trial.",
+    "Open API keys in your ascii.dev account and create a key.",
+    "Copy the key that starts with box_ and paste it here.",
+  ],
+  docsLabel: "ascii.dev Box API keys guide",
+  docsURL: "https://docs.ascii.dev/box/api-keys",
+  signupLabel: "box.ascii.dev",
+  signupURL: "https://box.ascii.dev",
+  skipHint:
+    "Nothing here blocks you. Bots without a computer still chat and use connected apps.",
 } as const;
 
 /** UI chrome labels for the wizard host. gawkbot voice, no contractions. */

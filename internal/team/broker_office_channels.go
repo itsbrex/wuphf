@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nex-crm/wuphf/internal/computer/box"
 	"github.com/nex-crm/wuphf/internal/config"
 	"github.com/nex-crm/wuphf/internal/provider"
 )
@@ -474,7 +475,17 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			changed = true
 		}
 		if body.BoxAPIKey != nil {
-			cfg.BoxAPIKey = strings.TrimSpace(*body.BoxAPIKey)
+			token := strings.TrimSpace(*body.BoxAPIKey)
+			// Check the key with the provider before saving it. Without this
+			// the paste "succeeds" and the first sign of trouble is a 401 in
+			// a bot's Computer tab minutes later, with nothing to act on.
+			if token != "" {
+				if err := box.VerifyToken(r.Context(), boxAPIBase(), token); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+			}
+			cfg.BoxAPIKey = token
 			changed = true
 		}
 		if body.TelegramToken != nil {

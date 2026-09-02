@@ -18,6 +18,14 @@ import (
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
+// boxAPIBase is the provider endpoint, overridable for tests and stubs.
+func boxAPIBase() string {
+	if api := strings.TrimSpace(os.Getenv("WUPHF_BOX_API")); api != "" {
+		return api
+	}
+	return box.DefaultAPI
+}
+
 // boxClient returns a client for the configured key, or nil.
 func (s *computerService) boxClient() *box.Client {
 	token := config.ResolveBoxAPIKey()
@@ -30,9 +38,7 @@ func (s *computerService) boxClient() *box.Client {
 		return s.boxClientCache
 	}
 	c := box.NewClient(token)
-	if api := strings.TrimSpace(os.Getenv("WUPHF_BOX_API")); api != "" {
-		c.API = api
-	}
+	c.API = boxAPIBase()
 	s.boxClientCache = c
 	return c
 }

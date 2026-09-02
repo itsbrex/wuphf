@@ -36,6 +36,7 @@ import { type ComponentType, useCallback, useEffect } from "react";
 import { track } from "../../../lib/analytics";
 import { MOD_KEY } from "../../ui/Kbd";
 import { BtnLabel, EnterHint } from "./components";
+import { StepComputer } from "./steps/StepComputer";
 import { StepFirstIssue } from "./steps/StepFirstIssue";
 import { StepMeet } from "./steps/StepMeet";
 import { StepShip } from "./steps/StepShip";
@@ -66,6 +67,7 @@ const STEPS: Record<
   wiki: StepWiki,
   team: StepTeam,
   ship: StepShip,
+  computer: StepComputer,
   "first-issue": StepFirstIssue,
 };
 

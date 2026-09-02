@@ -268,3 +268,38 @@ func TestLifecycleErrorsMapToStatusCodes(t *testing.T) {
 		t.Fatalf("plain errors must 500, got %d", rec.Code)
 	}
 }
+
+func TestConfigRefusesABadBoxKeyBeforeSaving(t *testing.T) {
+	t.Setenv("WUPHF_CONFIG_PATH", filepath.Join(t.TempDir(), "config.json"))
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") == "Bearer box_good" {
+			_, _ = w.Write([]byte(`{"ok":true,"boxes":[]}`))
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer fake.Close()
+	t.Setenv("WUPHF_BOX_API", fake.URL)
+	b := newComputerTestBroker(t, noRuntime)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/config", b.requireAuth(b.handleConfig))
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+
+	status, _ := authedJSON(t, srv, b.Token(), http.MethodPost, "/config", map[string]any{"box_api_key": "sk-not-a-box-key"})
+	if status != http.StatusBadRequest {
+		t.Fatalf("a rejected key must 400, got %d", status)
+	}
+	_, body := authedJSON(t, srv, b.Token(), http.MethodGet, "/config", nil)
+	if body["box_key_set"] != false {
+		t.Fatalf("a rejected key must not be saved: %v", body["box_key_set"])
+	}
+	status, _ = authedJSON(t, srv, b.Token(), http.MethodPost, "/config", map[string]any{"box_api_key": "box_good"})
+	if status != http.StatusOK {
+		t.Fatalf("a verified key must save, got %d", status)
+	}
+	_, body = authedJSON(t, srv, b.Token(), http.MethodGet, "/config", nil)
+	if body["box_key_set"] != true {
+		t.Fatalf("expected box_key_set after save: %v", body)
+	}
+}

@@ -9,7 +9,7 @@
  *
  *   - a dead step: the team screen still reachable, or a Next that goes
  *     nowhere,
- *   - a stale counter: a "01 / 05" marker or five dots over four steps,
+ *   - a stale counter: a "01 / 06" marker or six dots over five steps,
  *   - a broken seed: a finish that no longer sends the scratch-path payload
  *     (blueprint "", agents []) the broker turns into a CEO plus #general.
  *
@@ -107,6 +107,7 @@ describe("OnboardingWizard with starter packs hidden", () => {
       "meet",
       "wiki",
       "ship",
+      "computer",
       "first-issue",
     ]);
 
@@ -124,6 +125,8 @@ describe("OnboardingWizard with starter packs hidden", () => {
     // The team step used to sit here. Its successor must render instead.
     expect(screen.queryByTestId("onboarding-step-team")).toBeNull();
     expect(screen.getByTestId("onboarding-step-ship")).toBeTruthy();
+    clickNext();
+    expect(screen.getByTestId("onboarding-step-computer")).toBeTruthy();
     clickNext();
     expect(screen.getByTestId("onboarding-step-first-issue")).toBeTruthy();
 
@@ -149,17 +152,17 @@ describe("OnboardingWizard with starter packs hidden", () => {
     const { container } = render(<OnboardingWizard onComplete={vi.fn()} />);
 
     const marker = container.querySelector(".onboarding-wizard-step-marker");
-    expect(marker?.textContent).toBe("01 / 04");
-    expect(screen.getByLabelText("Step 1 of 4")).toBeTruthy();
+    expect(marker?.textContent).toBe("01 / 05");
+    expect(screen.getByLabelText("Step 1 of 5")).toBeTruthy();
     expect(container.querySelectorAll(".onboarding-wizard-dot")).toHaveLength(
-      4,
+      5,
     );
     expect(screen.queryByTestId("onboarding-wizard-dot-team")).toBeNull();
 
     clickNext();
     expect(
       container.querySelector(".onboarding-wizard-step-marker")?.textContent,
-    ).toBe("02 / 04");
+    ).toBe("02 / 05");
   });
 
   it("finishes on the broker's scratch path, which seeds a CEO and #general", async () => {
@@ -169,6 +172,7 @@ describe("OnboardingWizard with starter packs hidden", () => {
     fireEvent.change(screen.getByTestId("onboarding-office-name"), {
       target: { value: "Dunder HQ" },
     });
+    clickNext();
     clickNext();
     clickNext();
     clickNext();

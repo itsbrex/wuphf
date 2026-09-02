@@ -1402,3 +1402,69 @@
     min-height: 44px;
   }
 }
+
+/* ── Computer step: the two ways a bot gets hands ─────────────────────── */
+.onboarding-computer {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  max-width: 560px;
+}
+.onboarding-computer-path {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+.onboarding-computer-path[data-state="ready"] {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.onboarding-computer-status {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.onboarding-computer-path[data-state="missing"] .onboarding-computer-status,
+.onboarding-computer-path[data-state="stopped"] .onboarding-computer-status {
+  color: var(--text-secondary);
+}
+.onboarding-computer-hint,
+.onboarding-computer-skip {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.onboarding-computer-link {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.onboarding-computer-link:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+.onboarding-computer-howto {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
+}
+.onboarding-computer-howto-heading {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.onboarding-computer-steps {
+  margin: 0;
+  padding-left: 22px;
+  list-style: decimal outside;
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
