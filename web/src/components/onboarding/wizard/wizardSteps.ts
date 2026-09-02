@@ -171,7 +171,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
 > = {
   meet: {
     eyebrow: "WELCOME TO THE OFFICE",
-    headline: "Meet WUPHF.",
+    headline: "Meet gawkbot.",
     body: "gawkbot is a team of AI agents that work on your behalf. They claim work, they ship, and they actually answer your messages. Watch your team assemble itself on the right.",
   },
   wiki: {
@@ -187,7 +187,7 @@ export const ONBOARDING_WIZARD_COPY: Record<
   ship: {
     eyebrow: "HOW WORK SHIPS",
     headline: "File it. They ship it.",
-    body: "Mention an agent with @, hand off a problem, and the work fans out into tasks across the team while you watch. The ship lands back in a channel you can see.",
+    body: "Mention an agent with @, hand off a problem, and the work fans out into tasks across the team while you watch. The result lands back in the chat where you asked.",
   },
   "first-issue": {
     eyebrow: "WRITE YOUR FIRST ISSUE",
@@ -218,7 +218,7 @@ export const ONBOARDING_EMAIL_COPY = {
     "That does not look like an email. Leave it blank, or fix it to stay in touch.",
   /** Consent checkbox label on the final step. Checked by default. */
   consent:
-    "Keep me posted on WUPHF. It is source-available and built in the open, and we would love to learn what to build next. No spam, we promise.",
+    "Keep me posted on gawkbot. It is source-available and built in the open, and we would love to learn what to build next. No spam, we promise.",
 } as const;
 
 /**

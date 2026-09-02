@@ -1,5 +1,6 @@
 import { useMatches } from "@tanstack/react-router";
 
+import { directChannelSlug } from "../lib/channels";
 import { useOfficeTasks } from "../hooks/useOfficeTasks";
 import {
   agentDetailRoute,
@@ -257,7 +258,22 @@ export function useActiveChannelSlug(): string | null {
   const route = useCurrentRoute();
   const { data: tasks } = useOfficeTasks();
   if (route.kind === "channel") return route.channelSlug;
-  if (route.kind === "home") return "general";
+  // The agent subspace IS a chat now — its Chat tab is the DM with that
+  // agent, and since the shared-room retirement it is the PRIMARY surface.
+  // Without this mapping the globally-mounted InterviewBar treated
+  // /agents/:slug as a non-chat route and rendered nothing, which made
+  // blocking approvals (add a teammate, plan sign-off) unanswerable anywhere:
+  // the board card is read-only and a chat reply just makes the agent cancel
+  // and re-ask. Found live: three consecutive "Add Editor?" requests, each
+  // canceled by the next, with no Approve control on any surface.
+  if (route.kind === "agent-detail" && route.agentSlug.trim()) {
+    return directChannelSlug(route.agentSlug);
+  }
+  // Home used to scope to "general", a room that no longer exists — every
+  // request silently failed to render there. The lead's DM is the one
+  // conversation every office is guaranteed to have, and it is where the
+  // home composer routes work by default.
+  if (route.kind === "home") return directChannelSlug("ceo");
   if (route.kind === "task-detail") {
     const owner = (tasks ?? []).find((task) => task.id === route.taskId);
     const channel = owner?.channel?.trim();

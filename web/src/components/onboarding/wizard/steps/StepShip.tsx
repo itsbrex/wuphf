@@ -36,7 +36,7 @@ export function StepShip({ active }: OnboardingWizardStepProps) {
         <p className="office-tour-slide-body">{COPY.body}</p>
         <p className="office-tour-slide-caption">
           You write one line. The team cuts it into tasks, picks them up in
-          parallel, and lands the result back in a channel you can watch.
+          parallel, and lands the result back in the chat where you asked.
         </p>
       </div>
 
