@@ -19,6 +19,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -436,6 +437,25 @@ func (c *Client) DesktopURL(ctx context.Context, boxID string, budget time.Durat
 		return u, nil
 	}
 	return "", fmt.Errorf("box desktop link could not be created")
+}
+
+// ViewerLink shapes the provider's desktop link for the panel iframe. The
+// noVNC page ascii.dev serves takes the same query switches as our local
+// viewer: scale to the frame, show a dot cursor, and refuse input while
+// the bot is driving. Other viewers pass through untouched.
+func ViewerLink(raw string, viewOnly bool) string {
+	u, err := url.Parse(raw)
+	if err != nil || !strings.HasSuffix(u.Path, "/vnc.html") {
+		return raw
+	}
+	q := u.Query()
+	q.Set("autoconnect", "true")
+	q.Set("reconnect", "true")
+	q.Set("resize", "scale")
+	q.Set("show_dot", "true")
+	q.Set("view_only", strconv.FormatBool(viewOnly))
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func desktopURLFrom(body map[string]any) string {

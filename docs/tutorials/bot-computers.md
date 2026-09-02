@@ -65,13 +65,18 @@ and, when boxes are blocked, says so and links to the billing page. Settings
 Then choose **Cloud** for the bot. The first turn creates a box named after
 the bot, installs the driver, and gives the bot the same tools. You pay
 ascii.dev directly; gawkbot never sees a bill. Sleep archives the box;
-billing pauses and the disk survives. Take control opens the provider's
-desktop link.
+billing pauses and the disk survives. The Computer tab shows the box's own
+noVNC page live, at the box's full 1920x1080, whether the bot is working or
+idle; Take control switches the same page to accept your input. The small
+tab on the left edge of the screen is noVNC's control bar handle. It is part
+of the viewer, not gawkbot, and stays folded unless you click it.
 
 ## Watching and taking control
 
-The Computer tab shows the bot's screen live while it works, and a frame
-appears in the thread after every turn that touched the screen.
+The Computer tab shows the bot's screen live, and a frame appears in the
+thread after every turn that touched the screen. The live view keeps one
+connection open; the link it uses is renewed every half hour, so a reconnect
+notice that often is normal, and one every few seconds is a bug.
 
 **Take control** pauses the bot's hands and hands you the desktop. While you
 hold it, every click and keystroke the bot sends is refused, not queued, so

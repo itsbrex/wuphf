@@ -293,6 +293,22 @@ func TestViewerSignerRoundTrip(t *testing.T) {
 	}
 }
 
+func TestViewerURLIsStableAcrossPolls(t *testing.T) {
+	signer := NewViewerSignerWithSecret([]byte("secret"))
+	// Stability is per window, so start on a boundary.
+	now := time.Unix(1_700_000_000, 0).Truncate(ViewerWindow)
+	first := signer.ViewerURL("cos", PolicyView, "pw", now)
+	for _, later := range []time.Duration{5 * time.Second, 2 * time.Minute, ViewerWindow - time.Second} {
+		if got := signer.ViewerURL("cos", PolicyView, "pw", now.Add(later)); got != first {
+			t.Fatalf("viewer url changed after %s: the iframe would reconnect on every poll", later)
+		}
+	}
+	token := signer.Token("cos", PolicyView, now.Add(ViewerWindow-time.Second))
+	if !signer.Verify("cos", PolicyView, token, now.Add(ViewerWindow+ViewerTTL/2-time.Minute)) {
+		t.Fatalf("a token minted at the end of its window must still carry half the TTL")
+	}
+}
+
 func TestViewerProxyForwardsOnlyValidCapabilities(t *testing.T) {
 	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("upstream " + r.URL.Path + "?" + r.URL.RawQuery + " ref=" + r.Header.Get("Referer")))

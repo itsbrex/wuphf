@@ -136,6 +136,46 @@ type computerService struct {
 	boxMount       func(ctx context.Context, slug, turnID, taskID, controlURL, controlToken string) (*computerMount, error)
 	boxAction      func(w http.ResponseWriter, r *http.Request, slug, action string)
 	boxClientCache *box.Client
+	boxViewers     map[string]boxViewerCache
+}
+
+// boxViewerCache remembers the provider's desktop link so status reads do
+// not mint one per poll; a changed link would reload the iframe.
+type boxViewerCache struct {
+	boxID string
+	url   string
+	at    time.Time
+}
+
+// boxViewerMaxAge is how long a provider desktop link is reused.
+var boxViewerMaxAge = 20 * time.Minute
+
+// boxViewerURL returns the provider's live desktop page for a cloud box,
+// shaped for viewing, minting it at most once per boxViewerMaxAge.
+func (s *computerService) boxViewerURL(ctx context.Context, slug, boxID string) (string, error) {
+	s.mu.Lock()
+	cached, ok := s.boxViewers[slug]
+	s.mu.Unlock()
+	if ok && cached.boxID == boxID && time.Since(cached.at) < boxViewerMaxAge {
+		return box.ViewerLink(cached.url, true), nil
+	}
+	c := s.boxClient()
+	if c == nil {
+		return "", nil
+	}
+	linkCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	raw, err := c.DesktopURL(linkCtx, boxID, 8*time.Second)
+	if err != nil {
+		return "", err
+	}
+	s.mu.Lock()
+	if s.boxViewers == nil {
+		s.boxViewers = map[string]boxViewerCache{}
+	}
+	s.boxViewers[slug] = boxViewerCache{boxID: boxID, url: raw, at: time.Now()}
+	s.mu.Unlock()
+	return box.ViewerLink(raw, true), nil
 }
 
 type viewerPortCache struct {
@@ -423,10 +463,14 @@ func (s *computerService) statusFor(ctx context.Context, slug string) (computerS
 				p.State = "asleep"
 			case box.State == "idle" || box.State == "ready" || box.State == "running":
 				p.State = "ready"
-				// The provider's desktop link is minted on Join; the panel
-				// shows frames until the person takes control. Outside a
-				// turn nothing polls, so take one frame here when the last
-				// one is stale, and say so when the box cannot give one.
+				// The panel shows the provider's own noVNC page live, at
+				// the box's full resolution; frames stay for the stream
+				// thumbnails and as the fallback when the link fails.
+				if u, err := s.boxViewerURL(ctx, slug, box.BoxID); err != nil {
+					setProblem("The box is up but its desktop link could not be created: " + err.Error())
+				} else if u != "" {
+					p.ViewerURL = &u
+				}
 				if frame, err := s.refreshBoxFrame(ctx, slug, box.BoxID); err != nil {
 					setProblem("The box is up but could not take a screenshot yet: " + err.Error())
 				} else if frame != nil {

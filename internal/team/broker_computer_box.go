@@ -195,7 +195,7 @@ func (s *computerService) boxActionHandler(w http.ResponseWriter, r *http.Reques
 			writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
 			return
 		}
-		writeJSON(w, http.StatusOK, map[string]string{"viewer_url": u})
+		writeJSON(w, http.StatusOK, map[string]string{"viewer_url": box.ViewerLink(u, false)})
 		return
 	case "control":
 		var body struct {

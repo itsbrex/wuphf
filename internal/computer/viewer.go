@@ -57,9 +57,16 @@ func (v *ViewerSigner) sign(slug, policy string, expires int64) string {
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
 }
 
+// ViewerWindow is how long a minted token stays byte-identical. The panel
+// re-reads status every few seconds and swaps the iframe src whenever the
+// URL changes, and every swap is a noVNC reconnect; pinning the expiry to
+// a window keeps the URL stable between renewals while every token still
+// carries at least half of ViewerTTL.
+var ViewerWindow = ViewerTTL / 2
+
 // Token mints "<expires>.<signature>" for a slug and policy.
 func (v *ViewerSigner) Token(slug, policy string, now time.Time) string {
-	expires := now.Add(ViewerTTL).Unix()
+	expires := now.Truncate(ViewerWindow).Add(ViewerTTL).Unix()
 	return strconv.FormatInt(expires, 10) + "." + v.sign(slug, policy, expires)
 }
 

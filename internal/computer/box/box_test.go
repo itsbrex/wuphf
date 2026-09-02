@@ -239,6 +239,26 @@ func TestActionShellAndFrameParsing(t *testing.T) {
 	}
 }
 
+func TestViewerLinkShapesOnlyNoVNC(t *testing.T) {
+	raw := "https://x-6080.on.ascii.dev/vnc.html?autoconnect=true&resize=remote&path=websockify&password=pw&_token=t"
+	view := ViewerLink(raw, true)
+	for _, want := range []string{"view_only=true", "resize=scale", "show_dot=true", "password=pw", "_token=t", "path=websockify"} {
+		if !strings.Contains(view, want) {
+			t.Fatalf("view link missing %s: %s", want, view)
+		}
+	}
+	if strings.Contains(view, "resize=remote") {
+		t.Fatalf("view link must scale, not resize the remote: %s", view)
+	}
+	if !strings.Contains(ViewerLink(raw, false), "view_only=false") {
+		t.Fatalf("control link must allow input")
+	}
+	stream := "https://x-desktop.on.ascii.dev/stream.html?hostId=1&width=1920#tok"
+	if ViewerLink(stream, true) != stream {
+		t.Fatalf("non-noVNC links pass through untouched")
+	}
+}
+
 func TestErrorMessageAlwaysLinksBilling(t *testing.T) {
 	msg := ErrorMessage(http.StatusPaymentRequired, "box create", map[string]any{"message": "Start the $20/month Box plan to create sandboxes."})
 	if !strings.Contains(msg, "Start the $20/month Box plan") || !strings.Contains(msg, BillingURL) {

@@ -22,7 +22,7 @@ type Frame struct {
 // PreviewWidth is the widest frame handed to the UI. The desktop is
 // 1280 wide, so this is a 2:1 downscale that keeps text legible while
 // cutting the bytes on the wire by roughly six times.
-var PreviewWidth = 640
+var PreviewWidth = 1024
 
 // ScreenshotTimeout bounds the capture inside the container.
 var ScreenshotTimeout = 30 * time.Second
