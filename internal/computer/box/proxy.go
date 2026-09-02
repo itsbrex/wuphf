@@ -3,6 +3,7 @@ package box
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
@@ -136,6 +137,13 @@ func (p *Proxy) register(s *mcp.Server) {
 	mcp.AddTool(s, &mcp.Tool{Name: "wait_for", Description: "Wait up to five seconds for the screen to settle, then return a screenshot."}, p.waitFor)
 	mcp.AddTool(s, &mcp.Tool{Name: "computer_status", Description: "Report whether the desktop driver is healthy."}, p.status)
 	mcp.AddTool(s, &mcp.Tool{Name: computer.HelpToolName, Description: "Ask the person watching this computer to take control for a moment (a login, a CAPTCHA, a judgment call). Blocks until they hand control back, dismiss, or ten minutes pass."}, p.requestHelp)
+}
+
+// failed reports a transport or provider error to the model as a tool
+// error result. The MCP call itself succeeded, so the Go error is consumed
+// here on purpose: returning it would make the SDK drop the explanatory text.
+func failed(prefix string, err error) (*mcp.CallToolResult, any, error) {
+	return textResult(prefix+err.Error(), true), nil, nil
 }
 
 func textResult(text string, isError bool) *mcp.CallToolResult {
@@ -291,11 +299,7 @@ func (p *Proxy) run(ctx context.Context, command string, timeout time.Duration) 
 }
 
 func asNotRunning(err error, target **NotRunningError) bool {
-	e, ok := err.(*NotRunningError)
-	if ok {
-		*target = e
-	}
-	return ok
+	return errors.As(err, target)
 }
 
 func frameFrom(ctx context.Context, p *Proxy, out CommandResult) ([]byte, string) {
@@ -381,7 +385,7 @@ func (p *Proxy) actAndObserve(ctx context.Context, actions []batchAction, note s
 	command := strings.Join([]string{envPrefix, geometry, EnsureCuaCommand(), guarded, captureBlock(settleMs), `echo "ACT $ACT"`}, "; ")
 	out, err := p.run(ctx, command, timeout)
 	if err != nil {
-		return textResult(note+" failed: "+err.Error(), true), nil, nil
+		return failed(note+" failed: ", err)
 	}
 	acted := strings.Contains(out.Stdout, "ACT ok")
 	if !acted && !strings.Contains(out.Stdout, "GEOM") {
@@ -407,7 +411,7 @@ func (p *Proxy) screenshot(ctx context.Context, _ *mcp.CallToolRequest, _ screen
 	}
 	out, err := p.run(ctx, strings.Join([]string{envPrefix, geometry, EnsureCuaCommand(), captureBlock(0)}, "; "), 60*time.Second)
 	if err != nil {
-		return textResult("screenshot failed: "+err.Error(), true), nil, nil
+		return failed("screenshot failed: ", err)
 	}
 	frame, geom := frameFrom(ctx, p, out)
 	if frame == nil {
@@ -488,7 +492,7 @@ func (p *Proxy) exec(ctx context.Context, _ *mcp.CallToolRequest, a execArgs) (*
 	}
 	out, err := p.run(ctx, cmd, 120*time.Second)
 	if err != nil {
-		return textResult("command failed: "+err.Error(), true), nil, nil
+		return failed("command failed: ", err)
 	}
 	code := 0
 	if out.ExitCode != nil {
@@ -513,7 +517,7 @@ func (p *Proxy) openURL(ctx context.Context, _ *mcp.CallToolRequest, a openURLAr
 	command := strings.Join([]string{envPrefix, geometry, open, "sleep 2.5", captureBlock(settleMs)}, "; ")
 	out, err := p.run(ctx, command, 60*time.Second)
 	if err != nil {
-		return textResult("open_url failed: "+err.Error(), true), nil, nil
+		return failed("open_url failed: ", err)
 	}
 	frame, geom := frameFrom(ctx, p, out)
 	return observed("opened "+u, frame, geom), nil, nil
@@ -529,7 +533,7 @@ func (p *Proxy) waitFor(ctx context.Context, _ *mcp.CallToolRequest, a waitArgs)
 	}
 	out, err := p.run(ctx, strings.Join([]string{envPrefix, geometry, captureBlock(ms)}, "; "), 60*time.Second)
 	if err != nil {
-		return textResult("wait_for failed: "+err.Error(), true), nil, nil
+		return failed("wait_for failed: ", err)
 	}
 	frame, geom := frameFrom(ctx, p, out)
 	return observed(fmt.Sprintf("waited %dms", ms), frame, geom), nil, nil
@@ -546,7 +550,7 @@ func (p *Proxy) status(ctx context.Context, _ *mcp.CallToolRequest, _ screenshot
 	}, "\n")
 	out, err := p.run(ctx, command, 20*time.Second)
 	if err != nil {
-		return textResult("status failed: "+err.Error(), true), nil, nil
+		return failed("status failed: ", err)
 	}
 	if !strings.Contains(out.Stdout, "CUA ") {
 		return textResult("Cloud computer automation: X11 fallback (Cua Driver is still installing or needs repair).", true), nil, nil
@@ -571,7 +575,7 @@ func (p *Proxy) requestHelp(ctx context.Context, _ *mcp.CallToolRequest, a helpA
 	if !initial.Held {
 		id, err := p.gate.RequestHelp(ctx, reason)
 		if err != nil {
-			return textResult("Could not reach the app to ask for help: "+err.Error(), true), nil, nil
+			return failed("Could not reach the app to ask for help: ", err)
 		}
 		requestID = id
 	}

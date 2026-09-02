@@ -228,11 +228,21 @@ func (p *screenPoller) run() {
 	}
 }
 
+// pokeDelay lets the action land before the frame is taken.
+var pokeDelay = 1500 * time.Millisecond
+
 func (p *screenPoller) poke() {
 	p.mu.Lock()
 	p.usedShot = true
 	p.mu.Unlock()
-	go p.captureOnce(false)
+	go func() {
+		select {
+		case <-p.stop:
+			return
+		case <-time.After(pokeDelay):
+		}
+		p.captureOnce(false)
+	}()
 }
 
 func (p *screenPoller) captureOnce(force bool) {

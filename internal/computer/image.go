@@ -182,7 +182,7 @@ func PrepareImage(ctx context.Context, rt Runtime, stream StreamRunner, onLine f
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(dir)
+	defer func() { _ = os.RemoveAll(dir) }()
 	if err := os.WriteFile(filepath.Join(dir, "Dockerfile"), []byte(ManagedImageDockerfile()), 0o600); err != nil {
 		return err
 	}

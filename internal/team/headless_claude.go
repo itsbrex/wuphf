@@ -228,6 +228,11 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 				metrics.FirstToolMs = durationMillis(startedAt, firstToolAt)
 			}
 			appendHeadlessClaudeLog(slug, fmt.Sprintf("tool_use: %s %s", event.ToolName, truncate(event.ToolInput, 120)))
+			if isComputerTool(event.ToolName) {
+				// The bot is acting on its screen: refresh the preview once
+				// the action has landed. tool_result carries no tool name.
+				l.pokeComputer(slug)
+			}
 			l.updateHeadlessProgress(slug, "active", "tool_use", fmt.Sprintf("running %s", strings.TrimSpace(event.ToolName)), metrics)
 			if planning && isExitPlanModeTool(event.ToolName) {
 				if plan := extractClaudePlanArtifact(event.ToolInput); plan != "" {
@@ -240,10 +245,6 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 			turnToolNames = append(turnToolNames, manifestToolToken(event.ToolName, event.ToolInput))
 			emitHeadlessToolUse(agentStream, turnID, HeadlessProviderClaude, slug, taskID, event.ToolName, event.ToolInput, "claude.tool_use")
 		case "tool_result":
-			if isComputerTool(event.ToolName) {
-				// The bot just acted on its screen: refresh the preview now.
-				l.pokeComputer(slug)
-			}
 			appendHeadlessClaudeLog(slug, "tool_result: "+truncate(event.Text, 140))
 			l.updateHeadlessProgress(slug, "active", "tool_result", truncate(event.Text, 140), metrics)
 			emitHeadlessToolResult(agentStream, turnID, HeadlessProviderClaude, slug, taskID, event.ToolName, event.Text, "claude.tool_result")

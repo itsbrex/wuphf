@@ -1,6 +1,6 @@
 # gawkbot bot computers
 
-Status: PLAN, 2026-09-01. Reopens the per-bot sandbox decision declined on
+Status: S1, S2, S3 built and live-verified on 2026-09-01 (Go side, sandbox path); S4 cloud path built against a fake provider, unverified against live ascii.dev; web tab in progress. Originally a plan, 2026-09-01. Reopens the per-bot sandbox decision declined on
 2026-08-31. Founder asked for: per-bot sandboxes with no subscription on the
 local machine, a cloud VM option, and above all a UX where the gawker watches
 bots use their computers.

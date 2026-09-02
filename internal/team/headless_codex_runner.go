@@ -258,6 +258,9 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 			turnTextLen += len(event.Text)
 			emitHeadlessText(agentStream, turnID, HeadlessProviderCodex, slug, taskID, event.Text, event.RawType)
 		case "tool_use":
+			if isComputerTool(event.ToolName) {
+				l.pokeComputer(slug)
+			}
 			relay.Flush()
 			if firstToolAt.IsZero() {
 				firstToolAt = time.Now()
@@ -272,9 +275,6 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 			turnToolNames = append(turnToolNames, manifestToolToken(event.ToolName, event.ToolInput))
 			emitHeadlessToolUse(agentStream, turnID, HeadlessProviderCodex, slug, taskID, event.ToolName, event.ToolInput, event.RawType)
 		case "tool_result":
-			if isComputerTool(event.ToolName) {
-				l.pokeComputer(slug)
-			}
 			line := "tool_result: " + truncate(event.Text, 140)
 			appendHeadlessCodexLog(slug, line)
 			l.updateHeadlessProgress(slug, "active", "tool_result", truncate(event.Text, 140), snapshotMetrics())
