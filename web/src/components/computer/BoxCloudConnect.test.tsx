@@ -71,3 +71,22 @@ describe("BoxCloudConnect", () => {
     expect(screen.getByTestId("box-key-input")).toBeTruthy();
   });
 });
+
+describe("BoxCloudConnect plan hint", () => {
+  it("names the plan requirement with the billing link before anyone signs in", async () => {
+    vi.spyOn(computerApi, "getBoxAccount").mockResolvedValue({
+      ...signedIn,
+      keySet: false,
+      signedIn: false,
+      identifier: "",
+      canStart: null,
+    });
+    render(<BoxCloudConnect compact={true} />);
+    await waitFor(() =>
+      expect(screen.getByTestId("box-plan-hint")).toBeTruthy(),
+    );
+    expect(screen.getByTestId("box-plan-hint-link").getAttribute("href")).toBe(
+      computerApi.BOX_BILLING_URL,
+    );
+  });
+});

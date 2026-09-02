@@ -27,6 +27,10 @@ import (
 // DefaultAPI is the provider endpoint; tests point it at a stub.
 const DefaultAPI = "https://ascii.dev/api/box/v1"
 
+// BillingURL is where a plan or the 7-day trial is started. The plain
+// dashboard link, never the provider's token-bearing one.
+const BillingURL = "https://box.ascii.dev/box/dashboard?tab=billing"
+
 var readyStates = map[string]bool{"idle": true, "ready": true, "running": true}
 
 const (
@@ -276,15 +280,14 @@ func ErrorMessage(status int, what string, body map[string]any) string {
 	if msg, isStr := body["message"].(string); isStr {
 		theirs = strings.TrimSpace(msg)
 	}
-	link := ""
-	if e, isMap := body["error"].(map[string]any); isMap {
-		if d, isMap := e["details"].(map[string]any); isMap {
-			link, _ = d["billingUrl"].(string)
-		}
-	}
 	switch status {
 	case http.StatusPaymentRequired:
-		return strings.TrimSpace(strings.Join([]string{firstNonEmpty(theirs, "ascii.dev needs a paid Box plan before it will create a computer."), link}, " "))
+		// The provider's own link may embed a session token; always point at
+		// the plain billing page and mention the trial, which counts.
+		return strings.TrimSpace(strings.Join([]string{
+			firstNonEmpty(theirs, "ascii.dev needs a plan before it will start a box. The 7-day trial counts."),
+			"Start it at " + BillingURL,
+		}, " "))
 	case http.StatusUnauthorized, http.StatusForbidden:
 		return "your box token was rejected by ascii.dev — open Settings and paste a current token (it starts with box_)"
 	case http.StatusTooManyRequests:

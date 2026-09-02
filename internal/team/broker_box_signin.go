@@ -545,7 +545,7 @@ type boxAccountView struct {
 // boxBillingURL is where a plan or the 7-day trial is started. Deliberately
 // the plain dashboard link: the CLI's own billing link embeds the session
 // token, which must never reach the browser.
-const boxBillingURL = "https://box.ascii.dev/box/dashboard?tab=billing"
+const boxBillingURL = box.BillingURL
 
 // boxReadLimits fills the plan gate from `box limits --json`.
 func boxReadLimits(ctx context.Context, view *boxAccountView) {

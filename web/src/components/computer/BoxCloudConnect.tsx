@@ -10,6 +10,7 @@
 import { useState } from "react";
 
 import { ApiError, updateConfig } from "../../api/client";
+import { BOX_BILLING_URL } from "../../api/computer";
 import { type BoxSigninPhase, useBoxSignin } from "../../hooks/useBoxSignin";
 import { BoxPlanNotice, boxAccountLine } from "./BoxPlanNotice";
 
@@ -223,6 +224,20 @@ export function BoxCloudConnect({
           onCancel={() => void signin.cancel()}
         />
       </div>
+      {!signin.keySet ? (
+        <p className="box-account-line" data-testid="box-plan-hint">
+          Boxes run on your own ascii.dev account and need a plan or the 7-day
+          trial; you pay ascii.dev directly.{" "}
+          <a
+            href={BOX_BILLING_URL}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="box-plan-hint-link"
+          >
+            Plans and trial
+          </a>
+        </p>
+      ) : null}
       {signin.phase === "cli_missing" ? (
         <div
           role="alert"

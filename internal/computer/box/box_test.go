@@ -238,3 +238,13 @@ func TestActionShellAndFrameParsing(t *testing.T) {
 		t.Fatalf("a size mismatch must not become a trusted frame")
 	}
 }
+
+func TestErrorMessageAlwaysLinksBilling(t *testing.T) {
+	msg := ErrorMessage(http.StatusPaymentRequired, "box create", map[string]any{"message": "Start the $20/month Box plan to create sandboxes."})
+	if !strings.Contains(msg, "Start the $20/month Box plan") || !strings.Contains(msg, BillingURL) {
+		t.Fatalf("402 must keep the provider's words and add the billing link: %s", msg)
+	}
+	if strings.Contains(ErrorMessage(http.StatusPaymentRequired, "box create", map[string]any{"error": map[string]any{"details": map[string]any{"billingUrl": "https://x/?box_token=secret"}}}), "box_token") {
+		t.Fatalf("the provider's token-bearing link must never be surfaced")
+	}
+}

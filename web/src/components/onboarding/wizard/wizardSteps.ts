@@ -329,7 +329,7 @@ export const ONBOARDING_COMPUTER_COPY = {
   localCheckAgain: "Check again",
   cloudHeading: "In the cloud, with your own ascii.dev key",
   cloudNote:
-    "A cloud box is a persistent Linux desktop that keeps its files and logins between sessions. You pay ascii.dev directly; gawkbot never sees a bill. Paste a key here or in Settings later.",
+    "A cloud box is a persistent Linux desktop that keeps its files and logins between sessions. It runs on your own ascii.dev account, which needs a plan or the 7-day trial; you pay ascii.dev directly and gawkbot never sees a bill.",
   signinCta: "Sign in to ascii.dev",
   signinInstalling: "Getting the Box CLI ready…",
   signinAwaiting:
