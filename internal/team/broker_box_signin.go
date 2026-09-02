@@ -82,6 +82,8 @@ func boxInstallDir() string {
 	if dir := strings.TrimSpace(os.Getenv("WUPHF_BOX_CLI_DIR")); dir != "" {
 		return dir
 	}
+	// PHASE0 carve-out: the Box CLI's installer and session live under the
+	// real user HOME (~/.ascii), never under the gawkbot runtime home.
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""

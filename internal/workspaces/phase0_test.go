@@ -40,6 +40,12 @@ var allowedFiles = map[string]string{
 	// gbrain — user-global MCP subprocess, real HOME for subprocess auth.
 	"internal/team/memory_backend.go": "gbrainMCPEnv + gbrainMCPEnvVars — gbrain is user-global",
 
+	// Box CLI sign-in — ascii.dev's official installer puts the `box` binary
+	// under the real user HOME (~/.ascii/bin) and the CLI keeps its login
+	// session there too; gawkbot only locates the binary, so the runtime home
+	// is the wrong root. WUPHF_BOX_CLI_DIR overrides it for tests.
+	"internal/team/broker_box_signin.go": "boxInstallDir — Box CLI lives in ~/.ascii/bin, its own home convention",
+
 	// Composio sign-in — the composio CLI writes its login session to the
 	// real user HOME (~/.composio/user_data.json); the broker only READS it
 	// to detect login state. Same user-global-auth class as codex/opencode.
