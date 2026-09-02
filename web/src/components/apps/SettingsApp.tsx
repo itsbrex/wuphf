@@ -29,6 +29,7 @@ import {
 import { showNotice } from "../ui/Toast";
 import { WipeModal } from "../ui/WipeModal";
 import { ImageGenSection } from "./SettingsApp.imageGen";
+import { BoxAccountSection } from "./settings/BoxAccountSection";
 import { Field, KeyField, SaveButton } from "./settings/components";
 import { SECTION_GROUPS } from "./settings/constants";
 import { PrivacySection } from "./settings/PrivacySection";
@@ -776,13 +777,6 @@ const KEY_DEFS: KeyDef[] = [
     placeholder: "123456:ABC...",
     env: "WUPHF_TELEGRAM_BOT_TOKEN",
   },
-  {
-    field: "box_api_key",
-    flag: "box_key_set",
-    label: "ascii.dev Box",
-    placeholder: "box_…",
-    env: "WUPHF_BOX_API_KEY",
-  },
 ];
 
 function KeysSection({ cfg, save }: SectionProps) {
@@ -810,6 +804,8 @@ function KeysSection({ cfg, save }: SectionProps) {
         your local config file and never transmitted to gawkbot servers. Enter a
         new value to update, or leave blank to keep the current key.
       </p>
+
+      <BoxAccountSection />
 
       {KEY_DEFS.map((def) => (
         <Field key={def.field} label={def.label} hint={`Env: ${def.env}`}>

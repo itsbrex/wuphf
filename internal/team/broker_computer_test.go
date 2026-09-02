@@ -317,7 +317,9 @@ func writeFakeBoxCLI(t *testing.T, dir string) string {
 		"  login) echo '{\"event\":\"login_url\",\"url\":\"https://ascii.dev/api/box/auth/github?state=abc\"}'; exit 0 ;;\n" +
 		"  onboard) sleep 0.2; echo '{\"event\":\"login_complete\"}'; touch " + marker + "; exit 0 ;;\n" +
 		"  status) if [ -f " + marker + " ]; then echo '{\"account\":{\"loginState\":\"signed in\"}}'; else echo '{\"account\":{\"loginState\":\"signed out\"}}'; fi ;;\n" +
-		"  api-key) echo '{\"id\":\"k1\",\"secret\":\"box_minted\"}' ;;\n" +
+		"  api-key) case \"$2\" in list) echo '{\"apiKeys\":[{\"id\":\"k1\",\"name\":\"gawkbot\"},{\"id\":\"k2\",\"name\":\"other\"}]}' ;; revoke) echo \"$3\" >> " + filepath.Join(dir, "revoked") + " ;; *) echo '{\"id\":\"k1\",\"secret\":\"box_minted\"}' ;; esac ;;\n" +
+		"  logout) rm -f " + marker + "; echo '{\"event\":\"logged_out\"}' ;;\n" +
+		"  limits) echo '{\"event\":\"limits\",\"limits\":{\"canStart\":false,\"blockedReason\":\"subscription_required\",\"planName\":null,\"accessTier\":\"trial\",\"trialLine\":\"2 boxes, 25h compute\"}}' ;;\n" +
 		"  *) exit 2 ;;\n" +
 		"esac\n"
 	path := filepath.Join(dir, "box")
@@ -331,11 +333,18 @@ func TestBoxSigninFlowMintsAndStoresAKey(t *testing.T) {
 	t.Setenv("WUPHF_CONFIG_PATH", filepath.Join(t.TempDir(), "config.json"))
 	t.Setenv("WUPHF_BOX_CLI", writeFakeBoxCLI(t, t.TempDir()))
 	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Authorization") == "Bearer box_minted" {
-			_, _ = w.Write([]byte(`{"ok":true,"boxes":[]}`))
+		if r.Header.Get("Authorization") != "Bearer box_minted" {
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		w.WriteHeader(http.StatusUnauthorized)
+		switch r.URL.Path {
+		case "/me":
+			_, _ = w.Write([]byte(`{"ok":true,"user":{"login":"sam","email":"sam@example.com"}}`))
+		case "/limits":
+			_, _ = w.Write([]byte(`{"ok":true,"accessTier":"trial","blockedReason":"subscription_required","trialLine":"2 boxes, 25h compute"}`))
+		default:
+			_, _ = w.Write([]byte(`{"ok":true,"boxes":[]}`))
+		}
 	}))
 	defer fake.Close()
 	t.Setenv("WUPHF_BOX_API", fake.URL)
@@ -368,6 +377,37 @@ func TestBoxSigninFlowMintsAndStoresAKey(t *testing.T) {
 	status, body = authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signin/start", map[string]any{})
 	if status != http.StatusOK || body["status"] != "done" {
 		t.Fatalf("restart with key: %d %v", status, body)
+	}
+	_, account := authedJSON(t, srv, b.Token(), http.MethodGet, "/computer/box/account?fresh=1", nil)
+	if account["key_set"] != true || account["signed_in"] != true {
+		t.Fatalf("account must report key and session: %v", account)
+	}
+	if account["can_start"] != false || account["blocked_reason"] != "subscription_required" || account["billing_url"] != boxBillingURL {
+		t.Fatalf("account must surface the plan gate with a billing link: %v", account)
+	}
+	if account["identifier"] != "sam@example.com" {
+		t.Fatalf("identity must come from the key via /me: %v", account)
+	}
+	// Sign out: revokes only the gawkbot key, ends the session, forgets the key.
+	status, body = authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signout", map[string]any{})
+	if status != http.StatusOK || body["revoked_keys"] != float64(1) || body["logged_out"] != true {
+		t.Fatalf("signout: %d %v", status, body)
+	}
+	if config.ResolveBoxAPIKey() != "" {
+		t.Fatalf("signout must forget the key")
+	}
+	revoked, _ := os.ReadFile(filepath.Join(filepath.Dir(os.Getenv("WUPHF_BOX_CLI")), "revoked"))
+	if strings.TrimSpace(string(revoked)) != "k1" {
+		t.Fatalf("only the gawkbot key must be revoked, got %q", revoked)
+	}
+	_, account = authedJSON(t, srv, b.Token(), http.MethodGet, "/computer/box/account?fresh=1", nil)
+	if account["key_set"] != false || account["signed_in"] != false {
+		t.Fatalf("account must be clear after signout: %v", account)
+	}
+	// And signing in again starts a fresh flow.
+	status, body = authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signin/start", map[string]any{})
+	if status != http.StatusOK || body["status"] != "installing" {
+		t.Fatalf("re-signin: %d %v", status, body)
 	}
 }
 

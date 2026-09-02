@@ -164,7 +164,7 @@ func defaultBoxInstaller(ctx context.Context) error {
 		return err
 	}
 	if _, err := io.Copy(tmp, io.LimitReader(res.Body, 512<<20)); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		_ = os.Remove(tmp.Name())
 		return err
 	}
@@ -468,4 +468,221 @@ func (b *Broker) storeBoxAPIKey(key string) error {
 		return fmt.Errorf("config save failed: %w", err)
 	}
 	return nil
+}
+
+// ── account and sign-out ────────────────────────────────────────────────
+
+type boxAccountView struct {
+	KeySet     bool   `json:"key_set"`
+	SignedIn   bool   `json:"signed_in"`
+	Identifier string `json:"identifier,omitempty"`
+	CLI        bool   `json:"cli_installed"`
+	// Plan gate, from `box limits`. CanStart is nil when unknown (not signed
+	// in, CLI missing); false with a BlockedReason such as
+	// subscription_required means no box will start until the person acts.
+	CanStart      *bool  `json:"can_start"`
+	BlockedReason string `json:"blocked_reason,omitempty"`
+	Plan          string `json:"plan,omitempty"`
+	TrialLine     string `json:"trial_line,omitempty"`
+	BillingURL    string `json:"billing_url"`
+}
+
+// boxBillingURL is where a plan or the 7-day trial is started. Deliberately
+// the plain dashboard link: the CLI's own billing link embeds the session
+// token, which must never reach the browser.
+const boxBillingURL = "https://box.ascii.dev/box/dashboard?tab=billing"
+
+// boxReadLimits fills the plan gate from `box limits --json`.
+func boxReadLimits(ctx context.Context, view *boxAccountView) {
+	probe, cancel := context.WithTimeout(ctx, boxProbeTimeout)
+	defer cancel()
+	cmd, err := boxCommand(probe, "limits")
+	if err != nil {
+		return
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	var raw map[string]json.RawMessage
+	if json.Unmarshal(out, &raw) != nil {
+		return
+	}
+	payload := out
+	if nested, ok := raw["limits"]; ok {
+		payload = nested
+	}
+	var limits struct {
+		CanStart      *bool   `json:"canStart"`
+		BlockedReason *string `json:"blockedReason"`
+		PlanName      *string `json:"planName"`
+		AccessTier    *string `json:"accessTier"`
+		TrialLine     *string `json:"trialLine"`
+	}
+	if json.Unmarshal(payload, &limits) != nil || limits.CanStart == nil {
+		return
+	}
+	view.CanStart = limits.CanStart
+	if limits.BlockedReason != nil {
+		view.BlockedReason = *limits.BlockedReason
+	}
+	if limits.PlanName != nil && *limits.PlanName != "" {
+		view.Plan = *limits.PlanName
+	} else if limits.AccessTier != nil {
+		view.Plan = *limits.AccessTier
+	}
+	if limits.TrialLine != nil {
+		view.TrialLine = *limits.TrialLine
+	}
+}
+
+var (
+	boxAccountCacheTTL = 30 * time.Second
+	boxAccountMu       sync.Mutex
+	boxAccountCached   boxAccountView
+	boxAccountAt       time.Time
+)
+
+// boxAccount reads the CLI session (cached) and the key flag.
+func boxAccount(ctx context.Context, fresh bool) boxAccountView {
+	boxAccountMu.Lock()
+	cached, at := boxAccountCached, boxAccountAt
+	boxAccountMu.Unlock()
+	if !fresh && time.Since(at) < boxAccountCacheTTL {
+		cached.KeySet = config.ResolveBoxAPIKey() != ""
+		return cached
+	}
+	view := boxAccountView{KeySet: config.ResolveBoxAPIKey() != "", BillingURL: boxBillingURL}
+	// The key alone answers the two questions that matter, through REST:
+	// who the account is, and whether ascii.dev will start a box. This
+	// covers pasted keys and machines with no CLI session.
+	if view.KeySet {
+		c := box.NewClient(config.ResolveBoxAPIKey())
+		c.API = boxAPIBase()
+		probe, cancel := context.WithTimeout(ctx, boxProbeTimeout)
+		if login, email, err := c.Me(probe); err == nil {
+			view.SignedIn = true
+			view.Identifier = firstNonEmpty(email, login)
+		}
+		if limits, err := c.Limits(probe); err == nil {
+			view.CanStart = limits.CanStart
+			view.BlockedReason = limits.BlockedReason
+			view.Plan = firstNonEmpty(limits.PlanName, limits.AccessTier)
+			view.TrialLine = limits.TrialLine
+		}
+		cancel()
+	}
+	if _, ok := boxCLIBinary(); ok {
+		view.CLI = true
+		probe, cancel := context.WithTimeout(ctx, boxProbeTimeout)
+		if cmd, err := boxCommand(probe, "status"); err == nil {
+			if out, err := cmd.Output(); err == nil {
+				var status struct {
+					Account struct {
+						Identifier string `json:"identifier"`
+						LoginState string `json:"loginState"`
+					} `json:"account"`
+				}
+				if json.Unmarshal(out, &status) == nil {
+					state := strings.ToLower(strings.TrimSpace(status.Account.LoginState))
+					cliSignedIn := state != "" && state != "signed out"
+					if cliSignedIn {
+						view.SignedIn = true
+						if view.Identifier == "" {
+							view.Identifier = strings.TrimSpace(status.Account.Identifier)
+						}
+					}
+					if cliSignedIn && view.CanStart == nil {
+						boxReadLimits(ctx, &view)
+					}
+				}
+			}
+		}
+		cancel()
+	}
+	boxAccountMu.Lock()
+	boxAccountCached, boxAccountAt = view, time.Now()
+	boxAccountMu.Unlock()
+	return view
+}
+
+func (b *Broker) handleBoxAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	writeJSON(w, http.StatusOK, boxAccount(r.Context(), r.URL.Query().Get("fresh") == "1"))
+}
+
+// handleBoxSignout revokes the gawkbot key on the account (best effort),
+// ends the CLI session, and forgets the stored key, so the next sign-in
+// starts clean. POST /computer/box/signout
+func (b *Broker) handleBoxSignout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	if !requireJSONBody(w, r) {
+		return
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 90*time.Second)
+	defer cancel()
+	revoked := boxRevokeGawkbotKeys(ctx)
+	loggedOut := false
+	if cmd, err := boxCommand(ctx, "logout"); err == nil {
+		cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
+		loggedOut = cmd.Run() == nil
+	}
+	if err := b.storeBoxAPIKey(""); err != nil {
+		log.Printf("box signout: %v", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "could not clear the stored key — check the broker logs"})
+		return
+	}
+	flow := &b.boxSignin
+	flow.mu.Lock()
+	flow.state = boxSigninState{Status: boxSigninStatusIdle}
+	flow.deadline = time.Time{}
+	flow.mu.Unlock()
+	view := boxAccount(ctx, true)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"status":       boxSigninStatusIdle,
+		"revoked_keys": revoked,
+		"logged_out":   loggedOut,
+		"account":      view,
+	})
+}
+
+// boxRevokeGawkbotKeys revokes every key the CLI lists under the gawkbot
+// name. Best effort: a missing session or an old CLI just yields zero.
+func boxRevokeGawkbotKeys(ctx context.Context) int {
+	cmd, err := boxCommand(ctx, "api-key", "list")
+	if err != nil {
+		return 0
+	}
+	out, err := cmd.Output()
+	if err != nil {
+		return 0
+	}
+	var listing struct {
+		APIKeys []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"apiKeys"`
+	}
+	if json.Unmarshal(out, &listing) != nil {
+		return 0
+	}
+	revoked := 0
+	for _, key := range listing.APIKeys {
+		if key.Name != boxKeyName || key.ID == "" {
+			continue
+		}
+		if revoke, err := boxCommand(ctx, "api-key", "revoke", key.ID); err == nil {
+			revoke.Stdout, revoke.Stderr = io.Discard, io.Discard
+			if revoke.Run() == nil {
+				revoked++
+			}
+		}
+	}
+	return revoked
 }

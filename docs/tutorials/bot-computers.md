@@ -55,6 +55,13 @@ later in Settings:
 - **Paste a key.** Create one at box.ascii.dev under API keys (they start
   with `box_`). gawkbot checks the key with ascii.dev before saving it.
 
+A saved key is not the whole story: ascii.dev only starts boxes for an
+account with a plan or an active 7-day trial. Wherever the cloud shows up
+(onboarding, the Computer tab, Settings) gawkbot reads the account's limits
+and, when boxes are blocked, says so and links to the billing page. Settings
+→ API Keys also has **Sign out and sign in again**, which revokes the
+`gawkbot` key on your account, ends the CLI session, and forgets the key.
+
 Then choose **Cloud** for the bot. The first turn creates a box named after
 the bot, installs the driver, and gives the bot the same tools. You pay
 ascii.dev directly; gawkbot never sees a bill. Sleep archives the box;

@@ -34,6 +34,8 @@ const runtimeReady: computerApi.ComputerRuntime = {
 
 const viewDefaults = {
   installHint: "",
+  account: null,
+  onSignOut: noop,
   signin: "idle" as const,
   authUrl: "",
   installCommand: "",
@@ -48,11 +50,21 @@ const viewDefaults = {
   saveError: null,
 };
 
+const account = (keySet: boolean): computerApi.BoxAccount => ({
+  keySet,
+  signedIn: keySet,
+  identifier: keySet ? "sam@example.com" : "",
+  cliInstalled: true,
+  canStart: keySet ? false : null,
+  blockedReason: keySet ? "subscription_required" : "",
+  plan: keySet ? "trial" : "",
+  trialLine: "",
+  billingUrl: computerApi.BOX_BILLING_URL,
+});
+
 function seedContainer(keySet = false) {
   vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
-  vi.spyOn(client, "getConfig").mockResolvedValue({
-    box_key_set: keySet,
-  } as never);
+  vi.spyOn(computerApi, "getBoxAccount").mockResolvedValue(account(keySet));
 }
 
 afterEach(() => {
@@ -121,7 +133,10 @@ describe("ComputerChoiceView", () => {
 describe("ComputerChoice sign-in", () => {
   it("opens the sign-in tab once, polls, and flips to set on done", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    seedContainer();
+    vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
+    vi.spyOn(computerApi, "getBoxAccount")
+      .mockResolvedValueOnce(account(false))
+      .mockResolvedValue(account(true));
     const open = vi.spyOn(window, "open").mockImplementation(() => null);
     vi.spyOn(computerApi, "startBoxSignin").mockResolvedValue({
       status: "awaiting_login",
@@ -184,7 +199,10 @@ describe("ComputerChoice sign-in", () => {
 
 describe("ComputerChoice paste fallback", () => {
   it("saves the key through /config and flips to the set state", async () => {
-    seedContainer();
+    vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
+    vi.spyOn(computerApi, "getBoxAccount")
+      .mockResolvedValueOnce(account(false))
+      .mockResolvedValue(account(true));
     const update = vi
       .spyOn(client, "updateConfig")
       .mockResolvedValue({} as never);
@@ -229,14 +247,18 @@ describe("ComputerChoice paste fallback", () => {
       ...runtimeReady,
       daemonUp: false,
     });
-    vi.spyOn(client, "getConfig").mockResolvedValue({
-      box_key_set: true,
-    } as never);
+    vi.spyOn(computerApi, "getBoxAccount").mockResolvedValue(account(true));
     render(<ComputerChoice />);
     await waitFor(() =>
       expect(screen.getByText(COPY.localStopped)).toBeTruthy(),
     );
     expect(screen.getByTestId("onboarding-computer-key-set")).toBeTruthy();
+    // A key alone is not enough: the plan gate and the account are named.
+    expect(screen.getByTestId("box-plan-notice")).toBeTruthy();
+    expect(
+      screen.getByTestId("onboarding-computer-account").textContent,
+    ).toContain("sam@example.com");
+    expect(screen.getByTestId("onboarding-computer-signout")).toBeTruthy();
   });
 });
 

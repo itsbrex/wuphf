@@ -18,16 +18,16 @@
  * Staff opened example.com on its own desktop.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { ApiError, getConfig, updateConfig } from "../../../../api/client";
+import { ApiError, updateConfig } from "../../../../api/client";
 import {
-  type BoxSigninState,
+  type BoxAccount,
   type ComputerRuntime,
-  getBoxSigninStatus,
   getComputerRuntime,
-  startBoxSignin,
 } from "../../../../api/computer";
+import { useBoxSignin } from "../../../../hooks/useBoxSignin";
+import { BoxPlanNotice, boxAccountLine } from "../../../computer/BoxPlanNotice";
 import {
   ONBOARDING_COMPUTER_COPY as COPY,
   ONBOARDING_WIZARD_COPY,
@@ -35,7 +35,6 @@ import {
 } from "../wizardSteps";
 
 const STEP_COPY = ONBOARDING_WIZARD_COPY.computer;
-const SIGNIN_POLL_MS = 1500;
 
 type LocalState = "loading" | "ready" | "stopped" | "missing";
 
@@ -52,12 +51,15 @@ export type SigninPhase =
   | "cli_missing"
   | "awaiting_login"
   | "provisioning"
+  | "signing_out"
   | "error";
 
 export interface ComputerChoiceViewProps {
   local: LocalState;
   installHint: string;
   keySet: boolean;
+  account: BoxAccount | null;
+  onSignOut: () => void;
   signin: SigninPhase;
   authUrl: string;
   installCommand: string;
@@ -154,6 +156,8 @@ function SigninStatus({
 type CloudPathProps = Pick<
   ComputerChoiceViewProps,
   | "keySet"
+  | "account"
+  | "onSignOut"
   | "signin"
   | "authUrl"
   | "installCommand"
@@ -170,6 +174,8 @@ type CloudPathProps = Pick<
 /** The cloud half: sign-in first, paste as the fallback. */
 function CloudPath({
   keySet,
+  account,
+  onSignOut,
   signin,
   authUrl,
   installCommand,
@@ -191,12 +197,32 @@ function CloudPath({
   return (
     <>
       {keySet ? (
-        <p
-          className="onboarding-embedding-success"
-          data-testid="onboarding-computer-key-set"
-        >
-          {COPY.keySet}
-        </p>
+        <div className="box-account-row">
+          <p
+            className="onboarding-embedding-success"
+            data-testid="onboarding-computer-key-set"
+          >
+            {COPY.keySet}
+          </p>
+          {boxAccountLine(account) ? (
+            <p
+              className="box-account-line"
+              data-testid="onboarding-computer-account"
+            >
+              {boxAccountLine(account)}
+            </p>
+          ) : null}
+          <BoxPlanNotice account={account} compact={true} />
+          <button
+            type="button"
+            className="onboarding-embedding-expand"
+            onClick={onSignOut}
+            disabled={signin === "signing_out"}
+            data-testid="onboarding-computer-signout"
+          >
+            {signin === "signing_out" ? COPY.signingOut : COPY.signOut}
+          </button>
+        </div>
       ) : (
         <>
           <p className="onboarding-embedding-note">{COPY.cloudNote}</p>
@@ -307,6 +333,8 @@ export function ComputerChoiceView({
   local,
   installHint,
   keySet,
+  account,
+  onSignOut,
   signin,
   authUrl,
   installCommand,
@@ -369,6 +397,8 @@ export function ComputerChoiceView({
         <h3 className="onboarding-embedding-heading">{COPY.cloudHeading}</h3>
         <CloudPath
           keySet={keySet}
+          account={account}
+          onSignOut={onSignOut}
           signin={signin}
           authUrl={authUrl}
           installCommand={installCommand}
@@ -402,20 +432,14 @@ const EMPTY_RUNTIME: ComputerRuntime = {
   problem: "",
 };
 
-/** Container: reads the runtime and the key flag, runs sign-in, saves a key. */
+/** Container: reads the runtime, runs sign-in through the shared hook, saves a pasted key. */
 export function ComputerChoice() {
   const [runtime, setRuntime] = useState<ComputerRuntime | null>(null);
-  const [keySet, setKeySet] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
   const [keyValue, setKeyValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [signin, setSignin] = useState<SigninPhase>("idle");
-  const [authUrl, setAuthUrl] = useState("");
-  const [installCommand, setInstallCommand] = useState("");
-  const [signinError, setSigninError] = useState("");
-  // Open the sign-in tab once per flow; polls must not spawn more.
-  const openedRef = useRef(false);
+  const signin = useBoxSignin();
 
   useEffect(() => {
     let cancelled = false;
@@ -426,86 +450,10 @@ export function ComputerChoice() {
       .catch(() => {
         if (!cancelled) setRuntime(EMPTY_RUNTIME);
       });
-    getConfig()
-      .then((cfg) => {
-        if (!cancelled) setKeySet(Boolean(cfg.box_key_set));
-      })
-      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
   }, []);
-
-  const applySignin = useCallback((state: BoxSigninState) => {
-    switch (state.status) {
-      case "installing":
-        setSignin("installing");
-        break;
-      case "cli_missing":
-        setSignin("cli_missing");
-        setInstallCommand(state.installCommand);
-        setSigninError(state.reason);
-        break;
-      case "awaiting_login":
-        setSignin("awaiting_login");
-        setAuthUrl(state.authUrl);
-        if (state.authUrl && !openedRef.current) {
-          openedRef.current = true;
-          window.open(state.authUrl, "_blank", "noopener");
-        }
-        break;
-      case "provisioning":
-        setSignin("provisioning");
-        break;
-      case "done":
-        setSignin("idle");
-        setKeySet(true);
-        break;
-      case "error":
-        setSignin("error");
-        setSigninError(
-          state.reason || "Sign-in failed. Try again, or paste a key.",
-        );
-        break;
-      default:
-        break;
-    }
-  }, []);
-
-  const onStartSignin = useCallback(() => {
-    openedRef.current = false;
-    setSigninError("");
-    setSignin("installing");
-    startBoxSignin()
-      .then(applySignin)
-      .catch((error: unknown) => {
-        setSignin("error");
-        setSigninError(
-          error instanceof Error ? error.message : "Could not start sign-in.",
-        );
-      });
-  }, [applySignin]);
-
-  const polling =
-    signin === "installing" ||
-    signin === "awaiting_login" ||
-    signin === "provisioning";
-  useEffect(() => {
-    if (!polling) return;
-    let cancelled = false;
-    const tick = () => {
-      getBoxSigninStatus()
-        .then((state) => {
-          if (!cancelled) applySignin(state);
-        })
-        .catch(() => undefined);
-    };
-    const timer = setInterval(tick, SIGNIN_POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [polling, applySignin]);
 
   const onSaveKey = useCallback(async () => {
     const token = keyValue.trim();
@@ -514,8 +462,8 @@ export function ComputerChoice() {
     setSaveError(null);
     try {
       await updateConfig({ box_api_key: token });
-      setKeySet(true);
       setKeyValue("");
+      await signin.refreshAccount();
     } catch (error) {
       setSaveError(
         error instanceof ApiError
@@ -525,18 +473,20 @@ export function ComputerChoice() {
     } finally {
       setSaving(false);
     }
-  }, [keyValue]);
+  }, [keyValue, signin.refreshAccount]);
 
   return (
     <ComputerChoiceView
       local={localStateOf(runtime)}
       installHint={runtime?.installHint ?? ""}
-      keySet={keySet}
-      signin={signin}
-      authUrl={authUrl}
-      installCommand={installCommand}
-      signinError={signinError}
-      onStartSignin={onStartSignin}
+      keySet={signin.keySet}
+      account={signin.account}
+      onSignOut={() => void signin.signOut()}
+      signin={signin.phase}
+      authUrl={signin.authUrl}
+      installCommand={signin.installCommand}
+      signinError={signin.error}
+      onStartSignin={signin.start}
       showPaste={showPaste}
       onShowPaste={() => setShowPaste(true)}
       keyValue={keyValue}

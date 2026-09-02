@@ -336,6 +336,8 @@ export const ONBOARDING_COMPUTER_COPY = {
   signinCliMissing:
     "We could not set up the Box CLI on this machine. Run this in a terminal, then try again:",
   signinPasteInstead: "Or paste a key yourself",
+  signOut: "Sign out of ascii.dev and sign in again",
+  signingOut: "Signing out…",
   keyLabel: "ascii.dev Box API key",
   keyPlaceholder: "box_…",
   keyHint:

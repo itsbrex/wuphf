@@ -469,3 +469,49 @@ func (c *Client) ReadFileBase64(ctx context.Context, boxID, path string) (string
 	}
 	return content, nil
 }
+
+// Limits is the account's plan gate as the API reports it to a key.
+type Limits struct {
+	CanStart      *bool  `json:"canStart"`
+	BlockedReason string `json:"blockedReason"`
+	AccessTier    string `json:"accessTier"`
+	PlanName      string `json:"planName"`
+	TrialLine     string `json:"trialLine"`
+}
+
+// Limits reads GET /limits. A missing canStart is inferred from
+// blockedReason so older API shapes still gate correctly.
+func (c *Client) Limits(ctx context.Context) (*Limits, error) {
+	status, body, err := c.do(ctx, http.MethodGet, "/limits", nil, 20*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	if !ok(status, body) {
+		return nil, fmt.Errorf("%s", ErrorMessage(status, "limits", body))
+	}
+	raw, _ := json.Marshal(body)
+	var out Limits
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, err
+	}
+	if out.CanStart == nil {
+		can := out.BlockedReason == ""
+		out.CanStart = &can
+	}
+	return &out, nil
+}
+
+// Me reads GET /me: who the key belongs to.
+func (c *Client) Me(ctx context.Context) (login, email string, err error) {
+	status, body, err := c.do(ctx, http.MethodGet, "/me", nil, 20*time.Second)
+	if err != nil {
+		return "", "", err
+	}
+	if !ok(status, body) {
+		return "", "", fmt.Errorf("%s", ErrorMessage(status, "me", body))
+	}
+	user, _ := body["user"].(map[string]any)
+	login, _ = user["login"].(string)
+	email, _ = user["email"].(string)
+	return login, email, nil
+}

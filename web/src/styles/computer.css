@@ -455,3 +455,45 @@
     padding: 14px 16px 32px;
   }
 }
+
+/* ── ascii.dev plan gate: shown wherever the cloud shows up ───────────── */
+.box-plan-notice {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 12px 14px;
+  border: 1px solid
+    color-mix(in srgb, var(--accent-warm, var(--accent)) 45%, var(--border));
+  border-radius: var(--radius-md);
+  background: color-mix(
+    in srgb,
+    var(--accent-warm, var(--accent)) 8%,
+    var(--bg-card)
+  );
+}
+.box-plan-notice--compact {
+  padding: 10px 12px;
+}
+.box-plan-notice-text {
+  margin: 0;
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  max-width: 62ch;
+}
+.box-account-row {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+.box-account-line {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+.box-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}

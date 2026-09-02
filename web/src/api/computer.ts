@@ -374,3 +374,89 @@ export async function getBoxSigninStatus(): Promise<BoxSigninState> {
     await get<BoxSigninWire>("/computer/box/signin/status"),
   );
 }
+
+// ── Box account: session, key, and the plan gate ─────────────────────────
+
+export interface BoxAccount {
+  keySet: boolean;
+  signedIn: boolean;
+  identifier: string;
+  cliInstalled: boolean;
+  /** null when unknown (not signed in). false means no box will start. */
+  canStart: boolean | null;
+  blockedReason: string;
+  plan: string;
+  trialLine: string;
+  billingUrl: string;
+}
+
+interface BoxAccountWire {
+  key_set?: boolean;
+  signed_in?: boolean;
+  identifier?: string;
+  cli_installed?: boolean;
+  can_start?: boolean | null;
+  blocked_reason?: string;
+  plan?: string;
+  trial_line?: string;
+  billing_url?: string;
+}
+
+export const BOX_BILLING_URL =
+  "https://box.ascii.dev/box/dashboard?tab=billing";
+
+export function normalizeBoxAccount(wire: BoxAccountWire): BoxAccount {
+  return {
+    keySet: wire.key_set === true,
+    signedIn: wire.signed_in === true,
+    identifier: wire.identifier ?? "",
+    cliInstalled: wire.cli_installed === true,
+    canStart: typeof wire.can_start === "boolean" ? wire.can_start : null,
+    blockedReason: wire.blocked_reason ?? "",
+    plan: wire.plan ?? "",
+    trialLine: wire.trial_line ?? "",
+    billingUrl: wire.billing_url || BOX_BILLING_URL,
+  };
+}
+
+export async function getBoxAccount(fresh = false): Promise<BoxAccount> {
+  return normalizeBoxAccount(
+    await get<BoxAccountWire>(
+      "/computer/box/account",
+      fresh ? { fresh: "1" } : undefined,
+    ),
+  );
+}
+
+export interface BoxSignoutResult {
+  revokedKeys: number;
+  loggedOut: boolean;
+  account: BoxAccount;
+}
+
+export async function signOutBox(): Promise<BoxSignoutResult> {
+  const wire = await post<{
+    revoked_keys?: number;
+    logged_out?: boolean;
+    account?: BoxAccountWire;
+  }>("/computer/box/signout", {});
+  return {
+    revokedKeys: wire.revoked_keys ?? 0,
+    loggedOut: wire.logged_out === true,
+    account: normalizeBoxAccount(wire.account ?? {}),
+  };
+}
+
+/** Plain words for the provider's blocked_reason codes. */
+export function describeBoxBlock(reason: string): string {
+  switch (reason) {
+    case "subscription_required":
+      return "ascii.dev needs a plan before it will start a box. The 7-day trial counts.";
+    case "suspended":
+      return "ascii.dev has suspended this account.";
+    case "":
+      return "";
+    default:
+      return `ascii.dev will not start a box right now (${reason.replaceAll("_", " ")}).`;
+  }
+}

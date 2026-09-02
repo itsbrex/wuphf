@@ -16,6 +16,10 @@ const computerApi = vi.hoisted(() => ({
   computerJoin: vi.fn(),
   computerControl: vi.fn(),
   updateMemberComputer: vi.fn(),
+  getBoxAccount: vi.fn(),
+  startBoxSignin: vi.fn(),
+  getBoxSigninStatus: vi.fn(),
+  signOutBox: vi.fn(),
 }));
 const clientApi = vi.hoisted(() => ({
   getConfig: vi.fn(),
@@ -110,6 +114,17 @@ function resetStore() {
 }
 
 beforeEach(() => {
+  computerApi.getBoxAccount.mockResolvedValue({
+    keySet: false,
+    signedIn: false,
+    identifier: "",
+    cliInstalled: true,
+    canStart: null,
+    blockedReason: "",
+    plan: "",
+    trialLine: "",
+    billingUrl: "https://box.ascii.dev/box/dashboard?tab=billing",
+  });
   resetStore();
   computerApi.getComputerRuntime.mockResolvedValue(runtime());
   clientApi.getConfig.mockResolvedValue({ box_key_set: false });
@@ -179,12 +194,11 @@ describe("<ComputerTab> phases", () => {
     const install = screen.getByRole("link", { name: /Install OrbStack/ });
     expect(install).toHaveAttribute("href", "https://orbstack.dev");
     expect(screen.getByText("Use a cloud computer")).toBeInTheDocument();
-    expect(screen.getByTestId("box-key-status")).toHaveTextContent(
-      "No key yet",
-    );
+    expect(await screen.findByTestId("box-signin")).toBeInTheDocument();
 
+    await user.click(screen.getByTestId("box-paste"));
     await user.type(screen.getByLabelText("ascii.dev Box API key"), "box_abc");
-    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Save key" }));
 
     await waitFor(() =>
       expect(clientApi.updateConfig).toHaveBeenCalledWith({
@@ -197,12 +211,30 @@ describe("<ComputerTab> phases", () => {
     computerApi.getComputer.mockResolvedValue(
       status({ state: "runtime_missing" }),
     );
-    clientApi.getConfig.mockResolvedValue({ box_key_set: true });
+    computerApi.getBoxAccount.mockResolvedValue({
+      keySet: true,
+      signedIn: true,
+      identifier: "sam@example.com",
+      cliInstalled: true,
+      canStart: false,
+      blockedReason: "subscription_required",
+      plan: "trial",
+      trialLine: "",
+      billingUrl: "https://box.ascii.dev/box/dashboard?tab=billing",
+    });
     renderTab();
 
     await waitFor(() =>
-      expect(screen.getByTestId("box-key-status")).toHaveTextContent("Key set"),
+      expect(screen.getByTestId("box-account-line")).toHaveTextContent(
+        "sam@example.com",
+      ),
     );
+    // A saved key is not the whole story: the plan gate is named with a link.
+    expect(screen.getByTestId("box-plan-notice-link")).toHaveAttribute(
+      "href",
+      "https://box.ascii.dev/box/dashboard?tab=billing",
+    );
+    expect(screen.getByTestId("box-signout")).toBeInTheDocument();
   });
 
   it("image_missing: prepares the shared image and streams build lines", async () => {

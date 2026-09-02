@@ -8,13 +8,16 @@
  */
 
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 import type { OfficeMember } from "../../../api/client";
 import { useAppStore } from "../../../stores/app";
+import { BoxCloudAccountCard } from "../../computer/BoxCloudAccountCard";
+import { BoxCloudConnect } from "../../computer/BoxCloudConnect";
 import { ComputerConsole } from "../computer/ComputerConsole";
 import { ComputerDriving } from "../computer/ComputerDriving";
 import {
-  BoxKeyField,
+  invalidateAfterBoxChange,
   RuntimeMissingPaths,
 } from "../computer/ComputerEmptyState";
 import { ComputerPreview } from "../computer/ComputerPreview";
@@ -57,6 +60,7 @@ export function ComputerTab({ agent }: ComputerTabProps) {
   // holds the wheel. Local to the tab: the broker does not hand it back on
   // the status poll, and it expires with the hold.
   const [controlViewerUrl, setControlViewerUrl] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const actions = useComputerTabActions(slug, phase, setControlViewerUrl);
 
   useEffect(() => {
@@ -94,11 +98,18 @@ export function ComputerTab({ agent }: ComputerTabProps) {
       {phase === "unconfigured" ? (
         <div className="computer-card">
           <div className="computer-card-text computer-card-text--secondary">
-            Add a Box API key to give this bot a cloud computer. It spins up
-            right here.
+            Connect ascii.dev to give this bot a cloud computer. It spins up
+            right here on your account.
           </div>
-          <BoxKeyField slug={slug} />
+          <BoxCloudConnect
+            compact={true}
+            onChanged={() => invalidateAfterBoxChange(queryClient, slug)}
+          />
         </div>
+      ) : null}
+
+      {status?.destination === "cloud" && phase !== "unconfigured" ? (
+        <BoxCloudAccountCard slug={slug} />
       ) : null}
 
       {phase === "ready" ? (

@@ -1,7 +1,12 @@
 // What the 16:10 preview shows when there is no picture: one honest line
 // per phase plus the single action that moves it forward.
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { Cloud, Computer, Laptop, OpenNewWindow } from "iconoir-react";
 
 import { getConfig, updateConfig } from "../../../api/client";
@@ -12,6 +17,7 @@ import {
 } from "../../../api/computer";
 import { keyedByOccurrence } from "../../../lib/reactKeys";
 import { useAppStore } from "../../../stores/app";
+import { BoxCloudConnect } from "../../computer/BoxCloudConnect";
 import { showNotice } from "../../ui/Toast";
 import { type ComputerPhase, ORBSTACK_URL, phaseCopy } from "./computerPhase";
 
@@ -169,6 +175,7 @@ export function RuntimeMissingPaths({
   slug: string;
   runtime: ComputerRuntime | undefined;
 }) {
+  const queryClient = useQueryClient();
   return (
     <div className="computer-paths" data-testid="computer-runtime-paths">
       <div className="computer-path">
@@ -199,13 +206,27 @@ export function RuntimeMissingPaths({
           Use a cloud computer
         </div>
         <p className="computer-path-body">
-          Paste an ascii.dev Box key. The desktop lives on a rented machine with
-          a persistent disk, so logins survive between turns.
+          Sign in to ascii.dev or paste a Box key. The desktop lives on a rented
+          machine with a persistent disk, so logins survive between turns. You
+          pay ascii.dev directly.
         </p>
-        <BoxKeyField slug={slug} />
+        <BoxCloudConnect
+          compact={true}
+          onChanged={() => invalidateAfterBoxChange(queryClient, slug)}
+        />
       </div>
     </div>
   );
+}
+
+/** After a key is saved or removed, every cloud-dependent query re-reads. */
+export function invalidateAfterBoxChange(
+  queryClient: QueryClient,
+  slug: string,
+) {
+  void queryClient.invalidateQueries({ queryKey: ["config"] });
+  void queryClient.invalidateQueries({ queryKey: COMPUTER_RUNTIME_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: computerQueryKey(slug) });
 }
 
 /** Saves `box_api_key` through the normal config route. */
