@@ -5,21 +5,28 @@
  *  - Local VM: free, on this machine, needs a container runtime. The step
  *    reads GET /computer/runtime and says exactly which of the three states
  *    the machine is in (ready, installed but stopped, nothing installed).
- *  - Cloud: an ascii.dev Box with the user's own key. The key form saves
- *    through the existing /config path, which checks the key with ascii.dev
- *    before persisting it, so a bad paste is refused here rather than
- *    surfacing as a 401 in a bot's Computer tab later.
+ *  - Cloud: an ascii.dev Box on the person's own account. The primary path
+ *    is "Sign in to ascii.dev": the broker installs the Box CLI, opens the
+ *    browser sign-in, mints a key named gawkbot, verifies it, and stores it,
+ *    so nothing is copied. Pasting a key stays available as the fallback and
+ *    goes through the same verified /config path.
+ *
+ * Plain effects, no react-query: the wizard host mounts without a
+ * QueryClientProvider in tests, and a 1.5 s poll needs nothing more.
  *
  * The stage visual is a real capture of the Computer tab while the Chief of
  * Staff opened example.com on its own desktop.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ApiError, getConfig, updateConfig } from "../../../../api/client";
 import {
+  type BoxSigninState,
   type ComputerRuntime,
+  getBoxSigninStatus,
   getComputerRuntime,
+  startBoxSignin,
 } from "../../../../api/computer";
 import {
   ONBOARDING_COMPUTER_COPY as COPY,
@@ -28,6 +35,7 @@ import {
 } from "../wizardSteps";
 
 const STEP_COPY = ONBOARDING_WIZARD_COPY.computer;
+const SIGNIN_POLL_MS = 1500;
 
 type LocalState = "loading" | "ready" | "stopped" | "missing";
 
@@ -38,10 +46,25 @@ function localStateOf(runtime: ComputerRuntime | null): LocalState {
   return "missing";
 }
 
+export type SigninPhase =
+  | "idle"
+  | "installing"
+  | "cli_missing"
+  | "awaiting_login"
+  | "provisioning"
+  | "error";
+
 export interface ComputerChoiceViewProps {
   local: LocalState;
   installHint: string;
   keySet: boolean;
+  signin: SigninPhase;
+  authUrl: string;
+  installCommand: string;
+  signinError: string;
+  onStartSignin: () => void;
+  showPaste: boolean;
+  onShowPaste: () => void;
   keyValue: string;
   onKeyChange: (value: string) => void;
   onSaveKey: () => void;
@@ -49,11 +72,248 @@ export interface ComputerChoiceViewProps {
   saveError: string | null;
 }
 
+interface SigninStatusProps {
+  phase: SigninPhase;
+  authUrl: string;
+  installCommand: string;
+  error: string;
+}
+
+function SigninStatus({
+  phase,
+  authUrl,
+  installCommand,
+  error,
+}: SigninStatusProps) {
+  switch (phase) {
+    case "installing":
+      return (
+        <p
+          className="onboarding-computer-status"
+          data-testid="onboarding-computer-signin-status"
+        >
+          {COPY.signinInstalling}
+        </p>
+      );
+    case "awaiting_login":
+      return (
+        <p
+          className="onboarding-computer-status"
+          data-testid="onboarding-computer-signin-status"
+        >
+          {COPY.signinAwaiting}{" "}
+          {authUrl ? (
+            <a
+              href={authUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="onboarding-computer-link"
+              data-testid="onboarding-computer-signin-link"
+            >
+              {COPY.signinOpenAgain}
+            </a>
+          ) : null}
+        </p>
+      );
+    case "provisioning":
+      return (
+        <p
+          className="onboarding-computer-status"
+          data-testid="onboarding-computer-signin-status"
+        >
+          {COPY.signinProvisioning}
+        </p>
+      );
+    case "cli_missing":
+      return (
+        <div
+          className="onboarding-computer-status"
+          data-testid="onboarding-computer-signin-status"
+        >
+          <p className="onboarding-embedding-error" role="alert">
+            {error || COPY.signinCliMissing}
+          </p>
+          <code className="onboarding-embedding-code">{installCommand}</code>
+        </div>
+      );
+    case "error":
+      return (
+        <p
+          className="onboarding-embedding-error"
+          role="alert"
+          data-testid="onboarding-computer-signin-status"
+        >
+          {error}
+        </p>
+      );
+    default:
+      return null;
+  }
+}
+
+type CloudPathProps = Pick<
+  ComputerChoiceViewProps,
+  | "keySet"
+  | "signin"
+  | "authUrl"
+  | "installCommand"
+  | "signinError"
+  | "onStartSignin"
+  | "showPaste"
+  | "onShowPaste"
+  | "keyValue"
+  | "onKeyChange"
+  | "saving"
+  | "saveError"
+> & { canSave: boolean; onSubmit: (event: React.FormEvent) => void };
+
+/** The cloud half: sign-in first, paste as the fallback. */
+function CloudPath({
+  keySet,
+  signin,
+  authUrl,
+  installCommand,
+  signinError,
+  onStartSignin,
+  showPaste,
+  onShowPaste,
+  keyValue,
+  onKeyChange,
+  saving,
+  saveError,
+  canSave,
+  onSubmit,
+}: CloudPathProps) {
+  const signinBusy =
+    signin === "installing" ||
+    signin === "awaiting_login" ||
+    signin === "provisioning";
+  return (
+    <>
+      {keySet ? (
+        <p
+          className="onboarding-embedding-success"
+          data-testid="onboarding-computer-key-set"
+        >
+          {COPY.keySet}
+        </p>
+      ) : (
+        <>
+          <p className="onboarding-embedding-note">{COPY.cloudNote}</p>
+          <div className="onboarding-computer-signin">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onStartSignin}
+              disabled={signinBusy}
+              data-testid="onboarding-computer-signin"
+            >
+              {COPY.signinCta}
+            </button>
+            <SigninStatus
+              phase={signin}
+              authUrl={authUrl}
+              installCommand={installCommand}
+              error={signinError}
+            />
+          </div>
+          {showPaste ? (
+            <form className="onboarding-embedding-key" onSubmit={onSubmit}>
+              <label
+                className="onboarding-team-label"
+                htmlFor="onboarding-computer-box-key"
+              >
+                {COPY.keyLabel}
+              </label>
+              <div className="onboarding-embedding-key-row">
+                <input
+                  id="onboarding-computer-box-key"
+                  className="onboarding-team-input"
+                  type="password"
+                  value={keyValue}
+                  placeholder={COPY.keyPlaceholder}
+                  autoComplete="off"
+                  spellCheck={false}
+                  onChange={(event) => onKeyChange(event.target.value)}
+                  data-testid="onboarding-computer-box-key"
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary onboarding-embedding-save"
+                  disabled={!canSave}
+                  data-testid="onboarding-computer-save"
+                >
+                  {saving ? COPY.savingKey : COPY.saveKey}
+                </button>
+              </div>
+              <p className="onboarding-embedding-hint">{COPY.keyHint}</p>
+              {saveError ? (
+                <p
+                  className="onboarding-embedding-error"
+                  role="alert"
+                  data-testid="onboarding-computer-error"
+                >
+                  {saveError}
+                </p>
+              ) : null}
+              <div className="onboarding-computer-howto">
+                <p className="onboarding-computer-howto-heading">
+                  {COPY.howToHeading}
+                </p>
+                <ol className="onboarding-computer-steps">
+                  {COPY.howTo.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+                <p className="onboarding-computer-hint">
+                  <a
+                    href={COPY.signupURL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="onboarding-computer-link"
+                  >
+                    {COPY.signupLabel}
+                  </a>
+                  <span> · </span>
+                  <a
+                    href={COPY.docsURL}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="onboarding-computer-link"
+                    data-testid="onboarding-computer-docs"
+                  >
+                    {COPY.docsLabel}
+                  </a>
+                </p>
+              </div>
+            </form>
+          ) : (
+            <button
+              type="button"
+              className="onboarding-embedding-expand"
+              onClick={onShowPaste}
+              data-testid="onboarding-computer-paste"
+            >
+              {COPY.signinPasteInstead}
+            </button>
+          )}
+        </>
+      )}
+    </>
+  );
+}
 /** Pure presentational surface; the container below feeds it. */
 export function ComputerChoiceView({
   local,
   installHint,
   keySet,
+  signin,
+  authUrl,
+  installCommand,
+  signinError,
+  onStartSignin,
+  showPaste,
+  onShowPaste,
   keyValue,
   onKeyChange,
   onSaveKey,
@@ -107,100 +367,55 @@ export function ComputerChoiceView({
         data-state={keySet ? "ready" : "open"}
       >
         <h3 className="onboarding-embedding-heading">{COPY.cloudHeading}</h3>
-        {keySet ? (
-          <p
-            className="onboarding-embedding-success"
-            data-testid="onboarding-computer-key-set"
-          >
-            {COPY.keySet}
-          </p>
-        ) : (
-          <>
-            <p className="onboarding-embedding-note">{COPY.cloudNote}</p>
-            <form className="onboarding-embedding-key" onSubmit={onSubmit}>
-              <label
-                className="onboarding-team-label"
-                htmlFor="onboarding-computer-box-key"
-              >
-                {COPY.keyLabel}
-              </label>
-              <div className="onboarding-embedding-key-row">
-                <input
-                  id="onboarding-computer-box-key"
-                  className="onboarding-team-input"
-                  type="password"
-                  value={keyValue}
-                  placeholder={COPY.keyPlaceholder}
-                  autoComplete="off"
-                  spellCheck={false}
-                  onChange={(event) => onKeyChange(event.target.value)}
-                  data-testid="onboarding-computer-box-key"
-                />
-                <button
-                  type="submit"
-                  className="btn btn-primary onboarding-embedding-save"
-                  disabled={!canSave}
-                  data-testid="onboarding-computer-save"
-                >
-                  {saving ? COPY.savingKey : COPY.saveKey}
-                </button>
-              </div>
-              <p className="onboarding-embedding-hint">{COPY.keyHint}</p>
-              {saveError ? (
-                <p
-                  className="onboarding-embedding-error"
-                  role="alert"
-                  data-testid="onboarding-computer-error"
-                >
-                  {saveError}
-                </p>
-              ) : null}
-            </form>
-            <div className="onboarding-computer-howto">
-              <p className="onboarding-computer-howto-heading">
-                {COPY.howToHeading}
-              </p>
-              <ol className="onboarding-computer-steps">
-                {COPY.howTo.map((step) => (
-                  <li key={step}>{step}</li>
-                ))}
-              </ol>
-              <p className="onboarding-computer-hint">
-                <a
-                  href={COPY.signupURL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="onboarding-computer-link"
-                >
-                  {COPY.signupLabel}
-                </a>
-                <span> · </span>
-                <a
-                  href={COPY.docsURL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="onboarding-computer-link"
-                  data-testid="onboarding-computer-docs"
-                >
-                  {COPY.docsLabel}
-                </a>
-              </p>
-            </div>
-          </>
-        )}
+        <CloudPath
+          keySet={keySet}
+          signin={signin}
+          authUrl={authUrl}
+          installCommand={installCommand}
+          signinError={signinError}
+          onStartSignin={onStartSignin}
+          showPaste={showPaste}
+          onShowPaste={onShowPaste}
+          keyValue={keyValue}
+          onKeyChange={onKeyChange}
+          saving={saving}
+          saveError={saveError}
+          canSave={canSave}
+          onSubmit={onSubmit}
+        />
       </div>
       <p className="onboarding-computer-skip">{COPY.skipHint}</p>
     </section>
   );
 }
 
-/** Container: reads the runtime and the key flag, saves the key. */
+const EMPTY_RUNTIME: ComputerRuntime = {
+  available: false,
+  runtime: "",
+  daemonUp: false,
+  image: false,
+  imageRef: "",
+  driverVersion: "",
+  building: false,
+  installHint: "",
+  runtimeStartHint: "",
+  problem: "",
+};
+
+/** Container: reads the runtime and the key flag, runs sign-in, saves a key. */
 export function ComputerChoice() {
   const [runtime, setRuntime] = useState<ComputerRuntime | null>(null);
   const [keySet, setKeySet] = useState(false);
+  const [showPaste, setShowPaste] = useState(false);
   const [keyValue, setKeyValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [signin, setSignin] = useState<SigninPhase>("idle");
+  const [authUrl, setAuthUrl] = useState("");
+  const [installCommand, setInstallCommand] = useState("");
+  const [signinError, setSigninError] = useState("");
+  // Open the sign-in tab once per flow; polls must not spawn more.
+  const openedRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -209,19 +424,7 @@ export function ComputerChoice() {
         if (!cancelled) setRuntime(value);
       })
       .catch(() => {
-        if (!cancelled)
-          setRuntime({
-            available: false,
-            runtime: "",
-            daemonUp: false,
-            image: false,
-            imageRef: "",
-            driverVersion: "",
-            building: false,
-            installHint: "",
-            runtimeStartHint: "",
-            problem: "",
-          });
+        if (!cancelled) setRuntime(EMPTY_RUNTIME);
       });
     getConfig()
       .then((cfg) => {
@@ -232,6 +435,77 @@ export function ComputerChoice() {
       cancelled = true;
     };
   }, []);
+
+  const applySignin = useCallback((state: BoxSigninState) => {
+    switch (state.status) {
+      case "installing":
+        setSignin("installing");
+        break;
+      case "cli_missing":
+        setSignin("cli_missing");
+        setInstallCommand(state.installCommand);
+        setSigninError(state.reason);
+        break;
+      case "awaiting_login":
+        setSignin("awaiting_login");
+        setAuthUrl(state.authUrl);
+        if (state.authUrl && !openedRef.current) {
+          openedRef.current = true;
+          window.open(state.authUrl, "_blank", "noopener");
+        }
+        break;
+      case "provisioning":
+        setSignin("provisioning");
+        break;
+      case "done":
+        setSignin("idle");
+        setKeySet(true);
+        break;
+      case "error":
+        setSignin("error");
+        setSigninError(
+          state.reason || "Sign-in failed. Try again, or paste a key.",
+        );
+        break;
+      default:
+        break;
+    }
+  }, []);
+
+  const onStartSignin = useCallback(() => {
+    openedRef.current = false;
+    setSigninError("");
+    setSignin("installing");
+    startBoxSignin()
+      .then(applySignin)
+      .catch((error: unknown) => {
+        setSignin("error");
+        setSigninError(
+          error instanceof Error ? error.message : "Could not start sign-in.",
+        );
+      });
+  }, [applySignin]);
+
+  const polling =
+    signin === "installing" ||
+    signin === "awaiting_login" ||
+    signin === "provisioning";
+  useEffect(() => {
+    if (!polling) return;
+    let cancelled = false;
+    const tick = () => {
+      getBoxSigninStatus()
+        .then((state) => {
+          if (!cancelled) applySignin(state);
+        })
+        .catch(() => undefined);
+    };
+    const timer = setInterval(tick, SIGNIN_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [polling, applySignin]);
 
   const onSaveKey = useCallback(async () => {
     const token = keyValue.trim();
@@ -258,6 +532,13 @@ export function ComputerChoice() {
       local={localStateOf(runtime)}
       installHint={runtime?.installHint ?? ""}
       keySet={keySet}
+      signin={signin}
+      authUrl={authUrl}
+      installCommand={installCommand}
+      signinError={signinError}
+      onStartSignin={onStartSignin}
+      showPaste={showPaste}
+      onShowPaste={() => setShowPaste(true)}
       keyValue={keyValue}
       onKeyChange={setKeyValue}
       onSaveKey={onSaveKey}

@@ -18,6 +18,8 @@ import (
 func (b *Broker) registerComputerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/computer/runtime", b.requireAuth(b.handleComputerRuntime))
 	mux.HandleFunc("/computer/runtime/prepare", b.requireAuth(b.handleComputerRuntimePrepare))
+	mux.HandleFunc("/computer/box/signin/start", b.requireAuth(b.handleBoxSigninStart))
+	mux.HandleFunc("/computer/box/signin/status", b.requireAuth(b.handleBoxSigninStatus))
 	mux.HandleFunc("/computer/", b.requireAuth(b.handleComputerAgent))
 	mux.HandleFunc("/computer-control/", b.requireAuth(b.handleComputerControl))
 }
@@ -69,7 +71,7 @@ func (b *Broker) handleComputerAgent(w http.ResponseWriter, r *http.Request) {
 	rest := strings.TrimPrefix(r.URL.Path, "/computer/")
 	slug, action, _ := strings.Cut(rest, "/")
 	slug = strings.TrimSpace(slug)
-	if slug == "" || slug == "runtime" {
+	if slug == "" || slug == "runtime" || slug == "box" {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "no such route"})
 		return
 	}

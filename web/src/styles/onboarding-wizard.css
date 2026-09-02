@@ -1468,3 +1468,8 @@
   font-size: var(--text-sm);
   line-height: 1.6;
 }
+.onboarding-computer-signin {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}

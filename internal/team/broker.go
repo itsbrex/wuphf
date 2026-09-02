@@ -120,7 +120,9 @@ type Broker struct {
 	actionGrants []actionGrant
 	// composioSignin is the in-memory "Sign in with Composio" CLI flow state
 	// (broker_composio_signin.go). Carries its own mutex; zero value ready.
-	composioSignin      composioSigninFlow
+	composioSignin composioSigninFlow
+	// boxSignin is the "Sign in to ascii.dev" CLI flow (broker_box_signin.go).
+	boxSignin           boxSigninFlow
 	humanInvites        []humanInvite
 	humanSessions       []humanSession
 	humanSessionRevoke  map[string]chan struct{} // session ID → closed on revoke

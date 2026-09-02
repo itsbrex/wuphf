@@ -45,10 +45,21 @@ so logins survive too.
 
 ## Cloud
 
-Paste an ascii.dev Box API key in Settings, then choose **Cloud** for the
-bot. The first turn creates a box named after the bot, installs the driver,
-and gives the bot the same tools. Sleep archives the box; billing pauses and
-the disk survives. Take control opens the provider's desktop link.
+Bring your own ascii.dev account. Two ways in, both during onboarding or
+later in Settings:
+
+- **Sign in to ascii.dev.** gawkbot installs the Box CLI (one static binary
+  under `~/.ascii/bin`), opens ascii.dev's GitHub, Google, or email sign-in
+  in your browser, mints an API key named `gawkbot` on your account, checks
+  it, and saves it. Nothing to copy.
+- **Paste a key.** Create one at box.ascii.dev under API keys (they start
+  with `box_`). gawkbot checks the key with ascii.dev before saving it.
+
+Then choose **Cloud** for the bot. The first turn creates a box named after
+the bot, installs the driver, and gives the bot the same tools. You pay
+ascii.dev directly; gawkbot never sees a bill. Sleep archives the box;
+billing pauses and the disk survives. Take control opens the provider's
+desktop link.
 
 ## Watching and taking control
 

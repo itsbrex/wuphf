@@ -327,6 +327,15 @@ export const ONBOARDING_COMPUTER_COPY = {
   cloudHeading: "In the cloud, with your own ascii.dev key",
   cloudNote:
     "A cloud box is a persistent Linux desktop that keeps its files and logins between sessions. You pay ascii.dev directly; gawkbot never sees a bill. Paste a key here or in Settings later.",
+  signinCta: "Sign in to ascii.dev",
+  signinInstalling: "Getting the Box CLI ready…",
+  signinAwaiting:
+    "Finish signing in to ascii.dev in the tab we opened, then come back here.",
+  signinOpenAgain: "Open the sign-in page again",
+  signinProvisioning: "Signed in. Creating a key named gawkbot for you…",
+  signinCliMissing:
+    "We could not set up the Box CLI on this machine. Run this in a terminal, then try again:",
+  signinPasteInstead: "Or paste a key yourself",
   keyLabel: "ascii.dev Box API key",
   keyPlaceholder: "box_…",
   keyHint:

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/computer"
+	"github.com/nex-crm/wuphf/internal/config"
 )
 
 // noRuntime is a Runner for a machine with no container CLI at all.
@@ -301,5 +303,96 @@ func TestConfigRefusesABadBoxKeyBeforeSaving(t *testing.T) {
 	_, body = authedJSON(t, srv, b.Token(), http.MethodGet, "/config", nil)
 	if body["box_key_set"] != true {
 		t.Fatalf("expected box_key_set after save: %v", body)
+	}
+}
+
+// A fake `box` CLI: login prints the login_url event and exits, status
+// reports signed in once a marker file exists, api-key create prints the
+// secret. The marker lets the test flip the account state mid-flow.
+func writeFakeBoxCLI(t *testing.T, dir string) string {
+	t.Helper()
+	marker := filepath.Join(dir, "signed-in")
+	script := "#!/bin/sh\n" +
+		"case \"$1\" in\n" +
+		"  login) echo '{\"event\":\"login_url\",\"url\":\"https://ascii.dev/api/box/auth/github?state=abc\"}'; touch " + marker + "; exit 0 ;;\n" +
+		"  status) if [ -f " + marker + " ]; then echo '{\"account\":{\"loginState\":\"signed in\"}}'; else echo '{\"account\":{\"loginState\":\"signed out\"}}'; fi ;;\n" +
+		"  api-key) echo '{\"id\":\"k1\",\"secret\":\"box_minted\"}' ;;\n" +
+		"  *) exit 2 ;;\n" +
+		"esac\n"
+	path := filepath.Join(dir, "box")
+	if err := os.WriteFile(path, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func TestBoxSigninFlowMintsAndStoresAKey(t *testing.T) {
+	t.Setenv("WUPHF_CONFIG_PATH", filepath.Join(t.TempDir(), "config.json"))
+	t.Setenv("WUPHF_BOX_CLI", writeFakeBoxCLI(t, t.TempDir()))
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") == "Bearer box_minted" {
+			_, _ = w.Write([]byte(`{"ok":true,"boxes":[]}`))
+			return
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer fake.Close()
+	t.Setenv("WUPHF_BOX_API", fake.URL)
+	b := newComputerTestBroker(t, noRuntime)
+	srv := httptest.NewServer(computerMux(b))
+	defer srv.Close()
+
+	status, body := authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signin/start", map[string]any{})
+	if status != http.StatusOK || body["status"] != "installing" {
+		t.Fatalf("start: %d %v", status, body)
+	}
+	deadline := time.Now().Add(10 * time.Second)
+	var last map[string]any
+	for time.Now().Before(deadline) {
+		_, last = authedJSON(t, srv, b.Token(), http.MethodGet, "/computer/box/signin/status", nil)
+		if last["status"] == "done" || last["status"] == "error" {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	if last["status"] != "done" {
+		t.Fatalf("expected done, got %v", last)
+	}
+	if got := config.ResolveBoxAPIKey(); got != "box_minted" {
+		t.Fatalf("minted key must be stored, got %q", got)
+	}
+	_, cfg := authedJSON(t, srv, b.Token(), http.MethodGet, "/config", nil)
+	_ = cfg
+	// A second start with a key present is done immediately.
+	status, body = authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signin/start", map[string]any{})
+	if status != http.StatusOK || body["status"] != "done" {
+		t.Fatalf("restart with key: %d %v", status, body)
+	}
+}
+
+func TestBoxSigninReportsMissingCLIWhenInstallFails(t *testing.T) {
+	t.Setenv("WUPHF_CONFIG_PATH", filepath.Join(t.TempDir(), "config.json"))
+	t.Setenv("WUPHF_BOX_CLI", filepath.Join(t.TempDir(), "absent"))
+	prev := boxInstaller
+	boxInstaller = func(context.Context) error { return errors.New("offline") }
+	t.Cleanup(func() { boxInstaller = prev })
+	b := newComputerTestBroker(t, noRuntime)
+	srv := httptest.NewServer(computerMux(b))
+	defer srv.Close()
+	status, body := authedJSON(t, srv, b.Token(), http.MethodPost, "/computer/box/signin/start", map[string]any{})
+	if status != http.StatusOK || body["status"] != "installing" {
+		t.Fatalf("start: %d %v", status, body)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	var last map[string]any
+	for time.Now().Before(deadline) {
+		_, last = authedJSON(t, srv, b.Token(), http.MethodGet, "/computer/box/signin/status", nil)
+		if last["status"] == "cli_missing" {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	if last["status"] != "cli_missing" || last["install_command"] == "" {
+		t.Fatalf("expected cli_missing with the manual command, got %v", last)
 	}
 }

@@ -315,3 +315,62 @@ export const COMPUTER_RUNTIME_QUERY_KEY = ["computer-runtime"] as const;
 export function computerQueryKey(slug: string) {
   return [COMPUTER_QUERY_KEY, slug] as const;
 }
+
+// ── Sign in to ascii.dev (Box CLI flow, broker_box_signin.go) ────────────
+
+export type BoxSigninStatus =
+  | "idle"
+  | "installing"
+  | "cli_missing"
+  | "awaiting_login"
+  | "provisioning"
+  | "done"
+  | "error";
+
+export interface BoxSigninState {
+  status: BoxSigninStatus;
+  authUrl: string;
+  installCommand: string;
+  reason: string;
+}
+
+interface BoxSigninWire {
+  status?: string;
+  auth_url?: string;
+  install_command?: string;
+  reason?: string;
+}
+
+const BOX_SIGNIN_STATUSES: readonly BoxSigninStatus[] = [
+  "idle",
+  "installing",
+  "cli_missing",
+  "awaiting_login",
+  "provisioning",
+  "done",
+  "error",
+];
+
+export function normalizeBoxSigninState(wire: BoxSigninWire): BoxSigninState {
+  const status = BOX_SIGNIN_STATUSES.includes(wire.status as BoxSigninStatus)
+    ? (wire.status as BoxSigninStatus)
+    : "error";
+  return {
+    status,
+    authUrl: wire.auth_url ?? "",
+    installCommand: wire.install_command ?? "",
+    reason: wire.reason ?? "",
+  };
+}
+
+export async function startBoxSignin(): Promise<BoxSigninState> {
+  return normalizeBoxSigninState(
+    await post<BoxSigninWire>("/computer/box/signin/start", {}),
+  );
+}
+
+export async function getBoxSigninStatus(): Promise<BoxSigninState> {
+  return normalizeBoxSigninState(
+    await get<BoxSigninWire>("/computer/box/signin/status"),
+  );
+}

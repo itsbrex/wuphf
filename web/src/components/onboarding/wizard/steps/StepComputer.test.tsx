@@ -32,28 +32,51 @@ const runtimeReady: computerApi.ComputerRuntime = {
   problem: "",
 };
 
+const viewDefaults = {
+  installHint: "",
+  signin: "idle" as const,
+  authUrl: "",
+  installCommand: "",
+  signinError: "",
+  onStartSignin: noop,
+  showPaste: true,
+  onShowPaste: noop,
+  keyValue: "",
+  onKeyChange: noop,
+  onSaveKey: noop,
+  saving: false,
+  saveError: null,
+};
+
+function seedContainer(keySet = false) {
+  vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
+  vi.spyOn(client, "getConfig").mockResolvedValue({
+    box_key_set: keySet,
+  } as never);
+}
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe("ComputerChoiceView", () => {
   it("tells the person where to get the key, with the real links", () => {
     render(
       <ComputerChoiceView
+        {...viewDefaults}
         local="missing"
         installHint="Install OrbStack (https://orbstack.dev)."
         keySet={false}
-        keyValue=""
-        onKeyChange={noop}
-        onSaveKey={noop}
-        saving={false}
-        saveError={null}
       />,
     );
     expect(screen.getByText(COPY.localMissing)).toBeTruthy();
     expect(screen.getByText(COPY.localInstallLabel).getAttribute("href")).toBe(
       COPY.localInstallURL,
+    );
+    expect(screen.getByTestId("onboarding-computer-signin").textContent).toBe(
+      COPY.signinCta,
     );
     for (const step of COPY.howTo) {
       expect(screen.getByText(step)).toBeTruthy();
@@ -69,36 +92,105 @@ describe("ComputerChoiceView", () => {
 
   it("hides the form and instructions once a key is set", () => {
     render(
-      <ComputerChoiceView
-        local="ready"
-        installHint=""
-        keySet={true}
-        keyValue=""
-        onKeyChange={noop}
-        onSaveKey={noop}
-        saving={false}
-        saveError={null}
-      />,
+      <ComputerChoiceView {...viewDefaults} local="ready" keySet={true} />,
     );
     expect(screen.getByTestId("onboarding-computer-key-set").textContent).toBe(
       COPY.keySet,
     );
     expect(screen.queryByTestId("onboarding-computer-box-key")).toBeNull();
+    expect(screen.queryByTestId("onboarding-computer-signin")).toBeNull();
     expect(screen.getByText(COPY.localReady)).toBeTruthy();
+  });
+
+  it("shows the manual install command when the CLI could not be installed", () => {
+    render(
+      <ComputerChoiceView
+        {...viewDefaults}
+        local="ready"
+        keySet={false}
+        signin="cli_missing"
+        installCommand="curl -fsSL https://ascii.dev/api/box/install | sh"
+      />,
+    );
+    expect(
+      screen.getByText("curl -fsSL https://ascii.dev/api/box/install | sh"),
+    ).toBeTruthy();
   });
 });
 
-describe("ComputerChoice", () => {
+describe("ComputerChoice sign-in", () => {
+  it("opens the sign-in tab once, polls, and flips to set on done", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    seedContainer();
+    const open = vi.spyOn(window, "open").mockImplementation(() => null);
+    vi.spyOn(computerApi, "startBoxSignin").mockResolvedValue({
+      status: "awaiting_login",
+      authUrl: "https://ascii.dev/api/box/auth/github?state=abc",
+      installCommand: "",
+      reason: "",
+    });
+    const status = vi
+      .spyOn(computerApi, "getBoxSigninStatus")
+      .mockResolvedValueOnce({
+        status: "awaiting_login",
+        authUrl: "https://ascii.dev/api/box/auth/github?state=abc",
+        installCommand: "",
+        reason: "",
+      })
+      .mockResolvedValue({
+        status: "done",
+        authUrl: "",
+        installCommand: "",
+        reason: "",
+      });
+    render(<ComputerChoice />);
+    await waitFor(() => expect(screen.getByText(COPY.localReady)).toBeTruthy());
+    fireEvent.click(screen.getByTestId("onboarding-computer-signin"));
+    await waitFor(() =>
+      expect(screen.getByText(/Finish signing in/)).toBeTruthy(),
+    );
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open).toHaveBeenCalledWith(
+      "https://ascii.dev/api/box/auth/github?state=abc",
+      "_blank",
+      "noopener",
+    );
+    await vi.advanceTimersByTimeAsync(1600);
+    await vi.advanceTimersByTimeAsync(1600);
+    await waitFor(() =>
+      expect(screen.getByTestId("onboarding-computer-key-set")).toBeTruthy(),
+    );
+    expect(status).toHaveBeenCalled();
+    expect(open).toHaveBeenCalledTimes(1);
+  });
+
+  it("surfaces the broker's reason when sign-in fails", async () => {
+    seedContainer();
+    vi.spyOn(computerApi, "startBoxSignin").mockResolvedValue({
+      status: "error",
+      authUrl: "",
+      installCommand: "",
+      reason: "the Box CLI could not start",
+    });
+    render(<ComputerChoice />);
+    fireEvent.click(screen.getByTestId("onboarding-computer-signin"));
+    await waitFor(() =>
+      expect(
+        screen.getByTestId("onboarding-computer-signin-status").textContent,
+      ).toContain("could not start"),
+    );
+  });
+});
+
+describe("ComputerChoice paste fallback", () => {
   it("saves the key through /config and flips to the set state", async () => {
-    vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
-    vi.spyOn(client, "getConfig").mockResolvedValue({
-      box_key_set: false,
-    } as never);
+    seedContainer();
     const update = vi
       .spyOn(client, "updateConfig")
       .mockResolvedValue({} as never);
     render(<ComputerChoice />);
     await waitFor(() => expect(screen.getByText(COPY.localReady)).toBeTruthy());
+    fireEvent.click(screen.getByTestId("onboarding-computer-paste"));
     fireEvent.change(screen.getByTestId("onboarding-computer-box-key"), {
       target: { value: "box_abc123" },
     });
@@ -110,10 +202,7 @@ describe("ComputerChoice", () => {
   });
 
   it("shows the provider's refusal instead of a generic error", async () => {
-    vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
-    vi.spyOn(client, "getConfig").mockResolvedValue({
-      box_key_set: false,
-    } as never);
+    seedContainer();
     vi.spyOn(client, "updateConfig").mockRejectedValue(
       new ApiError({
         status: 400,
@@ -122,6 +211,7 @@ describe("ComputerChoice", () => {
       }),
     );
     render(<ComputerChoice />);
+    fireEvent.click(screen.getByTestId("onboarding-computer-paste"));
     fireEvent.change(screen.getByTestId("onboarding-computer-box-key"), {
       target: { value: "sk-wrong" },
     });
@@ -152,10 +242,7 @@ describe("ComputerChoice", () => {
 
 describe("StepComputer", () => {
   it("renders the step copy and the stage clip", async () => {
-    vi.spyOn(computerApi, "getComputerRuntime").mockResolvedValue(runtimeReady);
-    vi.spyOn(client, "getConfig").mockResolvedValue({
-      box_key_set: false,
-    } as never);
+    seedContainer();
     render(
       <StepComputer
         active={true}
