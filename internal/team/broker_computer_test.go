@@ -314,7 +314,8 @@ func writeFakeBoxCLI(t *testing.T, dir string) string {
 	marker := filepath.Join(dir, "signed-in")
 	script := "#!/bin/sh\n" +
 		"case \"$1\" in\n" +
-		"  login) echo '{\"event\":\"login_url\",\"url\":\"https://ascii.dev/api/box/auth/github?state=abc\"}'; touch " + marker + "; exit 0 ;;\n" +
+		"  login) echo '{\"event\":\"login_url\",\"url\":\"https://ascii.dev/api/box/auth/github?state=abc\"}'; exit 0 ;;\n" +
+		"  onboard) sleep 0.2; echo '{\"event\":\"login_complete\"}'; touch " + marker + "; exit 0 ;;\n" +
 		"  status) if [ -f " + marker + " ]; then echo '{\"account\":{\"loginState\":\"signed in\"}}'; else echo '{\"account\":{\"loginState\":\"signed out\"}}'; fi ;;\n" +
 		"  api-key) echo '{\"id\":\"k1\",\"secret\":\"box_minted\"}' ;;\n" +
 		"  *) exit 2 ;;\n" +

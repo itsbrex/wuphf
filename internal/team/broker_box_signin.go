@@ -361,8 +361,17 @@ func (b *Broker) boxSigninBeginLogin() {
 			flow.mu.Unlock()
 		}
 	}
-	// Output deliberately not logged: it may carry a session token.
+	// `box login` exits as soon as it has printed the URL. The CLI's own
+	// completion step is `box onboard --json`, which polls the pending
+	// browser session until it finishes (the event it names as nextCommand).
+	// Output deliberately not logged: it carries the session token.
 	_ = cmd.Wait()
+	if onboard, err := boxCommand(ctx, "onboard"); err == nil {
+		onboard.Stdin = nil
+		onboard.Stdout = io.Discard
+		onboard.Stderr = io.Discard
+		_ = onboard.Run()
+	}
 	b.boxSigninAdvanceIfLoggedIn(context.Background())
 }
 
