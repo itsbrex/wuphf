@@ -108,7 +108,10 @@ export function MessageBubble({
     message.from === "you" ||
     message.from === "human" ||
     message.from.startsWith("human:");
-  const isLocalUser = message.from === "you";
+  // A bare "human" sender is the person at this keyboard (onboarding seeds
+  // and single-person offices post as "human"); only "human:<slug>" names a
+  // different team member.
+  const isLocalUser = message.from === "you" || message.from === "human";
   const teamMemberDisplayName =
     isHuman && !isLocalUser
       ? message.from.startsWith("human:")
@@ -209,6 +212,16 @@ export function MessageBubble({
   // nobody said it. Derived server-side from the real agent-to-agent message
   // (internal/team/broker_consult_relay.go), so it cannot be faked by an agent
   // claiming a consult it never had.
+  // Seed markers for the agents (which operation was synthesized, and the
+  // run-it-for-real contract) are context for the bot, not conversation.
+  // They stay in the channel history the agent reads and never render as
+  // an "Office" speaker.
+  if (
+    message.kind === "synthesized_blueprint" ||
+    message.kind === "from_scratch_contract"
+  ) {
+    return null;
+  }
   if (message.kind === "consult_relay") {
     return (
       <ConsultRelayMarker payload={parseConsultRelayPayload(message.payload)} />

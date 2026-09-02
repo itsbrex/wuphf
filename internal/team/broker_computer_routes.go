@@ -20,6 +20,7 @@ func (b *Broker) registerComputerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/computer/runtime/prepare", b.requireAuth(b.handleComputerRuntimePrepare))
 	mux.HandleFunc("/computer/box/signin/start", b.requireAuth(b.handleBoxSigninStart))
 	mux.HandleFunc("/computer/box/signin/status", b.requireAuth(b.handleBoxSigninStatus))
+	mux.HandleFunc("/computer/box/signin/cancel", b.requireAuth(b.handleBoxSigninCancel))
 	mux.HandleFunc("/computer/box/signout", b.requireAuth(b.handleBoxSignout))
 	mux.HandleFunc("/computer/box/account", b.requireAuth(b.handleBoxAccount))
 	mux.HandleFunc("/computer/", b.requireAuth(b.handleComputerAgent))

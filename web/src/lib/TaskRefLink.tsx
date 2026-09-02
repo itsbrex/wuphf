@@ -99,9 +99,7 @@ export function TaskRefLink({ taskId, children }: TaskRefLinkProps) {
           the board cache yet, which is the case for a task created seconds
           ago in this very message. */}
       <span className="msg-task-link-id">{taskId || children}</span>
-      {title ? (
-        <span className="msg-task-link-title">{title}</span>
-      ) : null}
+      {title ? <span className="msg-task-link-title">{title}</span> : null}
     </button>
   );
 }

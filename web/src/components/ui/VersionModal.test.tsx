@@ -164,7 +164,9 @@ describe("<VersionModal>", () => {
       expect(screen.getByText("Install failed")).toBeInTheDocument();
     });
     expect(screen.getByText("permission denied")).toBeInTheDocument();
-    expect(screen.getByText("npm install -g gawkbot@latest")).toBeInTheDocument();
+    expect(
+      screen.getByText("npm install -g gawkbot@latest"),
+    ).toBeInTheDocument();
   });
 
   it("uses the guarded install command when runUpgrade rejects", async () => {

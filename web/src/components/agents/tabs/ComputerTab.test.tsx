@@ -189,7 +189,7 @@ describe("<ComputerTab> phases", () => {
       await screen.findByTestId("computer-runtime-paths"),
     ).toBeInTheDocument();
     expect(
-      await screen.findByText("Install OrbStack, then open it once."),
+      await screen.findByText(/Install OrbStack, then open it once/),
     ).toBeInTheDocument();
     const install = screen.getByRole("link", { name: /Install OrbStack/ });
     expect(install).toHaveAttribute("href", "https://orbstack.dev");

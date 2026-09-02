@@ -173,6 +173,8 @@ export interface ComputerTabActions {
     prepare: () => void;
     provision: () => void;
     start: () => void;
+    /** Remove a refused or stale computer and create it again. */
+    replace: () => void;
     pending: boolean;
   };
   takeControl: () => void;
@@ -235,6 +237,15 @@ export function useComputerTabActions(
           }),
         provision: () => runLifecycle("provision"),
         start: () => runLifecycle("start"),
+        replace: () =>
+          lifecycle.mutate("remove", {
+            onSuccess: () => runLifecycle("provision"),
+            onError: (err) =>
+              showNotice(
+                errorText(err, "Could not remove the computer"),
+                "error",
+              ),
+          }),
         pending: emptyPending,
       },
       takeControl: () =>

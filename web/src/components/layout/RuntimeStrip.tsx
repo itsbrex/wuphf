@@ -26,7 +26,10 @@ export function RuntimeStrip() {
   if (officeIsQuiet(stats)) {
     return (
       <div className="runtime-strip">
-        <span className="runtime-pill runtime-pill-idle" title="Nobody is doing anything. Everybody is watching.">
+        <span
+          className="runtime-pill runtime-pill-idle"
+          title="Nobody is doing anything. Everybody is watching."
+        >
           all quiet
         </span>
       </div>

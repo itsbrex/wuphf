@@ -32,6 +32,7 @@ func newComputerTestBroker(t *testing.T, run computer.Runner) *Broker {
 	b.rebuildMemberIndexLocked()
 	b.mu.Unlock()
 	svc := b.computers()
+	svc.allowRuntime = true
 	svc.runner = run
 	svc.inspector = &computer.Inspector{Run: run, Platform: "darwin"}
 	svc.manager = &computer.Manager{Run: run, Inspector: svc.inspector, Platform: "darwin"}

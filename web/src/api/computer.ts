@@ -460,3 +460,7 @@ export function describeBoxBlock(reason: string): string {
       return `ascii.dev will not start a box right now (${reason.replaceAll("_", " ")}).`;
   }
 }
+
+export async function cancelBoxSignin(): Promise<void> {
+  await post("/computer/box/signin/cancel", {});
+}

@@ -30,6 +30,7 @@ import (
 // stub behavior call setPrepareTaskWorktreeForTest(t, fn); the
 // per-test t.Cleanup restores the package-init stub.
 func init() {
+	computerRuntimeAllowed.Store(false)
 	allowRealTaskWorktree.Store(false)
 	unscopedWikiRootAllowed = false
 	prep := prepareTaskWorktreeFn(stubPrepareTaskWorktree)

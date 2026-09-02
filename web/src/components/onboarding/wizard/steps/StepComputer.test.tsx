@@ -34,6 +34,8 @@ const runtimeReady: computerApi.ComputerRuntime = {
 
 const viewDefaults = {
   installHint: "",
+  onCheckAgain: noop,
+  onCancelSignin: noop,
   account: null,
   onSignOut: noop,
   signin: "idle" as const,
@@ -162,7 +164,7 @@ describe("ComputerChoice sign-in", () => {
     await waitFor(() => expect(screen.getByText(COPY.localReady)).toBeTruthy());
     fireEvent.click(screen.getByTestId("onboarding-computer-signin"));
     await waitFor(() =>
-      expect(screen.getByText(/Finish signing in/)).toBeTruthy(),
+      expect(screen.getByText(/Waiting for you to finish/)).toBeTruthy(),
     );
     expect(open).toHaveBeenCalledTimes(1);
     expect(open).toHaveBeenCalledWith(

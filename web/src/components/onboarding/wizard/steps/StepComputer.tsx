@@ -57,6 +57,7 @@ export type SigninPhase =
 export interface ComputerChoiceViewProps {
   local: LocalState;
   installHint: string;
+  onCheckAgain: () => void;
   keySet: boolean;
   account: BoxAccount | null;
   onSignOut: () => void;
@@ -65,6 +66,7 @@ export interface ComputerChoiceViewProps {
   installCommand: string;
   signinError: string;
   onStartSignin: () => void;
+  onCancelSignin: () => void;
   showPaste: boolean;
   onShowPaste: () => void;
   keyValue: string;
@@ -79,6 +81,7 @@ interface SigninStatusProps {
   authUrl: string;
   installCommand: string;
   error: string;
+  onCancel: () => void;
 }
 
 function SigninStatus({
@@ -86,6 +89,7 @@ function SigninStatus({
   authUrl,
   installCommand,
   error,
+  onCancel,
 }: SigninStatusProps) {
   switch (phase) {
     case "installing":
@@ -115,6 +119,15 @@ function SigninStatus({
               {COPY.signinOpenAgain}
             </a>
           ) : null}
+          {" · "}
+          <button
+            type="button"
+            className="btn btn-text btn-sm"
+            onClick={onCancel}
+            data-testid="onboarding-computer-signin-cancel"
+          >
+            {COPY.signinStartOver}
+          </button>
         </p>
       );
     case "provisioning":
@@ -163,6 +176,7 @@ type CloudPathProps = Pick<
   | "installCommand"
   | "signinError"
   | "onStartSignin"
+  | "onCancelSignin"
   | "showPaste"
   | "onShowPaste"
   | "keyValue"
@@ -181,6 +195,7 @@ function CloudPath({
   installCommand,
   signinError,
   onStartSignin,
+  onCancelSignin,
   showPaste,
   onShowPaste,
   keyValue,
@@ -241,6 +256,7 @@ function CloudPath({
               authUrl={authUrl}
               installCommand={installCommand}
               error={signinError}
+              onCancel={onCancelSignin}
             />
           </div>
           {showPaste ? (
@@ -332,6 +348,7 @@ function CloudPath({
 export function ComputerChoiceView({
   local,
   installHint,
+  onCheckAgain,
   keySet,
   account,
   onSignOut,
@@ -340,6 +357,7 @@ export function ComputerChoiceView({
   installCommand,
   signinError,
   onStartSignin,
+  onCancelSignin,
   showPaste,
   onShowPaste,
   keyValue,
@@ -375,18 +393,41 @@ export function ComputerChoiceView({
           {local === "stopped" && COPY.localStopped}
           {local === "missing" && COPY.localMissing}
         </p>
-        {local === "missing" ? (
-          <p className="onboarding-computer-hint">
-            <a
-              href={COPY.localInstallURL}
-              target="_blank"
-              rel="noreferrer"
-              className="onboarding-computer-link"
+        {local === "missing" || local === "stopped" ? (
+          <div className="box-account-actions">
+            {local === "missing" ? (
+              <>
+                <a
+                  href={COPY.localInstallURL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-primary btn-sm"
+                >
+                  {COPY.localInstallLabel}
+                </a>
+                <a
+                  href={COPY.localDockerURL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary btn-sm"
+                  data-testid="onboarding-computer-docker"
+                >
+                  {COPY.localDockerLabel}
+                </a>
+              </>
+            ) : null}
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onCheckAgain}
+              data-testid="onboarding-computer-check"
             >
-              {COPY.localInstallLabel}
-            </a>
-            {installHint ? <span> {installHint}</span> : null}
-          </p>
+              {COPY.localCheckAgain}
+            </button>
+            {installHint && local === "missing" ? (
+              <span className="onboarding-computer-hint">{installHint}</span>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
@@ -404,6 +445,7 @@ export function ComputerChoiceView({
           installCommand={installCommand}
           signinError={signinError}
           onStartSignin={onStartSignin}
+          onCancelSignin={onCancelSignin}
           showPaste={showPaste}
           onShowPaste={onShowPaste}
           keyValue={keyValue}
@@ -441,6 +483,7 @@ export function ComputerChoice() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const signin = useBoxSignin();
 
+  const [runtimeCheck, setRuntimeCheck] = useState(0);
   useEffect(() => {
     let cancelled = false;
     getComputerRuntime()
@@ -453,7 +496,7 @@ export function ComputerChoice() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [runtimeCheck]);
 
   const onSaveKey = useCallback(async () => {
     const token = keyValue.trim();
@@ -479,6 +522,10 @@ export function ComputerChoice() {
     <ComputerChoiceView
       local={localStateOf(runtime)}
       installHint={runtime?.installHint ?? ""}
+      onCheckAgain={() => {
+        setRuntime(null);
+        setRuntimeCheck((n) => n + 1);
+      }}
       keySet={signin.keySet}
       account={signin.account}
       onSignOut={() => void signin.signOut()}
@@ -487,6 +534,7 @@ export function ComputerChoice() {
       installCommand={signin.installCommand}
       signinError={signin.error}
       onStartSignin={signin.start}
+      onCancelSignin={() => void signin.cancel()}
       showPaste={showPaste}
       onShowPaste={() => setShowPaste(true)}
       keyValue={keyValue}

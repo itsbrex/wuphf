@@ -319,18 +319,22 @@ export const ONBOARDING_COMPUTER_COPY = {
   localReady:
     "Ready. A container runtime is running, so every bot gets its own desktop here.",
   localMissing:
-    "No container runtime found. Install OrbStack or Docker Desktop and your bots get free desktops on this machine.",
+    "Local computers need Docker. Install OrbStack (lightest on a Mac) or Docker Desktop, open it once, then check again. Free, and nothing leaves this machine.",
   localStopped:
-    "A container runtime is installed but not running. Start it and you are set.",
+    "Docker is installed but not running. Open OrbStack or Docker Desktop, then check again.",
   localInstallLabel: "Get OrbStack",
   localInstallURL: "https://orbstack.dev",
+  localDockerLabel: "Get Docker Desktop",
+  localDockerURL: "https://www.docker.com/products/docker-desktop/",
+  localCheckAgain: "Check again",
   cloudHeading: "In the cloud, with your own ascii.dev key",
   cloudNote:
     "A cloud box is a persistent Linux desktop that keeps its files and logins between sessions. You pay ascii.dev directly; gawkbot never sees a bill. Paste a key here or in Settings later.",
   signinCta: "Sign in to ascii.dev",
   signinInstalling: "Getting the Box CLI ready…",
   signinAwaiting:
-    "Finish signing in to ascii.dev in the tab we opened, then come back here.",
+    "Waiting for you to finish in the ascii.dev tab. We check every few seconds and this flips on its own.",
+  signinStartOver: "Start over",
   signinOpenAgain: "Open the sign-in page again",
   signinProvisioning: "Signed in. Creating a key named gawkbot for you…",
   signinCliMissing:

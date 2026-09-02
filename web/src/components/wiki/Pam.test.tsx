@@ -65,7 +65,9 @@ describe("<Pam>", () => {
     });
     expect(visitor).toHaveClass("is-chatting");
     expect(
-      screen.getByText("Did you hear? Chief of Staff merged 12 PRs. Didn't ask anyone."),
+      screen.getByText(
+        "Did you hear? Chief of Staff merged 12 PRs. Didn't ask anyone.",
+      ),
     ).toBeInTheDocument();
 
     act(() => {

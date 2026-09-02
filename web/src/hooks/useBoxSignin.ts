@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   type BoxAccount,
   type BoxSigninState,
+  cancelBoxSignin,
   getBoxAccount,
   getBoxSigninStatus,
   signOutBox,
@@ -39,8 +40,12 @@ export interface BoxSignin {
   accountLoaded: boolean;
   keySet: boolean;
   start: () => void;
+  /** Abandon a pending sign-in so the person can start over. */
+  cancel: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshAccount: () => Promise<void>;
+  /** Seconds since the sign-in tab was opened, for honest waiting copy. */
+  waitingSeconds: number;
 }
 
 const POLL_MS = 1500;
@@ -54,6 +59,8 @@ export function useBoxSignin(): BoxSignin {
   const [accountLoaded, setAccountLoaded] = useState(false);
   const openedRef = useRef(false);
   const aliveRef = useRef(true);
+  const [waitingSince, setWaitingSince] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const refreshAccount = useCallback(async () => {
     try {
@@ -95,6 +102,7 @@ export function useBoxSignin(): BoxSignin {
         case "awaiting_login":
           setPhase("awaiting_login");
           setAuthUrl(state.authUrl);
+          setWaitingSince((prev) => prev ?? Date.now());
           if (state.authUrl && !openedRef.current) {
             openedRef.current = true;
             window.open(state.authUrl, "_blank", "noopener");
@@ -105,6 +113,7 @@ export function useBoxSignin(): BoxSignin {
           break;
         case "done":
           setPhase("idle");
+          setWaitingSince(null);
           void refreshAccount();
           break;
         case "error":
@@ -134,6 +143,20 @@ export function useBoxSignin(): BoxSignin {
       });
   }, [apply]);
 
+  const cancel = useCallback(async () => {
+    try {
+      await cancelBoxSignin();
+    } catch {
+      // The broker resets on its own timeout; the UI can still start over.
+    }
+    if (aliveRef.current) {
+      setPhase("idle");
+      setAuthUrl("");
+      setWaitingSince(null);
+      openedRef.current = false;
+    }
+  }, []);
+
   const signOut = useCallback(async () => {
     setError("");
     setPhase("signing_out");
@@ -159,6 +182,7 @@ export function useBoxSignin(): BoxSignin {
     if (!polling) return;
     let cancelled = false;
     const timer = setInterval(() => {
+      setNow(Date.now());
       getBoxSigninStatus()
         .then((state) => {
           if (!cancelled) apply(state);
@@ -180,7 +204,11 @@ export function useBoxSignin(): BoxSignin {
     accountLoaded,
     keySet: account?.keySet === true,
     start,
+    cancel,
     signOut,
     refreshAccount,
+    waitingSeconds: waitingSince
+      ? Math.max(0, Math.round((now - waitingSince) / 1000))
+      : 0,
   };
 }

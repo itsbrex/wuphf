@@ -39,8 +39,8 @@ export const Intro: StoryObj = {
           marginBottom: 28,
         }}
       >
-        Tokens, atoms, molecules, organisms, and patterns for the gawkbot web app
-        — a context graph platform for AI agents.
+        Tokens, atoms, molecules, organisms, and patterns for the gawkbot web
+        app — a context graph platform for AI agents.
       </p>
 
       <Section title="Foundations">

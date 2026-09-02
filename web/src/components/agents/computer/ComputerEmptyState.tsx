@@ -26,6 +26,7 @@ export interface EmptyStateActions {
   provision: () => void;
   start: () => void;
   pending: boolean;
+  replace: () => void;
 }
 
 interface ComputerEmptyStateProps {
@@ -126,14 +127,27 @@ export function ComputerEmptyState({
         </button>
       ) : null}
       {phase === "error" ? (
-        <button
-          type="button"
-          className="btn btn-ghost btn-sm"
-          onClick={actions.provision}
-          disabled={actions.pending}
-        >
-          Retry
-        </button>
+        <div className="computer-empty-actions">
+          {problem && /replace it|remove it/i.test(problem) ? (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={actions.replace}
+              disabled={actions.pending}
+              data-testid="computer-replace"
+            >
+              {`Replace ${name}'s computer`}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={actions.provision}
+            disabled={actions.pending}
+          >
+            Retry
+          </button>
+        </div>
       ) : null}
     </div>
   );
@@ -184,18 +198,43 @@ export function RuntimeMissingPaths({
           Run it here
         </div>
         <p className="computer-path-body">
-          {runtime?.installHint ||
-            "Install a container runtime. OrbStack is the lightest option on a Mac; Docker Desktop and Podman work too."}
+          Local computers need Docker. Install OrbStack (lightest on a Mac) or
+          Docker Desktop, open it once, then check again. Free, and nothing
+          leaves this machine.
+          {runtime?.installHint ? ` ${runtime.installHint}` : ""}
         </p>
-        <a
-          className="btn btn-ghost btn-sm"
-          href={ORBSTACK_URL}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Install OrbStack
-          <OpenNewWindow width={12} height={12} aria-hidden="true" />
-        </a>
+        <div className="box-account-actions">
+          <a
+            className="btn btn-primary btn-sm"
+            href={ORBSTACK_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Install OrbStack
+            <OpenNewWindow width={12} height={12} aria-hidden="true" />
+          </a>
+          <a
+            className="btn btn-secondary btn-sm"
+            href="https://www.docker.com/products/docker-desktop/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Docker Desktop
+            <OpenNewWindow width={12} height={12} aria-hidden="true" />
+          </a>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={() =>
+              void queryClient.invalidateQueries({
+                queryKey: COMPUTER_RUNTIME_QUERY_KEY,
+              })
+            }
+            data-testid="computer-runtime-check"
+          >
+            Check again
+          </button>
+        </div>
         {runtime?.runtimeStartHint ? (
           <p className="computer-path-note">{runtime.runtimeStartHint}</p>
         ) : null}

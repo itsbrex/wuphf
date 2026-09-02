@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/computer"
@@ -87,6 +88,15 @@ type computerRuntimePayload struct {
 	Problem          *string `json:"problem"`
 }
 
+// computerRuntimeAllowed gates every real container runtime call. Tests flip
+// it off (worktree_guard_test.go, DisableRealTaskWorktreeForTests) so a
+// turn under `go test` can never create a container on the developer's
+// Docker; the 2026-09-02 fresh-office run found two containers left by the
+// suite and refused the one whose name matched its own agent.
+var computerRuntimeAllowed atomic.Bool
+
+func init() { computerRuntimeAllowed.Store(true) }
+
 var (
 	computerRuntimeCacheTTL = 15 * time.Second
 	computerIdleTimeout     = 10 * time.Minute
@@ -105,6 +115,9 @@ type computerService struct {
 	leases    *computer.LeasePool
 	signer    *computer.ViewerSigner
 	root      string
+	// allowRuntime is captured at construction; test brokers that inject a
+	// scripted runner set it back to true.
+	allowRuntime bool
 
 	mu             sync.Mutex
 	runtime        computer.RuntimeStatus
@@ -147,23 +160,24 @@ func (b *Broker) computers() *computerService {
 	b.computerOnce.Do(func() {
 		inspector := &computer.Inspector{Run: computer.ExecRunner, Platform: runtime.GOOS}
 		s := &computerService{
-			b:           b,
-			platform:    runtime.GOOS,
-			runner:      computer.ExecRunner,
-			stream:      computer.ExecStreamRunner,
-			inspector:   inspector,
-			manager:     &computer.Manager{Run: computer.ExecRunner, Inspector: inspector, Platform: runtime.GOOS},
-			control:     &computer.Control{},
-			leases:      computer.NewLeasePool(computerLeaseTTL),
-			signer:      computer.NewViewerSigner(),
-			root:        computersRoot(),
-			frames:      map[string]computer.Frame{},
-			states:      map[string]string{},
-			viewerPorts: map[string]viewerPortCache{},
-			idle:        map[string]*computer.IdleTimer{},
-			pollers:     map[string]*screenPoller{},
-			turnEnv:     map[string]map[string]string{},
-			subscribers: map[int]chan computerEvent{},
+			b:            b,
+			platform:     runtime.GOOS,
+			runner:       computer.ExecRunner,
+			stream:       computer.ExecStreamRunner,
+			inspector:    inspector,
+			manager:      &computer.Manager{Run: computer.ExecRunner, Inspector: inspector, Platform: runtime.GOOS},
+			control:      &computer.Control{},
+			leases:       computer.NewLeasePool(computerLeaseTTL),
+			signer:       computer.NewViewerSigner(),
+			root:         computersRoot(),
+			allowRuntime: computerRuntimeAllowed.Load(),
+			frames:       map[string]computer.Frame{},
+			states:       map[string]string{},
+			viewerPorts:  map[string]viewerPortCache{},
+			idle:         map[string]*computer.IdleTimer{},
+			pollers:      map[string]*screenPoller{},
+			turnEnv:      map[string]map[string]string{},
+			subscribers:  map[int]chan computerEvent{},
 		}
 		s.control.OnChange = func(slug string, snap computer.Snapshot) {
 			held := snap.Held
@@ -231,6 +245,9 @@ func (s *computerService) setState(slug, state, problem string) {
 // ── runtime and image ──────────────────────────────────────────────────
 
 func (s *computerService) runtimeStatus(ctx context.Context, fresh bool) computer.RuntimeStatus {
+	if !s.allowRuntime {
+		return computer.RuntimeStatus{Problem: "container runtimes are disabled in this process"}
+	}
 	s.mu.Lock()
 	if !fresh && time.Since(s.runtimeAt) < computerRuntimeCacheTTL {
 		rt := s.runtime

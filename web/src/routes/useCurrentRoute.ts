@@ -1,7 +1,7 @@
 import { useMatches } from "@tanstack/react-router";
 
-import { directChannelSlug } from "../lib/channels";
 import { useOfficeTasks } from "../hooks/useOfficeTasks";
+import { directChannelSlug } from "../lib/channels";
 import {
   agentDetailRoute,
   agentDetailTabRoute,

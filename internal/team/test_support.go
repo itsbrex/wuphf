@@ -45,6 +45,7 @@ func DisableRealTaskWorktreeForTests() {
 			"(it mutates package-level worktree dispatch vars with no restore path)")
 	}
 	allowRealTaskWorktree.Store(false)
+	computerRuntimeAllowed.Store(false)
 	skipBrokerStateLoadOnConstruct = true
 	prep := prepareTaskWorktreeFn(func(taskID string) (string, string, error) {
 		path, branch := stubTaskWorktreePath(taskID)

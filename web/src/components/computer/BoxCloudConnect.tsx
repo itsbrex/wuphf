@@ -26,17 +26,25 @@ interface BoxCloudConnectProps {
 function SigninProgress({
   phase,
   authUrl,
+  waitingSeconds,
+  onCancel,
 }: {
   phase: BoxSigninPhase;
   authUrl: string;
+  waitingSeconds: number;
+  onCancel: () => void;
 }) {
   if (phase === "installing") {
     return <span className="box-account-line">Getting the Box CLI ready…</span>;
   }
   if (phase === "awaiting_login") {
     return (
-      <span className="box-account-line">
-        Finish signing in in the tab we opened.{" "}
+      <span className="box-account-line" data-testid="box-signin-waiting">
+        Waiting for you to finish in the ascii.dev tab
+        {waitingSeconds >= 5
+          ? ` (${waitingSeconds}s, checking every few seconds)`
+          : ""}
+        .{" "}
         {authUrl ? (
           <a
             href={authUrl}
@@ -47,6 +55,15 @@ function SigninProgress({
             Open it again
           </a>
         ) : null}
+        {" · "}
+        <button
+          type="button"
+          className="btn btn-text btn-sm"
+          onClick={onCancel}
+          data-testid="box-signin-cancel"
+        >
+          Start over
+        </button>
       </span>
     );
   }
@@ -199,7 +216,12 @@ export function BoxCloudConnect({
             Sign in to ascii.dev
           </button>
         )}
-        <SigninProgress phase={signin.phase} authUrl={signin.authUrl} />
+        <SigninProgress
+          phase={signin.phase}
+          authUrl={signin.authUrl}
+          waitingSeconds={signin.waitingSeconds}
+          onCancel={() => void signin.cancel()}
+        />
       </div>
       {signin.phase === "cli_missing" ? (
         <div
@@ -218,7 +240,7 @@ export function BoxCloudConnect({
           className="computer-card-text computer-card-text--error"
           data-testid="box-signin-error"
         >
-          {signin.error}
+          {signin.error} Use Sign in to ascii.dev to try again, or paste a key.
         </p>
       ) : null}
       {!signin.keySet ? (

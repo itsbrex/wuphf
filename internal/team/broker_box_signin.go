@@ -67,7 +67,16 @@ type boxSigninFlow struct {
 	mu       sync.Mutex
 	state    boxSigninState
 	deadline time.Time
+	// lastComplete throttles `box onboard` attempts from the status poll.
+	lastComplete time.Time
+	// generation increments on cancel so a stale login goroutine cannot
+	// advance a flow the person has since restarted.
+	generation int
 }
+
+// boxCompleteEvery bounds how often the status poll re-runs the CLI's
+// completion step while a browser login is pending.
+var boxCompleteEvery = 3 * time.Second
 
 func boxInstallDir() string {
 	if dir := strings.TrimSpace(os.Getenv("WUPHF_BOX_CLI_DIR")); dir != "" {
@@ -269,6 +278,17 @@ func (b *Broker) handleBoxSigninStatus(w http.ResponseWriter, r *http.Request) {
 		flow.mu.Unlock()
 	}
 	if state.Status == boxSigninStatusAwaitingLogin {
+		// `box onboard` completes a finished browser session and returns at
+		// once when it is not finished, so the poll drives completion.
+		flow.mu.Lock()
+		due := time.Since(flow.lastComplete) >= boxCompleteEvery
+		if due {
+			flow.lastComplete = time.Now()
+		}
+		flow.mu.Unlock()
+		if due {
+			boxTryCompleteLogin(r.Context())
+		}
 		if b.boxSigninAdvanceIfLoggedIn(r.Context()) {
 			flow.mu.Lock()
 			state = flow.state
@@ -283,6 +303,39 @@ func (b *Broker) handleBoxSigninStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, state)
+}
+
+// handleBoxSigninCancel abandons a pending sign-in so the person can start
+// over. POST /computer/box/signin/cancel
+func (b *Broker) handleBoxSigninCancel(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+		return
+	}
+	if !requireJSONBody(w, r) {
+		return
+	}
+	flow := &b.boxSignin
+	flow.mu.Lock()
+	flow.generation++
+	flow.state = boxSigninState{Status: boxSigninStatusIdle}
+	flow.deadline = time.Time{}
+	flow.mu.Unlock()
+	writeJSON(w, http.StatusOK, map[string]string{"status": boxSigninStatusIdle})
+}
+
+// boxTryCompleteLogin runs the CLI's completion step once. Output is
+// discarded: it carries the session token.
+func boxTryCompleteLogin(ctx context.Context) {
+	ctx, cancel := context.WithTimeout(ctx, boxProbeTimeout)
+	defer cancel()
+	cmd, err := boxCommand(ctx, "onboard")
+	if err != nil {
+		return
+	}
+	cmd.Stdin = nil
+	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
+	_ = cmd.Run()
 }
 
 // ── flow ────────────────────────────────────────────────────────────────
@@ -324,6 +377,7 @@ func (b *Broker) boxSigninBeginLogin() {
 	}
 	flow.state = boxSigninState{Status: boxSigninStatusAwaitingLogin}
 	flow.deadline = time.Now().Add(boxLoginWindow)
+	generation := flow.generation
 	flow.mu.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), boxLoginWindow)
@@ -355,7 +409,7 @@ func (b *Broker) boxSigninBeginLogin() {
 		}
 		if evt.Event == "login_url" && evt.URL != "" {
 			flow.mu.Lock()
-			if flow.state.Status == boxSigninStatusAwaitingLogin {
+			if flow.state.Status == boxSigninStatusAwaitingLogin && flow.generation == generation {
 				flow.state.AuthURL = evt.URL
 			}
 			flow.mu.Unlock()
@@ -366,12 +420,13 @@ func (b *Broker) boxSigninBeginLogin() {
 	// browser session until it finishes (the event it names as nextCommand).
 	// Output deliberately not logged: it carries the session token.
 	_ = cmd.Wait()
-	if onboard, err := boxCommand(ctx, "onboard"); err == nil {
-		onboard.Stdin = nil
-		onboard.Stdout = io.Discard
-		onboard.Stderr = io.Discard
-		_ = onboard.Run()
+	flow.mu.Lock()
+	stale := flow.generation != generation
+	flow.mu.Unlock()
+	if stale {
+		return
 	}
+	boxTryCompleteLogin(ctx)
 	b.boxSigninAdvanceIfLoggedIn(context.Background())
 }
 

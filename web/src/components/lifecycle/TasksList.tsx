@@ -464,8 +464,8 @@ function TasksEmptyState({ onOpenCreate }: { onOpenCreate: () => void }) {
       data-testid="issues-list-empty"
     >
       <p className="issues-empty-copy">
-        No tasks yet. The team is watching this space, which is all they can
-        do until you file something.
+        No tasks yet. The team is watching this space, which is all they can do
+        until you file something.
       </p>
       <button
         type="button"

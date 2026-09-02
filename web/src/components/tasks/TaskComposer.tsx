@@ -278,8 +278,8 @@ export function TaskComposer() {
       <div className="task-composer">
         <h1 className="task-composer-title">What do you want to get done?</h1>
         <p className="task-composer-subtitle">
-          Describe the outcome. The team starts immediately, and watches each other do it — you review
-          the delivered work.
+          Describe the outcome. The team starts immediately, and watches each
+          other do it — you review the delivered work.
         </p>
         <form className="task-composer-form" onSubmit={handleSubmit}>
           <textarea
