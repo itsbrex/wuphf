@@ -41,12 +41,12 @@ describe("requestAppBuild", () => {
   // retired the broker's create path could not find that channel and the
   // whole Edit App flow died with "channel not found". The task must be
   // addressed to the agent that will do the work.
-  it("addresses the build task to the App Builder's DM, never a shared room", async () => {
+  it("addresses the build task to the Chief of Staff's DM, never a shared room", async () => {
     await requestAppBuild({ name: "Pipeline", description: "a board" });
 
     const body = post.mock.calls[0][1] as { channel: string; owner: string };
-    expect(body.channel).toBe("app-builder__human");
-    expect(body.owner).toBe("app-builder");
+    expect(body.channel).toBe("ceo__human");
+    expect(body.owner).toBe("ceo");
   });
 
   it("uses the same DM when improving an existing app", async () => {
@@ -57,7 +57,7 @@ describe("requestAppBuild", () => {
     });
 
     const body = post.mock.calls[0][1] as { channel: string; title: string };
-    expect(body.channel).toBe("app-builder__human");
+    expect(body.channel).toBe("ceo__human");
     expect(body.title).toBe("Improve app: Pipeline");
   });
 });

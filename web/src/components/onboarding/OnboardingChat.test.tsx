@@ -110,7 +110,7 @@ describe("OnboardingChat", () => {
     getMock.mockResolvedValue({ phase: "greet", pending_suggestion: null });
     render(<OnboardingChat />, { wrapper });
     await waitFor(() => {
-      expect(screen.getByText(/CEO is composing/)).toBeDefined();
+      expect(screen.getByText(/Chief of Staff is composing/)).toBeDefined();
     });
   });
 
@@ -130,7 +130,7 @@ describe("OnboardingChat", () => {
         screen.getByTestId("onboarding-chat").getAttribute("data-phase"),
       ).toBe("greet"),
     );
-    expect(screen.queryByText(/CEO is composing/)).toBeNull();
+    expect(screen.queryByText(/Chief of Staff is composing/)).toBeNull();
   });
 
   it("renders without crash when state load is still pending", () => {
