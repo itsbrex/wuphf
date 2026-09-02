@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/config"
+	"github.com/nex-crm/wuphf/internal/provider"
 )
 
 // ollamaListTimeout bounds the `ollama list` probe used for local embedding
@@ -40,6 +41,7 @@ var (
 	selectOpenAIKey      = config.ResolveOpenAIAPIKey
 	selectVoyageKey      = resolveVoyageAPIKey
 	ollamaEmbeddingModel = detectOllamaEmbeddingModel
+	localRuntimeEmbedder = detectLocalRuntimeEmbedder
 	runGBrain            = Run
 )
 
@@ -103,10 +105,11 @@ func parseOllamaEmbeddingModel(listing string) string {
 // SelectEmbeddingModel returns the best available gbrain `--embedding-model`
 // value, in precedence order:
 //
-//  1. OpenAI key         -> "openai:text-embedding-3-large" (1536d)
-//  2. Voyage key         -> "voyage:voyage-3-large"         (1024d)
-//  3. Local Ollama model -> "ollama:<model>"                (typically 768d)
-//  4. Otherwise ""       -> keyword-only, no vector arm
+//  1. OpenAI key           -> "openai:text-embedding-3-large" (1536d)
+//  2. Voyage key           -> "voyage:voyage-3-large"         (1024d)
+//  3. Local Ollama model   -> "ollama:<model>"                (typically 768d)
+//  4. Other local runtime  -> "openai-compatible:<model>"     (probed)
+//  5. Otherwise ""         -> keyword-only, no vector arm
 //
 // A hosted key outranks the local model deliberately: a user who has already
 // supplied one has paid for the stronger embedder, and silently substituting a
@@ -127,6 +130,38 @@ func SelectEmbeddingModel() string {
 	}
 	if model := strings.TrimSpace(OllamaEmbeddingModel()); model != "" {
 		return "ollama:" + model
+	}
+	// Any other configured local runtime (mlx-lm, exo, or a bare
+	// openai-compatible endpoint). Unlike the Ollama branch this must PROBE:
+	// serving /v1/chat/completions says nothing about serving /v1/embeddings,
+	// and picking wrong means a brain that has to be wiped to fix, because
+	// embedding_model sizes gbrain's schema.
+	if model := strings.TrimSpace(localRuntimeEmbedder()); model != "" {
+		return model
+	}
+	return ""
+}
+
+// LocalRuntimeEmbedder returns an "openai-compatible:<model>" selector for a
+// configured local runtime that PROVES it can embed, or "".
+func LocalRuntimeEmbedder() string { return localRuntimeEmbedder() }
+
+// detectLocalRuntimeEmbedder walks the local OpenAI-compatible runtimes and
+// returns the first whose endpoint actually produces a vector.
+//
+// Ollama is deliberately excluded here: it is handled one step earlier by
+// OllamaEmbeddingModel, which inspects `ollama list` and can name a real
+// embedding model. This branch covers the runtimes where the only way to know
+// is to ask.
+func detectLocalRuntimeEmbedder() string {
+	for _, kind := range []string{provider.KindMLXLM, provider.KindExo} {
+		baseURL, model := provider.OpenAICompatDefaults(kind)
+		if strings.TrimSpace(baseURL) == "" || strings.TrimSpace(model) == "" {
+			continue
+		}
+		if res := ProbeEmbeddings(context.Background(), baseURL, model); res.OK {
+			return "openai-compatible:" + model
+		}
 	}
 	return ""
 }
@@ -162,6 +197,9 @@ func ExpansionAvailable() bool {
 // single honest startup line rather than silent degradation.
 func RetrievalMode() string {
 	if model := SelectEmbeddingModel(); model != "" {
+		// Name the embedder, because a local one is not just cheaper: it turns
+		// a ~215ms hosted round-trip per query into a localhost call. See
+		// docs/specs/gbrain-context-layer.md on where retrieval latency goes.
 		return "semantic (" + model + ")"
 	}
 	if ExpansionAvailable() {

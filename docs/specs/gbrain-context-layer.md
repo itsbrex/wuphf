@@ -234,28 +234,51 @@ silently decoded EMPTY. That blanked `LastEditedTs` on every wiki page in
 `wiki_gbrain_adapter.go` and left the cursor with nothing to advance on.
 `PageMeta.UnmarshalJSON` now accepts either spelling.
 
-## Known latency defect in this adapter (not gbrain's fault)
+## Where the 226 ms actually goes (measured 2026-08-31)
 
-`gbrainTextIndex.Search` issues ONE `get_page` per hit to populate
-`SearchHit.Entity`, which renders as the citation title. At the bench's topK=20
-that is 20 sequential MCP round-trips per query, and it dominates the measured
-264 ms p50.
+**It is the hosted query-embedding API call, not this adapter.**
 
-It is fixable without touching gbrain: encode the entity slug into the atom slug
-(`atoms/<entity>__<factID>` rather than `atoms/<factID>`) so `Entity` is
-derivable from the search result with zero extra calls. That is a slug-scheme
-change, so it needs the mapping helpers, the contract tests, and a re-bench.
+Hybrid search must embed the query before it can search vectors. With
+`openai:text-embedding-3-large` that is a round-trip to api.openai.com. Measured
+directly, five samples:
 
-Deliberately NOT done yet: it would cut latency but cannot touch the ranking
-numbers (nDCG@10 0.425 vs 0.809), and those are what decide whether this backend
-is viable at all. Optimising the latency of a retrieval path that returns worse
-results first would be gold-plating a possible dead end.
+```
+0.486s  0.214s  0.171s  0.275s  0.261s     median ~215 ms
+```
+
+The bench measured 226 ms p50 for the entire retrieval. So the query embedding
+accounts for effectively all of it; the MCP round-trip, the page loads, and the
+anchor parsing are noise by comparison.
+
+Two consequences worth being explicit about:
+
+1. **There is nothing to optimise in WUPHF's code.** An earlier draft of this
+   document claimed the cost was one `get_page` per hit in
+   `gbrainTextIndex.Search`. That was true of the ATOM backend, which is not
+   what shipped. `gbrainEntityTextIndex.Search` makes ZERO `GetFact` calls —
+   the anchors carry the fact IDs, and entity pages are cached in the store.
+   Re-encoding the entity slug into the page slug would save approximately
+   nothing.
+
+2. **A local embedder is the latency fix, not just a cost saver.** An Ollama
+   embedder runs on localhost, so it trades a ~215 ms internet round-trip for a
+   single-digit-millisecond one. The local-embedding fallback in
+   `gbrain-local-embeddings.md` is therefore a PERFORMANCE feature as much as a
+   credential one — worth benching both ways before assuming the hosted model's
+   better recall is worth its latency.
+
+gbrain also ships a semantic query cache (`core/search/query-cache.ts`), so
+repeated queries skip the round-trip. The bench runs each query three times and
+reports the median, which means the 226 ms figure may already be cache-assisted
+and a cold query could be slower.
 
 ## Not done
 
-- **No benchmark run.** `bench/slice-1/` and the CI gate
-  (recall@3 >= 0.90, nDCG@10 >= 0.95 in `wiki_query_eval_test.go`) have not been
-  run against the gbrain backend. Retrieval quality versus bleve is unmeasured.
+- **The CI eval gate is still unrun against this backend.**
+  `wiki_query_eval_test.go` (recall@3 >= 0.90, nDCG@10 >= 0.95) lives on a
+  different branch and was never merged, so it does not gate this. The
+  `bench/slice-1` harness HAS been run against all four backends — see the
+  benchmark table above.
 - **The founder's own brain (`~/.gbrain`) still has `embedding_disabled: true`**
   and is therefore keyword-only. Enabling it means the same wipe-and-re-init
   against real data plus `gbrain sync`; not done, because it is destructive.

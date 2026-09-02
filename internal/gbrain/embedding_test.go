@@ -204,11 +204,16 @@ func containsCall(calls [][]string, want []string) bool {
 func withEmbedKeys(t *testing.T, openAIKey, voyageKey, ollamaModel string) {
 	t.Helper()
 	prevOpenAI, prevVoyage, prevOllama := selectOpenAIKey, selectVoyageKey, ollamaEmbeddingModel
+	prevLocal := localRuntimeEmbedder
 	selectOpenAIKey = func() string { return openAIKey }
 	selectVoyageKey = func() string { return voyageKey }
 	ollamaEmbeddingModel = func() string { return ollamaModel }
+	// Default the probe off; the local-runtime case installs its own stub.
+	// Without this every case would attempt a real network probe.
+	localRuntimeEmbedder = func() string { return "" }
 	t.Cleanup(func() {
 		selectOpenAIKey, selectVoyageKey, ollamaEmbeddingModel = prevOpenAI, prevVoyage, prevOllama
+		localRuntimeEmbedder = prevLocal
 	})
 }
 
@@ -259,4 +264,48 @@ func TestRetrievalModeNamesTheActualCapability(t *testing.T) {
 			t.Errorf("RetrievalMode() = %q claims semantic with no embedder", got)
 		}
 	})
+}
+
+// TestSelectEmbeddingModelFallsBackToProbedLocalRuntime covers the last rung of
+// the chain: a local runtime that is not Ollama, discovered by probe.
+//
+// It sits BELOW Ollama because Ollama can be interrogated cheaply
+// (`ollama list` names real embedding models), whereas these runtimes can only
+// be settled by asking the endpoint for a vector.
+func TestSelectEmbeddingModelFallsBackToProbedLocalRuntime(t *testing.T) {
+	withEmbedKeys(t, "", "", "") // no hosted key, no ollama model
+	prev := localRuntimeEmbedder
+	localRuntimeEmbedder = func() string { return "openai-compatible:bge-small" }
+	t.Cleanup(func() { localRuntimeEmbedder = prev })
+
+	if got := SelectEmbeddingModel(); got != "openai-compatible:bge-small" {
+		t.Errorf("SelectEmbeddingModel() = %q, want the probed local runtime", got)
+	}
+}
+
+// TestOllamaOutranksProbedRuntime pins the ordering: a named Ollama embedding
+// model is preferred over a probed generic endpoint, because `ollama list`
+// tells us the model was built to embed rather than merely that it responded.
+func TestOllamaOutranksProbedRuntime(t *testing.T) {
+	withEmbedKeys(t, "", "", "nomic-embed-text")
+	prev := localRuntimeEmbedder
+	localRuntimeEmbedder = func() string { return "openai-compatible:bge-small" }
+	t.Cleanup(func() { localRuntimeEmbedder = prev })
+
+	if got := SelectEmbeddingModel(); got != "ollama:nomic-embed-text" {
+		t.Errorf("SelectEmbeddingModel() = %q, want ollama to outrank the probed runtime", got)
+	}
+}
+
+// TestHostedKeyOutranksProbedRuntime re-pins the founder's decision against the
+// new rung: a supplied key still wins over anything local.
+func TestHostedKeyOutranksProbedRuntime(t *testing.T) {
+	withEmbedKeys(t, "sk-x", "", "")
+	prev := localRuntimeEmbedder
+	localRuntimeEmbedder = func() string { return "openai-compatible:bge-small" }
+	t.Cleanup(func() { localRuntimeEmbedder = prev })
+
+	if got := SelectEmbeddingModel(); got != openAIEmbeddingModel {
+		t.Errorf("SelectEmbeddingModel() = %q, want the hosted key to win", got)
+	}
 }
