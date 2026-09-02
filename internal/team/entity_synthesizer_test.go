@@ -78,7 +78,7 @@ func TestSynthesizer_HappyPathWritesBriefWithFrontmatter(t *testing.T) {
 	if _, err := synth.EnqueueSynthesis(EntityKindPeople, "nazz", "pm"); err != nil {
 		t.Fatalf("enqueue: %v", err)
 	}
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	// Verify file exists with frontmatter keys.
 	briefBytes, err := readArticle(worker.Repo(), "team/people/nazz.md")
@@ -110,7 +110,7 @@ func TestSynthesizer_FreshBriefCreatedWhenNoneExists(t *testing.T) {
 	_, _ = factLog.Append(ctx, EntityKindCompanies, "acme", "Founded 1999.", "", "pm")
 
 	_, _ = synth.EnqueueSynthesis(EntityKindCompanies, "acme", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	bytes, err := readArticle(worker.Repo(), "team/companies/acme.md")
 	if err != nil {
@@ -133,7 +133,7 @@ func TestSynthesizer_NoNewFactsIsIdempotentSkip(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindPeople, "pm", "One fact.", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindPeople, "pm", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	// Second synth with no new facts should skip — the commit timestamp
 	// covers all current facts.
@@ -227,7 +227,7 @@ func TestSynthesizer_ContradictionPhrasePassesThrough(t *testing.T) {
 	_, _ = factLog.Append(ctx, EntityKindPeople, "dup", "Joined 2024.", "", "pm")
 	_, _ = factLog.Append(ctx, EntityKindPeople, "dup", "Joined 2025.", "", "eng")
 	_, _ = synth.EnqueueSynthesis(EntityKindPeople, "dup", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	bytes, err := readArticle(worker.Repo(), "team/people/dup.md")
 	if err != nil {
@@ -304,16 +304,31 @@ func TestSynthesizer_StopPreventsNewJobs(t *testing.T) {
 
 // waitForBriefCount polls the publisher stub until the brief count meets n
 // or the deadline hits.
-func waitForBriefCount(t *testing.T, pub *entityPublisherStub, n int, timeout time.Duration) {
+// briefEventWaitBudget bounds the wait for asynchronous brief events.
+//
+// It is deliberately generous. The wait POLLS and returns the instant the
+// events arrive — typically ~0.3s — so the budget costs nothing on the happy
+// path and only decides how long to wait before declaring failure. The previous
+// 3s budget was measured failing on a loaded machine (load average 43), where
+// the same tests took 16-39s: the synthesis pipeline commits through git, and
+// git slows down with everything else under memory pressure.
+//
+// A wall-clock budget tuned to an idle machine is not a real assertion about
+// behaviour; it is an assertion about the host. This one is sized so that a
+// timeout means the pipeline is genuinely stuck, not merely busy.
+const briefEventWaitBudget = 90 * time.Second
+
+func waitForBriefCount(t *testing.T, pub *entityPublisherStub, n int) {
 	t.Helper()
-	deadline := time.Now().Add(timeout)
+	deadline := time.Now().Add(briefEventWaitBudget)
 	for time.Now().Before(deadline) {
 		if pub.briefCount() >= n {
 			return
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	t.Fatalf("timed out waiting for %d brief events; got %d", n, pub.briefCount())
+	t.Fatalf("timed out after %s waiting for %d brief events; got %d",
+		briefEventWaitBudget, n, pub.briefCount())
 }
 
 // seedBrief writes content at the brief's canonical path under the
@@ -340,7 +355,7 @@ func TestSentinel_NoHumanEditFullRewrite(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindCompanies, "acme", "Founded 1999.", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindCompanies, "acme", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, err := readArticle(worker.Repo(), "team/companies/acme.md")
 	if err != nil {
@@ -372,7 +387,7 @@ func TestSentinel_HumanEditedSwitchesToAppendMode(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindCompanies, "acme", "Acme raised Series C.", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindCompanies, "acme", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, err := readArticle(worker.Repo(), "team/companies/acme.md")
 	if err != nil {
@@ -409,7 +424,7 @@ func TestSentinel_StaleHumanEditTriggersFullRewrite(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindCompanies, "acme", "f1", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindCompanies, "acme", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, _ := readArticle(worker.Repo(), "team/companies/acme.md")
 	body := string(got)
@@ -434,7 +449,7 @@ func TestSentinel_EmptyBriefFullCreation(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindCompanies, "acme", "Founded 1999.", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindCompanies, "acme", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, _ := readArticle(worker.Repo(), "team/companies/acme.md")
 	body := string(got)
@@ -460,7 +475,7 @@ func TestTags_DerivedFromKindAndSignals(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindPeople, "sarah", "She closed an $80k deal.", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindPeople, "sarah", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, _ := readArticle(worker.Repo(), "team/people/sarah.md")
 	body := string(got)
@@ -489,7 +504,7 @@ func TestTags_PreservesUserAddedTags(t *testing.T) {
 
 	_, _ = factLog.Append(ctx, EntityKindPeople, "sarah", "f1", "", "pm")
 	_, _ = synth.EnqueueSynthesis(EntityKindPeople, "sarah", "pm")
-	waitForBriefCount(t, pub, 1, 3*time.Second)
+	waitForBriefCount(t, pub, 1)
 
 	got, _ := readArticle(worker.Repo(), "team/people/sarah.md")
 	body := string(got)

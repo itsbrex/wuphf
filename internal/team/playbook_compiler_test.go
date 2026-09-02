@@ -16,8 +16,25 @@ import (
 // testTickUntil polls cond on a ticker until it returns true or the timeout
 // elapses — the repo's deterministic-wait discipline (no bare sleeps in
 // tests; CONTRIBUTING gate).
+// minTickBudget floors every testTickUntil deadline.
+//
+// Call sites pass budgets tuned on an idle machine (2s, 5s, 10s). Those are not
+// assertions about behaviour, they are assertions about the host: the same
+// tests were measured taking 16-39s under load average 43, where work that
+// normally finishes in ~0.3s is starved. A too-short budget then reports a
+// timeout that reads exactly like a logic failure, which is how these cost
+// real bisection time.
+//
+// Flooring costs nothing on the happy path — this polls every 20ms and returns
+// the moment the condition holds — and it only changes how patient the failure
+// path is. A caller wanting to wait LONGER than the floor still can.
+const minTickBudget = 60 * time.Second
+
 func testTickUntil(t *testing.T, timeout time.Duration, cond func() bool) bool {
 	t.Helper()
+	if timeout < minTickBudget {
+		timeout = minTickBudget
+	}
 	deadline := time.Now().Add(timeout)
 	ticker := time.NewTicker(20 * time.Millisecond)
 	defer ticker.Stop()
