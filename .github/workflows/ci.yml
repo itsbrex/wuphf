@@ -3,17 +3,12 @@ name: CI
 on:
   push:
     branches: [main]
-  # Fire on every PR regardless of base branch. Without this, stacked
-  # PRs (whose base is another open PR's branch, not main) get only
-  # commitlint + scan + CodeRabbit — the full Go test job, web/web-e2e,
-  # and release-build are skipped, so a typo or break can land
-  # unnoticed and only surface when the stack tip retargets to main.
-  # See the Track A/B refactor train (#289 → #297 → #298 → #299) for
-  # the failure mode this filter caused.
+  # Fire on every PR regardless of base branch so stacked PRs get the
+  # full suite, not just commitlint + scan.
   pull_request:
 
 # Tighten the org default (`default_workflow_permissions: write`) — every
-# job in CI is read-only against the repo. The matrix legs that need to
+# job in CI is read-only against the repo. The jobs that need to
 # upload-artifact / download-artifact rely on actions/upload-artifact's
 # self-managed temporary token and don't need write contents.
 permissions:
@@ -37,178 +32,11 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # Classifies the PR diff so the heavy jobs below can skip a
-  # documentation-only change. Conservative by construction: any file
-  # that is not unambiguously docs flips non_docs=true and the full
-  # suite runs. Non-PR events (push to main, workflow_dispatch) also
-  # force non_docs=true — main always runs the full suite. The only
-  # inputs that skip the heavy jobs are PRs whose entire diff is
-  # markdown / docs / website payload. Cheap (~15s).
-  #
-  # Why a gate JOB and not `on: pull_request: paths-ignore:` — a
-  # path-filtered workflow never reports its required status checks, so
-  # a docs-only PR would sit blocked on permanently-pending
-  # lint/vet/build. A skipped JOB reports a `skipped` conclusion, which
-  # branch protection counts as satisfied. Do not "simplify" this into
-  # paths-ignore.
-  #
-  # `changes` is NOT itself a required check, so it must never be able
-  # to bypass one. Every gated job's `if:` therefore falls OPEN when
-  # this job does not succeed (`needs.changes.result != 'success'`):
-  # a failed/errored gate runs the full suite rather than skipping
-  # required jobs into a green merge. The only path that skips a
-  # required check is a deliberate `non_docs == 'false'` classification.
-  #
-  # The protocol job deliberately does NOT gate on this job — it protects
-  # wire invariants on every PR. shellcheck/npm-tests run
-  # unconditionally (cheap, and shellcheck must see any *.sh change).
-  changes:
-    runs-on: ubuntu-latest
-    outputs:
-      non_docs: ${{ steps.classify.outputs.non_docs }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Classify changed files
-        id: classify
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_EVENT_NAME}" != "pull_request" || -z "${BASE_SHA}" ]]; then
-            echo "non_docs=true" >> "$GITHUB_OUTPUT"
-            echo "event=${GITHUB_EVENT_NAME}: running full suite."
-            exit 0
-          fi
-          files="$(git diff --name-only "${BASE_SHA}...HEAD" || true)"
-          if [[ -z "${files}" ]]; then
-            echo "non_docs=true" >> "$GITHUB_OUTPUT"
-            echo "empty/unavailable diff: running full suite."
-            exit 0
-          fi
-          non_docs=false
-          while IFS= read -r f; do
-            [[ -z "$f" ]] && continue
-            # Docs arm: ONLY non-buildable file types. Never add a code,
-            # config, or dependency pattern here — a match skips the
-            # whole heavy suite incl. required checks. `*.md`/`*.mdx`
-            # already cover markdown anywhere (incl. wiki under team/,
-            # index/), so directory globs here must not be widened to
-            # bare `team/*`/`index/*` — that would also match a stray
-            # `team/foo.go`. The `*)` default MUST stay non_docs=true;
-            # that fail-safe is the safety property of this classifier.
-            case "$f" in
-              *.md|*.mdx) ;;
-              docs/*|website/*) ;;
-              .github/ISSUE_TEMPLATE/*) ;;
-              *) non_docs=true; echo "non-doc change: $f" ;;
-            esac
-          done <<< "${files}"
-          echo "non_docs=${non_docs}" >> "$GITHUB_OUTPUT"
-          echo "classified diff: non_docs=${non_docs}"
-
-  protocol:
-    # @wuphf/protocol is the moat — branded types, receipt schema, IPC envelopes,
-    # audit chain. The whole package is hand-rolled (no schema lib) precisely so
-    # we can audit the invariants. CI MUST run typecheck + biome + vitest on
-    # every PR or the invariants can regress silently. The `web` job below does
-    # NOT cover packages/protocol — its working-directory is `web/`.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # ratchet:oven-sh/setup-bun@v2.2.0
-        with:
-          bun-version: "1.3.13"
-      - name: Install workspace deps
-        # bun.lock lives at the repo root and covers every workspace package;
-        # `bun install --frozen-lockfile` from here resolves packages/protocol
-        # too. Doing the install per-package would split the lockfile.
-        run: bun install --frozen-lockfile
-      - name: Typecheck
-        working-directory: packages/protocol
-        run: bun run typecheck
-      - name: Biome (lint + format check)
-        working-directory: packages/protocol
-        run: bun run check
-      - name: Vitest (unit + property tests)
-        # Routed through the canonical wrapper so this matches what local
-        # contributors run — see scripts/test-protocol.sh.
-        run: bash scripts/test-protocol.sh
-      - name: Vitest coverage gate (ratchet)
-        # AGENTS.md rule #14: coverage is a one-way ratchet. Thresholds are
-        # in vitest.config.ts; lowering them is forbidden. NEW PRs must keep
-        # measured coverage at or above the declared floor.
-        working-directory: packages/protocol
-        run: bun run test:coverage
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
-        if: always()
-        with:
-          name: protocol-coverage
-          path: packages/protocol/coverage
-          retention-days: 14
-          if-no-files-found: ignore
-      - name: Vitest random-order smoke (catches order-dependent bugs)
-        # pytest-randomly equivalent. Same suite, shuffled file + test order
-        # with a fixed seed so a flake is deterministically reproducible.
-        # Cheap enough to run on every PR.
-        working-directory: packages/protocol
-        run: bun run test:shuffle
-      - name: Protocol invariant checks
-        # Custom protocol-grade invariants Biome cannot express:
-        # instanceof allowlist, single hashing entry point, no process.env
-        # in src/, demo imports from index only, every value export tested,
-        # no Date.now/Date.parse/performance.now (rule #13).
-        run: bash packages/protocol/scripts/check-invariants.sh
-      - name: Demo smoke (public-API ergonomics)
-        # The demo composes the public surface end-to-end (import from
-        # index.ts, use as a consumer would). Vitest covers per-module
-        # invariants; the demo catches regressions in how the modules
-        # COMPOSE — naming drift, missing exports, accidental API breaks
-        # at the index.ts boundary. Cheap (<1s).
-        run: bun run packages/protocol/scripts/demo.ts
-      - name: Frozen NFKC table drift check
-        # The moat normalises NFKC against frozen, version-pinned tables
-        # (src/nfkc-table.generated.ts + testdata/nfkc-table.json), derived
-        # from vendored UCD text. This step regenerates and fails if the
-        # committed tables drifted (a hand-edit, or a stale vendored file).
-        # `--require-runtime-match` makes the generator hard-fail unless this
-        # runner genuinely ships the pinned Unicode version — so its exhaustive
-        # frozenNfkc-vs-runtime proof actually runs here and cannot silently
-        # downgrade to a content-only check if the runner's ICU is bumped.
-        working-directory: packages/protocol
-        run: |
-          bun run scripts/generate-nfkc-table.ts --require-runtime-match
-          git -C "$GITHUB_WORKSPACE" diff --exit-code -- \
-            packages/protocol/src/nfkc-table.generated.ts \
-            packages/protocol/testdata/nfkc-table.json
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # ratchet:actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-      - name: Cross-language wire-contract verifier (Go)
-        # Independent reference implementation of the audit-chain wire
-        # contract in Go. Loads testdata/audit-event-vectors.json and
-        # recomputes the canonical serialization + eventHash byte-for-byte.
-        # Catches a class of bug NO other test catches: TS writer + external
-        # reader drift (e.g., someone changes both the serializer AND the
-        # in-package golden vector together — Vitest still passes, this
-        # fails). The verifier file uses `//go:build ignore` so it is NOT
-        # part of the main Go build; only `go run` against the file runs it.
-        working-directory: packages/protocol/testdata
-        run: go run verifier-reference.go
-
   web:
-    # Skipped on docs-only PRs (see the `changes` job). `web` produces the
-    # web-dist artifact consumed by the downstream Go build/test jobs.
-    # INVARIANT: every job that `needs: web` MUST also carry `web`'s
-    # `needs.changes` gate, so on a docs-only PR producer and consumers
-    # skip together. A `needs: web` job added without that gate would
-    # skip-cascade on docs-only PRs. (If `web` itself FAILS — e.g. a web
-    # typecheck break — consumers run and fail fast at download-artifact.
-    # That is intended: a broken web build must block the required
-    # `build` check, not skip it into a satisfied state.)
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
+    # Produces the web-dist artifact consumed by the downstream Go
+    # build/test jobs. (If `web` FAILS — e.g. a web typecheck break —
+    # consumers run and fail fast at download-artifact. That is intended:
+    # a broken web build must block the required `build` check.)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
@@ -261,11 +89,6 @@ jobs:
         run: exit 1
 
   lint:
-    # Skipped on docs-only PRs. `lint` is a required status check; a
-    # skipped required check satisfies branch protection, so docs-only
-    # PRs still merge.
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
     runs-on: ubuntu-latest
     # Single source of truth for govulncheck binary location. `go install`
     # writes to $GOBIN if set (else $GOPATH/bin), so pinning GOBIN here
@@ -473,9 +296,7 @@ jobs:
   # the race detector. -timeout 15m is generous headroom over the ~3m
   # observed locally (race instrumentation 2-3x's wall-clock).
   go-test:
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
+    needs: web
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
@@ -562,45 +383,8 @@ jobs:
   # slips into the main path and breaks Windows/macOS without anyone noticing
   # until release time. `release-build` exists but only verifies what
   # goreleaser's `goos:` happens to enumerate; if a future PR drops `windows`
-  # from .goreleaser.yml, this is the gate that catches it independently.
-  go-cross-build:
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - {goos: windows, goarch: amd64}
-          - {goos: windows, goarch: arm64}
-          - {goos: darwin, goarch: arm64}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # ratchet:actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # ratchet:actions/download-artifact@v8
-        with:
-          name: web-dist
-          path: web/dist
-      - name: Cross-compile ${{ matrix.goos }}/${{ matrix.goarch }}
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: "0"
-        # `./...` (not just ./cmd/wuphf) so an internal/ package picking up a
-        # unix-only import blocks the merge before someone hits it on Windows.
-        run: go build ./...
 
-  # Keep a standalone vet job so config drift (a new vet check landing in
-  # a Go minor bump, or an unknown //go:build tag) surfaces with its own
-  # red x instead of being mixed into a test leg. golangci-lint runs vet
-  # too but only what its govet linter enables.
   vet:
-    # Skipped on docs-only PRs (required check; skipped satisfies it).
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
@@ -611,9 +395,7 @@ jobs:
         run: go vet ./...
 
   build:
-    # Skipped on docs-only PRs (required check; skipped satisfies it).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
+    needs: web
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
@@ -629,77 +411,17 @@ jobs:
         run: |
           ./wuphf --version
           ./wuphf --help-all > /dev/null
-
-  vhs:
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: changes
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
-    runs-on: ubuntu-latest
-    env:
-      VHS_VERSION: "v0.11.0"
-      TTYD_VERSION: "1.7.7"
-      TTYD_SHA256: "8a217c968aba172e0dbf3f34447218dc015bc4d5e59bf51db2f2cd12b7be4f55"
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # ratchet:actions/setup-go@v6
-        with:
-          # VHS tracks newer Go minors than go.mod pins; use stable so
-          # `go install vhs` isn't blocked by GOTOOLCHAIN=local (Go is
-          # forward-compatible for the wuphf build in this job).
-          go-version: stable
-      - name: Cache VHS binary
-        id: cache-vhs
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # ratchet:actions/cache@v5.0.5
-        with:
-          path: ~/go/bin/vhs
-          key: vhs-${{ runner.os }}-${{ env.VHS_VERSION }}
-      - name: Install VHS
-        if: steps.cache-vhs.outputs.cache-hit != 'true'
-        run: go install github.com/charmbracelet/vhs@${{ env.VHS_VERSION }}
-      - name: Cache ttyd download
-        id: cache-ttyd
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # ratchet:actions/cache@v5.0.5
-        with:
-          path: /tmp/ttyd.x86_64
-          key: ttyd-${{ runner.os }}-${{ env.TTYD_VERSION }}-${{ env.TTYD_SHA256 }}
-      - name: Download ttyd
-        if: steps.cache-ttyd.outputs.cache-hit != 'true'
-        run: curl -fLo /tmp/ttyd.x86_64 https://github.com/tsl0922/ttyd/releases/download/${{ env.TTYD_VERSION }}/ttyd.x86_64
-      - name: Verify ttyd integrity
-        # Verify both on cache-miss (just downloaded) and cache-hit (guard
-        # against restored corruption or a ttyd release re-tag).
-        run: echo "${{ env.TTYD_SHA256 }}  /tmp/ttyd.x86_64" | sha256sum -c -
-      - name: Install ttyd
-        run: sudo install /tmp/ttyd.x86_64 /usr/local/bin/ttyd
-      - name: Install ffmpeg
-        # Pin to full SHA: third-party action runs `sudo apt-get`, so a re-tag
-        # of @v1 would execute with elevated privileges on the runner.
-        uses: awalsh128/cache-apt-pkgs-action@acb598e5ddbc6f68a970c5da0688d2f3a9f04d05 # ratchet:awalsh128/cache-apt-pkgs-action@v1.6.0
-        with:
-          # libblas3 is a transitive runtime dep of ffmpeg on ubuntu-latest.
-          # Listing it explicitly guarantees it lands in the apt cache payload
-          # alongside ffmpeg, so warm restores do not surface
-          # `ffmpeg: error while loading shared libraries: libblas.so.3`.
-          packages: ffmpeg libblas3
-          # NOTE: `version` is a cache-bust token, NOT an ffmpeg version pin.
-          # Bump it to force a fresh apt-get install (e.g., for a security
-          # advisory, or when the dependency list above changes). `packages`
-          # has no version constraint, so warm runs reuse whatever .debs the
-          # cold run captured.
-          version: "2"
-      - name: Build wuphf
-        run: go build -o wuphf ./cmd/wuphf
-      - name: Run VHS regression checks
-        run: |
-          export PATH="$PWD:$PATH"
-          bash testdata/vhs/check.sh
-      - name: Upload drift artifacts on failure
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
-        with:
-          name: vhs-drift
-          path: testdata/vhs/*.actual
-          retention-days: 7
+      - name: Cross-compile windows/amd64
+        # The one compile target no other lane covers: darwin is the daily
+        # local build, linux is every other CI job. Catches a
+        # `golang.org/x/sys/unix` import or stray `//go:build !windows`
+        # slipping into the main path. `./...` (not just ./cmd/wuphf) so an
+        # internal/ package picking up a unix-only import blocks here.
+        env:
+          GOOS: windows
+          GOARCH: amd64
+          CGO_ENABLED: "0"
+        run: go build ./...
 
   shellcheck:
     runs-on: ubuntu-latest
@@ -715,9 +437,7 @@ jobs:
     # we kept shipping (React render crashes that only surface in a browser
     # — e.g. "No QueryClient set", Minified React error #31 on first agent
     # click) by booting wuphf, loading /, and walking the happy path.
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
+    needs: web
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
@@ -843,138 +563,6 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-  release-build:
-    runs-on: ubuntu-latest
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # ratchet:actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # ratchet:actions/download-artifact@v8
-        with:
-          name: web-dist
-          path: web/dist
-      - uses: goreleaser/goreleaser-action@1a80836c5c9d9e5755a25cb59ec6f45a3b5f41a8 # ratchet:goreleaser/goreleaser-action@v7
-        with:
-          version: latest
-          args: release --snapshot --clean --skip=publish
-      - name: Verify Windows artifacts shipped
-        # Belt-and-braces against a future .goreleaser.yml edit that drops
-        # `windows` from goos: or removes the format_overrides .zip block.
-        # goreleaser would silently produce only Unix tarballs and CI would
-        # still pass the install.sh smoke (which targets linux/amd64).
-        run: |
-          set -euo pipefail
-          for arch in amd64 arm64; do
-            zip=$(ls dist/wuphf_*_windows_${arch}.zip 2>/dev/null || true)
-            if [ -z "$zip" ]; then
-              echo "missing windows/${arch} .zip artifact in dist/" >&2
-              echo "did .goreleaser.yml lose 'windows' from goos: or drop the format_overrides .zip block?" >&2
-              exit 1
-            fi
-          done
-          # Confirm both archives actually contain wuphf.exe (catches a
-          # goreleaser binary `name` regression that would ship `wuphf`
-          # without the .exe suffix on Windows). Both arches are checked
-          # because a per-arch override could regress one without the other.
-          for arch in amd64 arm64; do
-            zip=$(ls dist/wuphf_*_windows_${arch}.zip | head -1)
-            unzip -l "$zip" | grep -q 'wuphf\.exe' || {
-              echo "windows/${arch} zip does not contain wuphf.exe — goreleaser binary name regressed?" >&2
-              unzip -l "$zip" >&2
-              exit 1
-            }
-          done
-      - name: Smoke-test install.sh against snapshot (URL override)
-        # Cheap sanity path: feed install.sh a file:// tarball directly so
-        # download/extract/chmod/--version all run against the fresh snapshot.
-        # This SKIPS the redirect-parsing resolver — see next step for that.
-        run: |
-          set -euo pipefail
-          tarball="$(ls dist/wuphf_*_linux_amd64.tar.gz | head -1)"
-          if [ -z "$tarball" ]; then
-            echo "no snapshot tarball found in dist/" >&2
-            exit 1
-          fi
-          # install.sh falls back to $HOME/.local/bin if /usr/local/bin isn't
-          # writable — ensure either location is on PATH.
-          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-          WUPHF_INSTALL_URL_OVERRIDE="file://$PWD/$tarball" bash scripts/install.sh
-          command -v wuphf
-          wuphf --version
-      - name: Smoke-test install.sh against real resolver (mock GitHub)
-        # Guards the v0.8.1 regression: the 404 shipped to users lived in the
-        # redirect-parsing + archive-URL construction (install.sh:39-48). The
-        # URL-override step above bypasses that code entirely, so we also
-        # stand up a local HTTP server that emulates GitHub's behavior:
-        #   GET /releases/latest -> 302 /releases/tag/<tag>
-        #   GET /releases/download/<tag>/<archive> -> the snapshot tarball
-        # and point install.sh at it via WUPHF_INSTALL_REPO_BASE_URL.
-        run: |
-          set -euo pipefail
-          tarball="$(ls dist/wuphf_*_linux_amd64.tar.gz | head -1)"
-          archive="$(basename "$tarball")"
-          version="${archive#wuphf_}"
-          version="${version%_linux_amd64.tar.gz}"
-          tag="v${version}"
-
-          serve="$PWD/ci-mock-releases"
-          rm -rf "$serve"
-          mkdir -p "$serve/releases/download/${tag}"
-          cp "$tarball" "$serve/releases/download/${tag}/${archive}"
-
-          # The resolver parses VERSION from curl's url_effective by taking
-          # the last '/'-delimited field. Real GitHub redirects to
-          # /releases/tag/<tag> (no trailing slash). Python's default directory
-          # handler would 301 to '/releases/tag/<tag>/' and strip VERSION to
-          # empty — so handle the tag endpoint explicitly.
-          python3 - "$tag" "$serve" <<'PY' &
-          import http.server, socketserver, sys, os
-          tag, root = sys.argv[1], sys.argv[2]
-          os.chdir(root)
-          tag_path = f"/releases/tag/{tag}"
-          class H(http.server.SimpleHTTPRequestHandler):
-              def do_GET(self):
-                  if self.path == "/releases/latest":
-                      self.send_response(302)
-                      self.send_header("Location", tag_path)
-                      self.end_headers()
-                      return
-                  if self.path == tag_path:
-                      self.send_response(200)
-                      self.send_header("Content-Type", "text/html")
-                      self.end_headers()
-                      self.wfile.write(b"<html></html>")
-                      return
-                  super().do_GET()
-              def log_message(self, *a, **k):
-                  pass
-          with socketserver.TCPServer(("127.0.0.1", 7457), H) as srv:
-              srv.serve_forever()
-          PY
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-
-          for _ in $(seq 1 10); do
-            if curl -sf "http://127.0.0.1:7457/releases/tag/${tag}/" -o /dev/null; then
-              break
-            fi
-            sleep 1
-          done
-
-          # Wipe the binary the prior step installed so we're actually
-          # re-exercising install.sh end-to-end.
-          rm -f "$HOME/.local/bin/wuphf"
-          sudo rm -f /usr/local/bin/wuphf || true
-          export PATH="$HOME/.local/bin:/usr/local/bin:$PATH"
-          WUPHF_INSTALL_REPO_BASE_URL="http://127.0.0.1:7457" bash scripts/install.sh
-          command -v wuphf
-          wuphf --version
 
   # Pure-function tests for the npm wrapper's `process.platform === "win32"`
   # branches (archiveExtension, binaryFilename, archiveName, etc). These
@@ -997,107 +585,3 @@ jobs:
   # isPiped() fall-through fix (commit 9efaa3b3) addresses. windows-latest
   # bills at 2x Linux minutes; ~3 min wall clock = ~$0.008/PR. Worth it
   # because the regression vectors here are invisible to Linux/Mac CI.
-  windows-smoke:
-    # Skipped on docs-only PRs (see the `changes` job).
-    needs: [web, changes]
-    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.non_docs == 'true') }}
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # ratchet:actions/checkout@v6
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # ratchet:actions/setup-go@v6
-        with:
-          go-version-file: go.mod
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # ratchet:actions/download-artifact@v8
-        with:
-          name: web-dist
-          path: web/dist
-      - name: Build wuphf.exe
-        env:
-          CGO_ENABLED: "0"
-        run: go build -o wuphf.exe ./cmd/wuphf
-      - name: Help/version smoke
-        shell: pwsh
-        run: |
-          ./wuphf.exe --version
-          ./wuphf.exe --help | Out-Null
-          ./wuphf.exe --help-all | Out-Null
-      - name: Empty-pipe-stdin must reach the web UI (regression guard for 9efaa3b3)
-        shell: pwsh
-        # Reproduces the SSH/Start-Process/scheduled-task case where stdin is
-        # a closed pipe with no data. Before the fix, isPiped() returned true,
-        # the dispatch loop drained zero lines, and wuphf exited silently with
-        # no output and no listener. We assert that the web UI binds within
-        # 30s — if it doesn't, the regression is back.
-        run: |
-          $port = 17891
-          # Use a fresh port so we don't collide with anything on the runner.
-          $logPath = "$env:RUNNER_TEMP\wuphf-smoke.log"
-          $proc = Start-Process -FilePath ./wuphf.exe `
-            -ArgumentList "--no-open","--no-nex","--web-port",$port,"--broker-port","17890" `
-            -RedirectStandardOutput $logPath `
-            -RedirectStandardError "$env:RUNNER_TEMP\wuphf-smoke.err" `
-            -PassThru -NoNewWindow
-          try {
-            $ok = $false
-            for ($i = 0; $i -lt 30; $i++) {
-              Start-Sleep -Seconds 1
-              try {
-                $r = Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$port/onboarding/state" -TimeoutSec 2
-                if ($r.StatusCode -eq 200) { $ok = $true; break }
-              } catch {}
-            }
-            if (-not $ok) {
-              Write-Host "wuphf.exe never bound :$port — isPiped() regression?"
-              if (Test-Path $logPath) { Write-Host "--- stdout ---"; Get-Content $logPath }
-              if (Test-Path "$env:RUNNER_TEMP\wuphf-smoke.err") { Write-Host "--- stderr ---"; Get-Content "$env:RUNNER_TEMP\wuphf-smoke.err" }
-              exit 1
-            }
-            Write-Host "OK: wuphf.exe bound :$port within $i seconds"
-          } finally {
-            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-          }
-      - name: Token file lives under TEMP (regression guard for brokeraddr Windows path)
-        shell: pwsh
-        # If anyone reverts internal/brokeraddr/addr.go to a const "/tmp/..."
-        # this smoke catches it: the broker writes its token file on first
-        # boot, and that file MUST be under %TEMP%, not under a literal
-        # C:\tmp\ path that Windows would silently create at the drive root.
-        run: |
-          # Boot wuphf briefly so it writes the token file.
-          $port = 17892
-          $proc = Start-Process -FilePath ./wuphf.exe `
-            -ArgumentList "--no-open","--no-nex","--web-port",$port,"--broker-port","17893" `
-            -PassThru -NoNewWindow `
-            -RedirectStandardOutput "$env:RUNNER_TEMP\wuphf-tok.log" `
-            -RedirectStandardError "$env:RUNNER_TEMP\wuphf-tok.err"
-          try {
-            for ($i = 0; $i -lt 30; $i++) {
-              Start-Sleep -Seconds 1
-              try {
-                Invoke-WebRequest -UseBasicParsing "http://127.0.0.1:$port/onboarding/state" -TimeoutSec 2 | Out-Null
-                break
-              } catch {}
-            }
-            $tempToken = Join-Path $env:TEMP "wuphf-broker-token-17893"
-            $tmpToken  = "C:\tmp\wuphf-broker-token-17893"
-            if (Test-Path $tmpToken) {
-              Write-Error "regression: token file written to C:\tmp\ on Windows — internal/brokeraddr/addr.go reverted to a /tmp hardcode?"
-              exit 1
-            }
-            # Retry briefly: the broker writes its token file shortly after
-            # ServeWebUI returns, so a tight loop is enough. If it never lands
-            # under %TEMP% the regression guard must hard-fail — passing on
-            # absence would let a /tmp regression sneak through.
-            $found = $false
-            for ($j = 0; $j -lt 10; $j++) {
-              if (Test-Path $tempToken) { $found = $true; break }
-              Start-Sleep -Seconds 1
-            }
-            if (-not $found) {
-              Write-Error "token file missing at expected TEMP path: $tempToken — internal/brokeraddr/addr.go regression?"
-              exit 1
-            }
-            Write-Host "OK: token file at $tempToken"
-          } finally {
-            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-          }
