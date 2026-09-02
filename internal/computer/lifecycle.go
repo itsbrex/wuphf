@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -93,7 +94,16 @@ func (m *Manager) Apply(ctx context.Context, rt RuntimeStatus, action Action, ta
 		if err != nil {
 			return before, err
 		}
-		args, err := ContainerRunArgs(rt.Runtime, password, target, 0)
+		hostPort := 0
+		if rt.Runtime == RuntimeContainer {
+			// Apple container cannot publish an ephemeral loopback port, so
+			// pick a free one here. The inspect afterwards reads it back.
+			hostPort, err = freeLoopbackPort()
+			if err != nil {
+				return before, err
+			}
+		}
+		args, err := ContainerRunArgs(rt.Runtime, password, target, hostPort)
 		if err != nil {
 			return before, err
 		}
@@ -139,6 +149,16 @@ func (m *Manager) Apply(ctx context.Context, rt RuntimeStatus, action Action, ta
 func (m *Manager) Exists(ctx context.Context, rt Runtime, target Target) bool {
 	_, _, err := m.Run(ctx, string(rt), []string{"inspect", target.ContainerName}, DefaultTimeout)
 	return err == nil
+}
+
+func freeLoopbackPort() (int, error) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return 0, fmt.Errorf("allocate viewer port: %w", err)
+	}
+	port := l.Addr().(*net.TCPAddr).Port
+	_ = l.Close()
+	return port, nil
 }
 
 func randomPassword() (string, error) {
