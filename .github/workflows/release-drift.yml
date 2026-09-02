@@ -9,8 +9,8 @@ name: Release drift check
 # Surfaces compared:
 #   1. Latest semver tag on origin/main      (git source of truth)
 #   2. Latest GitHub Release `tag_name`      (goreleaser shipped tarballs)
-#   3. npm registry `wuphf@latest` version   (npm publish step ran)
-#   4. `npx --yes wuphf@latest --version`    (postinstall pulled the right
+#   3. npm registry `gawkbot@latest` version   (npm publish step ran)
+#   4. `npx --yes gawkbot@latest --version`    (postinstall pulled the right
 #                                             binary AND the binary's
 #                                             ldflag-injected version
 #                                             matches what npm advertises)
@@ -83,10 +83,10 @@ jobs:
           echo "GitHub release = $gh_tag"
 
           # --- 3. npm registry `latest` dist-tag ---
-          # `latest` is what `npm install -g wuphf` and `npx wuphf` both
+          # `latest` is what `npm install -g gawkbot` and `npx gawkbot` both
           # resolve to. If npm publish is stuck on an env gate, this
           # falls behind git/GitHub immediately.
-          npm_version=$(curl -fsSL https://registry.npmjs.org/wuphf/latest | jq -r .version)
+          npm_version=$(curl -fsSL https://registry.npmjs.org/gawkbot/latest | jq -r .version)
           echo "npm latest     = v$npm_version"
 
           # --- 4. npx-installed binary's self-reported version ---
@@ -97,12 +97,12 @@ jobs:
           # mismatched binary, or goreleaser could have shipped without
           # the ldflag so the binary self-reports `dev` despite being
           # tagged. The `vdev` regression from #350 would fail here.
-          npx_out=$(npx --yes "wuphf@$npm_version" --version 2>&1 || true)
+          npx_out=$(npx --yes "gawkbot@$npm_version" --version 2>&1 || true)
           echo "npx output     = $npx_out"
           # Match the same pattern release.yml's smoke-test uses:
           # ` v<version>` with optional trailing whitespace/EOL.
           if ! echo "$npx_out" | grep -E -q " v${npm_version}(\s|$)"; then
-            echo "::error::npx wuphf@${npm_version} --version did not self-report v${npm_version}"
+            echo "::error::npx gawkbot@${npm_version} --version did not self-report v${npm_version}"
             echo "::error::output was: ${npx_out}"
             echo "::error::either postinstall pulled a wrong binary, or goreleaser shipped without the version ldflag"
             exit 1
