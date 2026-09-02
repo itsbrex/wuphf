@@ -113,6 +113,11 @@ func printSubcommandHelp(sub string) {
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Usage:")
 		fmt.Fprintln(os.Stderr, "  gawkbot mcp-team")
+	case "computer-mcp":
+		fmt.Fprintln(os.Stderr, "gawkbot computer-mcp — stdio bridge into a bot's computer (used by agents, not humans)")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "Usage:")
+		fmt.Fprintln(os.Stderr, "  gawkbot computer-mcp <runtime> <container> <socket>")
 	case "workspace", "ws":
 		// Delegate to the workspace help printer so adding a new subcommand
 		// only touches workspace.go.
@@ -415,6 +420,9 @@ func main() {
 				os.Exit(1)
 			}
 			return
+		case "computer-mcp":
+			// stdio bridge into a bot's computer; spawned by agent CLIs.
+			os.Exit(runComputerMCP(args[1:]))
 		case "shred":
 			if !confirmDestructive(args[1:], "shred", shredSummary) {
 				fmt.Println("Cancelled. The team lives to serve another day.")

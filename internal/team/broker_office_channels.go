@@ -190,6 +190,7 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			"minimax_key_set":      config.ResolveMinimaxAPIKey() != "",
 			"one_key_set":          config.ResolveOneSecret() != "",
 			"composio_key_set":     config.IsComposioConfigured(),
+			"box_key_set":          config.ResolveBoxAPIKey() != "",
 			"telegram_token_set":   config.ResolveTelegramBotToken() != "",
 			"openclaw_token_set":   config.ResolveOpenclawToken() != "",
 			"openclaw_gateway_url": config.ResolveOpenclawGatewayURL(),
@@ -241,6 +242,7 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 			MinimaxAPIKey   *string `json:"minimax_api_key,omitempty"`
 			OneAPIKey       *string `json:"one_api_key,omitempty"`
 			ComposioAPIKey  *string `json:"composio_api_key,omitempty"`
+			BoxAPIKey       *string `json:"box_api_key,omitempty"`
 			TelegramToken   *string `json:"telegram_bot_token,omitempty"`
 			OpenclawToken   *string `json:"openclaw_token,omitempty"`
 			OpenclawGateway *string `json:"openclaw_gateway_url,omitempty"`
@@ -469,6 +471,10 @@ func (b *Broker) handleConfig(w http.ResponseWriter, r *http.Request) {
 		}
 		if body.ComposioAPIKey != nil {
 			cfg.ComposioAPIKey = strings.TrimSpace(*body.ComposioAPIKey)
+			changed = true
+		}
+		if body.BoxAPIKey != nil {
+			cfg.BoxAPIKey = strings.TrimSpace(*body.BoxAPIKey)
 			changed = true
 		}
 		if body.TelegramToken != nil {

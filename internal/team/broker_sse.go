@@ -63,6 +63,8 @@ func (b *Broker) handleEvents(w http.ResponseWriter, r *http.Request) {
 	defer unsubscribePam()
 	governorEvents, unsubscribeGovernor := b.SubscribeGovernor(16)
 	defer unsubscribeGovernor()
+	computerEvents, unsubscribeComputer := b.computers().subscribe(64)
+	defer unsubscribeComputer()
 
 	// revoked is closed immediately when the human session is revoked.
 	// For broker-bearer actors it is nil (select on nil blocks forever — no-op).
@@ -152,6 +154,13 @@ func (b *Broker) handleEvents(w http.ResponseWriter, r *http.Request) {
 			}
 		case evt, ok := <-pamFailed:
 			if !ok || writeEvent("pam:action_failed", evt) != nil {
+				return
+			}
+		case evt, ok := <-computerEvents:
+			if !ok {
+				return
+			}
+			if err := writeEvent("computer", evt); err != nil {
 				return
 			}
 		case evt, ok := <-governorEvents:

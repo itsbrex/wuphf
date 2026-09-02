@@ -49,11 +49,14 @@ type Config struct {
 	ComposioUserAPIKey string `json:"composio_user_api_key,omitempty"`
 	ComposioOrgID      string `json:"composio_org_id,omitempty"`
 	ComposioProjectID  string `json:"composio_project_id,omitempty"`
-	ActionProvider     string `json:"action_provider,omitempty"`
-	Email              string `json:"email,omitempty"`
-	WorkspaceID        string `json:"workspace_id,omitempty"`
-	WorkspaceSlug      string `json:"workspace_slug,omitempty"`
-	LLMProvider        string `json:"llm_provider,omitempty"`
+	// BoxAPIKey is the ascii.dev Box key that rents a bot its cloud
+	// computer. Resolved through ResolveBoxAPIKey (env wins).
+	BoxAPIKey      string `json:"box_api_key,omitempty"`
+	ActionProvider string `json:"action_provider,omitempty"`
+	Email          string `json:"email,omitempty"`
+	WorkspaceID    string `json:"workspace_id,omitempty"`
+	WorkspaceSlug  string `json:"workspace_slug,omitempty"`
+	LLMProvider    string `json:"llm_provider,omitempty"`
 	// LLMProviderPriority is an ordered list of provider identifiers (same
 	// vocabulary as LLMProvider — "claude-code", "codex", "opencode", etc.) that agents
 	// should try in order when picking a runtime. LLMProvider remains the
@@ -670,6 +673,19 @@ func ResolveComposioProjectID() string {
 	}
 	cfg, _ := Load()
 	return strings.TrimSpace(cfg.ComposioProjectID)
+}
+
+// ResolveBoxAPIKey resolves the ascii.dev Box API key.
+// Resolution: WUPHF_BOX_API_KEY env > BOX_API_KEY env > config file.
+func ResolveBoxAPIKey() string {
+	if v := strings.TrimSpace(Getenv("WUPHF_BOX_API_KEY")); v != "" {
+		return v
+	}
+	if v := strings.TrimSpace(os.Getenv("BOX_API_KEY")); v != "" {
+		return v
+	}
+	cfg, _ := Load()
+	return strings.TrimSpace(cfg.BoxAPIKey)
 }
 
 // IsComposioConfigured reports whether Composio has usable credentials: either

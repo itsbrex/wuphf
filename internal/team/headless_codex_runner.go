@@ -44,6 +44,9 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 	if err != nil {
 		return err
 	}
+	mount := l.mountComputerForTurn(ctx, slug)
+	defer l.releaseComputerForTurn(mount)
+	overrides = append(overrides, mount.codexOverrides()...)
 
 	// Resolve plan posture ONCE for the whole turn. The task could transition
 	// out of Planning (e.g. a concurrent human plan-approval) while this
@@ -97,10 +100,11 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 	cmd := headlessCodexCommandContext(ctx, "codex", args...)
 	cmd.Dir = workspaceDir
 	cmd.Env = l.buildHeadlessCodexEnv(slug, workspaceDir, firstNonEmpty(channel...))
+	cmd.Env = append(cmd.Env, mount.envPairs()...)
 	if isTaskWorktree {
 		cmd.Env = append(cmd.Env, "WUPHF_WORKTREE_PATH="+workspaceDir)
 	}
-	stdinText := buildHeadlessCodexPrompt(l.buildPrompt(slug), notification)
+	stdinText := buildHeadlessCodexPrompt(l.buildPrompt(slug)+mount.promptHint(), notification)
 	cmd.Stdin = strings.NewReader(stdinText)
 	configureHeadlessProcess(cmd)
 	dumpHeadlessCodexInvocation(slug, workspaceDir, args, cmd.Env, stdinText)
@@ -268,6 +272,9 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 			turnToolNames = append(turnToolNames, manifestToolToken(event.ToolName, event.ToolInput))
 			emitHeadlessToolUse(agentStream, turnID, HeadlessProviderCodex, slug, taskID, event.ToolName, event.ToolInput, event.RawType)
 		case "tool_result":
+			if isComputerTool(event.ToolName) {
+				l.pokeComputer(slug)
+			}
 			line := "tool_result: " + truncate(event.Text, 140)
 			appendHeadlessCodexLog(slug, line)
 			l.updateHeadlessProgress(slug, "active", "tool_result", truncate(event.Text, 140), snapshotMetrics())

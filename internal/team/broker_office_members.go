@@ -52,6 +52,18 @@ type officeMemberMutationBody struct {
 	AllowedTools []string                  `json:"allowed_tools"`
 	CreatedBy    string                    `json:"created_by"`
 	Provider     *provider.ProviderBinding `json:"provider,omitempty"`
+	// Computer / CloudBackend are pointers so "not sent" and "set to auto"
+	// (empty string) stay distinguishable.
+	Computer     *string `json:"computer,omitempty"`
+	CloudBackend *string `json:"cloud_backend,omitempty"`
+}
+
+func validComputerDestination(v string) bool {
+	switch strings.TrimSpace(v) {
+	case "", computerOff, computerSandbox, computerCloud:
+		return true
+	}
+	return false
 }
 
 type officeMemberMutationResult struct {
@@ -247,6 +259,15 @@ func (b *Broker) createOfficeMember(r *http.Request, slug string, body officeMem
 	}
 	if body.Provider != nil {
 		member.Provider = *body.Provider
+	}
+	if body.Computer != nil {
+		if !validComputerDestination(*body.Computer) {
+			return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusBadRequest, "computer must be sandbox, cloud, off, or empty")
+		}
+		member.Computer = strings.TrimSpace(*body.Computer)
+	}
+	if body.CloudBackend != nil {
+		member.CloudBackend = strings.TrimSpace(*body.CloudBackend)
 	}
 	applyOfficeMemberDefaults(&member)
 
@@ -489,6 +510,16 @@ func (b *Broker) updateOfficeMember(r *http.Request, slug string, body officeMem
 	}
 	if providerChanged {
 		member.Provider = newBinding
+	}
+	if body.Computer != nil {
+		if !validComputerDestination(*body.Computer) {
+			b.mu.Unlock()
+			return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusBadRequest, "computer must be sandbox, cloud, off, or empty")
+		}
+		member.Computer = strings.TrimSpace(*body.Computer)
+	}
+	if body.CloudBackend != nil {
+		member.CloudBackend = strings.TrimSpace(*body.CloudBackend)
 	}
 	applyOfficeMemberDefaults(member)
 	write, err := b.prepareBrokerStateWriteLocked()

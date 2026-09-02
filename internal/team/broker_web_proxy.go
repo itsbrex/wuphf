@@ -17,6 +17,7 @@ import (
 
 	wuphf "github.com/nex-crm/wuphf"
 	"github.com/nex-crm/wuphf/internal/brokeraddr"
+	"github.com/nex-crm/wuphf/internal/computer"
 	"github.com/nex-crm/wuphf/internal/config"
 )
 
@@ -139,6 +140,10 @@ func (b *Broker) ServeWebUI(port int) error {
 	// rather than the API mux. Path traversal is bounded by http.FileServer
 	// + http.Dir; we strip the prefix so requests resolve relative to the
 	// artist root.
+	// Live desktop viewer: noVNC reverse-proxied under a signed, expiring
+	// capability path. <iframe> cannot carry the bearer, so like artist
+	// files this lives on the web-UI port; the signature is the gate.
+	mux.Handle(computer.ViewerPathPrefix, webUIRebindGuard(b.viewerProxy()))
 	artistRoot := imagegenArtistRoot()
 	mux.Handle("/artist-files/", http.StripPrefix(
 		"/artist-files/",

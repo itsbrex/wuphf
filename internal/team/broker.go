@@ -168,21 +168,24 @@ type Broker struct {
 	wikiSectionsSubscribers   map[int]chan WikiSectionsUpdatedEvent
 	wikiCategoriesSubscribers map[int]chan WikiCategoriesUpdatedEvent
 	governorSubscribers       map[int]chan governorStatus
-	governor                  *governor
-	wikiWorker                *WikiWorker
-	wikiInitMu                sync.Mutex
-	wikiInitErr               error
-	customApps                *customAppStore
-	customAppOnce             sync.Once
-	appDev                    *appDevManager
-	appDevOnce                sync.Once
-	humanWikiWriter           *HumanWikiIntentWriter
-	obsidianWatcher           *ObsidianWatcher
-	wikiIndex                 *WikiIndex
-	wikiExtractor             *Extractor
-	wikiDLQ                   *DLQ
-	wikiSectionsCache         *wikiSectionsCache
-	wikiCategoriesCache       *wikiCategoriesCache
+	// computerService is lazily built by b.computers() (broker_computer.go).
+	computerOnce        sync.Once
+	computerService     *computerService
+	governor            *governor
+	wikiWorker          *WikiWorker
+	wikiInitMu          sync.Mutex
+	wikiInitErr         error
+	customApps          *customAppStore
+	customAppOnce       sync.Once
+	appDev              *appDevManager
+	appDevOnce          sync.Once
+	humanWikiWriter     *HumanWikiIntentWriter
+	obsidianWatcher     *ObsidianWatcher
+	wikiIndex           *WikiIndex
+	wikiExtractor       *Extractor
+	wikiDLQ             *DLQ
+	wikiSectionsCache   *wikiSectionsCache
+	wikiCategoriesCache *wikiCategoriesCache
 	// gbrainClient is the broker-owned gbrain MCP client backing the gbrain
 	// memory backend. Constructed once on Start (lazily — it does not connect
 	// or spawn `gbrain serve` until first use) and registered with the
@@ -663,6 +666,8 @@ func (b *Broker) StartOnPort(port int) error {
 	mux.HandleFunc("/execute/approve", b.requireAuth(b.handleExecuteApprove))
 	mux.HandleFunc("/observe/browser", b.requireAuth(b.handleObserveBrowser))
 	mux.HandleFunc("/office-members", b.requireAuth(b.handleOfficeMembers))
+	// Every bot gets a computer (broker_computer_routes.go).
+	b.registerComputerRoutes(mux)
 	// Single derived-stats source: every surface-level count (header
 	// strip, board lane headers, dashboard tiles, inbox badge, wiki
 	// home) reads this one endpoint so the numbers cannot drift.

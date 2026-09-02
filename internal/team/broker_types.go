@@ -699,6 +699,12 @@ type officeMember struct {
 	// format unchanged on disk for agents that have not been configured
 	// with a watching set.
 	Watching Watching `json:"watching,omitempty"`
+	// Computer is where this agent's hands live: "sandbox" (a container on
+	// this machine), "cloud" (an ascii.dev box), "off", or "" for auto
+	// (sandbox when a runtime is running, else off). CloudBackend picks the
+	// cloud provider; "" means box. See docs/specs/gawkbot-bot-computers.md.
+	Computer     string `json:"computer,omitempty"`
+	CloudBackend string `json:"cloud_backend,omitempty"`
 }
 
 type officeActionLog struct {

@@ -115,7 +115,7 @@ func shouldWarnShadow(showVersion, channelView, cmdFlagSet, piped bool, subcmd s
 	if showVersion || channelView || cmdFlagSet || piped {
 		return false
 	}
-	if subcmd == "mcp-team" {
+	if subcmd == "mcp-team" || subcmd == "computer-mcp" {
 		return false
 	}
 	return true

@@ -131,17 +131,26 @@ func (l *Launcher) ensureMCPConfig() (string, error) {
 // per-launch temp directory (see writeAgentPromptFile) so two offices can
 // run the same slug without one clobbering the other's broker token.
 func (l *Launcher) ensureAgentMCPConfig(slug string) (string, error) {
+	return l.ensureAgentMCPConfigWith(slug, nil)
+}
+
+// ensureAgentMCPConfigWith adds per-turn servers (today: the bot's
+// "computer", see broker_computer_turn.go) on top of the office set.
+func (l *Launcher) ensureAgentMCPConfigWith(slug string, extra map[string]any) (string, error) {
 	allServers, err := l.buildMCPServerMap()
 	if err != nil {
 		return "", err
 	}
 
 	allowed := agentMCPServers(slug)
-	filtered := make(map[string]any, len(allowed))
+	filtered := make(map[string]any, len(allowed)+len(extra))
 	for _, key := range allowed {
 		if srv, ok := allServers[key]; ok {
 			filtered[key] = srv
 		}
+	}
+	for key, srv := range extra {
+		filtered[key] = srv
 	}
 
 	cfg := map[string]any{

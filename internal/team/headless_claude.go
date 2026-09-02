@@ -26,9 +26,15 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 		return fmt.Errorf("broker is not running")
 	}
 
+	// The bot's computer, when it has one: wake it, claim it for this turn,
+	// and mount it as the "computer" MCP server. A bot without one runs
+	// exactly as before.
+	mount := l.mountComputerForTurn(ctx, slug)
+	defer l.releaseComputerForTurn(mount)
+
 	// Per-agent MCP scoping: give each agent only the MCP servers it needs.
 	agentMCP := l.mcpConfig
-	if path, err := l.ensureAgentMCPConfig(slug); err == nil {
+	if path, err := l.ensureAgentMCPConfigWith(slug, mount.mcpServers()); err == nil {
 		agentMCP = path
 	}
 
@@ -40,7 +46,7 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 		"--max-turns", l.headlessClaudeMaxTurns(slug),
 		"--disable-slash-commands",
 		"--setting-sources", "user",
-		"--append-system-prompt", l.buildPrompt(slug),
+		"--append-system-prompt", l.buildPrompt(slug) + mount.promptHint(),
 		"--mcp-config", agentMCP,
 		"--strict-mcp-config",
 		// NOTE: tried --disallowedTools ToolSearch to block the
@@ -94,6 +100,7 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 	if worktreeDir != "" {
 		env = append(env, "WUPHF_WORKTREE_PATH="+worktreeDir)
 	}
+	env = append(env, mount.envPairs()...)
 	cmd.Env = env
 
 	// Enrich the notification with memory-backend context. Use a 2s deadline so a
@@ -233,6 +240,10 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 			turnToolNames = append(turnToolNames, manifestToolToken(event.ToolName, event.ToolInput))
 			emitHeadlessToolUse(agentStream, turnID, HeadlessProviderClaude, slug, taskID, event.ToolName, event.ToolInput, "claude.tool_use")
 		case "tool_result":
+			if isComputerTool(event.ToolName) {
+				// The bot just acted on its screen: refresh the preview now.
+				l.pokeComputer(slug)
+			}
 			appendHeadlessClaudeLog(slug, "tool_result: "+truncate(event.Text, 140))
 			l.updateHeadlessProgress(slug, "active", "tool_result", truncate(event.Text, 140), metrics)
 			emitHeadlessToolResult(agentStream, turnID, HeadlessProviderClaude, slug, taskID, event.ToolName, event.Text, "claude.tool_result")
