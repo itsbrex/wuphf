@@ -225,9 +225,14 @@ jobs:
           # The grep below excludes test files via :(exclude). The remaining
           # `internal/brokeraddr/addr.go` hits are the runtime-gated /tmp
           # branches that are only taken on non-Windows; those are correct.
+          # The internal/computer exclusions are paths INSIDE the remote
+          # Linux bot-computer VM/container (sent over its command API), not
+          # host paths — os.TempDir() would wrongly resolve on the host.
           bad=$(git grep -nE '"/tmp/' -- '*.go' \
                  ':(exclude)*_test.go' \
-                 ':(exclude)internal/brokeraddr/addr.go' || true)
+                 ':(exclude)internal/brokeraddr/addr.go' \
+                 ':(exclude)internal/computer/box/bootstrap.go' \
+                 ':(exclude)internal/computer/screenshot.go' || true)
           if [ -n "$bad" ]; then
             echo "$bad" >&2
             echo "" >&2
