@@ -103,6 +103,12 @@ export function useComputerMutations(slug: string) {
     mutationFn: async () => {
       await computerControl(slug, "take");
       const { viewerUrl } = await computerJoin(slug);
+      // A cloud box hands back the provider's own desktop page, which
+      // refuses to be framed; open it as a tab and keep the preview here.
+      if (/^https?:\/\//.test(viewerUrl)) {
+        window.open(viewerUrl, "_blank", "noopener");
+        return null;
+      }
       return viewerUrl;
     },
     onSuccess: () => {

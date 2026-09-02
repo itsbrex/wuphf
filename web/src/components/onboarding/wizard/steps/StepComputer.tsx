@@ -230,7 +230,7 @@ function CloudPath({
           <BoxPlanNotice account={account} compact={true} />
           <button
             type="button"
-            className="onboarding-embedding-expand"
+            className="btn btn-ghost btn-sm"
             onClick={onSignOut}
             disabled={signin === "signing_out"}
             data-testid="onboarding-computer-signout"
@@ -332,7 +332,7 @@ function CloudPath({
           ) : (
             <button
               type="button"
-              className="onboarding-embedding-expand"
+              className="btn btn-text btn-sm onboarding-computer-paste"
               onClick={onShowPaste}
               data-testid="onboarding-computer-paste"
             >

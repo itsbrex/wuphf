@@ -27,9 +27,12 @@ type Target struct {
 }
 
 // TargetFor derives an agent's target from its slug and the computers root
-// directory (normally <runtime home>/.wuphf/computers).
+// directory (normally <runtime home>/.wuphf/computers). The root is part of
+// the identity on purpose: two runtime homes (a real office and a test
+// home, or two workspaces) must never resolve the same container name, or
+// one office finds the other's container and refuses it as foreign.
 func TargetFor(slug, computersRoot string) Target {
-	digest := sha256.Sum256([]byte(slug))
+	digest := sha256.Sum256([]byte(filepath.Clean(computersRoot) + "\x00" + slug))
 	full := hex.EncodeToString(digest[:])
 	short := full[:16]
 	return Target{

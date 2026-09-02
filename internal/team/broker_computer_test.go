@@ -438,3 +438,16 @@ func TestBoxSigninReportsMissingCLIWhenInstallFails(t *testing.T) {
 		t.Fatalf("expected cli_missing with the manual command, got %v", last)
 	}
 }
+
+func TestComputerRuntimeGuardIsOffUnderGoTest(t *testing.T) {
+	if computerRuntimeAllowed.Load() {
+		t.Fatalf("computerRuntimeAllowed must be false in test binaries")
+	}
+	b := newRawTestBroker(t)
+	if b.computers().allowRuntime {
+		t.Fatalf("a broker built under go test must not touch a real runtime")
+	}
+	if rt := b.computers().runtimeStatus(t.Context(), true); rt.DaemonUp || rt.Available {
+		t.Fatalf("runtime must be unavailable under tests: %+v", rt)
+	}
+}

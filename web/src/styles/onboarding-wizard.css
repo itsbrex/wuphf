@@ -1473,3 +1473,10 @@
   gap: 8px;
   justify-items: start;
 }
+.onboarding-computer-paste {
+  justify-self: start;
+  padding-left: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

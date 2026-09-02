@@ -64,6 +64,9 @@ func TestTargetForIsDeterministicAndOpaque(t *testing.T) {
 	if filepath.Dir(a.WorkspaceDir) != "/tmp/computers" {
 		t.Fatalf("workspace must live under the computers root: %s", a.WorkspaceDir)
 	}
+	if TargetFor("chief-of-staff", "/tmp/other").ContainerName == a.ContainerName {
+		t.Fatalf("the same slug in another runtime home must get its own container")
+	}
 }
 
 func TestDetectRuntimePrefersDaemonUp(t *testing.T) {

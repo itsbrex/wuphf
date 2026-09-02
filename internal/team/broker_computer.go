@@ -424,7 +424,14 @@ func (s *computerService) statusFor(ctx context.Context, slug string) (computerS
 			case box.State == "idle" || box.State == "ready" || box.State == "running":
 				p.State = "ready"
 				// The provider's desktop link is minted on Join; the panel
-				// shows frames until the person takes control.
+				// shows frames until the person takes control. Outside a
+				// turn nothing polls, so take one frame here when the last
+				// one is stale, and say so when the box cannot give one.
+				if frame, err := s.refreshBoxFrame(ctx, slug, box.BoxID); err != nil {
+					setProblem("The box is up but could not take a screenshot yet: " + err.Error())
+				} else if frame != nil {
+					p.LastFrame = &computerFramePayload{DataURL: frame.DataURL, At: frame.At.UnixMilli()}
+				}
 			case box.State == "error":
 				p.State = "error"
 				setProblem(problem)
@@ -469,6 +476,38 @@ func (s *computerService) statusFor(ctx context.Context, slug string) (computerS
 	}
 	s.setState(slug, p.State, "")
 	return p, true
+}
+
+// boxFrameMaxAge is how old a cached cloud frame may be before a status
+// read takes a fresh one.
+var boxFrameMaxAge = 20 * time.Second
+
+// refreshBoxFrame returns a fresh frame for a cloud box when the cached one
+// is missing or stale. It returns nil, nil when the cache is fresh enough.
+func (s *computerService) refreshBoxFrame(ctx context.Context, slug, boxID string) (*computer.Frame, error) {
+	s.mu.Lock()
+	cached, ok := s.frames[slug]
+	busyPoller := s.pollers[slug] != nil
+	s.mu.Unlock()
+	if busyPoller || (ok && time.Since(cached.At) < boxFrameMaxAge) {
+		return nil, nil
+	}
+	c := s.boxClient()
+	if c == nil {
+		return nil, nil
+	}
+	shotCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel()
+	raw, err := c.Screenshot(shotCtx, boxID)
+	if err != nil {
+		return nil, err
+	}
+	frame, err := computer.EncodePreview(raw, time.Now())
+	if err != nil {
+		return nil, err
+	}
+	s.storeFrame(slug, frame, true)
+	return &frame, nil
 }
 
 func (s *computerService) rememberViewer(slug string, port int, password string) {
