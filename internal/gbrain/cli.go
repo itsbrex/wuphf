@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/config"
@@ -133,6 +134,25 @@ func Query(ctx context.Context, query string, limit int) ([]SearchResult, error)
 	return results, nil
 }
 
+// shimToken is the broker Bearer token gbrain must present to reach the
+// OpenAI-compatible shim. Set by the broker at startup via SetShimToken; empty
+// when no shim is in play.
+//
+// It rides in LITELLM_API_KEY because the shim is addressed through gbrain's
+// `litellm` recipe, whose auth_env lists LITELLM_API_KEY as optional. The
+// recipe requires no key, but gbrain forwards one as a Bearer header when
+// present — which is exactly the broker's auth scheme.
+var shimToken atomic.Value // string
+
+// SetShimToken records the broker token used to authenticate to the shim.
+func SetShimToken(token string) { shimToken.Store(strings.TrimSpace(token)) }
+
+// currentShimToken returns the recorded broker token, or "".
+func currentShimToken() string {
+	v, _ := shimToken.Load().(string)
+	return v
+}
+
 func gbrainEnv() []string {
 	env := os.Environ()
 	// user-global; intentionally NOT under WUPHF_RUNTIME_HOME — gbrain HOME
@@ -145,6 +165,9 @@ func gbrainEnv() []string {
 	}
 	if key := strings.TrimSpace(config.ResolveAnthropicAPIKey()); key != "" && strings.TrimSpace(os.Getenv("ANTHROPIC_API_KEY")) == "" {
 		env = append(env, "ANTHROPIC_API_KEY="+key)
+	}
+	if tok := currentShimToken(); tok != "" && strings.TrimSpace(os.Getenv("LITELLM_API_KEY")) == "" {
+		env = append(env, "LITELLM_API_KEY="+tok)
 	}
 	return env
 }

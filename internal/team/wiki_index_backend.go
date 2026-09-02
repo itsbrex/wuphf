@@ -29,6 +29,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"github.com/nex-crm/wuphf/internal/gbrain"
@@ -96,6 +97,19 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 		log.Printf("wiki: gbrain brain init skipped: %v", err)
 	}
 
+	// Fill in chat + expansion for a host with NO API key, so a
+	// subscription-only user gets more than bare keyword retrieval. Chat goes
+	// native through gbrain's claude-cli recipe; expansion goes through the
+	// broker's OpenAI-compatible shim, which is the only route gbrain exposes
+	// for a custom endpoint. Never overwrites an operator's own choice.
+	if shim := shimBaseURL(); shim != "" {
+		if applied, err := gbrain.ConfigureNoKeyFallback(ctx, shim); err != nil {
+			log.Printf("wiki: gbrain no-key fallback not applied: %v", err)
+		} else if applied.Configured() {
+			log.Printf("wiki: %s", applied)
+		}
+	}
+
 	idx, err := NewGBrainEntityIndex(ctx, root)
 	if err == nil {
 		// State the retrieval capability that is ACTUALLY active. Silent
@@ -111,4 +125,21 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 		"Facts will NOT persist across restarts. Install gbrain, or set %s=%s to silence this.",
 		err, WikiBackendEnv, WikiBackendMemory)
 	return NewWikiIndex(root), nil
+}
+
+// brokerShimBase records the broker's own OpenAI-compatible base URL, set once
+// the listener has an address. gbrain is configured to reach the shim there.
+//
+// It is a package var rather than a parameter because the wiki index is built
+// during broker startup, at which point the caller does not thread its own
+// address down this path.
+var brokerShimBase atomic.Value // string
+
+// SetBrokerShimBase records the broker's "http://host:port/v1" for gbrain.
+func SetBrokerShimBase(base string) { brokerShimBase.Store(strings.TrimSpace(base)) }
+
+// shimBaseURL returns the recorded shim base URL, or "".
+func shimBaseURL() string {
+	v, _ := brokerShimBase.Load().(string)
+	return v
 }

@@ -121,33 +121,39 @@ A user on a Claude Pro or ChatGPT subscription with **no API key of any kind**
 still cannot reach a chat model from gbrain, because gbrain speaks HTTP to model
 providers and the CLI is a subprocess.
 
-**SHIPPED, BUT NOT YET REACHABLE BY GBRAIN.** Read this before relying on it.
+**SHIPPED AND WIRED (gbrain 0.48+).** A host with no API key of any kind now
+gets a working brain automatically.
 
-`internal/team/broker_openai_compat.go` serves `POST /v1/chat/completions` on the
-broker, proxying to the configured agent CLI via
-`provider.RunConfiguredOneShotCtx`. It is behind the broker's Bearer auth, is
-non-streaming only, and is proven end-to-end by
-`TestOpenAIChatCompletionsLive_SuccessPath`: a real Claude CLI call returning a
-valid chat-completion body.
+Two mechanisms, because gbrain declares touchpoints per recipe and no single
+recipe covers both:
 
-**What does not work is pointing gbrain at it.** On gbrain 0.42.58.0 there is no
-recipe whose `expansion` touchpoint can be redirected to a custom endpoint:
+| Need | Route | Why |
+|---|---|---|
+| chat | `claude-cli:claude-sonnet-4-6` | gbrain 0.48's own recipe drives the `claude` CLI as a subprocess on its OAuth session. Native, no shim, no key. |
+| expansion | `litellm:<name>` → the broker's shim | `claude-cli` declares ONLY a chat touchpoint, so it cannot serve expansion. `litellm` is the one recipe with an expansion touchpoint plus `user_provided_models` and `auth_env.required: []`. |
+| embeddings | not available | Anthropic publishes no embeddings endpoint and a chat model cannot make a usable vector. A keyless user gets keyword + expansion, not semantic search. |
 
-| Attempt | Why it fails |
-|---|---|
-| `expansion_model: openai-compatible:<model>` | No such provider recipe exists. gbrain names recipes by SERVICE (ollama, litellm, llama-server); `implementation: "openai-compatible"` is an internal detail, not a provider id. `resolveRecipe` throws "Unknown provider", `isAvailable` catches it, expansion silently degrades to the bare query with NO error surfaced. |
-| `litellm:` / `llama-server:` / `ollama:` | These declare only `embedding` (and reranker) touchpoints. `isAvailable` returns false on the missing touchpoint before auth is considered. |
-| `openai:` with `provider_base_urls` override | The openai recipe DOES declare expansion and its base URL IS overridable, but the touchpoint allowlists `['gpt-5.2','gpt-4o-mini']` with no `user_provided_models`. An arbitrary model name is rejected; an allowlisted name with the base URL redirected still produced no call. |
+`ConfigureNoKeyFallback` applies this at broker startup, once the listener's
+address is known. It is strictly gap-filling:
 
-An earlier version of this document gave the first row as working wiring. That
-was wrong and is corrected here.
+- no-op when any hosted key exists — gbrain reaches a model on its own;
+- never overwrites an operator's `chat_model` or `expansion_model`;
+- MERGES `provider_base_urls` rather than replacing it, so another provider's
+  endpoint is not silently dropped;
+- writes the FILE plane, because `gbrain config set` exits 0 without persisting
+  where the gateway reads these fields.
 
-The route is kept because it is correct, tested, and costs nothing idle. Re-test
-when gbrain either adds `expansion` to an openai-compatible-implementation
-recipe or adds `user_provided_models` to one that already has it. Worth
-retrying on 0.48+, which is several minors ahead of what this was verified
-against. `TestGBrainConsumesTheShim` is skipped with the full reasoning and is
-the place to re-enable.
+The broker token reaches gbrain as `LITELLM_API_KEY` (the litellm recipe's
+optional key, forwarded as a Bearer header) so the shim's auth is satisfied
+without the user handling a token.
+
+### Do not use "openai-compatible" as a provider id
+
+It is an IMPLEMENTATION tag, not a provider id. gbrain names recipes by service.
+Setting `expansion_model: openai-compatible:<model>` throws "Unknown provider",
+which `isAvailable` swallows — expansion then degrades to the bare query with no
+error surfaced anywhere. An earlier version of this document gave that as
+working wiring; it never was.
 
 This buys EXPANSION, not embeddings. Nothing here changes the fact that a chat
 model cannot produce a usable vector.

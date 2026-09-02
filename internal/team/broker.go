@@ -861,6 +861,11 @@ func (b *Broker) StartOnPort(port int) error {
 		return err
 	}
 	b.addr = ln.Addr().String()
+	// Record where gbrain can reach the OpenAI-compatible shim, and the token
+	// it must present. Done here because this is the first point the listener's
+	// address is known; the wiki index is constructed later and needs both.
+	SetBrokerShimBase("http://" + b.addr + "/v1")
+	gbrain.SetShimToken(b.Token())
 	b.listener = ln
 
 	srv := &http.Server{
