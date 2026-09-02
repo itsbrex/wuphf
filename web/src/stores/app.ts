@@ -1,13 +1,21 @@
 import { create } from "zustand";
 
+import type { ComputerEventPayload } from "../api/computer";
 import {
   __internal as agentEventTimerInternal,
   computePillState,
   type PillState,
 } from "../lib/agentEventTimer";
 import { DEFAULT_THEME, isTheme, type Theme } from "../lib/themes";
+import {
+  applyComputerEvent,
+  type ComputerLiveState,
+  type ComputerRuntimeBuild,
+  EMPTY_COMPUTER_RUNTIME_BUILD,
+} from "./computerState";
 
-export type { Theme };
+export { MAX_COMPUTER_BUILD_LINES } from "./computerState";
+export type { ComputerLiveState, ComputerRuntimeBuild, Theme };
 
 /**
  * Snapshot payload for the SSE "activity" event. Lane A may not yet emit
@@ -275,6 +283,16 @@ export interface AppStore {
   // "Reconnecting…" indicator (eng decision A3).
   isReconnecting: boolean;
   setIsReconnecting: (v: boolean) => void;
+
+  // Bot computers (SSE `computer` events, docs/specs/gawkbot-bot-computers.md).
+  // Per-slug live state: the latest frame, who holds the wheel, and the
+  // lifecycle state. The Computer tab merges its 5s status poll into this
+  // record too, so every surface (tab, chat thumbnails, sidebar glyph)
+  // reads one truth.
+  computerStates: Record<string, ComputerLiveState>;
+  // Machine-wide desktop-image build: events arrive with slug "".
+  computerRuntimeBuild: ComputerRuntimeBuild;
+  recordComputerEvent: (payload: ComputerEventPayload) => void;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -521,6 +539,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setIsReconnecting: (v) => {
     if (get().isReconnecting === v) return;
     set({ isReconnecting: v });
+  },
+
+  computerStates: {},
+  computerRuntimeBuild: EMPTY_COMPUTER_RUNTIME_BUILD,
+  recordComputerEvent: (payload) => {
+    const now = Date.now();
+    set((state) => applyComputerEvent(state, payload, now));
   },
 
   onboardingComplete: false,

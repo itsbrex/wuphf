@@ -1,5 +1,4 @@
 import { useMemo, useRef } from "react";
-import { AVATAR_MODE } from "../../lib/avatarMode";
 
 import type { OfficeMember } from "../../api/client";
 import { useAgentEventPeek } from "../../hooks/useAgentEventPeek";
@@ -7,6 +6,7 @@ import { useDefaultHarness } from "../../hooks/useConfig";
 import { useFirstRunNudge } from "../../hooks/useFirstRunNudge";
 import { useOfficeMembers } from "../../hooks/useMembers";
 import { useOverflow } from "../../hooks/useOverflow";
+import { AVATAR_MODE } from "../../lib/avatarMode";
 import { type HarnessKind, resolveHarness } from "../../lib/harness";
 import { router } from "../../lib/router";
 import { useCurrentRoute } from "../../routes/useCurrentRoute";
@@ -77,6 +77,12 @@ function SidebarAgentRow({
   const anchorRef = useRef<HTMLDivElement>(null);
   const ac = classifyActivity(agent);
   const working = isWorking(agent);
+  // "On its computer": the desktop is up AND the bot is mid-turn. Both
+  // facts are required so an idle bot with a sleeping VM shows nothing.
+  const computerReady = useAppStore(
+    (s) => s.computerStates[agent.slug]?.state === "ready",
+  );
+  const onComputer = working && computerReady;
   const harness = resolveHarness(agent.provider, defaultHarness);
   const displayName = agent.name || agent.slug;
 
@@ -159,6 +165,29 @@ function SidebarAgentRow({
         </div>
         <span className={`status-dot ${ac.dotClass}`} />
       </button>
+      {onComputer ? (
+        <span
+          className="sidebar-agent-computer"
+          title={`${displayName} is on its computer`}
+          data-testid={`computer-glyph-${agent.slug}`}
+          aria-hidden="true"
+        >
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="3" y="4" width="18" height="12" rx="2" />
+            <path d="M8 20h8M12 16v4" />
+          </svg>
+        </span>
+      ) : null}
       <button
         type="button"
         className="sidebar-agent-peek-trigger"

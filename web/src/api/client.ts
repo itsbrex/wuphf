@@ -723,6 +723,13 @@ export interface OfficeMember {
    * and not render a "last seen" line.
    */
   last_seen_at?: string;
+  /**
+   * Where this bot's computer runs. "" (or absent) means auto: sandbox when
+   * a container runtime exists, else off. See docs/specs/gawkbot-bot-computers.md.
+   */
+  computer?: "" | "off" | "sandbox" | "cloud";
+  /** Cloud provider for `computer: "cloud"`. "" means box. */
+  cloud_backend?: "" | "box";
 }
 
 /**
@@ -1170,6 +1177,8 @@ export interface ConfigSnapshot {
   telegram_token_set?: boolean;
   openclaw_token_set?: boolean;
   openclaw_gateway_url?: string;
+  // ascii.dev Box key for cloud bot computers.
+  box_key_set?: boolean;
   // Product-analytics consent (PostHog). Both default true. `analytics_configured`
   // reports whether the broker injects a key; the frontend ORs it with its own
   // build-time key to decide whether the toggles are meaningful to show.
@@ -1212,6 +1221,8 @@ export type ConfigUpdate = Partial<{
   telegram_bot_token: string;
   openclaw_token: string;
   openclaw_gateway_url: string;
+  // ascii.dev Box key; blank keeps the existing key.
+  box_api_key: string;
   // Product-analytics consent toggles.
   analytics_telemetry_enabled: boolean;
   analytics_session_recording_enabled: boolean;

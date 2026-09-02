@@ -111,6 +111,15 @@ vi.mock("./AgentInstructionsSection", () => ({
   ),
 }));
 
+// The Computer tab polls the broker and owns its own phases; it is covered in
+// tabs/ComputerTab.test.tsx. Here only registration + the agent it receives
+// matter.
+vi.mock("./tabs/ComputerTab", () => ({
+  ComputerTab: ({ agent }: { agent: { slug: string } }) => (
+    <div data-testid="computer-tab" data-agent={agent.slug} />
+  ),
+}));
+
 vi.mock("../ui/ConfirmDialog", () => ({
   confirm: vi.fn(),
   ConfirmHost: () => null,
@@ -166,7 +175,7 @@ describe("<AgentSubspace>", () => {
     getLocalProvidersStatusMock.mockResolvedValue([]);
   });
 
-  it("renders all 7 tabs in order", () => {
+  it("renders all 8 tabs in order", () => {
     render(wrap(<AgentSubspace agent={baseAgent} tab="chat" />));
 
     const tabs = screen.getAllByRole("tab");
@@ -175,6 +184,7 @@ describe("<AgentSubspace>", () => {
     // Knowledge sits next to Skills: both answer "what does this agent bring".
     expect(labels).toEqual([
       "Chat",
+      "Computer",
       "Tasks",
       "Skills",
       "Knowledge",
@@ -298,6 +308,30 @@ describe("<AgentSubspace>", () => {
       "true",
     );
     expect(screen.getByTestId("agent-knowledge-panel")).toBeInTheDocument();
+  });
+
+  // The bot's computer sits right after Chat and is handed THIS agent.
+  it("renders Computer tab content scoped to the agent", () => {
+    render(wrap(<AgentSubspace agent={baseAgent} tab="computer" />));
+
+    const panel = screen.getByTestId("computer-tab");
+    expect(panel).toHaveAttribute("data-agent", "planner");
+    expect(screen.getByRole("tab", { name: "Computer" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  it.each([
+    "screen",
+    "desktop",
+    "vm",
+  ])("resolves the /%s alias to the Computer tab", (alias) => {
+    render(wrap(<AgentSubspace agent={baseAgent} tab={alias} />));
+    expect(screen.getByRole("tab", { name: "Computer" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   it("renders Policies tab content", () => {

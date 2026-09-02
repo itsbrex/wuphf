@@ -1,6 +1,6 @@
 /**
- * AgentSubspace — tabbed per-agent view with 7 tabs:
- *   Chat · Tasks · Skills · Knowledge · Policies · Live Stream · Config
+ * AgentSubspace — tabbed per-agent view with 8 tabs:
+ *   Chat · Computer · Tasks · Skills · Knowledge · Policies · Live Stream · Config
  *
  * The shell header (avatar + editable name + role + status + current-task chip
  * + "Teach a workflow") is persistent across all tabs. Tab content is
@@ -33,6 +33,7 @@ import { PixelAvatar } from "../ui/PixelAvatar";
 import { EditableName } from "./AgentProfilePanel";
 import { TeachWorkflowModal } from "./TeachWorkflowModal";
 import { ChatTab } from "./tabs/ChatTab";
+import { ComputerTab } from "./tabs/ComputerTab";
 import { ConfigTab } from "./tabs/ConfigTab";
 import { LiveStreamTab } from "./tabs/LiveStreamTab";
 import { PoliciesTab } from "./tabs/PoliciesTab";
@@ -43,6 +44,7 @@ import { TasksTab } from "./tabs/TasksTab";
 
 export type AgentTab =
   | "chat"
+  | "computer"
   | "tasks"
   | "skills"
   | "knowledge"
@@ -52,6 +54,9 @@ export type AgentTab =
 
 export const AGENT_TABS: Array<{ id: AgentTab; label: string }> = [
   { id: "chat", label: "Chat" },
+  // Right after Chat: watching the bot work is the second thing a gawker
+  // reaches for, and the screen is where a mid-turn "needs hands" lands.
+  { id: "computer", label: "Computer" },
   { id: "tasks", label: "Tasks" },
   { id: "skills", label: "Skills" },
   { id: "knowledge", label: "Knowledge" },
@@ -81,6 +86,9 @@ const TAB_ALIASES: Record<string, AgentTab> = {
   task: "tasks",
   skill: "skills",
   policy: "policies",
+  screen: "computer",
+  desktop: "computer",
+  vm: "computer",
   // Knowledge used to be an app tab and is now per-agent, so the words people
   // reach for from the old surface (and from the wiki) land on it.
   wiki: "knowledge",
@@ -225,6 +233,17 @@ function TabContent({ agent, tab }: { agent: OfficeMember; tab: AgentTab }) {
           className="agent-subspace-panel"
         >
           <ChatTab key={`chat-${agent.slug}`} agent={agent} />
+        </div>
+      );
+    case "computer":
+      return (
+        <div
+          role="tabpanel"
+          id="agent-tabpanel-computer"
+          aria-labelledby="agent-tab-computer"
+          className="agent-subspace-panel"
+        >
+          <ComputerTab key={`computer-${agent.slug}`} agent={agent} />
         </div>
       );
     case "tasks":

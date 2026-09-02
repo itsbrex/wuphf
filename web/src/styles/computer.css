@@ -1,0 +1,457 @@
+/* ─── Bot computers ──────────────────────────────────────────────
+   The Computer tab in the agent subspace, the settled frame card in the
+   agent stream, the live-frame thumbnail on computer tool cards, and the
+   sidebar "on its computer" glyph. Tokens only: every colour comes from
+   global.css / the theme sheets so the three themes stay honest.
+   Spec: docs/specs/gawkbot-bot-computers.md */
+
+.computer-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg);
+  max-width: 920px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Screen ── */
+.computer-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.computer-preview-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--text-sm, 13px);
+  color: var(--text-secondary);
+}
+.computer-preview-title {
+  font-weight: 500;
+  color: var(--text);
+}
+.computer-preview-destination {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+.computer-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.computer-screen[data-phase="ready"] {
+  /* A desktop is a dark rectangle; the surface behind a live frame should
+     not flash the card colour between frames. */
+  background: var(--neutral-950);
+}
+.computer-viewer {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--neutral-950);
+}
+.computer-frame {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.computer-frame.is-stale {
+  filter: grayscale(0.6) brightness(0.55);
+}
+.computer-screen-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Empty state inside the screen ── */
+.computer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-secondary);
+  max-width: 420px;
+}
+.computer-screen-overlay .computer-empty {
+  background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+  border-radius: var(--radius-md, 8px);
+  padding: 16px 20px;
+}
+.computer-empty-glyph {
+  color: var(--text-tertiary);
+  display: inline-flex;
+}
+.computer-empty-title {
+  font-size: var(--text-sm, 13px);
+  color: var(--text);
+}
+.computer-empty-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+.computer-empty-problem {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--red);
+  word-break: break-word;
+}
+.computer-empty .btn {
+  margin-top: 4px;
+}
+.computer-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--border-dark);
+  border-top-color: var(--accent);
+  animation: computer-spin 0.9s linear infinite;
+}
+@keyframes computer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .computer-spinner {
+    animation-duration: 2.4s;
+  }
+}
+.computer-build-log {
+  width: 100%;
+  margin-top: 6px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 10px;
+  overflow: hidden;
+}
+.computer-build-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.computer-build-line:last-child {
+  color: var(--text);
+}
+
+/* ── Cards ── */
+.computer-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.computer-card-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+}
+.computer-card-text {
+  font-size: var(--text-sm, 13px);
+  line-height: 1.5;
+  color: var(--text);
+}
+.computer-card-text--secondary {
+  color: var(--text-secondary);
+  margin: 0;
+}
+.computer-card-text b {
+  color: var(--text);
+  font-weight: 600;
+}
+.computer-card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.computer-card--help {
+  border-color: color-mix(in srgb, var(--warning-400) 40%, transparent);
+  background: color-mix(in srgb, var(--warning-400) 10%, var(--bg-card));
+}
+.computer-card--held {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-card));
+}
+.computer-card--error {
+  border-color: color-mix(in srgb, var(--red) 40%, transparent);
+  color: var(--red);
+  font-size: var(--text-sm, 13px);
+}
+
+/* ── Who is driving ── */
+.computer-driving {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.computer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.computer-actions .btn {
+  gap: 6px;
+}
+.computer-btn-danger {
+  color: var(--red);
+  margin-left: auto;
+}
+.computer-btn-danger:hover {
+  border-color: color-mix(in srgb, var(--red) 50%, transparent);
+  background: color-mix(in srgb, var(--red) 8%, var(--bg-card));
+}
+
+/* ── Two paths when no runtime ── */
+.computer-paths {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+.computer-path {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.computer-path-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.computer-path-body,
+.computer-path-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.computer-path-note {
+  color: var(--text-tertiary);
+}
+.computer-path .btn {
+  align-self: flex-start;
+  gap: 6px;
+}
+.computer-box-key {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.computer-box-key-input {
+  flex: 1 1 160px;
+  height: 32px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.computer-box-key-status {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+.computer-box-key-status.is-set {
+  color: var(--green);
+}
+
+/* ── Runs on: segmented picker ── */
+.computer-segmented {
+  /* A fieldset so the group has a real accessible name; reset its chrome. */
+  display: flex;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+}
+.computer-segment {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: var(--text-sm, 13px);
+  font-family: var(--font-sans);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 0;
+  cursor: pointer;
+  transition:
+    background var(--duration-base, 0.15s),
+    color var(--duration-base, 0.15s);
+}
+.computer-segment + .computer-segment {
+  border-left: 1px solid var(--border-dark);
+}
+.computer-segment:hover:not(:disabled) {
+  background: var(--bg-warm);
+  color: var(--text);
+}
+.computer-segment.is-selected {
+  background: var(--accent-bg);
+  color: var(--text);
+  font-weight: 600;
+}
+.computer-segment:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.computer-segment:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: -2px;
+}
+
+/* ── Console ── */
+.computer-console {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-card);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.computer-console-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  list-style: none;
+  user-select: none;
+}
+.computer-console-summary::-webkit-details-marker {
+  display: none;
+}
+.computer-console[open] .computer-console-summary {
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.computer-console-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+}
+.computer-console-prompt {
+  color: var(--text-tertiary);
+}
+.computer-console-input {
+  flex: 1;
+  height: 32px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.computer-console-output {
+  margin: 0;
+  padding: 10px 14px 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  max-height: 260px;
+  overflow: auto;
+  line-height: 1.5;
+}
+.computer-console-echo {
+  color: var(--text-tertiary);
+}
+.computer-console-stderr,
+.computer-console-error {
+  color: var(--red);
+}
+.computer-console-error {
+  padding: 0 14px 10px;
+}
+.computer-console-exit {
+  color: var(--text-tertiary);
+}
+
+/* ── Agent stream: settled frame + tool-card thumbnail ── */
+.stream-computer-frame {
+  max-width: 480px;
+  border-radius: var(--radius-md, 8px);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--neutral-950);
+  margin: 4px 0;
+}
+.stream-computer-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.stream-computer-frame-caption {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding: 4px 8px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+.cc-tool-thumb {
+  width: 40px;
+  height: 25px;
+  object-fit: cover;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Sidebar: "on its computer" glyph ──
+   Borrows the peek chevron's slot (right: 24px, see layout.css
+   .sidebar-agent-peek-trigger) so the status-dot budget is untouched.
+   The chevron owns that slot on hover/focus, so the glyph steps aside then. */
+.sidebar-agent-computer {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  pointer-events: none;
+  transition: opacity 120ms ease-out;
+}
+.sidebar-agent-row:hover .sidebar-agent-computer,
+.sidebar-agent-row:focus-within .sidebar-agent-computer {
+  opacity: 0;
+}
+
+@media (max-width: 720px) {
+  .computer-tab {
+    padding: 14px 16px 32px;
+  }
+}

@@ -120,7 +120,12 @@ export function LiveStreamTab({ agentSlug }: LiveStreamTabProps) {
             <div className="agent-stream-empty">No output yet</div>
           ) : (
             lines.map((line) => (
-              <StreamLineView key={line.id} line={line} compact={true} />
+              <StreamLineView
+                key={line.id}
+                line={line}
+                compact={true}
+                agentSlug={agentSlug}
+              />
             ))
           )}
         </div>

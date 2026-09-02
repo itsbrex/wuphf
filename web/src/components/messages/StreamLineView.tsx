@@ -2,12 +2,20 @@ import { type ReactNode, useMemo, useState } from "react";
 
 import type { StreamLine } from "../../hooks/useAgentStream";
 import { keyedByOccurrence } from "../../lib/reactKeys";
+import { useAppStore } from "../../stores/app";
 
 interface StreamLineViewProps {
   line: StreamLine;
   /** Compact mode collapses arrays and objects beyond the first level. */
   compact?: boolean;
+  /**
+   * Whose stream this is. Computer tool cards show that bot's live frame as
+   * a thumbnail; the HeadlessEvent `agent` field wins when present.
+   */
+  agentSlug?: string;
 }
+
+const COMPUTER_TOOL_PREFIX = "mcp__computer__";
 
 /**
  * Renders one SSE line from the agent stream. Understands the broker's
@@ -16,7 +24,11 @@ interface StreamLineViewProps {
  * back to pretty-printed JSON.
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Existing cognitive complexity is baselined for a focused follow-up refactor.
-export function StreamLineView({ line, compact = false }: StreamLineViewProps) {
+export function StreamLineView({
+  line,
+  compact = false,
+  agentSlug,
+}: StreamLineViewProps) {
   const { data, parsed } = line;
   if (!parsed) {
     // Raw chunks from agentStream.Push (local-LLM streaming text). The
@@ -33,7 +45,19 @@ export function StreamLineView({ line, compact = false }: StreamLineViewProps) {
   // Branch first so the discriminator wins over provider-native `type`
   // routes below (e.g. `assistant`, `mcp_tool_event`).
   if (parsed.kind === "headless_event") {
-    return <HeadlessEventView parsed={parsed} compact={compact} />;
+    return (
+      <HeadlessEventView
+        parsed={parsed}
+        compact={compact}
+        agentSlug={agentSlug}
+      />
+    );
+  }
+
+  // Settled frame appended at turn end when the turn touched the screen.
+  // Wire: docs/specs/gawkbot-bot-computers.md, "Agent stream lines".
+  if (parsed.kind === "computer_frame") {
+    return <ComputerFrameCard parsed={parsed} />;
   }
 
   const evtType = typeof parsed.type === "string" ? parsed.type : "";
@@ -131,9 +155,11 @@ export function StreamLineView({ line, compact = false }: StreamLineViewProps) {
 function HeadlessEventView({
   parsed,
   compact,
+  agentSlug,
 }: {
   parsed: Record<string, unknown>;
   compact: boolean;
+  agentSlug?: string;
 }) {
   const eventType = stringish(parsed.type);
   const provider = stringish(parsed.provider);
@@ -190,17 +216,22 @@ function HeadlessEventView({
     // Wire mapping: HeadlessEvent.tool_name -> name, .detail -> args
     // for tool_use, .text -> result for tool_result.
     const toolName = stringish(parsed.tool_name) || "tool";
-    return (
-      <ToolCallCard
-        item={{
-          type: "tool_call",
-          name: toolName,
-          arguments: eventType === "tool_use" ? parsed.detail : undefined,
-          result: eventType === "tool_result" ? parsed.text : undefined,
-        }}
-        compact={compact}
-      />
-    );
+    const item = {
+      type: "tool_call",
+      name: toolName,
+      arguments: eventType === "tool_use" ? parsed.detail : undefined,
+      result: eventType === "tool_result" ? parsed.text : undefined,
+    };
+    if (toolName.startsWith(COMPUTER_TOOL_PREFIX)) {
+      return (
+        <ComputerToolCallCard
+          item={item}
+          compact={compact}
+          slug={stringish(parsed.agent) || agentSlug || ""}
+        />
+      );
+    }
+    return <ToolCallCard item={item} compact={compact} />;
   }
 
   if (eventType === "manifest") {
@@ -407,12 +438,60 @@ function stringFromToolContent(content: unknown): string {
 
 const ARG_SKIP = new Set(["my_slug", "new_topic", "viewer_slug", "tagged"]);
 
-function ToolCallCard({
+/**
+ * Settled end-of-turn screen frame: an image card sized like an artifact.
+ * Honest by construction: it only renders when the broker sent bytes.
+ */
+function ComputerFrameCard({ parsed }: { parsed: Record<string, unknown> }) {
+  const dataUrl = stringish(parsed.data_url);
+  if (!dataUrl.startsWith("data:image/")) return null;
+  const slug = stringish(parsed.slug) || "bot";
+  return (
+    <div className="stream-computer-frame" data-testid="stream-computer-frame">
+      <img src={dataUrl} alt={`${slug}'s screen`} />
+      <div className="stream-computer-frame-caption">{`${slug}'s screen`}</div>
+    </div>
+  );
+}
+
+/**
+ * Computer tool calls carry the bot's latest live frame as a thumbnail so
+ * a reader can see what the click landed on without opening the tab. The
+ * store is the only source: no frame, no thumbnail.
+ */
+function ComputerToolCallCard({
   item,
   compact,
+  slug,
 }: {
   item: Record<string, unknown>;
   compact: boolean;
+  slug: string;
+}) {
+  const frame = useAppStore((s) =>
+    slug ? (s.computerStates[slug]?.frameDataUrl ?? null) : null,
+  );
+  return (
+    <ToolCallCard
+      item={item}
+      compact={compact}
+      thumbSrc={frame}
+      thumbAlt={`${slug}'s screen`}
+    />
+  );
+}
+
+function ToolCallCard({
+  item,
+  compact,
+  thumbSrc,
+  thumbAlt,
+}: {
+  item: Record<string, unknown>;
+  compact: boolean;
+  /** Optional live-screen thumbnail rendered at the header's right edge. */
+  thumbSrc?: string | null;
+  thumbAlt?: string;
 }) {
   const [open, setOpen] = useState(false);
   const toolName =
@@ -501,6 +580,14 @@ function ToolCallCard({
         <span className="cc-tool-name">{toolName}</span>
         {summaryArg ? (
           <span className="cc-tool-summary">{summaryArg}</span>
+        ) : null}
+        {thumbSrc ? (
+          <img
+            src={thumbSrc}
+            alt={thumbAlt ?? "screen"}
+            className="cc-tool-thumb"
+            data-testid="cc-tool-thumb"
+          />
         ) : null}
       </button>
       {summaryResult && !open && (

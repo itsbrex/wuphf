@@ -355,6 +355,105 @@ describe("useBrokerEvents activity stream", () => {
   });
 });
 
+describe("useBrokerEvents computer stream", () => {
+  const originalEventSource = globalThis.EventSource;
+
+  beforeEach(() => {
+    FakeEventSource.created = [];
+    (globalThis as { EventSource: unknown }).EventSource =
+      FakeEventSource as unknown as typeof EventSource;
+    useAppStore.setState({
+      computerStates: {},
+      computerRuntimeBuild: { building: false, problem: null, lines: [] },
+    });
+    navigateRouter("/agents/growth/computer");
+  });
+
+  afterEach(() => {
+    (globalThis as { EventSource: unknown }).EventSource = originalEventSource;
+    useAppStore.setState({
+      computerStates: {},
+      computerRuntimeBuild: { building: false, problem: null, lines: [] },
+      brokerConnected: false,
+    });
+  });
+
+  it("records the live frame in the store AND invalidates the per-slug status query", () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrokerEventsHarness />
+      </QueryClientProvider>,
+    );
+    const [source] = FakeEventSource.created;
+
+    act(() => {
+      source.emit("computer", {
+        slug: "growth",
+        state: "ready",
+        frame: "data:image/jpeg;base64,AAA",
+        at: 1725,
+      });
+    });
+
+    const keys = invalidateSpy.mock.calls.map(
+      (call) => (call[0] as { queryKey?: unknown[] }).queryKey,
+    );
+    expect(keys).toContainEqual(["computer", "growth"]);
+    expect(useAppStore.getState().computerStates.growth.frameDataUrl).toBe(
+      "data:image/jpeg;base64,AAA",
+    );
+  });
+
+  it("routes runtime build progress (empty slug) to the runtime query and build log", () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <BrokerEventsHarness />
+      </QueryClientProvider>,
+    );
+    const [source] = FakeEventSource.created;
+
+    act(() => {
+      source.emit("computer", {
+        slug: "",
+        state: "building",
+        message: "Pulling base image",
+      });
+    });
+
+    const keys = invalidateSpy.mock.calls.map(
+      (call) => (call[0] as { queryKey?: unknown[] }).queryKey,
+    );
+    expect(keys).toContainEqual(["computer-runtime"]);
+    expect(useAppStore.getState().computerRuntimeBuild.lines).toEqual([
+      "Pulling base image",
+    ]);
+  });
+
+  it("ignores a malformed computer payload without throwing", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderHarness();
+    const [source] = FakeEventSource.created;
+
+    expect(() => {
+      act(() => {
+        source.emitRaw("computer", "{not-json");
+      });
+    }).not.toThrow();
+    expect(useAppStore.getState().computerStates).toEqual({});
+    warnSpy.mockRestore();
+  });
+});
+
 describe("useBrokerEvents disconnect grace", () => {
   const originalEventSource = globalThis.EventSource;
 

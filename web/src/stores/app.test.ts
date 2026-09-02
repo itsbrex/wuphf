@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   directChannelSlug,
   MAX_AGENT_HISTORY,
+  MAX_COMPUTER_BUILD_LINES,
   selectAgentPeek,
   selectPillState,
   useAppStore,
@@ -24,6 +25,8 @@ afterEach(() => {
     agentActivitySnapshots: {},
     agentActivityHistory: {},
     isReconnecting: false,
+    computerStates: {},
+    computerRuntimeBuild: { building: false, problem: null, lines: [] },
   });
 });
 
@@ -418,5 +421,155 @@ describe("pendingComposerDraft (one-shot composer prefill)", () => {
     expect(
       useAppStore.getState().consumePendingComposerDraft("ceo__human"),
     ).toBe("Draft for the CEO DM");
+  });
+});
+
+describe("recordComputerEvent", () => {
+  it("records state, hold, and help reason for a slug", () => {
+    useAppStore.getState().recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      held: false,
+      help_reason: "Xero wants a login",
+    });
+
+    expect(useAppStore.getState().computerStates.growth).toEqual({
+      state: "ready",
+      problem: null,
+      frameDataUrl: null,
+      frameAt: null,
+      held: false,
+      helpReason: "Xero wants a login",
+    });
+  });
+
+  it("stores a live frame and stamps it with the event time", () => {
+    useAppStore.getState().recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: "data:image/jpeg;base64,AAA",
+      at: 1000,
+    });
+
+    const live = useAppStore.getState().computerStates.growth;
+    expect(live.frameDataUrl).toBe("data:image/jpeg;base64,AAA");
+    expect(live.frameAt).toBe(1000);
+  });
+
+  it("never rewinds to an older frame (poll last_frame vs live SSE frame)", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: "data:newer",
+      at: 2000,
+    });
+    store.recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: "data:older",
+      at: 1000,
+    });
+
+    expect(useAppStore.getState().computerStates.growth.frameDataUrl).toBe(
+      "data:newer",
+    );
+    expect(useAppStore.getState().computerStates.growth.frameAt).toBe(2000);
+  });
+
+  it("keeps the previous frame and hold when a state-only event arrives", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: "data:x",
+      at: 5,
+      held: true,
+    });
+    store.recordComputerEvent({ slug: "growth", state: "asleep" });
+
+    const live = useAppStore.getState().computerStates.growth;
+    expect(live.state).toBe("asleep");
+    expect(live.frameDataUrl).toBe("data:x");
+    expect(live.held).toBe(true);
+  });
+
+  it("clears the help reason when the event carries null", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      help_reason: "needs a login",
+    });
+    store.recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      help_reason: null,
+    });
+    expect(useAppStore.getState().computerStates.growth.helpReason).toBeNull();
+  });
+
+  it("keeps slugs independent", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({ slug: "growth", state: "ready" });
+    store.recordComputerEvent({ slug: "ceo", state: "off" });
+    expect(useAppStore.getState().computerStates.growth.state).toBe("ready");
+    expect(useAppStore.getState().computerStates.ceo.state).toBe("off");
+  });
+
+  it("routes slug-less events to the runtime build log", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({
+      slug: "",
+      state: "building",
+      message: "Pulling trycua/xfce-cua",
+    });
+    store.recordComputerEvent({
+      slug: "",
+      state: "building",
+      message: "Installing cua-driver 0.20.0",
+    });
+
+    expect(useAppStore.getState().computerRuntimeBuild).toEqual({
+      building: true,
+      problem: null,
+      lines: ["Pulling trycua/xfce-cua", "Installing cua-driver 0.20.0"],
+    });
+    expect(useAppStore.getState().computerStates).toEqual({});
+  });
+
+  it("marks the build finished and keeps the problem when it fails", () => {
+    const store = useAppStore.getState();
+    store.recordComputerEvent({
+      slug: "",
+      state: "building",
+      message: "step 1",
+    });
+    store.recordComputerEvent({
+      slug: "",
+      state: "error",
+      problem: "docker build exited 1",
+    });
+
+    expect(useAppStore.getState().computerRuntimeBuild).toMatchObject({
+      building: false,
+      problem: "docker build exited 1",
+    });
+  });
+
+  it("caps the build log at MAX_COMPUTER_BUILD_LINES", () => {
+    const store = useAppStore.getState();
+    for (let i = 0; i < MAX_COMPUTER_BUILD_LINES + 5; i += 1) {
+      store.recordComputerEvent({
+        slug: "",
+        state: "building",
+        message: `line ${i}`,
+      });
+    }
+    const { lines } = useAppStore.getState().computerRuntimeBuild;
+    expect(lines.length).toBe(MAX_COMPUTER_BUILD_LINES);
+    expect(lines[lines.length - 1]).toBe(
+      `line ${MAX_COMPUTER_BUILD_LINES + 4}`,
+    );
   });
 });

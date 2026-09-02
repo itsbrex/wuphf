@@ -143,12 +143,12 @@ function renderList() {
 beforeEach(() => {
   useFirstRunNudgeMock.mockReturnValue({ showNudge: false });
   useAgentEventPeekMock.mockImplementation(() => defaultPeekState());
-  useAppStore.setState({ agentActivitySnapshots: {} });
+  useAppStore.setState({ agentActivitySnapshots: {}, computerStates: {} });
 });
 
 afterEach(() => {
   vi.clearAllMocks();
-  useAppStore.setState({ agentActivitySnapshots: {} });
+  useAppStore.setState({ agentActivitySnapshots: {}, computerStates: {} });
 });
 
 describe("<AgentList>", () => {
@@ -549,5 +549,38 @@ describe("<AgentList> presence and activity", () => {
     expect(dot?.className).toContain("active");
     // A pulsing dot beside animating eyes is two clocks for one fact.
     expect(dot?.className).not.toContain("pulse");
+  });
+});
+
+describe("<AgentList> on-its-computer glyph", () => {
+  function seedComputer(slug: string, state: string) {
+    useAppStore.getState().recordComputerEvent({ slug, state });
+  }
+
+  it("shows the monitor glyph only when the computer is ready AND the agent is working", () => {
+    setMembers([
+      { slug: "growth", name: "Growth", role: "growth", status: "active" },
+      { slug: "ceo", name: "CEO", role: "lead", status: "idle" },
+      { slug: "ops", name: "Ops", role: "ops", status: "active" },
+    ]);
+    seedComputer("growth", "ready");
+    seedComputer("ceo", "ready");
+    seedComputer("ops", "asleep");
+
+    const { queryByTestId } = renderList();
+
+    expect(queryByTestId("computer-glyph-growth")).not.toBeNull();
+    // Ready but idle: nothing to watch.
+    expect(queryByTestId("computer-glyph-ceo")).toBeNull();
+    // Working but the desktop is asleep: no computer to watch.
+    expect(queryByTestId("computer-glyph-ops")).toBeNull();
+  });
+
+  it("renders no glyph when the store has never heard of the agent's computer", () => {
+    setMembers([
+      { slug: "growth", name: "Growth", role: "growth", status: "active" },
+    ]);
+    const { queryByTestId } = renderList();
+    expect(queryByTestId("computer-glyph-growth")).toBeNull();
   });
 });

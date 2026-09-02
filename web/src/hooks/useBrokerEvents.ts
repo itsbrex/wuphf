@@ -2,6 +2,11 @@ import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { initApi } from "../api/client";
+import {
+  COMPUTER_QUERY_KEY,
+  COMPUTER_RUNTIME_QUERY_KEY,
+  parseComputerEvent,
+} from "../api/computer";
 import { openSharedEventStream } from "../api/eventStream";
 import { GOVERNOR_QUERY_KEY } from "../api/governor";
 import {
@@ -79,6 +84,7 @@ export function useBrokerEvents(enabled: boolean) {
   const queryClient = useQueryClient();
   const setBrokerConnected = useAppStore((s) => s.setBrokerConnected);
   const recordActivitySnapshot = useAppStore((s) => s.recordActivitySnapshot);
+  const recordComputerEvent = useAppStore((s) => s.recordComputerEvent);
   const setIsReconnecting = useAppStore((s) => s.setIsReconnecting);
 
   useEffect(() => {
@@ -188,6 +194,34 @@ export function useBrokerEvents(enabled: boolean) {
     source.addEventListener("governor", () => {
       void queryClient.invalidateQueries({ queryKey: GOVERNOR_QUERY_KEY });
     });
+    source.addEventListener("computer", (event) => {
+      // Bot computers: live frames, hold changes, and image-build progress.
+      // The store write gives the Computer tab an instant frame between
+      // status polls; the invalidation refreshes the settled status
+      // (viewer_url, destination) behind it. Same defensive shape as the
+      // activity handler: a throw here would kill the listener for good.
+      try {
+        const raw =
+          "data" in event && typeof event.data === "string" ? event.data : "";
+        const payload = parseComputerEvent(raw);
+        if (!payload) {
+          console.warn("useBrokerEvents: malformed computer payload");
+          return;
+        }
+        recordComputerEvent(payload);
+        if (payload.slug.length > 0) {
+          void queryClient.invalidateQueries({
+            queryKey: [COMPUTER_QUERY_KEY, payload.slug],
+          });
+        } else {
+          void queryClient.invalidateQueries({
+            queryKey: COMPUTER_RUNTIME_QUERY_KEY,
+          });
+        }
+      } catch (err) {
+        console.warn("useBrokerEvents: computer store write failed", err);
+      }
+    });
     source.onerror = () => {
       setBrokerConnected(false);
       // EventSource auto-reconnects; only mark "reconnecting" once the
@@ -210,6 +244,7 @@ export function useBrokerEvents(enabled: boolean) {
     queryClient,
     setBrokerConnected,
     recordActivitySnapshot,
+    recordComputerEvent,
     setIsReconnecting,
   ]);
 }

@@ -1,7 +1,12 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
 
+import { useAppStore } from "../../stores/app";
 import { StreamLineView } from "./StreamLineView";
+
+afterEach(() => {
+  useAppStore.setState({ computerStates: {} });
+});
 
 describe("<StreamLineView>", () => {
   it("renders Claude assistant text and tool-use blocks", () => {
@@ -269,5 +274,138 @@ describe("<StreamLineView>", () => {
     );
 
     expect(screen.getByText("Final Codex answer")).toBeInTheDocument();
+  });
+});
+
+describe("<StreamLineView> bot computers", () => {
+  const FRAME = "data:image/jpeg;base64,/9j/AAA";
+
+  it("renders a settled computer_frame line as an image card", () => {
+    render(
+      <StreamLineView
+        line={{
+          id: 1,
+          data: "",
+          parsed: {
+            kind: "computer_frame",
+            slug: "growth",
+            data_url: FRAME,
+            at: 1725,
+            final: true,
+          },
+        }}
+      />,
+    );
+
+    const img = screen.getByAltText("growth's screen");
+    expect(img).toHaveAttribute("src", FRAME);
+    expect(screen.getByTestId("stream-computer-frame")).toBeInTheDocument();
+  });
+
+  it("drops a computer_frame line that carries no image bytes", () => {
+    const { container } = render(
+      <StreamLineView
+        line={{
+          id: 1,
+          data: "",
+          parsed: { kind: "computer_frame", slug: "growth", data_url: "" },
+        }}
+      />,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it("shows the bot's live frame as a thumbnail on mcp__computer__ tool cards", () => {
+    useAppStore.getState().recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: FRAME,
+      at: 1,
+    });
+
+    render(
+      <StreamLineView
+        line={{
+          id: 1,
+          data: "",
+          parsed: {
+            kind: "headless_event",
+            type: "tool_use",
+            agent: "growth",
+            tool_name: "mcp__computer__click",
+            detail: '{"x": 120, "y": 44}',
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("mcp__computer__click")).toBeInTheDocument();
+    expect(screen.getByTestId("cc-tool-thumb")).toHaveAttribute("src", FRAME);
+  });
+
+  it("falls back to the stream's agentSlug when the event has no agent field", () => {
+    useAppStore.getState().recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: FRAME,
+    });
+
+    render(
+      <StreamLineView
+        agentSlug="growth"
+        line={{
+          id: 1,
+          data: "",
+          parsed: {
+            kind: "headless_event",
+            type: "tool_result",
+            tool_name: "mcp__computer__screenshot",
+            text: "ok",
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("cc-tool-thumb")).toBeInTheDocument();
+  });
+
+  it("shows no thumbnail when there is no frame, and none on other tools", () => {
+    render(
+      <StreamLineView
+        line={{
+          id: 1,
+          data: "",
+          parsed: {
+            kind: "headless_event",
+            type: "tool_use",
+            agent: "growth",
+            tool_name: "mcp__computer__click",
+          },
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("cc-tool-thumb")).not.toBeInTheDocument();
+    cleanup();
+
+    useAppStore.getState().recordComputerEvent({
+      slug: "growth",
+      state: "ready",
+      frame: FRAME,
+    });
+    render(
+      <StreamLineView
+        line={{
+          id: 2,
+          data: "",
+          parsed: {
+            kind: "headless_event",
+            type: "tool_use",
+            agent: "growth",
+            tool_name: "team_broadcast",
+          },
+        }}
+      />,
+    );
+    expect(screen.queryByTestId("cc-tool-thumb")).not.toBeInTheDocument();
   });
 });

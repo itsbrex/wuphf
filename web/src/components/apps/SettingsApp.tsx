@@ -776,6 +776,13 @@ const KEY_DEFS: KeyDef[] = [
     placeholder: "123456:ABC...",
     env: "WUPHF_TELEGRAM_BOT_TOKEN",
   },
+  {
+    field: "box_api_key",
+    flag: "box_key_set",
+    label: "ascii.dev Box",
+    placeholder: "box_…",
+    env: "WUPHF_BOX_API_KEY",
+  },
 ];
 
 function KeysSection({ cfg, save }: SectionProps) {
