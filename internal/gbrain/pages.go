@@ -262,9 +262,11 @@ func (c *Client) listPageBatchCursor(ctx context.Context, opts ListPageOptions, 
 	if tag := strings.TrimSpace(opts.Tag); tag != "" {
 		args["tag"] = tag
 	}
-	if p := strings.TrimSpace(opts.SlugPrefix); p != "" {
-		args["slug_prefix"] = p
-	}
+	// slug_prefix is deliberately NOT sent. It is not a list_pages parameter —
+	// it never was, which is why the filter below exists — and since 0.48
+	// gbrain warns "unknown parameter ... ignored. A future release rejects
+	// unknown parameters." Sending it bought nothing and would eventually be a
+	// hard error.
 	if opts.IncludeDeleted {
 		args["include_deleted"] = true
 	}

@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -85,42 +89,157 @@ func TestOpenAIChatCompletionsLive_SuccessPath(t *testing.T) {
 	t.Logf("upstream CLI replied: %.80q", c.Message.Content)
 }
 
-// TestGBrainConsumesTheShim is DISABLED, and the reason is the finding.
+// TestGBrainConsumesTheShim proves the thing that justifies the shim: that
+// gbrain — its only intended consumer — can actually be pointed at it and can
+// parse what it returns.
 //
-// It was written to prove the thing that justifies the shim: that gbrain — its
-// only intended consumer — can be pointed at it. It cannot, on gbrain
-// 0.42.58.0, and the blocker is in gbrain's recipe definitions rather than in
-// anything here.
+// Routing, and why it is `litellm` specifically
+// ============================================
+// gbrain has no provider recipe literally named "openai-compatible"; that is an
+// IMPLEMENTATION tag, not a provider id, and using it as one throws "Unknown
+// provider" which isAvailable swallows — expansion then degrades to the bare
+// query with no error surfaced anywhere. Recipes are named by SERVICE.
 //
-// What was tried, and why each failed
-// ===================================
-//  1. expansion_model "openai-compatible:<model>". There IS NO
-//     openai-compatible provider recipe. gbrain names recipes by SERVICE
-//     (ollama, litellm, llama-server); several carry
-//     implementation:"openai-compatible", but that is an implementation detail,
-//     not a provider id. resolveRecipe throws "Unknown provider",
-//     gateway.isAvailable catches and returns false, and expansion silently
-//     degrades to the bare query. No error surfaces.
-//  2. The openai-compatible-implementation recipes. litellm, llama-server and
-//     ollama declare only `embedding` (and reranker) touchpoints — never
-//     `expansion`. isAvailable returns false on the missing touchpoint before
-//     auth is even considered.
-//  3. Masquerading as `openai` with its base_url overridden. The openai recipe
-//     DOES declare expansion, and provider_base_urls overrides its endpoint.
-//     But its expansion touchpoint allowlists models ['gpt-5.2','gpt-4o-mini']
-//     with no user_provided_models, so an arbitrary name is rejected. Using an
-//     allowlisted name and pointing the base URL at the shim STILL did not
-//     produce a call — verified with the config confirmed via `config get`.
+// The recipe must satisfy three things at once, and on gbrain 0.42 nothing did:
 //
-// So: no gbrain recipe declares an expansion touchpoint whose endpoint can be
-// redirected. The shim is correct and proven end-to-end by
-// TestOpenAIChatCompletionsLive_SuccessPath, but its intended consumer cannot
-// currently reach it.
+//  1. declare an `expansion` touchpoint (openai/anthropic/google did; the
+//     openai-compat ones declared only embedding),
+//  2. accept an arbitrary model name (`user_provided_models`), since the shim
+//     dispatches to whatever CLI is configured and has no model list, and
+//  3. require no API key, since a subscription-only user has none.
 //
-// Re-enable this when gbrain either adds `expansion` to an
-// openai-compatible-implementation recipe, or adds user_provided_models to one
-// that has it. Worth retrying on 0.48+, which is several minors ahead of what
-// this was tested against.
+// gbrain 0.48's `litellm` recipe is the first to satisfy all three:
+// expansion with `models: []` + `user_provided_models`, and `auth_env.required:
+// []`. That is the supported route.
+//
+// Two traps this test was rewritten to avoid, both of which made an earlier
+// version pass while proving NOTHING:
+//
+//  1. `gbrain config set` exits 0 without persisting to the plane the gateway
+//     reads, so the config must be written to config.json and VERIFIED.
+//  2. asserting "the query did not error" is vacuous: gbrain exits 0 printing
+//     "No results." on an empty brain, having never called expansion. The test
+//     must assert the shim was ACTUALLY HIT, which it does by counting
+//     requests through a proxy in front of the real broker route.
 func TestGBrainConsumesTheShim(t *testing.T) {
-	t.Skip("blocked upstream: no gbrain recipe exposes a redirectable expansion touchpoint — see the comment above")
+	if !liveShimEnabled() {
+		t.Skip("spends provider tokens: set WUPHF_SHIM_LIVE_TEST=1")
+	}
+	home := strings.TrimSpace(os.Getenv("GBRAIN_HOME"))
+	if home == "" {
+		t.Skip("set GBRAIN_HOME to a scratch brain; this rewrites its config")
+	}
+	bin, err := exec.LookPath("gbrain")
+	if err != nil {
+		t.Skip("gbrain not on PATH")
+	}
+
+	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
+	b := newTestBroker(t)
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("start broker: %v", err)
+	}
+	defer b.Stop()
+
+	// Counting proxy in front of the REAL broker route, so a hit is provable
+	// rather than inferred. It injects the broker token so gbrain needs no key.
+	var mu sync.Mutex
+	var hits, lastStatus int
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, _ := io.ReadAll(r.Body)
+		mu.Lock()
+		hits++
+		mu.Unlock()
+
+		fwd, _ := http.NewRequest(r.Method, "http://"+b.Addr()+r.URL.Path, strings.NewReader(string(body)))
+		fwd.Header.Set("Content-Type", "application/json")
+		fwd.Header.Set("Authorization", "Bearer "+b.Token())
+		resp, err := (&http.Client{Timeout: 120 * time.Second}).Do(fwd)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
+		defer func() { _ = resp.Body.Close() }()
+		out, _ := io.ReadAll(resp.Body)
+		mu.Lock()
+		lastStatus = resp.StatusCode
+		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(resp.StatusCode)
+		_, _ = w.Write(out)
+	}))
+	defer proxy.Close()
+
+	cfgPath := filepath.Join(home, ".gbrain", "config.json")
+	raw, err := os.ReadFile(cfgPath)
+	if err != nil {
+		t.Skipf("no gbrain config at %s: %v", cfgPath, err)
+	}
+	t.Cleanup(func() { _ = os.WriteFile(cfgPath, raw, 0o600) })
+
+	var cfg map[string]any
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		t.Fatalf("parse gbrain config: %v", err)
+	}
+	cfg["provider_base_urls"] = map[string]any{"litellm": proxy.URL + "/v1"}
+	cfg["expansion_model"] = "litellm:wuphf-configured-provider"
+	patched, _ := json.MarshalIndent(cfg, "", "  ")
+	if err := os.WriteFile(cfgPath, patched, 0o600); err != nil {
+		t.Fatalf("write gbrain config: %v", err)
+	}
+
+	run := func(args ...string) (string, error) {
+		cmd := exec.Command(bin, args...)
+		cmd.Env = append(os.Environ(), "GBRAIN_HOME="+home)
+		out, err := cmd.CombinedOutput()
+		return string(out), err
+	}
+
+	// `config set` writes a plane the gateway may not read, so verify the file
+	// plane took rather than trusting the write.
+	if out, _ := run("config", "get", "expansion_model"); !strings.Contains(out, "litellm:") {
+		t.Fatalf("expansion_model did not take; got %q", strings.TrimSpace(out))
+	}
+
+	// Seed content. gbrain prints "No results." on an empty brain and never
+	// calls expansion at all, so a test that depends on leftover pages from
+	// other tests passes or fails on ordering rather than on behaviour. The
+	// contract tests purge every namespace, so this must stand alone.
+	seed := `{"slug":"notes/shim-expansion-probe","content":"---\ntype: note\n---\n\n` +
+		`The Orbit Launch project ships the new satellite telemetry pipeline in Q3.\n"}`
+	if out, err := run("call", "put_page", seed); err != nil {
+		t.Fatalf("seed page failed: %v\n%s", err, truncateForLog(out))
+	}
+
+	out, err := run("query", "what is the orbit launch project about")
+	t.Logf("gbrain query output:\n%s", truncateForLog(out))
+	if err != nil {
+		t.Fatalf("gbrain query failed with the shim as its expansion model: %v", err)
+	}
+
+	mu.Lock()
+	got, status := hits, lastStatus
+	mu.Unlock()
+
+	// THE assertion. Without it this passes on an empty brain having exercised
+	// nothing at all.
+	if got == 0 {
+		t.Fatal("gbrain never called the shim — expansion did not fire, so this proves nothing")
+	}
+	t.Logf("shim received %d request(s), last upstream status %d", got, status)
+	if status != http.StatusOK {
+		t.Errorf("shim returned %d to gbrain, want 200", status)
+	}
+	for _, marker := range []string{"expansion failed", "gateway unavailable", "could not parse"} {
+		if strings.Contains(strings.ToLower(out), marker) {
+			t.Errorf("gbrain rejected the shim response (%q in output)", marker)
+		}
+	}
+}
+
+func truncateForLog(s string) string {
+	if len(s) > 1200 {
+		return s[:1200] + "…"
+	}
+	return s
 }

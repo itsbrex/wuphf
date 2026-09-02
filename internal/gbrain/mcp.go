@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -602,8 +603,47 @@ func decodeJSON(raw string, v any) error {
 	if strings.HasPrefix(raw, "ERROR: ") {
 		return errors.New(strings.TrimPrefix(raw, "ERROR: "))
 	}
-	if err := json.Unmarshal([]byte(raw), v); err != nil {
-		return fmt.Errorf("unmarshal payload: %w", err)
+	// Decode the FIRST JSON value and tolerate anything after it.
+	//
+	// gbrain returns tool output as MCP text blocks, and flattenResult
+	// concatenates them all. Since 0.48 it appends advisory blocks alongside the
+	// payload, e.g.
+	//
+	//   [ ...json... ]
+	//   warning: unknown parameter "slug_prefix" ignored.
+	//
+	// json.Unmarshal rejects that as "invalid character 'w' after top-level
+	// value", which turned an advisory note into a hard decode failure across
+	// every call. A Decoder reads one value and stops, so trailing prose cannot
+	// break parsing again.
+	dec := json.NewDecoder(strings.NewReader(raw))
+	if err := dec.Decode(v); err != nil {
+		// Bounded prefix AND suffix: a bare parse error names neither the tool
+		// nor the content, and the useful part is often at the end.
+		return fmt.Errorf("unmarshal payload: %w (payload: %.160q … %.160q)", err, raw, tailOf(raw, 160))
+	}
+	// Surface, do not swallow. These warnings announce upcoming breaking
+	// changes ("a future release rejects unknown parameters"), so silently
+	// discarding them trades a visible problem now for a hard failure later.
+	if trailing := strings.TrimSpace(drainDecoder(dec, raw)); trailing != "" {
+		log.Printf("gbrain: advisory alongside tool payload: %.300s", trailing)
 	}
 	return nil
+}
+
+// drainDecoder returns whatever followed the decoded JSON value.
+func drainDecoder(dec *json.Decoder, raw string) string {
+	off := dec.InputOffset()
+	if off < 0 || int(off) >= len(raw) {
+		return ""
+	}
+	return raw[off:]
+}
+
+// tailOf returns the last n characters of s.
+func tailOf(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[len(s)-n:]
 }
