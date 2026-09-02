@@ -143,6 +143,13 @@ func (b *Broker) handlePostMessage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "channel access denied", http.StatusForbidden)
 		return
 	}
+	// Agent↔agent DMs are writable only by their two members; the human
+	// observes through the consult markers' read-only thread view.
+	if reason := b.guardAgentDMPostLocked(channel, body.From); reason != "" {
+		b.mu.Unlock()
+		http.Error(w, reason, http.StatusForbidden)
+		return
+	}
 	// Auto-promote @slug mentions in the body into the tagged array. If a
 	// user or agent typed `@pm`, treat it as a tag — `extractMentionedSlugs`
 	// already restricts to registered agent slugs, so conversational use of
@@ -521,6 +528,9 @@ func (b *Broker) PostMessage(from, channel, content string, tagged []string, rep
 	}
 	if !b.canAccessChannelLocked(from, channel) {
 		return channelMessage{}, fmt.Errorf("channel access denied")
+	}
+	if reason := b.guardAgentDMPostLocked(channel, from); reason != "" {
+		return channelMessage{}, fmt.Errorf("%s", reason)
 	}
 	b.counter++
 	msg := channelMessage{

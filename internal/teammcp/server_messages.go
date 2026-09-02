@@ -25,7 +25,7 @@ func handleTeamBroadcast(ctx context.Context, _ *mcp.CallToolRequest, args TeamB
 		replyTo = location.ReplyToID
 	}
 
-	if !isOneOnOneMode() {
+	if !isOneOnOneMode() && !isAgentPairDM(channel, slug) {
 		if messages, tasks, err := fetchBroadcastContext(ctx, channel, slug); err == nil {
 			if reason := suppressBroadcastReason(slug, args.Content, replyTo, messages, tasks); reason != "" {
 				return textResult(fmt.Sprintf("Held reply for @%s: %s. Poll again if the thread changes or if the Chief of Staff tags you in.", slug, reason)), nil, nil
@@ -184,6 +184,26 @@ func fetchBroadcastContext(ctx context.Context, channel, mySlug string) ([]broke
 		return messages.Messages, nil, err
 	}
 	return messages.Messages, tasks.Tasks, nil
+}
+
+// isAgentPairDM reports whether channel is an agent↔agent pair DM that
+// includes the sender: "<a>__<b>", neither side a human sender, sender one
+// of the two parts. A pair DM is the sender's own private consult thread,
+// so the domain chatter suppressor must never hold those replies — observed
+// live: two agents mid-consult were told "this is outside your domain" and
+// the exchange stalled. The broker still enforces membership and the human
+// write-block on POST.
+func isAgentPairDM(channel, slug string) bool {
+	parts := strings.SplitN(strings.TrimSpace(channel), "__", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" || parts[0] == parts[1] {
+		return false
+	}
+	for _, p := range parts {
+		if p == "human" || p == "you" || strings.HasPrefix(p, "human:") {
+			return false
+		}
+	}
+	return parts[0] == slug || parts[1] == slug
 }
 
 func suppressBroadcastReason(slug, content, replyTo string, messages []brokerMessage, tasks []brokerTaskSummary) string {

@@ -743,7 +743,10 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			if typeFilter == "dm" {
-				if ch.isDM() {
+				// Human DMs only. Agent↔agent pair DMs never appear in
+				// listings — their sole human surface is the consult
+				// markers' read-only thread view.
+				if _, _, pair := isAgentToAgentDM(ch.Slug); ch.isDM() && !pair {
 					channels = append(channels, ch)
 				}
 			} else {

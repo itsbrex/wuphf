@@ -151,7 +151,7 @@ type conversationContext struct {
 }
 
 type TeamBroadcastArgs struct {
-	Channel   string   `json:"channel,omitempty" jsonschema:"Channel slug. Defaults to the agent's current channel or general."`
+	Channel   string   `json:"channel,omitempty" jsonschema:"Channel slug. Defaults to the agent's current channel or general. For a private 1:1 consult with one teammate, use the pair DM slug '<agent-a>__<agent-b>' (the two agent slugs, alphabetical); it is auto-created, wakes only that teammate, and the human sees quiet consult markers in their own DMs with a read-only view of the thread. Keep task work in task channels; pair DMs are for short side consultations."`
 	Content   string   `json:"content" jsonschema:"Message to post to the shared team channel. If you created an HTML visual artifact, include visual-artifact:ra_0123456789abcdef on its own line so chat renders a compact artifact card."`
 	MySlug    string   `json:"my_slug,omitempty" jsonschema:"Agent slug sending the message. Defaults to WUPHF_AGENT_SLUG."`
 	Tagged    []string `json:"tagged,omitempty" jsonschema:"Optional list of tagged agent slugs who should respond"`

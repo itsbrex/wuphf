@@ -371,6 +371,12 @@ func (l *Launcher) notificationTargetsForMessage(msg channelMessage) (immediate 
 		if recipient == "" || isHumanMessageSender(recipient) || recipient == msg.From {
 			return nil, nil
 		}
+		// Agent-pair DMs cap partner wakes per window so two agents cannot
+		// ping-pong each other forever. The message still lands in the DM;
+		// only the wake is suppressed until the window rolls over.
+		if l.broker != nil && !l.broker.AgentDMWakeAllowed(ch) {
+			return nil, nil
+		}
 		if target, ok := targetMap[recipient]; ok {
 			return []notificationTarget{target}, nil
 		}
