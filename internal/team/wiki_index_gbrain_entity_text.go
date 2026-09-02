@@ -26,6 +26,26 @@ import (
 // gbrainEntityTextIndex implements TextIndex against gbrain's hybrid search.
 type gbrainEntityTextIndex struct {
 	store *gbrainEntityStore
+
+	// queryFn is the retrieval call. It exists as a seam so the chunk-to-fact
+	// mapping below can be tested WITHOUT a live brain.
+	//
+	// That mapping is where this backend's retrieval quality actually lives —
+	// it is what took the bench's status class from 60% to 85% — and it was
+	// previously reachable only from opt-in tests that CI never runs. A
+	// regression there would have been invisible until someone re-ran the
+	// bench by hand.
+	//
+	// Nil means "use the paired store's client", which is the production path.
+	queryFn func(ctx context.Context, query string, limit int) ([]gbrain.Hit, error)
+}
+
+// query runs the retrieval call, honouring the test seam.
+func (t *gbrainEntityTextIndex) query(ctx context.Context, q string, limit int) ([]gbrain.Hit, error) {
+	if t.queryFn != nil {
+		return t.queryFn(ctx, q, limit)
+	}
+	return t.store.client.Query(ctx, q, limit)
 }
 
 // Index is a no-op: the paired store writes the entity page, and gbrain chunks
@@ -88,7 +108,7 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 	// in the same brain — cannot be excluded server-side; they are filtered
 	// below by slug prefix, but they still consume slots in the ranked result.
 	// The fetch is widened to compensate.
-	results, err := t.store.client.Query(ctx, query, gbrainChunkFetch(topK)*gbrainNonEntityOverfetch)
+	results, err := t.query(ctx, query, gbrainChunkFetch(topK)*gbrainNonEntityOverfetch)
 	if err != nil {
 		return nil, err
 	}
@@ -139,9 +159,12 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 		// matching a person's page means the question is about that person, so
 		// what we know about them IS the result set. Under the atom backend
 		// each of those facts had to win its own ranking contest.
+		// Best-effort: a page that cannot be loaded (deleted mid-query, or a
+		// slug in an entity directory that is not ours) must not fail the whole
+		// search. The anchored hits already gathered are still valid answers.
 		rest, err := t.store.ListFactsForEntity(ctx, entity)
 		if err != nil {
-			return nil, err
+			continue
 		}
 		for _, f := range factsForRender(factMap(rest)) {
 			if seen[f.ID] {

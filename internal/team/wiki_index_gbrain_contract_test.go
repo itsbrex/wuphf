@@ -80,7 +80,8 @@ func newGBrainTestStore(t *testing.T) FactStore {
 func purgeGBrainNamespaces(t *testing.T, ctx context.Context, client *gbrain.Client) {
 	t.Helper()
 	prefixes := append([]string{
-		gbrainFactPrefix, gbrainEntityPrefix, gbrainCategoryPrefix, gbrainArticlePrefix, gbrainDirSources,
+		gbrainFactPrefix, gbrainEntityPrefix, gbrainCategoryPrefix, gbrainArticlePrefix,
+		gbrainDirSources, entityCategoryDir,
 	}, allEntityDirs()...)
 	for _, prefix := range prefixes {
 		for pass := 0; ; pass++ {

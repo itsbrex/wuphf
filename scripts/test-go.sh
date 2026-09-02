@@ -35,7 +35,12 @@ cd "$repo_root" || exit 2
 # macOS ships bash 3.2, so no `mapfile` / no `readarray`. Use a tempfile +
 # while-read loop, which works on any POSIX bash.
 pkg_list="$(mktemp -t wuphf-test-go.XXXXXX)"
-trap 'rm -f "$pkg_list"' EXIT
+skip_log="$(mktemp -t wuphf-test-go-skip.XXXXXX)"
+trap 'rm -f "$pkg_list" "$skip_log"' EXIT
+
+# Formatter that turns `go test -json` into the usual compact output PLUS a
+# skip census. See scripts/testgo-format.py for why the census matters.
+formatter="$repo_root/scripts/testgo-format.py"
 
 if [ "$#" -gt 0 ]; then
   # Caller passed explicit package patterns. Default to repo-relative
@@ -68,13 +73,23 @@ while IFS= read -r pkg; do
   fi
 
   printf '\n=== go test %s ===\n' "$pkg"
+  # -json so skips are observable; the formatter restores human-readable output
+  # and records skips. PIPESTATUS[1] is the formatter, which mirrors go test's
+  # own exit status — piping would otherwise mask a failure behind the pipe.
   # shellcheck disable=SC2086  # word-splitting on $args is intentional
-  if ! go test $args "$pkg"; then
+  go test $args -json "$pkg" 2>&1 | python3 "$formatter" "$pkg" "$skip_log"
+  if [ "${PIPESTATUS[1]}" -ne 0 ]; then
     failures=$((failures + 1))
   fi
 done < "$pkg_list"
 
 echo
+if [ -s "$skip_log" ]; then
+  skipped=$(wc -l < "$skip_log" | tr -d ' ')
+  echo "test-go: ${skipped} test(s) SKIPPED — green here does not mean covered:"
+  sed 's/^/  /' "$skip_log"
+  echo
+fi
 if [ "$failures" -eq 0 ]; then
   echo "test-go: all ${total} packages green"
 else

@@ -24,14 +24,24 @@ import (
 // gbrainDirSources is where article stubs are filed. See the file header.
 const gbrainDirSources = "sources/"
 
+// entityCategoryDir is the category namespace.
+//
+// Categories deliberately do NOT share `concepts/` with concept-kind entities.
+// They did, and it was a real collision: entitySlugFromPageSlug treats anything
+// under an entity directory as an entity, so a category page returned by search
+// was mistaken for an entity and sent through the fact-hydration path. A
+// category and a concept entity with the same slug would also have overwritten
+// each other outright.
+const entityCategoryDir = "categories/"
+
 // entityCategorySlug returns the page slug for a category.
 func entityCategorySlug(category string) string {
-	return gbrainDirConcepts + strings.TrimSpace(category)
+	return entityCategoryDir + strings.TrimSpace(category)
 }
 
 // categoryFromEntityPageSlug reverses entityCategorySlug for category pages.
 // Returns "" for a concepts/ page that is not a category.
-func categoryFromEntityPageSlug(pageSlug, category string) string {
+func categoryFromEntityPageSlug(pageSlug, category string) string { //nolint:unused // symmetry with the atom backend
 	want := entityCategorySlug(category)
 	if pageSlug == want {
 		return category
@@ -94,7 +104,7 @@ func (s *gbrainEntityStore) UpsertArticleCategories(ctx context.Context, article
 	}
 	current := map[string]bool{}
 	for _, e := range existing {
-		for _, cat := range []string{strings.TrimPrefix(e.ToSlug, gbrainDirConcepts)} {
+		for _, cat := range []string{strings.TrimPrefix(e.ToSlug, entityCategoryDir)} {
 			if cat != "" && cat != e.ToSlug {
 				current[cat] = true
 			}
@@ -173,7 +183,7 @@ func (s *gbrainEntityStore) ListCategoriesForArticle(ctx context.Context, articl
 	seen := map[string]bool{}
 	var out []string
 	for _, e := range edges {
-		cat := strings.TrimPrefix(e.ToSlug, gbrainDirConcepts)
+		cat := strings.TrimPrefix(e.ToSlug, entityCategoryDir)
 		if cat != "" && cat != e.ToSlug && !seen[cat] {
 			seen[cat] = true
 			out = append(out, cat)
@@ -187,7 +197,7 @@ func (s *gbrainEntityStore) ListCategoriesForArticle(ctx context.Context, articl
 // wuphf_category frontmatter key).
 func (s *gbrainEntityStore) categoryPages(ctx context.Context) ([]string, error) {
 	kept, err := s.client.ListAllPages(ctx, gbrain.ListPageOptions{
-		SlugPrefix: gbrainDirConcepts,
+		SlugPrefix: entityCategoryDir,
 		Limit:      gbrainListPageSize,
 	})
 	if err != nil {
@@ -203,7 +213,7 @@ func (s *gbrainEntityStore) categoryPages(ctx context.Context) ([]string, error)
 			return nil, err
 		}
 		if _, ok := blobFromFrontmatter(page.Frontmatter, "wuphf_category"); ok {
-			out = append(out, strings.TrimPrefix(meta.Slug, gbrainDirConcepts))
+			out = append(out, strings.TrimPrefix(meta.Slug, entityCategoryDir))
 		}
 	}
 	sort.Strings(out)
@@ -243,7 +253,7 @@ func (s *gbrainEntityStore) UpsertCategoryParents(ctx context.Context, category 
 	}
 	current := map[string]bool{}
 	for _, e := range existing {
-		p := strings.TrimPrefix(e.ToSlug, gbrainDirConcepts)
+		p := strings.TrimPrefix(e.ToSlug, entityCategoryDir)
 		if p != "" && p != e.ToSlug {
 			current[p] = true
 		}
@@ -299,7 +309,7 @@ func (s *gbrainEntityStore) ListCategoryParents(ctx context.Context, category st
 	seen := map[string]bool{}
 	var out []string
 	for _, e := range edges {
-		p := strings.TrimPrefix(e.ToSlug, gbrainDirConcepts)
+		p := strings.TrimPrefix(e.ToSlug, entityCategoryDir)
 		if p != "" && p != e.ToSlug && !seen[p] {
 			seen[p] = true
 			out = append(out, p)
