@@ -332,6 +332,16 @@ type Broker struct {
 	stopCh   chan struct{} // closed by Stop(); signals background goroutines to exit
 	stopOnce sync.Once
 
+	// Fire-and-forget hook tracking (publish-path manifest stamps, workflow
+	// precompile, dev-server pre-warm). Stop waits on bgWG so none of these
+	// can write into the runtime home after Stop returns — a post-Stop write
+	// races whoever owns that tree next (observed: t.TempDir cleanup failing
+	// with "directory not empty" when advisePublishOddities re-stamped
+	// app.json after the test ended).
+	bgMu      sync.Mutex
+	bgStopped bool
+	bgWG      sync.WaitGroup
+
 	// Skill compile (Stage A) plumbing. The scanner is lazily constructed on
 	// first compile; metrics + flags coordinate concurrent triggers. All four
 	// fields are guarded by b.mu except where the metric body uses sync/atomic.
@@ -873,7 +883,33 @@ func (b *Broker) StartOnPort(port int) error {
 }
 
 // Stop shuts down the broker.
+// trackBackground runs fn on a goroutine Stop waits for. Use it for
+// fire-and-forget work that touches the runtime home (manifest stamps,
+// precompiles, pre-warms): an untracked goroutine can land a write after
+// Stop returns, corrupting whoever owns the tree next. Once Stop has begun,
+// fn is dropped instead of being launched into a dying broker — every
+// tracked hook is best-effort by construction.
+func (b *Broker) trackBackground(fn func()) {
+	b.bgMu.Lock()
+	if b.bgStopped {
+		b.bgMu.Unlock()
+		return
+	}
+	b.bgWG.Add(1)
+	b.bgMu.Unlock()
+	go func() {
+		defer b.bgWG.Done()
+		fn()
+	}()
+}
+
 func (b *Broker) Stop() {
+	// Refuse new tracked background work before anything is torn down, so
+	// the bgWG.Wait below is against a closed set.
+	b.bgMu.Lock()
+	b.bgStopped = true
+	b.bgMu.Unlock()
+
 	if b.stopCh != nil {
 		b.stopOnce.Do(func() {
 			close(b.stopCh)
@@ -947,6 +983,11 @@ func (b *Broker) Stop() {
 		setSharedGBrainClient(nil)
 		_ = gbrainClient.Close()
 	}
+
+	// Last: drain tracked fire-and-forget hooks. This runs after
+	// lifecycleCancel so ctx-aware hooks (workflow precompile) abort their
+	// model calls promptly instead of holding Stop for their full timeout.
+	b.bgWG.Wait()
 }
 
 // handleWebToken returns the broker token to localhost clients without requiring auth.

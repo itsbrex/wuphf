@@ -420,7 +420,14 @@ func (b *Broker) precompileAppWorkflowAsync(appID string) {
 			log.Printf("operator workflow: precompile for %s panicked: %v", appID, r)
 		}
 	}()
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+	// Parent on the broker lifecycle so Stop's cancel aborts the model call
+	// promptly — Stop waits for this goroutine (trackBackground), and a
+	// Background parent would hold shutdown for the full 90s on a hung call.
+	parent := b.lifecycleCtx
+	if parent == nil {
+		parent = context.Background()
+	}
+	ctx, cancel := context.WithTimeout(parent, 90*time.Second)
 	defer cancel()
 	if err := b.compileAndFreezeAppWorkflow(ctx, appID); err != nil {
 		log.Printf("operator workflow: precompile for %s skipped: %v", appID, err)

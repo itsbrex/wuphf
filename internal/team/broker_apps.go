@@ -73,14 +73,14 @@ func (b *Broker) handleApps(w http.ResponseWriter, r *http.Request) {
 		// off the request path so the Workflow tab opens already-compiled instead
 		// of compiling on demand while the operator watches. Fail-safe; the
 		// on-demand compile remains as the fallback.
-		go b.precompileAppWorkflowAsync(app.ID)
+		b.trackBackground(func() { b.precompileAppWorkflowAsync(app.ID) })
 		// First human build -> mint the starter routine server-side (the FE
 		// chat used to own this and lost it whenever it unmounted mid-build).
-		go b.mintStarterRoutineForFirstBuild(app)
+		b.trackBackground(func() { b.mintStarterRoutineForFirstBuild(app) })
 		// Deterministic post-publish sanity note: if the saved page is still
 		// the scaffold placeholder or implausibly small, say so once in the
 		// edit channel. Advisory only — never blocks, reopens, or retries.
-		go b.advisePublishOddities(app)
+		b.trackBackground(func() { b.advisePublishOddities(app) })
 		// A republish rewrites the source and may change the dependency set, so
 		// any running live-preview server is now stale. Stop it and pre-warm a
 		// fresh one in the background: the new deps (e.g. the refine stack)
@@ -88,7 +88,7 @@ func (b *Broker) handleApps(w http.ResponseWriter, r *http.Request) {
 		// blank cold boot when the human opens it.
 		mgr := b.appDevManager()
 		mgr.Stop(app.ID)
-		go func(id string) { _, _ = mgr.Ensure(id) }(app.ID)
+		b.trackBackground(func() { _, _ = mgr.Ensure(app.ID) })
 		writeJSON(w, http.StatusOK, map[string]any{"app": app})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

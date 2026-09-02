@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 )
 
@@ -216,10 +217,9 @@ func TestBrokerStop_ClosesStopChannelAndPreservesState(t *testing.T) {
 	// The previous incarnation slept 250ms and asserted no late writes,
 	// which (a) violated this repo's no-sleeps-in-tests rule and (b)
 	// would pass for the wrong reason if the offending goroutine was
-	// quiescent during the window. A real "no late writes" check
-	// requires a sync.WaitGroup on the goroutine set, which is broker
-	// instrumentation worth doing separately if/when the goroutine
-	// surface grows.
+	// quiescent during the window. The real "no late writes" guarantee
+	// now exists for tracked hooks: Stop drains b.bgWG — see
+	// trackBackground and TestStopWaitsForTrackedBackgroundWork below.
 	//
 	// Starts the broker via StartOnPort(0) so the HTTP listener
 	// goroutine is actually present — without that, Stop is a near-noop
@@ -274,4 +274,46 @@ func TestBrokerStop_ClosesStopChannelAndPreservesState(t *testing.T) {
 		t.Fatalf("state file content changed across Stop:\nbefore: %s\nafter: %s",
 			beforeBytes, afterBytes)
 	}
+}
+
+// TestStopWaitsForTrackedBackgroundWork locks the drain contract the comment
+// in TestBrokerStop_ClosesStopChannelAndPreservesState deferred to "when the
+// goroutine surface grows": it grew. The publish-path hooks (manifest
+// advisory stamp, workflow precompile, dev-server pre-warm) run through
+// trackBackground, and Stop must not return while one is mid-flight — an
+// untracked hook re-stamping app.json after Stop was exactly the race that
+// made t.TempDir cleanup fail with "directory not empty" in
+// TestAppEditSessionRestrictedToWriters.
+func TestStopWaitsForTrackedBackgroundWork(t *testing.T) {
+	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
+	if err := b.StartOnPort(0); err != nil {
+		t.Fatalf("StartOnPort: %v", err)
+	}
+
+	release := make(chan struct{})
+	var finished atomic.Bool
+	b.trackBackground(func() {
+		<-release
+		finished.Store(true)
+	})
+
+	stopReturned := make(chan struct{})
+	go func() {
+		b.Stop()
+		close(stopReturned)
+	}()
+	// Let the hook finish; Stop may only return after it has. No sleeps:
+	// if Stop does not wait on the tracked set, it races the hook and the
+	// finished assertion below fails.
+	close(release)
+	<-stopReturned
+	if !finished.Load() {
+		t.Fatal("Stop returned before the tracked background hook finished")
+	}
+
+	// Once Stop has begun, new tracked work is dropped, never launched. If
+	// this hook were tracked, the second (idempotent) Stop would wait for
+	// it and the t.Error would fire before Stop returned.
+	b.trackBackground(func() { t.Error("tracked hook launched after Stop") })
+	b.Stop()
 }
