@@ -77,35 +77,35 @@ describe("archiveExtension", () => {
 describe("archiveName", () => {
   test("Windows release name uses .zip + windows/amd64", () => {
     setPlatform("win32", "x64");
-    expect(archiveName("0.9.0")).toBe("wuphf_0.9.0_windows_amd64.zip");
+    expect(archiveName("0.9.0")).toBe("gawkbot_0.9.0_windows_amd64.zip");
   });
 
   test("Windows arm64 release name uses .zip + windows/arm64", () => {
     setPlatform("win32", "arm64");
-    expect(archiveName("1.2.3")).toBe("wuphf_1.2.3_windows_arm64.zip");
+    expect(archiveName("1.2.3")).toBe("gawkbot_1.2.3_windows_arm64.zip");
   });
 
   test("darwin release name uses .tar.gz", () => {
     setPlatform("darwin", "arm64");
-    expect(archiveName("0.9.0")).toBe("wuphf_0.9.0_darwin_arm64.tar.gz");
+    expect(archiveName("0.9.0")).toBe("gawkbot_0.9.0_darwin_arm64.tar.gz");
   });
 
   test("linux release name uses .tar.gz", () => {
     setPlatform("linux", "x64");
-    expect(archiveName("0.9.0")).toBe("wuphf_0.9.0_linux_amd64.tar.gz");
+    expect(archiveName("0.9.0")).toBe("gawkbot_0.9.0_linux_amd64.tar.gz");
   });
 });
 
 describe("binaryFilename", () => {
-  test("returns wuphf.exe on Windows (CreateProcess requires the .exe suffix)", () => {
+  test("returns gawkbot.exe on Windows (CreateProcess requires the .exe suffix)", () => {
     setPlatform("win32", "x64");
-    expect(binaryFilename()).toBe("wuphf.exe");
+    expect(binaryFilename()).toBe("gawkbot.exe");
   });
 
-  test("returns bare wuphf on Unix", () => {
+  test("returns bare gawkbot on Unix", () => {
     setPlatform("darwin", "arm64");
-    expect(binaryFilename()).toBe("wuphf");
+    expect(binaryFilename()).toBe("gawkbot");
     setPlatform("linux", "x64");
-    expect(binaryFilename()).toBe("wuphf");
+    expect(binaryFilename()).toBe("gawkbot");
   });
 });

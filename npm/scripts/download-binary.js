@@ -2,7 +2,7 @@
 
 // Downloads the gawkbot binary that matches the current package version
 // from the corresponding GitHub release and extracts it into bin/.
-// GoReleaser archive name: wuphf_<version>_<os>_<arch>.tar.gz
+// GoReleaser archive name: gawkbot_<version>_<os>_<arch>.tar.gz
 // where <version> is the tag without the leading 'v'.
 //
 // ---------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 //     <sha256-hex>  <archive-filename>
 //
 // Verification flow:
-//   1. Download the per-platform archive (wuphf_<ver>_<os>_<arch>.tar.gz).
+//   1. Download the per-platform archive (gawkbot_<ver>_<os>_<arch>.tar.gz).
 //   2. Download checksums.txt from the same release.
 //   3. Compute SHA256 of the downloaded archive locally.
 //   4. Compare against the hash listed for that archive in checksums.txt.
@@ -138,7 +138,7 @@ function expectedHashFor(checksumsText, filename) {
 async function verifyArchive({ version, archivePath, archiveBasename, silent }) {
   const checksumsUrl = releaseAssetUrl(version, CHECKSUMS_FILENAME);
   if (!silent) {
-    process.stderr.write(`wuphf: verifying ${archiveBasename} against ${CHECKSUMS_FILENAME}\n`);
+    process.stderr.write(`gawkbot: verifying ${archiveBasename} against ${CHECKSUMS_FILENAME}\n`);
   }
 
   let checksumsText;
