@@ -707,6 +707,11 @@ func (b *Broker) StartOnPort(port int) error {
 	mux.HandleFunc("/wiki/read", b.requireAuth(b.handleWikiRead))
 	mux.HandleFunc("/wiki/search", b.requireAuth(b.handleWikiSearch))
 	mux.HandleFunc("/wiki/lookup", b.requireAuth(b.handleWikiLookup))
+	// OpenAI-compatible chat shim. Exists so gbrain can reach a chat model for
+	// query expansion on a subscription-only host, where the user's
+	// credentials live inside the agent CLI and there is no API key to give
+	// gbrain. See broker_openai_compat.go.
+	mux.HandleFunc("/v1/chat/completions", b.requireAuth(b.handleOpenAIChatCompletions))
 	mux.HandleFunc("/wiki/list", b.requireAuth(b.handleWikiList))
 	mux.HandleFunc("/wiki/article", b.requireAuth(b.handleWikiArticle))
 	mux.HandleFunc("/wiki/catalog", b.requireAuth(b.handleWikiCatalog))

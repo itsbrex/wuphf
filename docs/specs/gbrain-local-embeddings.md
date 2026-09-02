@@ -121,14 +121,31 @@ A user on a Claude Pro or ChatGPT subscription with **no API key of any kind**
 still cannot reach a chat model from gbrain, because gbrain speaks HTTP to model
 providers and the CLI is a subprocess.
 
-Closing it needs a shim: expose an OpenAI-compatible `/v1/chat/completions`
-route on the broker that proxies to the already-selected agent CLI, then point
-gbrain at it with `provider_base_urls` + `expansion_model:
-openai-compatible:<model>`. WUPHF today only CONSUMES that protocol
-(`internal/provider/openai_compat.go`); the sole server is a test stub at
-`internal/testing/mlx-stub`. So this is real work, roughly one handler plus
-streaming translation, and it buys expansion (not embeddings) for
-subscription-only users.
+**SHIPPED.** `internal/team/broker_openai_compat.go` serves
+`POST /v1/chat/completions` on the broker, proxying to the configured agent CLI
+via `provider.RunConfiguredOneShotCtx`.
+
+Wire gbrain to it:
+
+```bash
+gbrain config set provider_base_urls '{"openai-compatible":"http://127.0.0.1:<broker-port>/v1"}'
+gbrain config set expansion_model 'openai-compatible:wuphf-configured-provider'
+```
+
+The broker's Bearer token is the API key (the route sits behind `requireAuth`
+like every other mutating surface — it reaches a subprocess that spends tokens,
+so it must not be open).
+
+Deliberately narrow, and it must stay that way: non-streaming only, no tool
+calls, no images, no n>1. `stream: true` is REFUSED rather than downgraded,
+because answering an SSE request with one JSON body leaves the client waiting
+for frames that never arrive — a hang is much harder to diagnose than a 400.
+Token usage is reported as zeros rather than invented, since the CLIs do not
+surface counts through the one-shot hook and fabricated numbers would silently
+corrupt a caller's cost accounting.
+
+This buys EXPANSION, not embeddings. Nothing here changes the fact that a chat
+model cannot produce a usable vector.
 
 A second, heavier option for true offline embeddings with no key and no Ollama
 is bundling a small ONNX embedder (bge-small-en-v1.5, 384d, ~130MB) in-process,
