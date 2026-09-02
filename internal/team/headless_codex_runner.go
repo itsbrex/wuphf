@@ -277,7 +277,7 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 		case "tool_result":
 			line := "tool_result: " + truncate(event.Text, 140)
 			appendHeadlessCodexLog(slug, line)
-			l.updateHeadlessProgress(slug, "active", "tool_result", truncate(event.Text, 140), snapshotMetrics())
+			l.updateHeadlessProgress(slug, "active", "tool_result", progressDetail(event.Text, 140), snapshotMetrics())
 			emitHeadlessToolResult(agentStream, turnID, HeadlessProviderCodex, slug, taskID, event.ToolName, event.Text, event.RawType)
 		case "error":
 			appendHeadlessCodexLog(slug, "stream_error: "+event.Detail)
