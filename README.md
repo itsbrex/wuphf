@@ -12,7 +12,7 @@
 
 ### Open source grok bot. Local VMs as computers for each bot. They build microapps to manage all your work.
 
-https://github.com/user-attachments/assets/312256d8-718a-44d1-8b42-fcf5019708d3
+https://github.com/user-attachments/assets/84c4b8cf-fb5d-4e9b-b720-213648c2e20b
 
 gawkbot lets anyone turn their manual workflows into microapps across 1200+
 integrations in minutes. Describe the job in one sentence — or demo it once on
