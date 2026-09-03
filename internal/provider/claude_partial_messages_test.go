@@ -1,0 +1,118 @@
+package provider
+
+import (
+	"context"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/nex-crm/wuphf/internal/agent"
+)
+
+// The office showed a "Working…" pill and nothing else for ~1 minute after the
+// human's first question (reported 2026-09-03). Without
+// --include-partial-messages the CLI emits one event per COMPLETED assistant
+// message, and RULE ZERO in prompt_builder forces the first message to be a
+// team_task tool call — so the first human-visible text only landed after a
+// full tool round-trip. These two tests pin the flag and the delta handling.
+
+func TestClaudeArgsRequestPartialMessages(t *testing.T) {
+	t.Parallel()
+	args := buildClaudeArgs("system prompt", "", false)
+	if !containsArg(args, "--include-partial-messages") {
+		t.Fatalf("claude args missing --include-partial-messages; the office cannot paint a reply until the whole message is done.\nargs: %v", args)
+	}
+	// The flag only does anything alongside stream-json.
+	if !containsArg(args, "stream-json") {
+		t.Fatalf("--include-partial-messages requires --output-format stream-json.\nargs: %v", args)
+	}
+}
+
+// Deltas reach the human as they generate, and the completed block that
+// follows them must NOT be emitted a second time.
+func TestClaudeStreamEmitsDeltasOnceNotTwice(t *testing.T) {
+	t.Parallel()
+	lines := []string{
+		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Spinning "}}}`,
+		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"up a prospector."}}}`,
+		`{"type":"assistant","message":{"content":[{"type":"text","text":"Spinning up a prospector."}]}}`,
+		`{"type":"result","subtype":"success","result":"Spinning up a prospector."}`,
+	}
+	chunks := runFixtureStream(t, lines)
+
+	var text []string
+	for _, c := range chunks {
+		if c.Type == "text" {
+			text = append(text, c.Content)
+		}
+	}
+	if len(text) == 0 {
+		t.Fatalf("no text reached the human at all; chunks=%+v", chunks)
+	}
+	// The FIRST thing the human sees is a partial, not the finished message —
+	// that is the whole point of the change.
+	if text[0] != "Spinning " {
+		t.Errorf("first text chunk = %q, want the first delta %q (text is not painting live)", text[0], "Spinning ")
+	}
+	if got := strings.Join(text, ""); got != "Spinning up a prospector." {
+		t.Errorf("joined text = %q, want it exactly once — the completed block must not re-emit what the deltas already painted", got)
+	}
+}
+
+// A turn emits several assistant messages (a tool call, then the reply). A
+// message with no deltas must still be emitted, or the guard from the previous
+// message would swallow it.
+func TestClaudeStreamStillEmitsMessageWithoutDeltas(t *testing.T) {
+	t.Parallel()
+	lines := []string{
+		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Scoping that."}}}`,
+		`{"type":"assistant","message":{"content":[{"type":"text","text":"Scoping that."}]}}`,
+		`{"type":"assistant","message":{"content":[{"type":"text","text":"Done — task-12 is running."}]}}`,
+		`{"type":"result","subtype":"success","result":"Done — task-12 is running."}`,
+	}
+	chunks := runFixtureStream(t, lines)
+
+	var joined strings.Builder
+	for _, c := range chunks {
+		if c.Type == "text" {
+			joined.WriteString(c.Content)
+		}
+	}
+	got := joined.String()
+	if !strings.Contains(got, "Scoping that.") {
+		t.Errorf("lost the delta-streamed message: %q", got)
+	}
+	if !strings.Contains(got, "Done — task-12 is running.") {
+		t.Errorf("lost the second assistant message, which had no deltas: %q", got)
+	}
+}
+
+// runFixtureStream feeds NDJSON through the real stream reader by pointing the
+// command at a file of canned CLI output.
+func runFixtureStream(t *testing.T, lines []string) []agent.StreamChunk {
+	t.Helper()
+	dir := t.TempDir()
+	fixture := filepath.Join(dir, "stream.ndjson")
+	if err := os.WriteFile(fixture, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+	// Replay the fixture as the CLI's stdout. No shell: the path goes straight
+	// through as an argv entry, so nothing in it can be read as a metacharacter.
+	// `cat <file>` ignores stdin, which is where the caller writes the prompt —
+	// the unread pipe just closes when the process exits.
+	cmd := exec.Command("cat", fixture)
+
+	ch := make(chan agent.StreamChunk, 64)
+	go func() {
+		defer close(ch)
+		runClaudeAttemptCommand(context.Background(), cmd, ch, "spin up a prospector", dir)
+	}()
+
+	var chunks []agent.StreamChunk
+	for c := range ch {
+		chunks = append(chunks, c)
+	}
+	return chunks
+}

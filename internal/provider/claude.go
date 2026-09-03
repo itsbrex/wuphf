@@ -32,13 +32,18 @@ var (
 
 // claudeStreamMsg is the NDJSON envelope emitted by `claude --output-format stream-json`.
 type claudeStreamMsg struct {
-	Type          string            `json:"type"`
-	Subtype       string            `json:"subtype,omitempty"`
-	SessionID     string            `json:"session_id,omitempty"`
-	Model         string            `json:"model,omitempty"`
-	Message       *claudeMessage    `json:"message"`
-	Result        string            `json:"result,omitempty"`
-	Errors        []json.RawMessage `json:"errors,omitempty"`
+	Type      string            `json:"type"`
+	Subtype   string            `json:"subtype,omitempty"`
+	SessionID string            `json:"session_id,omitempty"`
+	Model     string            `json:"model,omitempty"`
+	Message   *claudeMessage    `json:"message"`
+	Result    string            `json:"result,omitempty"`
+	Errors    []json.RawMessage `json:"errors,omitempty"`
+	// Event carries the raw Anthropic streaming event when Type is
+	// "stream_event" (emitted only under --include-partial-messages). Held as
+	// RawMessage because the envelope covers many event shapes and we decode
+	// just the delta ones.
+	Event         json.RawMessage `json:"event,omitempty"`
 	ToolUseResult *struct {
 		Stdout string `json:"stdout,omitempty"`
 		Stderr string `json:"stderr,omitempty"`
@@ -47,6 +52,18 @@ type claudeStreamMsg struct {
 
 type claudeMessage struct {
 	Content []claudeContentBlock `json:"content"`
+}
+
+// claudeStreamEvent is the subset of an Anthropic streaming event we act on:
+// the incremental text/thinking deltas that let the office paint a reply as it
+// is generated instead of after it is finished.
+type claudeStreamEvent struct {
+	Type  string `json:"type"`
+	Delta *struct {
+		Type     string `json:"type"`
+		Text     string `json:"text,omitempty"`
+		Thinking string `json:"thinking,omitempty"`
+	} `json:"delta,omitempty"`
 }
 
 type claudeContentBlock struct {
@@ -176,6 +193,11 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 
 	result := claudeAttemptResult{}
 	gotAssistantText := false
+	// Whether the CURRENT assistant message already reached the human as
+	// token deltas. Guards against printing a block twice: once live, then
+	// again when its completed form arrives.
+	streamedText := false
+	streamedThinking := false
 	for scanner.Scan() {
 		line := scanner.Text()
 		if line == "" {
@@ -194,6 +216,33 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 		}
 
 		switch msg.Type {
+		// Token-level deltas, emitted under --include-partial-messages. These
+		// arrive BEFORE the completed "assistant" message for the same turn,
+		// so they are what actually reaches the human first.
+		case "stream_event":
+			if len(msg.Event) == 0 {
+				continue
+			}
+			var ev claudeStreamEvent
+			if err := json.Unmarshal(msg.Event, &ev); err != nil {
+				continue
+			}
+			if ev.Type != "content_block_delta" || ev.Delta == nil {
+				continue
+			}
+			switch ev.Delta.Type {
+			case "text_delta":
+				if ev.Delta.Text != "" {
+					ch <- agent.StreamChunk{Type: "text", Content: ev.Delta.Text}
+					streamedText = true
+					gotAssistantText = true
+				}
+			case "thinking_delta":
+				if ev.Delta.Thinking != "" {
+					ch <- agent.StreamChunk{Type: "thinking", Content: ev.Delta.Thinking}
+					streamedThinking = true
+				}
+			}
 		case "assistant":
 			if msg.Message == nil {
 				continue
@@ -201,12 +250,16 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 			for _, block := range msg.Message.Content {
 				switch block.Type {
 				case "thinking":
-					if block.Thinking != "" {
+					// Already painted delta-by-delta above; re-emitting the
+					// completed block would print the whole thing twice.
+					if block.Thinking != "" && !streamedThinking {
 						ch <- agent.StreamChunk{Type: "thinking", Content: block.Thinking}
 					}
 				case "text":
 					if block.Text != "" {
-						streamTextChunks(ch, block.Text)
+						if !streamedText {
+							streamTextChunks(ch, block.Text)
+						}
 						gotAssistantText = true
 					}
 				case "tool_use":
@@ -219,6 +272,13 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 					}
 				}
 			}
+			// One turn emits several assistant messages (a tool call, then
+			// the reply). Each gets its own delta run, so the
+			// already-streamed guards reset once a message is complete —
+			// otherwise the first message's deltas would suppress every later
+			// message's text.
+			streamedText = false
+			streamedThinking = false
 		case "user":
 			if msg.Message != nil {
 				for _, block := range msg.Message.Content {
@@ -293,6 +353,14 @@ func buildClaudeArgs(systemPrompt string, resumeID string, oneShot bool) []strin
 	args := []string{
 		"--print", "-",
 		"--output-format", "stream-json",
+		// Emit token-level deltas. Without this the CLI only emits an event
+		// per COMPLETED assistant message, so the office showed a "Working…"
+		// pill and nothing else until the whole first message was done — and
+		// because the first message is required to be a team_task tool call
+		// (prompt_builder's RULE ZERO), the human's first visible text only
+		// arrived after a full tool round-trip. Measured ~1 min of dead air on
+		// a first question. Deltas make the reply paint as it generates.
+		"--include-partial-messages",
 		"--verbose",
 		"--max-turns", maxTurns,
 		"--disable-slash-commands",
