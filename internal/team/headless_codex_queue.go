@@ -876,6 +876,13 @@ func (l *Launcher) headlessCodexTurnTimeoutForTurn(slug string, turn headlessCod
 	if isAppBuilderSlug(slug) {
 		return headlessCodexAppBuildTurnTimeout
 	}
+	// App building is a system skill every bot carries. A Founding Engineer
+	// on this harness spent the whole 10m office budget on an app ask and
+	// was killed before publishing (2026-09-03); a bot that owns an open app
+	// build, or whose incoming ask is for an app, gets the build budget.
+	if l.broker != nil && (l.broker.ownsOpenAppBuild(slug) || looksLikeAppBuildRequest(turn.Prompt)) {
+		return headlessCodexAppBuildTurnTimeout
+	}
 	if task := l.timedOutTaskForTurn(slug, turn); task != nil {
 		if strings.EqualFold(strings.TrimSpace(task.ExecutionMode), "local_worktree") {
 			return headlessCodexLocalWorktreeTurnTimeout

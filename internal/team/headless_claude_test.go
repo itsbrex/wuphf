@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/nex-crm/wuphf/internal/bot"
@@ -361,5 +362,22 @@ func TestHeadlessClaudeMaxTurns_AppAskGetsHeadroom(t *testing.T) {
 		if got := l.headlessClaudeMaxTurns("pm", ask); got != want {
 			t.Fatalf("max turns for %q = %s, want %s", ask, got, want)
 		}
+	}
+}
+
+// TestWithAppAskPreface: an app ask gets the order-of-operations preface in
+// the message itself; anything else passes through untouched.
+func TestWithAppAskPreface(t *testing.T) {
+	ask := "Build me a Unit Converter app: km to miles."
+	got := withAppAskPreface(ask)
+	if !strings.HasPrefix(got, "APP ASK") || !strings.HasSuffix(got, ask) {
+		t.Fatalf("app ask not prefaced: %q", got)
+	}
+	if !strings.Contains(got, "team_task action=create") || !strings.Contains(got, "register_app(") {
+		t.Fatalf("preface missing the task-first / publish steps: %q", got)
+	}
+	plain := "what pressure for espresso?"
+	if withAppAskPreface(plain) != plain {
+		t.Fatalf("non-app message must pass through unchanged")
 	}
 }
