@@ -18,6 +18,7 @@ package team
 //     suppression is scoped to the asking agent.
 
 import (
+	"encoding/json"
 	"strings"
 	"testing"
 )
@@ -140,6 +141,65 @@ func TestHumanNoteWakesOwnerOnWaitingTaskStates(t *testing.T) {
 	}
 	if followUps["task-w-general"] {
 		t.Errorf("general-channel decision task must not get the follow-up wake")
+	}
+}
+
+// The announcement must carry a structured card payload, so the web client
+// can render the ask as an interactive card in the thread instead of a
+// sentence. Observed live 2026-09-03: a blocking "Add Prospector to the team?"
+// rendered as prose from a phantom "Office" speaker, pointing the human at an
+// Inbox the nav no longer has.
+func TestInterviewAnnouncementCarriesCardPayload(t *testing.T) {
+	t.Parallel()
+	b := newUtteranceTestBroker(t)
+	if _, err := b.CreateRequest(humanInterview{
+		Kind: "approval", From: "ceo", Channel: "team", Blocking: true, Required: true,
+		Title: "Add Prospector?", Question: "Add Prospector to the team?",
+	}); err != nil {
+		t.Fatalf("create request: %v", err)
+	}
+
+	var announcement *channelMessage
+	for _, msg := range b.ChannelMessages("team") {
+		if msg.Kind == "human_request_raised" {
+			m := msg
+			announcement = &m
+		}
+	}
+	if announcement == nil {
+		t.Fatalf("no announcement posted")
+	}
+
+	// The dead pointer must be gone: the standalone Inbox was consolidated
+	// into Tasks, so "Answer it in the Inbox" named a destination that no
+	// longer exists.
+	if strings.Contains(announcement.Content, "in the Inbox") {
+		t.Errorf("announcement still points at the removed Inbox: %q", announcement.Content)
+	}
+
+	if len(announcement.Payload) == 0 {
+		t.Fatalf("announcement carries no card payload — the client can only render prose")
+	}
+	var got humanRequestRaisedPayload
+	if err := json.Unmarshal(announcement.Payload, &got); err != nil {
+		t.Fatalf("payload does not decode: %v", err)
+	}
+	if got.RequestID == "" {
+		t.Errorf("payload has no request_id — the card cannot join the live request")
+	}
+	// The card is attributed to the bot that asked, even though the message
+	// itself is sent by "system" so it cannot wake other bots.
+	if got.From != "ceo" {
+		t.Errorf("payload from = %q, want ceo (the asker, not the wire sender)", got.From)
+	}
+	if got.Question != "Add Prospector to the team?" {
+		t.Errorf("payload question = %q", got.Question)
+	}
+	if !got.Blocking {
+		t.Errorf("payload blocking = false, want true")
+	}
+	if announcement.From != "system" {
+		t.Errorf("announcement From = %q, want system (must never wake agents)", announcement.From)
 	}
 }
 

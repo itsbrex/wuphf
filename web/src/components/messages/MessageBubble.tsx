@@ -31,6 +31,10 @@ import {
   parseConsultRelayPayload,
 } from "./cards/ConsultRelayMarker";
 import {
+  HumanRequestCard,
+  parseHumanRequestRaisedPayload,
+} from "./cards/HumanRequestCard";
+import {
   parseSystemAuthErrorPayload,
   SystemErrorCard,
 } from "./cards/SystemErrorCard";
@@ -274,6 +278,18 @@ export function MessageBubble({
       payload.task_id && payload.task_id === currentTaskId,
     );
     return <TaskLifecycleCard payload={payload} sameTask={sameTask} />;
+  }
+
+  // A bot's blocking ask, rendered as an interactive card in the thread —
+  // the options as real buttons, answered in place. Rendered OUTSIDE the
+  // standard message-bubble so it carries no author row: the wire message is
+  // sent by "system" (so it cannot wake other bots) and a byline would print
+  // a phantom "Office" speaker. The card names the real asker instead.
+  if (message.kind === "human_request_raised") {
+    const payload = parseHumanRequestRaisedPayload(message.payload);
+    return (
+      <HumanRequestCard payload={payload} fallbackText={message.content} />
+    );
   }
 
   // Wiki surface card. Broker emits this in #general when a new wiki

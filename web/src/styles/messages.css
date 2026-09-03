@@ -2512,3 +2512,98 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── Human request card ────────────────────────────────────────────────
+   A bot's blocking ask, rendered inline in the thread with its options as
+   real buttons (HumanRequestCard). Sits at the same altitude as the other
+   system cards above, but carries a warmer border while it is genuinely
+   blocking so it reads as "the office is waiting on you" rather than as
+   one more event in the log. All color comes from tokens so the card holds
+   up in Nex Light, Nex Dark, and Noir Gold. */
+.request-card {
+  margin: 8px 0;
+  padding: 12px 14px;
+  width: 100%;
+  background: color-mix(in srgb, var(--accent, #2563eb) 6%, var(--bg-card));
+  border: 1px solid
+    color-mix(in srgb, var(--accent, #2563eb) 40%, var(--border));
+  border-radius: var(--radius-md, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.request-card--blocking {
+  background: color-mix(in srgb, var(--warning, #d97706) 7%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--warning, #d97706) 45%, var(--border));
+}
+.request-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.request-card-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.request-card-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.request-card-asker {
+  color: var(--accent, #2563eb);
+}
+.request-card-badge {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm, 4px);
+  background: color-mix(in srgb, var(--warning, #d97706) 18%, transparent);
+  color: var(--warning, #d97706);
+}
+.request-card-title {
+  font-weight: 600;
+  color: var(--text);
+}
+.request-card-question {
+  color: var(--text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.request-card-help {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.request-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.request-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.request-card-textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--bg-input, var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+}
+.request-card-textarea:focus-visible {
+  outline: 2px solid var(--accent, #2563eb);
+  outline-offset: 1px;
+}

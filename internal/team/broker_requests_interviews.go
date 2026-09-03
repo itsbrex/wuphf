@@ -1200,6 +1200,30 @@ func (b *Broker) answerInterviewFromHumanThreadReplyLocked(msg channelMessage) (
 	return false, nil
 }
 
+// humanRequestRaisedPayload is the structured card payload on a
+// "human_request_raised" chat message. The web client renders this as an
+// interactive approval card in the thread — the ask itself, with the
+// request's options as buttons — instead of a sentence telling the human to
+// go answer it somewhere else.
+//
+// It carries identity and framing only, never the options: those live on the
+// request and change as it is answered, so the client joins against the live
+// request by RequestID rather than trusting a snapshot frozen at raise time.
+type humanRequestRaisedPayload struct {
+	RequestID string `json:"request_id"`
+	// From is the slug of the bot that asked. The message itself is sent by
+	// "system" so it cannot wake other agents; this is who the card is
+	// attributed to on screen.
+	From     string `json:"from"`
+	Question string `json:"question"`
+	Title    string `json:"title,omitempty"`
+	// Label is "interview" or "request" — the card uses it for its heading.
+	Label string `json:"label,omitempty"`
+	// Blocking is true when the office is stalled until this is answered
+	// (req.Blocking OR req.Required).
+	Blocking bool `json:"blocking,omitempty"`
+}
+
 // postRequestRaisedChatMessageLocked announces a newly raised
 // human-decision request in its channel as a system chat message, so the
 // ask is visible where the human actually works — not only as an Inbox row
@@ -1235,7 +1259,37 @@ func (b *Broker) postRequestRaisedChatMessageLocked(req *humanInterview) {
 		urgency = " (blocking)"
 	}
 	question := strings.TrimSpace(req.Question)
-	content := fmt.Sprintf("❓ @%s asks you%s (%s %s): %s\nAnswer it in the Inbox, or reply in this thread.", req.From, urgency, label, req.ID, question)
+	// Prose body. This is the FALLBACK surface, not the primary one: the web
+	// client renders Payload below as an interactive card with the request's
+	// own options as buttons. This text is what agents read in channel
+	// history, and what a client too old to know the payload still shows.
+	//
+	// It deliberately no longer says "Answer it in the Inbox". The standalone
+	// Inbox was consolidated into Tasks, so that sentence pointed the human at
+	// a destination the nav no longer has.
+	content := fmt.Sprintf("❓ @%s asks you%s (%s %s): %s\nAnswer it here, or reply in this thread.", req.From, urgency, label, req.ID, question)
+	// Structured card payload. Carries the request identity so the client can
+	// join against the live request (for its options and current status)
+	// rather than parsing it back out of the prose above, and carries the
+	// ASKER so the card is attributed to the bot that actually asked.
+	//
+	// From stays "system" on the wire: notifyAgentsLoop skips system senders,
+	// and attributing this to req.From would make the announcement wake other
+	// agents. The card reads `from` out of this payload for its byline, so the
+	// human sees "@ceo asks you" and never a phantom "Office" speaker.
+	payload, err := json.Marshal(humanRequestRaisedPayload{
+		RequestID: strings.TrimSpace(req.ID),
+		From:      strings.TrimSpace(req.From),
+		Question:  question,
+		Title:     strings.TrimSpace(req.Title),
+		Label:     label,
+		Blocking:  req.Blocking || req.Required,
+	})
+	if err != nil {
+		// A card we cannot describe still has a prose body that says the same
+		// thing, so degrade to that rather than dropping the announcement.
+		payload = nil
+	}
 	b.counter++
 	msg := channelMessage{
 		ID:        fmt.Sprintf("msg-%d", b.counter),
@@ -1244,6 +1298,7 @@ func (b *Broker) postRequestRaisedChatMessageLocked(req *humanInterview) {
 		Kind:      "human_request_raised",
 		Title:     strings.TrimSpace(req.Title),
 		Content:   content,
+		Payload:   payload,
 		ReplyTo:   strings.TrimSpace(req.ReplyTo),
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	}
