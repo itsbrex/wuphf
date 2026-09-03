@@ -13,7 +13,7 @@ package team
 //
 // Hard rules (from spec + task brief):
 //   - NO LLM tokens in Phase 2. All CEO messages are deterministic templates.
-//   - CEO transcript lives in b.messages (channel = ceo DM slug).
+//   - CEO transcript lives in b.messages (channel = cos DM slug).
 //   - Atomic seed via seedFromBlueprintLocked (blueprint path) or
 //     seedMinimalScratchLocked (scratch path) at the seed phase boundary.
 //   - Every CEO payload that becomes a ceo_* card MUST pass through
@@ -58,7 +58,7 @@ func (b *Broker) ceoOnboardingTransitionFn() onboarding.TransitionFunc {
 // internally (and for EnsureDirectChannel which has its own lock).
 func (b *Broker) advancePhase(s *onboarding.State, next string) error {
 	// Ensure the CEO DM channel exists before trying to post into it.
-	dmSlug, err := b.EnsureDirectChannel("ceo")
+	dmSlug, err := b.EnsureDirectChannel("cos")
 	if err != nil {
 		return fmt.Errorf("onboarding phase %s: ensure Chief of Staff DM: %w", next, err)
 	}
@@ -101,7 +101,7 @@ func (b *Broker) advancePhase(s *onboarding.State, next string) error {
 		b.counter++
 		b.appendMessageLocked(channelMessage{
 			ID:        fmt.Sprintf("msg-%d", b.counter),
-			From:      "ceo",
+			From:      "cos",
 			Channel:   dmSlug,
 			Kind:      payload.Kind,
 			Content:   payload.Content,
@@ -243,7 +243,7 @@ func (b *Broker) ensureOnboardingFirstIssue(s *onboarding.State) error {
 		// owner's DM. An unresolvable home leaves the task homeless rather than
 		// naming a dead room — a homeless task is legal and still listable,
 		// which is strictly better than one addressed to nothing.
-		firstIssueHome, homeErr := b.homeChannelForLocked("ceo")
+		firstIssueHome, homeErr := b.homeChannelForLocked("cos")
 		if homeErr != nil {
 			log.Printf("onboarding: first issue has no home channel: %v", homeErr)
 			firstIssueHome = ""
@@ -253,7 +253,7 @@ func (b *Broker) ensureOnboardingFirstIssue(s *onboarding.State) error {
 			Channel:       firstIssueHome,
 			Title:         onboardingFirstIssueTitle(prompt),
 			Details:       prompt,
-			Owner:         "ceo",
+			Owner:         "cos",
 			CreatedBy:     "human",
 			TaskType:      "issue",
 			PipelineID:    "issue",
@@ -323,7 +323,7 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 	// Seed CEO as the sole member.
 	b.members = []officeMember{
 		{
-			Slug:      "ceo",
+			Slug:      "cos",
 			Name:      "Chief of Staff",
 			Role:      "lead",
 			BuiltIn:   true,
@@ -331,7 +331,7 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 			CreatedAt: now,
 		},
 	}
-	b.memberIndex = map[string]int{"ceo": 0}
+	b.memberIndex = map[string]int{"cos": 0}
 
 	// Seed #general.
 	//
@@ -349,7 +349,7 @@ func (b *Broker) seedMinimalScratchLocked(s *onboarding.State) error {
 			Slug:        GeneralChannelSlug,
 			Name:        GeneralChannelSlug,
 			Description: generalDesc,
-			Members:     []string{"ceo"},
+			Members:     []string{"cos"},
 			CreatedBy:   "wuphf",
 			CreatedAt:   now,
 			UpdatedAt:   now,

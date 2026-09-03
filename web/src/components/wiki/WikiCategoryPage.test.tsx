@@ -8,21 +8,21 @@ const CATALOG: WikiCatalogEntry[] = [
   {
     path: "team/people/zoe.md",
     title: "Zoe",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T12:00:00Z",
     group: "people",
   },
   {
     path: "team/people/eng.md",
     title: "Eng",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T12:00:00Z",
     group: "people",
   },
   {
     path: "team/people/ana.md",
     title: "Ana",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T12:00:00Z",
     group: "people",
   },
@@ -109,7 +109,7 @@ describe("<WikiCategoryPage>", () => {
       {
         path: "team/playbooks/onboarding.md",
         title: "Onboarding",
-        author_slug: "ceo",
+        author_slug: "cos",
         last_edited_ts: "2026-06-11T12:00:00Z",
         group: "playbooks",
         categories: ["people"],
@@ -181,7 +181,7 @@ describe("<WikiCategoryPage>", () => {
       {
         path: "team/playbooks/mql.md",
         title: "MQL",
-        author_slug: "ceo",
+        author_slug: "cos",
         last_edited_ts: "2026-06-11T12:00:00Z",
         group: "playbooks",
         categories: ["revenue-operations"],

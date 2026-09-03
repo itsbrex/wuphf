@@ -145,7 +145,7 @@ func TestScheduleCRUD(t *testing.T) {
 	store := NewCalendarStore(path)
 
 	// Add
-	err := store.AddSchedule("ceo", "daily", "CEO daily standup")
+	err := store.AddSchedule("cos", "daily", "CEO daily standup")
 	if err != nil {
 		t.Fatalf("AddSchedule: %v", err)
 	}
@@ -159,8 +159,8 @@ func TestScheduleCRUD(t *testing.T) {
 	if len(schedules) != 2 {
 		t.Fatalf("ListSchedules: got %d, want 2", len(schedules))
 	}
-	if schedules[0].BotSlug != "ceo" {
-		t.Errorf("ListSchedules[0]: got %s, want ceo", schedules[0].BotSlug)
+	if schedules[0].BotSlug != "cos" {
+		t.Errorf("ListSchedules[0]: got %s, want cos", schedules[0].BotSlug)
 	}
 	if schedules[1].BotSlug != "cto" {
 		t.Errorf("ListSchedules[1]: got %s, want cto", schedules[1].BotSlug)
@@ -173,7 +173,7 @@ func TestScheduleCRUD(t *testing.T) {
 	}
 
 	// Remove
-	store.RemoveSchedule("ceo")
+	store.RemoveSchedule("cos")
 	schedules = store.ListSchedules()
 	if len(schedules) != 1 {
 		t.Fatalf("after remove: got %d, want 1", len(schedules))
@@ -201,7 +201,7 @@ func TestGetEventsForWeek(t *testing.T) {
 	path := filepath.Join(dir, "calendar.json")
 	store := NewCalendarStore(path)
 
-	_ = store.AddSchedule("ceo", "daily", "CEO standup")
+	_ = store.AddSchedule("cos", "daily", "CEO standup")
 
 	// Week starting Monday 2026-03-23
 	start := time.Date(2026, 3, 23, 0, 0, 0, 0, time.UTC)
@@ -213,8 +213,8 @@ func TestGetEventsForWeek(t *testing.T) {
 	}
 
 	for i, ev := range events {
-		if ev.BotSlug != "ceo" {
-			t.Errorf("event[%d] bot: got %s, want ceo", i, ev.BotSlug)
+		if ev.BotSlug != "cos" {
+			t.Errorf("event[%d] bot: got %s, want cos", i, ev.BotSlug)
 		}
 		if ev.ScheduledAt.Hour() != 9 || ev.ScheduledAt.Minute() != 0 {
 			t.Errorf("event[%d] time: got %s, want 09:00", i, ev.ScheduledAt.Format("15:04"))

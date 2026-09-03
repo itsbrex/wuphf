@@ -8,7 +8,7 @@ import {
 import { useOfficeMembers } from "../../hooks/useMembers";
 
 export interface AutocompleteItem {
-  /** Token to insert (e.g. "/clear" or "@ceo"). */
+  /** Token to insert (e.g. "/clear" or "@cos"). */
   insert: string;
   /** Primary label shown in the panel. */
   label: string;

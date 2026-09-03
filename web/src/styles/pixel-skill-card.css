@@ -239,7 +239,7 @@
 
 /* ── Stat strip (just under the art) ── */
 /* Marked up as a <dl> so screen readers announce "Status: Active,
-   Owners: @ceo" instead of bare values. Visual layout is unchanged. */
+   Owners: @cos" instead of bare values. Visual layout is unchanged. */
 .pixel-skill-card__stats {
   flex: 0 0 auto;
   display: flex;

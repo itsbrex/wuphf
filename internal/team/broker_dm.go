@@ -20,8 +20,8 @@ import (
 // DO NOT switch this to normalizeActorSlug.
 //
 // These are DM CHANNEL slugs, and normalizeChannelSlug's "__" placeholder
-// dance exists precisely to preserve the DM separator: "human__ceo" must stay
-// "human__ceo". normalizeActorSlug folds a double underscore to "--", which
+// dance exists precisely to preserve the DM separator: "human__cos" must stay
+// "human__cos". normalizeActorSlug folds a double underscore to "--", which
 // would turn every DM slug into a different string and break DM lookup,
 // DMTargetBot, and the canonical-slug migration at once.
 //
@@ -36,7 +36,7 @@ func (ch *teamChannel) isDM() bool {
 //
 // The canonical arm tests the SHAPE of the slug, not who is in it. It used to
 // route through canonicalDMTargetBot, which returns "" unless one side is
-// the human — so a bot-to-bot pair like "ceo__designer" was not
+// the human — so a bot-to-bot pair like "cos__designer" was not
 // recognised as a DM at all and fell through to channel routing. That blocks
 // the consult relay: tagging a bot inside your DM sends your bot to talk
 // to theirs, which needs bot-to-bot DMs to route like any other DM.
@@ -137,8 +137,8 @@ func DMParticipants(slug string) (string, string, bool) {
 // DMOtherParticipant returns the participant across the DM from viewer.
 //
 // This is the viewer-relative counterpart to DMTargetBot, and the one to
-// reach for when routing: in "ceo__designer" the answer is "designer" to the
-// CEO and "ceo" to the designer, which no human-relative lookup can express.
+// reach for when routing: in "cos__designer" the answer is "designer" to the
+// CEO and "cos" to the designer, which no human-relative lookup can express.
 // Returns "" when the slug is not a 1:1 DM, or when viewer is not one of its
 // two participants — callers must treat that as "cannot route", not as a
 // licence to guess a side.

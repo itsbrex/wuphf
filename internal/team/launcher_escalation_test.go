@@ -14,7 +14,7 @@ func TestPostEscalation_WritesToLeadDM(t *testing.T) {
 
 	l.postEscalation("eng", "eng-42", bot.EscalationStuck, "stuck in build_context for 20 ticks")
 
-	msgs := b.ChannelMessages("ceo__human")
+	msgs := b.ChannelMessages("cos__human")
 	for _, m := range msgs {
 		if strings.Contains(m.Content, "stuck") || strings.Contains(m.Content, "Heads up") {
 			return
@@ -29,7 +29,7 @@ func TestPostEscalation_MaxRetries_WritesToLeadDM(t *testing.T) {
 
 	l.postEscalation("pm", "pm-7", bot.EscalationMaxRetries, "tool_call failed: timeout")
 
-	msgs := b.ChannelMessages("ceo__human")
+	msgs := b.ChannelMessages("cos__human")
 	for _, m := range msgs {
 		if strings.Contains(m.Content, "Heads up") && strings.Contains(m.Content, "erroring") {
 			return
@@ -55,8 +55,8 @@ func TestPostEscalation_CreatesSelfHealingTask(t *testing.T) {
 	if found.ID == "" {
 		t.Fatalf("expected self-healing task (title=%q), got %+v", wantTitle, b.AllTasks())
 	}
-	if found.Owner != "ceo" {
-		t.Fatalf("expected self-healing task owned by ceo, got %+v", found)
+	if found.Owner != "cos" {
+		t.Fatalf("expected self-healing task owned by cos, got %+v", found)
 	}
 	// Self-heal records render as Issues in the FE; PipelineID stays "incident"
 	// so the recognition primitive (isSelfHealingTask) still matches.
@@ -178,7 +178,7 @@ func TestPostEscalation_DoesNotNestSelfHealingTasks(t *testing.T) {
 	if err != nil {
 		t.Fatalf("request self-healing: %v", err)
 	}
-	l.postEscalation("ceo", task.ID, bot.EscalationStuck, "self-healing lane stuck")
+	l.postEscalation("cos", task.ID, bot.EscalationStuck, "self-healing lane stuck")
 
 	var count int
 	for _, candidate := range b.AllTasks() {
@@ -406,7 +406,7 @@ func TestPostEscalation_PostedBySystem(t *testing.T) {
 
 	l.postEscalation("eng", "eng-99", bot.EscalationStuck, "some detail")
 
-	msgs := b.ChannelMessages("ceo__human")
+	msgs := b.ChannelMessages("cos__human")
 	if len(msgs) == 0 {
 		t.Fatal("expected at least one message in #team")
 	}

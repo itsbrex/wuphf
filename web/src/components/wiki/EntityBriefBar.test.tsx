@@ -151,7 +151,7 @@ describe("<EntityBriefBar>", () => {
         kind: "people",
         slug: "sarah-chen",
         fact_id: "f-new",
-        recorded_by: "ceo",
+        recorded_by: "cos",
         fact_count: 6,
         threshold_crossed: false,
         timestamp: new Date().toISOString(),

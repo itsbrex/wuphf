@@ -10,9 +10,9 @@ func TestIsBotPairDM(t *testing.T) {
 	}{
 		{"designer__pm", "designer", true},
 		{"designer__pm", "pm", true},
-		{"designer__pm", "ceo", false},            // not a member
+		{"designer__pm", "cos", false},            // not a member
 		{"human__pm", "pm", false},                // human DM, not a pair DM
-		{"ceo__human", "ceo", false},              // human DM, reversed order
+		{"cos__human", "cos", false},              // human DM, reversed order
 		{"human:sam__pm", "pm", false},            // named human session
 		{"general", "designer", false},            // plain channel
 		{"designer__designer", "designer", false}, // self pair is invalid

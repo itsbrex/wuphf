@@ -21,12 +21,12 @@ func TestExternalQueueDoesNotReplayPersistedHistoryAfterRestart(t *testing.T) {
 		Channels: []teamChannel{{
 			Slug:    "slack-office",
 			Name:    "slack-office",
-			Members: []string{"ceo"},
+			Members: []string{"cos"},
 			Surface: &channelSurface{Provider: "slack", RemoteID: "C0123"},
 		}},
 		Messages: []channelMessage{
-			{ID: "m1", From: "ceo", Channel: "slack-office", Content: "old message 1", Timestamp: "2026-06-10T00:00:00Z"},
-			{ID: "m2", From: "ceo", Channel: "slack-office", Content: "old message 2", Timestamp: "2026-06-10T00:01:00Z"},
+			{ID: "m1", From: "cos", Channel: "slack-office", Content: "old message 1", Timestamp: "2026-06-10T00:00:00Z"},
+			{ID: "m2", From: "cos", Channel: "slack-office", Content: "old message 2", Timestamp: "2026-06-10T00:01:00Z"},
 		},
 	}
 	data, err := json.Marshal(state)
@@ -48,7 +48,7 @@ func TestExternalQueueDoesNotReplayPersistedHistoryAfterRestart(t *testing.T) {
 	// New messages posted after boot still flow out.
 	b.mu.Lock()
 	b.messages = append(b.messages, channelMessage{
-		ID: "m3", From: "ceo", Channel: "slack-office", Content: "fresh message", Timestamp: "2026-06-12T00:00:00Z",
+		ID: "m3", From: "cos", Channel: "slack-office", Content: "fresh message", Timestamp: "2026-06-12T00:00:00Z",
 	})
 	b.mu.Unlock()
 

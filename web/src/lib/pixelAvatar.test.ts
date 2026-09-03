@@ -93,7 +93,7 @@ describe("pixel avatar sprite resolution", () => {
   });
 
   it("keeps procedural bot colors stable and accent-like", () => {
-    expect(getBotColor("ceo")).toBe("#E8A838");
+    expect(getBotColor("cos")).toBe("#E8A838");
     expect(getBotColor("jim")).toBe("#8FB3D1");
     expect(getBotColor("custom-ops-bot")).toMatch(/^#[0-9A-F]{6}$/i);
     expect(getBotColor("custom-ops-bot")).toBe(getBotColor("custom-ops-bot"));
@@ -155,8 +155,8 @@ describe("pixel avatar sprite resolution", () => {
   });
 
   it("derives eye colour from the slug so it is stable and roster-independent", () => {
-    expect(getBotEyeColor("ceo")).toBe(getBotEyeColor("ceo"));
-    expect(getBotEyeColor(" CEO ")).toBe(getBotEyeColor("ceo"));
+    expect(getBotEyeColor("cos")).toBe(getBotEyeColor("cos"));
+    expect(getBotEyeColor(" COS ")).toBe(getBotEyeColor("cos"));
     // Aliases are the same teammate, so they must wear the same eyes.
     expect(getBotEyeColor("planner")).toBe(getBotEyeColor("pm"));
     expect(getBotEyeColor("archivist")).toBe(getBotEyeColor("pam"));
@@ -196,7 +196,7 @@ describe("pixel avatar sprite resolution", () => {
     // which is exactly the failure that makes the feature pointless. Distinct
     // teammates must be distinctly coloured.
     const roster = [
-      "ceo",
+      "cos",
       "eng",
       "pm",
       "designer",

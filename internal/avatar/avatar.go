@@ -2,7 +2,7 @@
 //
 // Sprites are 14×14 grids of palette indices, encoded with Unicode
 // half-block characters (▀▄█) so two pixel rows occupy one terminal row.
-// Known slugs ("ceo", "pm", "fe", …) get hand-designed sprites; unknown
+// Known slugs ("cos", "pm", "fe", …) get hand-designed sprites; unknown
 // slugs get a deterministic procedural composition seeded by the slug.
 // The package is intentionally free of any TUI / channel-state
 // dependency — every public function takes only a slug (and frame for
@@ -209,7 +209,7 @@ func spriteForSlug(slug string, frame ...int) Sprite {
 
 	var sprite Sprite
 	switch slug {
-	case "ceo":
+	case "cos":
 		sprite = cloneSprite(spriteCEO)
 	case "pm":
 		sprite = cloneSprite(spritePM)
@@ -252,7 +252,7 @@ func animateFrame(sprite Sprite, slug string) {
 		return
 	}
 	switch slug {
-	case "ceo":
+	case "cos":
 		// Coffee cup raised: move prop pixels up one row
 		sprite[7][11] = pxProp
 		sprite[7][12] = pxLine
@@ -358,7 +358,7 @@ func parseHexColor(hex string) [3]int {
 }
 
 // PaletteForSlug returns the per-pixel-index color map for an avatar.
-// The known office roster (ceo, pm, fe, …) uses the hand-tuned palettes
+// The known office roster (cos, pm, fe, …) uses the hand-tuned palettes
 // shipped with each sprite; every other slug routes through the
 // procedural palette generator (which derives skin/hair/accent
 // independently from a hash of the slug). Together those two branches

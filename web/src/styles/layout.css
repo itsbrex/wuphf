@@ -1131,7 +1131,7 @@ html[data-theme="nex"]
 
 /* v3 MVP — CEO/specialist org hierarchy in the sidebar.
    The CEO row sits at the top with an "Orchestrator" pill; specialists
-   sit beneath under a "Reports to @ceo" label with a left-rail tree
+   sit beneath under a "Reports to @cos" label with a left-rail tree
    stem on each row so the org chart is obvious at a glance. */
 .sidebar-agent-group {
   display: flex;

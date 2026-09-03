@@ -58,9 +58,9 @@ func newBrokerWithPackChannels(t *testing.T, packBots []bot.BotConfig) *Broker {
 	backdated := time.Now().Add(-time.Hour).UTC().Format(time.RFC3339)
 	b.channels = []teamChannel{
 		{Slug: "team", Name: "team", Members: packSlugs, CreatedAt: backdated, UpdatedAt: backdated},
-		{Slug: "engineering", Name: "engineering", Members: []string{"ceo"}, CreatedAt: backdated, UpdatedAt: backdated},
+		{Slug: "engineering", Name: "engineering", Members: []string{"cos"}, CreatedAt: backdated, UpdatedAt: backdated},
 		// A DM channel that must NOT receive the new hire.
-		{Slug: "dm-human-ceo", Name: "DM: CEO", Type: "dm", Members: []string{"ceo"}, CreatedAt: backdated, UpdatedAt: backdated},
+		{Slug: "dm-human-ceo", Name: "DM: CEO", Type: "dm", Members: []string{"cos"}, CreatedAt: backdated, UpdatedAt: backdated},
 	}
 	b.mu.Unlock()
 	return b
@@ -73,7 +73,7 @@ func newBrokerWithPackChannels(t *testing.T, packBots []bot.BotConfig) *Broker {
 // change, and asserts a channel_updated event fires per mutated channel.
 func TestWizardHire_AddsNewMemberToAllNonDMChannels(t *testing.T) {
 	b := newBrokerWithPackChannels(t, []bot.BotConfig{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "pm", Name: "Product Manager"},
 	})
 	b.mu.Lock()
@@ -187,7 +187,7 @@ drain:
 // Disabled, so this is defensive. The test pins the invariant so a future
 // state-rebuild path that forgets it doesn't silently leave a new hire muted.
 func TestWizardHire_ClearsStaleDisabledEntryFromPriorLifecycle(t *testing.T) {
-	b := newBrokerWithPackChannels(t, []bot.BotConfig{{Slug: "ceo", Name: "CEO"}})
+	b := newBrokerWithPackChannels(t, []bot.BotConfig{{Slug: "cos", Name: "CEO"}})
 	b.mu.Lock()
 	b.token = "test-token"
 	// Simulate a leftover disabled entry for the slug we're about to hire.
@@ -236,7 +236,7 @@ func TestWizardHire_ClearsStaleDisabledEntryFromPriorLifecycle(t *testing.T) {
 // member on state reload. The existing remove branch already handles this
 // but we pin it so a future refactor of the create side can't break it.
 func TestWizardHire_RemoveReversesChannelMembership(t *testing.T) {
-	b := newBrokerWithPackChannels(t, []bot.BotConfig{{Slug: "ceo", Name: "CEO"}})
+	b := newBrokerWithPackChannels(t, []bot.BotConfig{{Slug: "cos", Name: "CEO"}})
 	b.mu.Lock()
 	b.token = "test-token"
 	b.mu.Unlock()
@@ -286,7 +286,7 @@ func TestWizardHire_RemoveReversesChannelMembership(t *testing.T) {
 //     Expected: 200 with a message id.
 func TestBug_WizardHiredSpecialist_ReplyEndToEnd_HTTPFlow(t *testing.T) {
 	b := newBrokerWithPackChannels(t, []bot.BotConfig{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "pm", Name: "Product Manager"},
 	})
 	// Bypass auth for the test — we're exercising access control, not tokens.

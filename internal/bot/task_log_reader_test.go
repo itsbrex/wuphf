@@ -45,8 +45,8 @@ func TestListRecentTasks_OrdersByMtimeDesc(t *testing.T) {
 	if got[0].TaskID != "ceo-200" {
 		t.Fatalf("expected ceo-200 first (newest), got %s", got[0].TaskID)
 	}
-	if got[0].BotSlug != "ceo" {
-		t.Fatalf("expected bot slug ceo, got %s", got[0].BotSlug)
+	if got[0].BotSlug != "cos" {
+		t.Fatalf("expected bot slug cos, got %s", got[0].BotSlug)
 	}
 	if got[0].ToolCallCount != 1 {
 		t.Fatalf("expected 1 tool call, got %d", got[0].ToolCallCount)

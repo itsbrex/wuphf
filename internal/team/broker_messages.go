@@ -166,7 +166,7 @@ func (b *Broker) handlePostMessage(w http.ResponseWriter, r *http.Request) {
 	//
 	// Exception: when the human explicitly tags the lead (CEO), do not
 	// auto-promote OTHER bots mentioned in the body. Example:
-	// "@ceo ask @reviewer to ..." — the human's intent is for CEO to route,
+	// "@cos ask @reviewer to ..." — the human's intent is for CEO to route,
 	// not for the broker to fan out in parallel. Without this guard the
 	// reviewer gets notified twice (by auto-promote AND later by CEO's
 	// explicit tag), spawning two turns with nearly identical answers.
@@ -856,7 +856,7 @@ func messageVisibleToViewer(msg channelMessage, viewerSlug string, messagesByID 
 
 func messageBelongsToViewerOutbox(msg channelMessage, viewerSlug string) bool {
 	viewerSlug = strings.TrimSpace(viewerSlug)
-	if viewerSlug == "" || viewerSlug == "ceo" {
+	if viewerSlug == "" || viewerSlug == "cos" {
 		return true
 	}
 	return strings.TrimSpace(msg.From) == viewerSlug
@@ -870,14 +870,14 @@ func messageBelongsToViewerInbox(msg channelMessage, viewerSlug string, messages
 	if !messageDMAdmitsViewer(msg, viewerSlug) {
 		return false
 	}
-	if viewerSlug == "" || viewerSlug == "ceo" {
+	if viewerSlug == "" || viewerSlug == "cos" {
 		return true
 	}
 	from := strings.TrimSpace(msg.From)
 	switch from {
 	case viewerSlug:
 		return false
-	case "ceo":
+	case "cos":
 		return true
 	}
 	if isHumanMessageSender(from) {

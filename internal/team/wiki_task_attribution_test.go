@@ -12,7 +12,7 @@ func TestResolveArticleAttribution_ByTaskArtifactPointer(t *testing.T) {
 	b.mu.Lock()
 	b.tasks = []teamTask{
 		{ID: "OFFICE-1", Title: "Q2 pricing launch", Owner: "revops", Channel: "team", Artifact: "team/briefs/launch.md"},
-		{ID: "OFFICE-2", Title: "Other", Owner: "ceo", Channel: "team"},
+		{ID: "OFFICE-2", Title: "Other", Owner: "cos", Channel: "team"},
 	}
 	b.mu.Unlock()
 

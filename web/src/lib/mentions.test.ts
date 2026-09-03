@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { extractTaggedMentions, parseMentions } from "./mentions";
 
 describe("parseMentions", () => {
-  const agents = ["pm", "ceo", "founding-engineer"];
+  const agents = ["pm", "cos", "founding-engineer"];
 
   it("wraps a known slug as a mention token", () => {
     const tokens = parseMentions("@pm hey", agents);
@@ -19,12 +19,12 @@ describe("parseMentions", () => {
   });
 
   it("handles multiple mentions interleaved with text", () => {
-    const tokens = parseMentions("hey @pm and @ceo, ship it", agents);
+    const tokens = parseMentions("hey @pm and @cos, ship it", agents);
     expect(tokens).toEqual([
       { kind: "text", value: "hey " },
       { kind: "mention", value: "pm" },
       { kind: "text", value: " and " },
-      { kind: "mention", value: "ceo" },
+      { kind: "mention", value: "cos" },
       { kind: "text", value: ", ship it" },
     ]);
   });
@@ -96,19 +96,19 @@ describe("parseMentions", () => {
 });
 
 describe("extractTaggedMentions", () => {
-  const agents = ["pm", "ceo", "founding-engineer", "human"];
+  const agents = ["pm", "cos", "founding-engineer", "human"];
 
   it("returns explicit bot mentions in order", () => {
-    expect(extractTaggedMentions("ping @pm then @ceo", agents)).toEqual([
+    expect(extractTaggedMentions("ping @pm then @cos", agents)).toEqual([
       "pm",
-      "ceo",
+      "cos",
     ]);
   });
 
   it("expands @all to every mentionable bot slug", () => {
     expect(extractTaggedMentions("ping @all now", agents)).toEqual([
       "pm",
-      "ceo",
+      "cos",
       "founding-engineer",
     ]);
   });
@@ -116,7 +116,7 @@ describe("extractTaggedMentions", () => {
   it("deduplicates explicit mentions when @all is present", () => {
     expect(extractTaggedMentions("ping @pm and @all", agents)).toEqual([
       "pm",
-      "ceo",
+      "cos",
       "founding-engineer",
     ]);
   });

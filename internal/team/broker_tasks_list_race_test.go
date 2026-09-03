@@ -22,7 +22,7 @@ import (
 func TestListTasksSnapshotIsSafeToMarshalOutsideTheLock(t *testing.T) {
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}}}
 	now := time.Now().UTC().Format(time.RFC3339)
 	for i := 0; i < 200; i++ {
 		b.tasks = append(b.tasks, teamTask{
@@ -31,9 +31,9 @@ func TestListTasksSnapshotIsSafeToMarshalOutsideTheLock(t *testing.T) {
 			Title:          fmt.Sprintf("board fixture %d", i+1),
 			Owner:          "eng",
 			status:         "in_progress",
-			CreatedBy:      "ceo",
+			CreatedBy:      "cos",
 			LifecycleState: LifecycleStateRunning,
-			Reviewers:      []string{"ceo"},
+			Reviewers:      []string{"cos"},
 			DependsOn:      []string{"OFFICE-0"},
 			Ledger: []TaskLedgerEntry{{
 				Bot: "eng", At: now, Outcome: "ok",

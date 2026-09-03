@@ -897,7 +897,7 @@ export default function RootRoute() {
   // matches (see stores/app.ts pendingComposerDraft + Composer.tsx). This is
   // the controlled-state-safe alternative to writing the textarea imperatively.
   const handleTourFinish = useCallback(() => {
-    const ceoChannel = directChannelSlug("ceo");
+    const ceoChannel = directChannelSlug("cos");
     useAppStore
       .getState()
       .setPendingComposerDraft(
@@ -1045,7 +1045,7 @@ export default function RootRoute() {
             // from.
             void router.navigate({
               to: "/agents/$agentSlug",
-              params: { agentSlug: "ceo" },
+              params: { agentSlug: "cos" },
               replace: true,
             });
           }}

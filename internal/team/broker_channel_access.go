@@ -28,7 +28,7 @@ import (
 //     inherit that trust, letting those senders read every message in it
 //     without an explicit Members entry. Keep these in sync with the trust
 //     check below.
-//   - "ceo", the Librarian, and the App Builder are built-in BOT slugs.
+//   - "cos", the Librarian, and the App Builder are built-in BOT slugs.
 //     They are no longer access bypasses (membership is authoritative for
 //     every bot), but a channel that shadows a bot slug still breaks
 //     DM slug resolution and @-mention routing, so they stay reserved.
@@ -37,7 +37,7 @@ var reservedChannelSlugs = map[string]bool{
 	"nex":          true,
 	"you":          true,
 	"human":        true,
-	"ceo":          true,
+	"cos":          true,
 	LibrarianSlug:  true,
 	appBuilderSlug: true,
 }

@@ -768,20 +768,20 @@ func (m channelModel) buildBotPickerOptions() []tui.PickerOption {
 		if meta, ok := officeMap[slug]; ok && meta.Name != "" {
 			name = meta.Name
 		}
-		if slug != "ceo" && disabled[slug] {
+		if slug != "cos" && disabled[slug] {
 			options = append(options, tui.PickerOption{
 				Label:       "Enable " + name,
 				Value:       "enable:" + slug,
 				Description: "Allow this teammate to participate in #" + m.activeChannel,
 			})
-		} else if slug != "ceo" {
+		} else if slug != "cos" {
 			options = append(options, tui.PickerOption{
 				Label:       "Disable " + name,
 				Value:       "disable:" + slug,
 				Description: "Keep them in the channel but stop notifications there",
 			})
 		}
-		if slug != "ceo" {
+		if slug != "cos" {
 			options = append(options, tui.PickerOption{
 				Label:       "Remove " + name,
 				Value:       "remove:" + slug,

@@ -261,10 +261,10 @@ Notebooks and the wiki (`/wiki`) are siblings sharing the same markdown/git subs
 
 Each blueprint under `templates/operations/{blueprint}/blueprint.yaml` declares:
 ```yaml
-default_reviewer: ceo         # agent slug, or "editor", or "human-only"
+default_reviewer: cos         # agent slug, or "editor", or "human-only"
 # optional: per-path overrides
 reviewer_paths:
-  team/decisions/**: ceo
+  team/decisions/**: cos
   team/playbooks/**: editor
   team/customers/**: pm
 ```
@@ -272,7 +272,7 @@ reviewer_paths:
 When a bot promotes a notebook entry:
 1. Check `reviewer_paths` for a match against the proposed wiki path. First match wins.
 2. Fall back to `default_reviewer`.
-3. Fall back to `ceo` if no blueprint-level config exists.
+3. Fall back to `cos` if no blueprint-level config exists.
 4. Author can override on submit (dropdown next to the Promote button).
 
 `human-only` disables bot approval — promotion sits in `Pending` until a human clicks Approve.

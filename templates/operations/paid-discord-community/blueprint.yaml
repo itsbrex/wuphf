@@ -46,7 +46,7 @@ example_artifacts:
     title: "Weekly engagement calendar"
   - kind: report
     title: "Monthly retention summary"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/community/**": community-manager
   "team/growth/**": growth
@@ -55,11 +55,11 @@ employee_blueprints:
   - discord-server-community-manager
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} community operation."
   kickoff_prompt: "Stand up the {{brand_name}} community operation end to end. Use the starter lanes, turn the objective into a repeatable community system, create the first member-ready artifacts, and keep community-facing changes behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

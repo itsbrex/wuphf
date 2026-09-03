@@ -26,17 +26,17 @@ import (
 )
 
 // newObjectionTestBroker seeds a broker with a general channel, a
-// ceo+eng roster (ceo resolves as lead), and one in-review task owned
+// cos+eng roster (cos resolves as lead), and one in-review task owned
 // by eng with reviewer on the reviewer list.
 func newObjectionTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng", "reviewer"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng", "reviewer"}},
 	}
 	b.tasks = []teamTask{
 		{
@@ -100,10 +100,10 @@ func TestHumanObjection_AgentApproveBlockedHumanApproveClears(t *testing.T) {
 	humanRequestChanges(t, b, "task-obj-1")
 
 	// Lead approve over the open objection → forbidden, naming the objection.
-	_, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "ceo"})
+	_, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "cos"})
 	var mutationErr *TaskMutationError
 	if !errors.As(err, &mutationErr) || mutationErr.Kind != TaskMutationForbidden {
-		t.Fatalf("ceo approve over open human objection: want TaskMutationForbidden, got %v", err)
+		t.Fatalf("cos approve over open human objection: want TaskMutationForbidden, got %v", err)
 	}
 	if !strings.Contains(mutationErr.Message, "@human") || !strings.Contains(mutationErr.Message, "Dana") {
 		t.Fatalf("forbidden error must name the objection (actor + feedback), got %q", mutationErr.Message)
@@ -119,7 +119,7 @@ func TestHumanObjection_AgentApproveBlockedHumanApproveClears(t *testing.T) {
 	}
 
 	// Decision-endpoint path: a non-human approve is refused too.
-	if err := b.RecordTaskDecision("task-obj-1", "approve", "ceo"); !errors.Is(err, ErrHumanObjectionOpen) {
+	if err := b.RecordTaskDecision("task-obj-1", "approve", "cos"); !errors.Is(err, ErrHumanObjectionOpen) {
 		t.Fatalf("decision-path bot approve: want ErrHumanObjectionOpen, got %v", err)
 	}
 	if got := b.TaskByID("task-obj-1"); got == nil || strings.EqualFold(strings.TrimSpace(got.status), "done") {
@@ -186,8 +186,8 @@ func TestHumanObjection_AgentRequestChangesDoesNotArmTheGate(t *testing.T) {
 	}
 	// Without a human objection the lead can still approve — and the
 	// approve retires the now-stale feedback stamp.
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "ceo"}); err != nil {
-		t.Fatalf("ceo approve with no human objection: %v", err)
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: "task-obj-1", Channel: "team", CreatedBy: "cos"}); err != nil {
+		t.Fatalf("cos approve with no human objection: %v", err)
 	}
 	if got := b.TaskByID("task-obj-1"); got.ChangesRequested != nil {
 		t.Fatalf("approve must clear the latest-feedback stamp, got %+v", got.ChangesRequested)
@@ -210,7 +210,7 @@ func TestHumanObjection_DecisionPathStampsAndHumanApproveClears(t *testing.T) {
 		t.Fatal("decision-path human request_changes must arm the objection")
 	}
 	// Bot approve via the decision path is refused while it stands.
-	if err := b.RecordTaskDecision("task-obj-1", "approve", "ceo"); !errors.Is(err, ErrHumanObjectionOpen) {
+	if err := b.RecordTaskDecision("task-obj-1", "approve", "cos"); !errors.Is(err, ErrHumanObjectionOpen) {
 		t.Fatalf("decision-path bot approve: want ErrHumanObjectionOpen, got %v", err)
 	}
 	// Human approve via the decision path clears it.

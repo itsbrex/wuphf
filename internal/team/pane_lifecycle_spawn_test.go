@@ -151,12 +151,12 @@ func TestPaneLifecycle_SetPaneTitleArgs(t *testing.T) {
 	fake := newFakeTmuxRunner()
 	setTmuxRunnerForTest(t, fake)
 
-	newPaneLifecycle("wuphf-team").SetPaneTitle("wuphf-team:team.2", "🤖 ceo (@ceo)")
+	newPaneLifecycle("wuphf-team").SetPaneTitle("wuphf-team:team.2", "🤖 cos (@cos)")
 	calls := fake.callsFor("select-pane")
 	if len(calls) != 1 {
 		t.Fatalf("select-pane calls = %d, want 1", len(calls))
 	}
-	want := []string{"select-pane", "-t", "wuphf-team:team.2", "-T", "🤖 ceo (@ceo)"}
+	want := []string{"select-pane", "-t", "wuphf-team:team.2", "-T", "🤖 cos (@cos)"}
 	if !equalStrings(calls[0], want) {
 		t.Errorf("args = %v, want %v", calls[0], want)
 	}

@@ -87,13 +87,13 @@ func TestTaskCreateByBotForAnotherBotUsesTheCreatorsOwnDM(t *testing.T) {
 		Action:    "create",
 		Title:     "Draft the launch plan",
 		Owner:     "planner",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "issue",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	if got, want := resp.Task.Channel, DMSlugFor("ceo"); got != want {
+	if got, want := resp.Task.Channel, DMSlugFor("cos"); got != want {
 		t.Errorf("task channel = %q, want the creator's own DM %q", got, want)
 	}
 }
@@ -180,11 +180,11 @@ func TestHomeChannelForWriterSkipsUnresolvableAndInaccessible(t *testing.T) {
 
 	// The librarian's DM resolves but the CEO may not post there, so it is
 	// skipped in favour of the CEO's own.
-	got, err = b.homeChannelForWriter("ceo", "librarian", "ceo")
+	got, err = b.homeChannelForWriter("cos", "librarian", "cos")
 	if err != nil {
-		t.Fatalf("expected the ceo to fall back to its own DM: %v", err)
+		t.Fatalf("expected the cos to fall back to its own DM: %v", err)
 	}
-	if want := DMSlugFor("ceo"); got != want {
+	if want := DMSlugFor("cos"); got != want {
 		t.Errorf("got %q, want %q", got, want)
 	}
 

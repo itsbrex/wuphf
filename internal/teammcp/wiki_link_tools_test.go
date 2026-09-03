@@ -103,7 +103,7 @@ func TestLinkTaskWikiRegisteredForCuratorsOnly(t *testing.T) {
 		slug     string
 		mustHave bool
 	}{
-		{"ceo", true},
+		{"cos", true},
 		{"librarian", true},
 		{"pm", false},
 		{"engineer", false},
@@ -213,7 +213,7 @@ func TestHandleTeamWikiLink_LinkAddsAndDedups(t *testing.T) {
 		[]string{"team/a.md", "team/b.md"},
 	)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	// link b.md plus a duplicate a.md → result keeps a, adds b, no dupes.
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
@@ -246,7 +246,7 @@ func TestHandleTeamWikiLink_ReplaceSetsExactSet(t *testing.T) {
 		[]string{"team/c.md", "team/d.md"},
 	)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
 		TaskID: "ISS-2",
@@ -272,7 +272,7 @@ func TestHandleTeamWikiLink_UnlinkRemoves(t *testing.T) {
 		nil, // unlink never validates, so no valid paths needed
 	)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
 		TaskID: "ISS-3",
@@ -301,7 +301,7 @@ func TestHandleTeamWikiLink_InvalidPathRejected(t *testing.T) {
 		[]string{"team/a.md"}, // team/missing.md is intentionally NOT valid
 	)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
 		TaskID: "ISS-4",
@@ -325,7 +325,7 @@ func TestHandleTeamWikiLink_InvalidPathRejected(t *testing.T) {
 func TestHandleTeamWikiLink_StructurallyBadPathRejectedBeforeNetwork(t *testing.T) {
 	broker := newFakeWikiLinkBroker(t, nil, nil)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
 		TaskID: "ISS-5",
@@ -352,7 +352,7 @@ func TestHandleTeamWikiLink_EmptyResultRejected(t *testing.T) {
 		nil,
 	)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	res, _, err := handleTeamWikiLink(context.Background(), nil, TeamWikiLinkArgs{
 		TaskID: "ISS-6",
@@ -373,7 +373,7 @@ func TestHandleTeamWikiLink_EmptyResultRejected(t *testing.T) {
 func TestHandleTeamWikiLink_ValidationErrors(t *testing.T) {
 	broker := newFakeWikiLinkBroker(t, nil, nil)
 	withBrokerURL(t, broker.srv.URL)
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	cases := []struct {
 		name string

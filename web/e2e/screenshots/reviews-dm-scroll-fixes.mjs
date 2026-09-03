@@ -25,7 +25,7 @@ const now = new Date("2026-05-26T09:00:00Z").getTime();
 
 const members = [
   {
-    slug: "ceo",
+    slug: "cos",
     name: "CEO",
     role: "Lead",
     provider: "claude-code",
@@ -59,7 +59,7 @@ function crowdedReviews() {
       proposed_wiki_path: `team/playbooks/promotion-${n}.md`,
       excerpt:
         "A wiki promotion with enough detail to make the review card readable while the column overflows.",
-      reviewer_slug: "ceo",
+      reviewer_slug: "cos",
       state: n <= 22 ? "pending" : "in-review",
       submitted_ts: iso(n),
       updated_ts: iso(n / 2),
@@ -73,7 +73,7 @@ const activeTasks = [
     id: "task-live-stream",
     title: "Audit promotion queue scroll behavior",
     status: "in_progress",
-    owner: "ceo",
+    owner: "cos",
     channel: "general",
     created_at: iso(8),
     updated_at: iso(1),
@@ -84,14 +84,14 @@ const messages = [
   {
     id: "dm-1",
     from: "human",
-    channel: "ceo__human",
+    channel: "cos__human",
     content: "Can you keep an eye on the review queue while I collapse logs?",
     timestamp: iso(1),
   },
   {
     id: "dm-2",
-    from: "ceo",
-    channel: "ceo__human",
+    from: "cos",
+    channel: "cos__human",
     content: "Yes. The live stream can be tucked away without dropping state.",
     timestamp: iso(0.5),
   },
@@ -107,7 +107,7 @@ async function installFeatureMocks(context) {
             llm_provider: "claude-code",
             llm_provider_configured: true,
             memory_backend: "markdown",
-            team_lead_slug: "ceo",
+            team_lead_slug: "cos",
           }),
         }),
       );
@@ -156,7 +156,7 @@ async function installFeatureMocks(context) {
             tasks: [
               {
                 taskId: "task-live-stream",
-                agentSlug: "ceo",
+                agentSlug: "cos",
                 toolCallCount: 7,
                 firstToolAt: now - 30 * 60_000,
                 lastToolAt: now - 5 * 60_000,
@@ -173,7 +173,7 @@ async function installFeatureMocks(context) {
           body: JSON.stringify({ reviews: crowdedReviews() }),
         }),
       );
-      await ctx.route(/\/api\/agent-stream\/ceo(?:\?|$)/, async (r) =>
+      await ctx.route(/\/api\/agent-stream\/cos(?:\?|$)/, async (r) =>
         r.fulfill({
           status: 200,
           headers: {
@@ -220,7 +220,7 @@ await shotElement(
 );
 
 await page.evaluate(() => {
-  window.location.hash = "#/dm/ceo";
+  window.location.hash = "#/dm/cos";
 });
 await page.waitForSelector('[data-testid="dm-workbench"]', {
   timeout: 10_000,

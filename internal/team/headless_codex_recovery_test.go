@@ -53,7 +53,7 @@ func newOfficeModeTaskForTestWithOwner(t *testing.T, b *Broker, owner string) te
 		Channel:       "team",
 		Title:         "Refresh the weekly metrics summary layout",
 		Owner:         owner,
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "office",
 	})

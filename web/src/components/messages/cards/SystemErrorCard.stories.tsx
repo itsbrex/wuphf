@@ -19,7 +19,7 @@ export const ClaudeCode: Story = {
       sign_in_command: "claude auth login",
       detail:
         "Claude CLI requires login. Run `claude login` or use /init to choose a different provider.",
-      reporter: "ceo",
+      reporter: "cos",
     },
   },
 };

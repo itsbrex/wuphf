@@ -193,12 +193,12 @@ describe("<MessageBubble> consult_relay dispatch", () => {
   // keep on the first run.
   const CONSULT: Message = {
     id: "msg-consult-1",
-    from: "ceo",
+    from: "cos",
     channel: "eng",
     content: "",
     kind: "consult_relay",
     timestamp: "2026-08-23T12:00:00Z",
-    payload: { direction: "sent", agent: "designer", channel: "ceo__designer" },
+    payload: { direction: "sent", agent: "designer", channel: "cos__designer" },
   } as unknown as Message;
 
   it("renders the marker, not a bubble", () => {
@@ -212,7 +212,7 @@ describe("<MessageBubble> consult_relay dispatch", () => {
   });
 
   it("returns before any author or avatar is rendered", () => {
-    // The placement requirement: above the isSyntheticSender path. "ceo" is
+    // The placement requirement: above the isSyntheticSender path. "cos" is
     // not on the stubbed roster, so a fall-through would render the synthetic
     // -sender bubble shell around it.
     const { container } = render(

@@ -19,7 +19,7 @@ func seedSlackDecision(t *testing.T, b *Broker, channel string) string {
 		ID:            "request-gate-1",
 		Kind:          "approval",
 		Status:        "pending",
-		From:          "ceo",
+		From:          "cos",
 		Channel:       channel,
 		Title:         "Send the launch email",
 		Question:      "Approve sending the launch email to the list?",
@@ -43,7 +43,7 @@ func TestFormatSlackInterviewBlocksOneButtonPerOption(t *testing.T) {
 	req := humanInterview{
 		ID:            "request-7",
 		Kind:          "approval",
-		From:          "ceo",
+		From:          "cos",
 		Question:      "Ship it?",
 		Context:       "context line",
 		Options:       options,
@@ -107,7 +107,7 @@ func TestSlackSendDecisionRendersBlocks(t *testing.T) {
 
 	out, ok := tr.FormatOutbound(channelMessage{
 		Channel: "slack-general",
-		From:    "ceo",
+		From:    "cos",
 		Kind:    "approval",
 		Content: "Approve sending the launch email to the list?",
 	})

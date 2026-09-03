@@ -15,7 +15,7 @@ const CATALOG: WikiCatalogEntry[] = [
   {
     path: "team/people/eng.md",
     title: "Eng",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T15:30:00Z",
     group: "people",
   },
@@ -69,7 +69,7 @@ export const WithRecentChanges: Story = {
       },
       {
         sha: "d4e5f6a",
-        author_slug: "ceo",
+        author_slug: "cos",
         timestamp: "2026-06-10T09:00:00Z",
         message: "wiki: record renewal playbook execution",
         paths: ["team/playbooks/acme-renewal.md"],

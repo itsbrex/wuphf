@@ -414,7 +414,7 @@ ceo_dispatched=false
 if [ -s "$CEO_CLAUDE_LOG" ] || [ -s "$CEO_CODEX_LOG" ]; then
   ceo_dispatched=true
 fi
-if [ -s "$LATENCY_LOG" ] && grep -q "agent=ceo " "$LATENCY_LOG"; then
+if [ -s "$LATENCY_LOG" ] && grep -q "agent=cos " "$LATENCY_LOG"; then
   ceo_dispatched=true
 fi
 

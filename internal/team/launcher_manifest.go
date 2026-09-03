@@ -50,7 +50,7 @@ func resetManifestToPack(pack *bot.PackDefinition) error {
 			Expertise:    append([]string(nil), cfg.Expertise...),
 			Personality:  cfg.Personality,
 			AllowedTools: append([]string(nil), cfg.AllowedTools...),
-			System:       cfg.Slug == pack.LeadSlug || cfg.Slug == "ceo",
+			System:       cfg.Slug == pack.LeadSlug || cfg.Slug == "cos",
 		})
 	}
 	manifest := company.Manifest{

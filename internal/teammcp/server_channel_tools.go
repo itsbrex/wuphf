@@ -148,8 +148,8 @@ func handleTeamBridge(ctx context.Context, _ *mcp.CallToolRequest, args TeamBrid
 	if err != nil {
 		return toolError(err), nil, nil
 	}
-	if slug != "ceo" {
-		return toolError(fmt.Errorf("only the Chief of Staff can bridge channel context; ask @ceo to do it")), nil, nil
+	if slug != "cos" {
+		return toolError(fmt.Errorf("only the Chief of Staff can bridge channel context; ask @cos to do it")), nil, nil
 	}
 	source := resolveChannel(args.SourceChannel)
 	target := resolveChannel(args.TargetChannel)

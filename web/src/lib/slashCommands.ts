@@ -11,7 +11,7 @@ function navigateToApp(appId: string): void {
 
 /** Routing prefix for `/ask`: mirrors TUI cmdAsk which always goes to the lead. */
 export function askPrefix(leadSlug: string | undefined): string {
-  const slug = (leadSlug || "ceo").trim().toLowerCase() || "ceo";
+  const slug = (leadSlug || "cos").trim().toLowerCase() || "cos";
   return `@${slug} `;
 }
 
@@ -20,7 +20,7 @@ export function unknownSlashCommandMessage(command: string): string {
   return `Unknown command: ${name}. Try /help.`;
 }
 
-/** Pick the team-lead slug: configured first, else first built-in bot, else 'ceo'. */
+/** Pick the team-lead slug: configured first, else first built-in bot, else 'cos'. */
 export function resolveLeadSlug(
   configured: string | undefined,
   members: { slug?: string; built_in?: boolean }[],
@@ -31,7 +31,7 @@ export function resolveLeadSlug(
     (m) => m.built_in && m.slug && m.slug !== "human" && m.slug !== "you",
   );
   if (builtin?.slug) return builtin.slug;
-  return "ceo";
+  return "cos";
 }
 
 export interface SlashHandlers {

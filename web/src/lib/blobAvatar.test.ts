@@ -54,8 +54,8 @@ describe("per-bot identity", () => {
   it("is stable for a slug", () => {
     // The whole point of deriving rather than storing: a bot looks the same
     // in every surface, in every session, forever.
-    expect(blobShapeIndex("ceo")).toBe(blobShapeIndex("ceo"));
-    expect(blobColor("ceo")).toBe(blobColor("ceo"));
+    expect(blobShapeIndex("cos")).toBe(blobShapeIndex("cos"));
+    expect(blobColor("cos")).toBe(blobColor("cos"));
   });
 
   it("does not change when other bots are added", () => {
@@ -68,13 +68,13 @@ describe("per-bot identity", () => {
   });
 
   it("ignores case and surrounding whitespace", () => {
-    expect(blobColor(" CEO ")).toBe(blobColor("ceo"));
-    expect(blobShapeIndex(" CEO ")).toBe(blobShapeIndex("ceo"));
+    expect(blobColor(" COS ")).toBe(blobColor("cos"));
+    expect(blobShapeIndex(" COS ")).toBe(blobShapeIndex("cos"));
   });
 
   it("spreads a real roster across several shapes AND colours", () => {
     const roster = [
-      "ceo",
+      "cos",
       "app-builder",
       "planner",
       "executor",
@@ -92,7 +92,7 @@ describe("per-bot identity", () => {
   });
 
   it("only ever returns a colour from the palette", () => {
-    for (const slug of ["a", "bb", "ceo", "zzz-agent", "человек"]) {
+    for (const slug of ["a", "bb", "cos", "zzz-agent", "человек"]) {
       expect(BLOB_COLORS).toContain(blobColor(slug));
     }
   });
@@ -138,7 +138,7 @@ describe("drawing", () => {
     // the eyes a fixed colour is what made the previous eye work depend on the
     // theme.
     const { ops, ctx } = fakeCtx();
-    drawBlobAvatar(ctx, "ceo", 48);
+    drawBlobAvatar(ctx, "cos", 48);
     const clears = ops.filter((o) => o.startsWith("clear:"));
     // One full-canvas clear at the start, then exactly two eye holes.
     expect(clears.length).toBe(3);
@@ -160,7 +160,7 @@ describe("drawing", () => {
 
   it("honours a colour override without touching the derived shape", () => {
     const { ctx } = fakeCtx();
-    drawBlobAvatar(ctx, "ceo", 32, { color: "#123456" });
+    drawBlobAvatar(ctx, "cos", 32, { color: "#123456" });
     expect(ctx.fillStyle).toBe("#123456");
   });
 });

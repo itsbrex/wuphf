@@ -529,7 +529,7 @@ export interface Message {
   /**
    * Two shapes reach the client and both are real.
    *
-   * The map form is `{ "👀": ["ceo", "eng"] }` — emoji to the slugs that
+   * The map form is `{ "👀": ["cos", "eng"] }` — emoji to the slugs that
    * reacted. The array form is a pre-counted `[{ emoji, count }]`. MessageBubble
    * has always handled both, branching on Array.isArray and casting, because
    * the cast was the only way past a type that claimed only one of them existed.

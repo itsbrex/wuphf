@@ -357,7 +357,7 @@ interface BotInstructionsSectionProps {
 // viewable + editable accordion. The office-wide USER.md (the human the office
 // serves) is shown on the lead bot's panel since it is shared by everyone.
 export function BotInstructionsSection({ agent }: BotInstructionsSectionProps) {
-  const isLead = agent.built_in === true || agent.slug === "ceo";
+  const isLead = agent.built_in === true || agent.slug === "cos";
 
   const files: FileCardConfig[] = AGENT_INSTRUCTION_FILES.map((name) => ({
     path: botFilePath(agent.slug, name),

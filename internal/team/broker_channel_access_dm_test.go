@@ -26,7 +26,7 @@ func dmBrokerWithRoster(t *testing.T) (*Broker, string) {
 	// defaults. The privacy rules pinned here still matter for LEGACY
 	// workspaces that hold both bots on disk, so the fixture keeps them.
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", Role: "Chief Executive"},
+		{Slug: "cos", Name: "CEO", Role: "Chief Executive"},
 		{Slug: "eng", Name: "Engineer", Role: "Engineer"},
 		{Slug: LibrarianSlug, Name: librarianName, Role: librarianRole},
 		{Slug: appBuilderSlug, Name: appBuilderRole, Role: appBuilderRole},
@@ -66,7 +66,7 @@ func TestNoBotBypassesDMMembership(t *testing.T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	for _, slug := range []string{"ceo", LibrarianSlug, appBuilderSlug} {
+	for _, slug := range []string{"cos", LibrarianSlug, appBuilderSlug} {
 		if b.canAccessChannelLocked(slug, dmChannel) {
 			t.Errorf("%q must not bypass membership on %q", slug, dmChannel)
 		}

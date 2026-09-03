@@ -74,7 +74,7 @@ func TestHandleWatchdogs_GETReturnsCurrentAlerts(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.watchdogs = []watchdogAlert{
-		{ID: "alert-1", Kind: "stalled", Owner: "ceo", Summary: "CEO stalled", Channel: "team"},
+		{ID: "alert-1", Kind: "stalled", Owner: "cos", Summary: "CEO stalled", Channel: "team"},
 		{ID: "alert-2", Kind: "stalled", Owner: "pm", Summary: "PM stalled", Channel: "team"},
 	}
 	b.mu.Unlock()
@@ -186,7 +186,7 @@ func TestBrokerSessionModePersistsAndSurvivesReset(t *testing.T) {
 func TestBrokerActionsAndSchedulerEndpoints(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.appendActionLocked("request_created", "office", "team", "ceo", "Asked for approval", "request-1")
+	b.appendActionLocked("request_created", "office", "team", "cos", "Asked for approval", "request-1")
 	b.mu.Unlock()
 	if err := b.SetSchedulerJob(schedulerJob{
 		Slug:            "nex-insights",
@@ -230,7 +230,7 @@ func TestBrokerPostsAndDedupesNexNotifications(t *testing.T) {
 		"event_id":     "feed-item-1",
 		"title":        "Context alert",
 		"content":      "Important: Acme mentioned budget pressure",
-		"tagged":       []string{"ceo"},
+		"tagged":       []string{"cos"},
 		"source":       "context_graph",
 		"source_label": "Nex",
 	}

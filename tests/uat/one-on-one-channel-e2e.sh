@@ -213,7 +213,7 @@ send_ctrl_u
 echo "--- Phase 2: Invalid agent falls back to CEO ---"
 send_raw "/1o1 ghost"
 send_enter
-wait_for_health "1o1" "ceo" "phase2-health"
+wait_for_health "1o1" "cos" "phase2-health"
 wait_for_pane_count 2 "phase2-panes"
 assert_screen_contains "1:1 with CEO" "phase2-screen"
 assert_screen_contains "Direct 1:1 with CEO" "phase2-screen"
@@ -263,7 +263,7 @@ send_raw "2"
 sleep 1
 assert_screen_contains "Return To Main Office" "phase5-confirm"
 send_enter
-wait_for_health "office" "ceo" "phase5-health"
+wait_for_health "office" "cos" "phase5-health"
 wait_for_pane_count 6 "phase5-panes"
 assert_screen_contains "The WUPHF Office" "phase5-screen"
 assert_screen_contains "Message #general" "phase5-screen"
@@ -279,14 +279,14 @@ assert_screen_not_contains "The WUPHF Office" "phase6-screen"
 
 echo "--- Phase 7: Fresh default launch returns to office ---"
 start_runtime "phase7"
-wait_for_health "office" "ceo" "phase7-health"
+wait_for_health "office" "cos" "phase7-health"
 assert_screen_contains "The WUPHF Office" "phase7-screen"
 assert_screen_contains "Message #general" "phase7-screen"
 assert_screen_not_contains "1:1 with Backend Engineer" "phase7-screen"
 
 echo "--- Phase 8: Direct launch without an agent defaults to CEO ---"
 start_runtime "phase8" --1o1
-wait_for_health "1o1" "ceo" "phase8-health"
+wait_for_health "1o1" "cos" "phase8-health"
 wait_for_pane_count 2 "phase8-panes"
 assert_screen_contains "1:1 with CEO" "phase8-screen"
 

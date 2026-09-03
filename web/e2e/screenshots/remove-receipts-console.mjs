@@ -51,7 +51,7 @@ const ACTIVITY = {
       id: "ev-lifecycle",
       kind: "lifecycle",
       timestamp: "2026-06-09T09:30:00Z",
-      actor: "ceo",
+      actor: "cos",
       summary: "Approved & started",
       lifecycle: { from: "drafting", to: "running" },
     },

@@ -30,7 +30,7 @@ const CONFIG = {
   provider_endpoints: {},
   memory_backend: "markdown",
   action_provider: "auto",
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
   company_name: "Northwind",
   config_path: "/Users/you/.wuphf/config.json",
 };
@@ -38,7 +38,7 @@ const CONFIG = {
 const MEMBERS = {
   members: [
     {
-      slug: "ceo",
+      slug: "cos",
       name: "CEO",
       role: "Office lead",
       status: "idle",
@@ -63,7 +63,7 @@ const MEMBERS = {
 
 const CHANNELS = {
   channels: [
-    { slug: "general", name: "general", members: ["ceo", "growth"] },
+    { slug: "general", name: "general", members: ["cos", "growth"] },
     { slug: "growth__human", name: "Growth Lead", members: ["growth"], type: "dm" },
   ],
 };
@@ -98,7 +98,7 @@ const TASKS = {
       id: "OPS-3",
       title: "Reconcile billing export (CEO-owned)",
       status: "in_progress",
-      owner: "ceo",
+      owner: "cos",
       created_at: "2026-06-09T09:00:00Z",
       updated_at: "2026-06-11T08:00:00Z",
     },
@@ -161,7 +161,7 @@ const POLICIES = {
       rule: "Get human approval before sending anything to a named account.",
       active: true,
       created_at: "2026-06-12T09:00:00Z",
-      agents: ["growth", "ceo"],
+      agents: ["growth", "cos"],
     },
   ],
 };

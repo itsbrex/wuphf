@@ -19,7 +19,7 @@ import { useFocusTrap } from "./editor/inserts/useFocusTrap";
  * wiki contribution is a system skill it carries like any bot.
  */
 
-export const WIKI_CHANGE_OWNER_SLUG = "ceo";
+export const WIKI_CHANGE_OWNER_SLUG = "cos";
 
 /** Builds the wiki AI-change task payload, owned by the Chief of Staff. */
 export function buildWikiChangeTask(

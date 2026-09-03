@@ -116,7 +116,7 @@ func (b *Broker) migrateLegacyChannelsIntoArchivedTasksLocked() {
 		if owned[slug] {
 			continue
 		}
-		// Trusted sender pseudo-slugs (system/nex/you/human/ceo/librarian) are
+		// Trusted sender pseudo-slugs (system/nex/you/human/cos/librarian) are
 		// not real chat channels — never mint a task for them.
 		if reservedChannelSlugs[slug] {
 			continue

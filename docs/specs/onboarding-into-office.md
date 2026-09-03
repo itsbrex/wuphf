@@ -69,7 +69,7 @@ should not be revisited without going through the same review.
   `LifecycleStateDrafting` for the pre-Intake "bots can comment, not
   dispatch" mode. Cuts ~40% off Phase 3 scope.
 - **CEO transcript lives in `b.messages`, not in onboarding state.** The CEO
-  DM is a real DM (`dm:ceo:onboarding` reserved slug). Inherits SSE,
+  DM is a real DM (`dm:cos:onboarding` reserved slug). Inherits SSE,
   persistence, replay, search for free. `state.CEOTranscript` is NOT
   introduced.
 - **Staged form answers + atomic seed at `seed` phase.** User answers update
@@ -97,7 +97,7 @@ should not be revisited without going through the same review.
 ### Code quality
 - **Frontend reuses `DMView` for the CEO chat.** A small `OnboardingDMRoute`
   wrapper provides the preview-overlay context and points `DMView` at
-  the reserved `dm:ceo:onboarding` channel. No new chat shell, no new
+  the reserved `dm:cos:onboarding` channel. No new chat shell, no new
   composer, no duplicated SSE/scroll/optimistic-post code.
 - **Suggestion cards extend `InterviewBar`/`HumanInterviewOverlay`.** New
   message kinds: `ceo_form_field`, `ceo_chip_row`, `ceo_checklist`,
@@ -1004,7 +1004,7 @@ Adversarial code review should compare these claims against current main.
 | Approve / request_changes / defer actions | `broker_inbox_handler.go:229` + `broker_inbox.go` + `broker_decision_packet.go` | `Approve & Start` button maps directly to `approve` action. |
 | Comments on lifecycle entities | Same comment payload field on the existing decision action (`"comment": "<reviewer note>"`) | Reuse the comment infrastructure for the issue document's timeline. |
 | Inbox / review UI surface | `web/src/components/review/{ReviewCard,ReviewColumn,ReviewDetail}.tsx` + the unified Inbox shipped via PR #885 | Issues list `/issues` route is a presentational sibling that filters/renders the same lifecycle index. |
-| Chat surface (composer, message feed, SSE, scroll, autocomplete, typing) | `DMView`, `Composer`, `MessageFeed`, `MessageBubble`, `TypingIndicator` | Reuse via a thin `OnboardingDMRoute` wrapper that points `DMView` at `dm:ceo:onboarding`. |
+| Chat surface (composer, message feed, SSE, scroll, autocomplete, typing) | `DMView`, `Composer`, `MessageFeed`, `MessageBubble`, `TypingIndicator` | Reuse via a thin `OnboardingDMRoute` wrapper that points `DMView` at `dm:cos:onboarding`. |
 | Interactive structured cards | `HumanInterviewOverlay` + `InterviewBar` with kind dispatch + `EXTERNAL ACTION` badge pattern | Extend with `ceo_form_field`, `ceo_chip_row`, `ceo_checklist`, `ceo_team_trim`, `ceo_scan_chip`. |
 | Suggestion-card sanitization | `sanitizeContextValue` (Go-side, per PR #684 closing confused-deputy bypass) | Inherited automatically by extending the same payload path. Add regression test for new kinds. |
 | Onboarding state persistence | `internal/onboarding/state.go` `Load`/`Save` (existing) | Extend schema to v2 with new fields. Migrate v1 → v2 on read. |

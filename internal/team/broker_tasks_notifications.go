@@ -45,7 +45,7 @@ func parseAtMentions(body string) []string {
 // postTaskReassignNotificationsLocked posts the channel announcement plus DMs
 // to the new owner and previous owner whenever a task ownership change happens.
 // The CEO is tagged in the channel message rather than DM'd (CEO is the human
-// user; human↔ceo self-DM is not a valid DM target).
+// user; human↔cos self-DM is not a valid DM target).
 //
 // Must be called while b.mu is held for write.
 // taskCardHasNoHome reports whether a card ABOUT this task has nowhere to go,
@@ -120,8 +120,8 @@ func (b *Broker) postTaskReassignNotificationsLocked(actor string, task *teamTas
 		Channel:   taskChannel,
 		Kind:      "task_reassigned",
 		Title:     title,
-		Content:   fmt.Sprintf("Task %q reassigned: %s → %s. (by @%s, cc @ceo)", title, prevLabel, newLabel, actor),
-		Tagged:    dedupeReassignTags([]string{"ceo", newOwner, prevOwner}),
+		Content:   fmt.Sprintf("Task %q reassigned: %s → %s. (by @%s, cc @cos)", title, prevLabel, newLabel, actor),
+		Tagged:    dedupeReassignTags([]string{"cos", newOwner, prevOwner}),
 		Timestamp: now,
 	})
 
@@ -169,8 +169,8 @@ func (b *Broker) postTaskCancelNotificationsLocked(actor string, task *teamTask,
 		Channel:   taskChannel,
 		Kind:      "task_canceled",
 		Title:     title,
-		Content:   fmt.Sprintf("Task %q closed as won't do. Owner was %s. (by @%s, cc @ceo)", title, ownerLabel, actor),
-		Tagged:    dedupeReassignTags([]string{"ceo", prevOwner}),
+		Content:   fmt.Sprintf("Task %q closed as won't do. Owner was %s. (by @%s, cc @cos)", title, ownerLabel, actor),
+		Tagged:    dedupeReassignTags([]string{"cos", prevOwner}),
 		Timestamp: now,
 	})
 
@@ -218,7 +218,7 @@ func (b *Broker) postTaskDMLocked(from, targetSlug, kind, title, content string)
 }
 
 // isDMTargetSlug reports whether slug is a valid recipient for a human-to-bot DM.
-// The human user ("human"/"you") and the CEO seat ("ceo", which is the human)
+// The human user ("human"/"you") and the CEO seat ("cos", which is the human)
 // are excluded because they would create self-DMs.
 func isDMTargetSlug(slug string) bool {
 	slug = strings.ToLower(strings.TrimSpace(slug))
@@ -226,7 +226,7 @@ func isDMTargetSlug(slug string) bool {
 		return false
 	}
 	switch slug {
-	case "human", "you", "ceo":
+	case "human", "you", "cos":
 		return false
 	}
 	return true
@@ -277,7 +277,7 @@ func (b *Broker) postTaskRequestChangesNotificationsLocked(actor string, task *t
 		Kind:      "task_changes_requested",
 		Title:     title,
 		Content:   body,
-		Tagged:    dedupeReassignTags([]string{owner, "ceo"}),
+		Tagged:    dedupeReassignTags([]string{owner, "cos"}),
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 	if isDMTargetSlug(owner) {
@@ -334,7 +334,7 @@ func (b *Broker) postTaskRejectedNotificationsLocked(actor string, task *teamTas
 		Kind:      "task_rejected",
 		Title:     title,
 		Content:   body,
-		Tagged:    dedupeReassignTags([]string{owner, "ceo"}),
+		Tagged:    dedupeReassignTags([]string{owner, "cos"}),
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 	if isDMTargetSlug(owner) {
@@ -398,7 +398,7 @@ func (b *Broker) postIssueCreatedCardLocked(actor string, task *teamTask) string
 		Kind:      "issue_created",
 		Title:     title,
 		Content:   fmt.Sprintf("Issue created: %s — %s", task.ID, title),
-		Tagged:    dedupeReassignTags([]string{"ceo", strings.TrimSpace(task.Owner), actor}),
+		Tagged:    dedupeReassignTags([]string{"cos", strings.TrimSpace(task.Owner), actor}),
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 		// ReplyTo folds the card into the originating chat thread so
 		// subsequent messages in that thread appear after the card
@@ -504,7 +504,7 @@ func (b *Broker) postIssueLifecycleCardLocked(task *teamTask, from, to Lifecycle
 	// the actor IS the owner (self-transitions on submit_for_review /
 	// complete still want a chat trace). CEO is included so the
 	// coordination view stays in sync.
-	tagged := []string{"ceo"}
+	tagged := []string{"cos"}
 	if owner != "" {
 		tagged = append(tagged, owner)
 	}

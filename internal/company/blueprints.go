@@ -45,7 +45,7 @@ func materializeManifestFromBlueprintRefs(manifest Manifest, repoRoot string) (M
 	resolved := Manifest{
 		Name:          firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyName), strings.TrimSpace(manifest.Name), strings.TrimSpace(operationBlueprint.Name), "Your gawkbot team"),
 		Description:   firstNonTemplateNonEmpty(strings.TrimSpace(cfg.CompanyDescription), strings.TrimSpace(manifest.Description), strings.TrimSpace(operationBlueprint.Description), strings.TrimSpace(operationBlueprint.Objective), "Autonomous bot team runtime."),
-		Lead:          firstNonEmpty(strings.TrimSpace(operationBlueprint.Starter.LeadSlug), strings.TrimSpace(manifest.Lead), "ceo"),
+		Lead:          firstNonEmpty(strings.TrimSpace(operationBlueprint.Starter.LeadSlug), strings.TrimSpace(manifest.Lead), "cos"),
 		BlueprintRefs: refs,
 		UpdatedAt:     manifest.UpdatedAt,
 	}
@@ -75,7 +75,7 @@ func loadPrimaryOperationBlueprint(repoRoot string, refs []BlueprintRef) (operat
 func buildMembersFromBlueprints(repoRoot string, blueprint operations.Blueprint, refs []BlueprintRef) []MemberSpec {
 	if len(blueprint.Starter.Bots) > 0 {
 		members := make([]MemberSpec, 0, len(blueprint.Starter.Bots))
-		lead := firstNonEmpty(strings.TrimSpace(blueprint.Starter.LeadSlug), "ceo")
+		lead := firstNonEmpty(strings.TrimSpace(blueprint.Starter.LeadSlug), "cos")
 		for _, starter := range blueprint.Starter.Bots {
 			if employeeID := normalizeSlug(starter.EmployeeBlueprint); employeeID != "" {
 				if employeeBlueprint, err := operations.LoadEmployeeBlueprint(repoRoot, employeeID); err == nil {
@@ -105,12 +105,12 @@ func buildMembersFromBlueprints(repoRoot string, blueprint operations.Blueprint,
 			if err != nil {
 				continue
 			}
-			members = append(members, memberSpecFromEmployeeBlueprint(employeeBlueprint, operations.StarterBot{}, "ceo"))
+			members = append(members, memberSpecFromEmployeeBlueprint(employeeBlueprint, operations.StarterBot{}, "cos"))
 		}
 		if len(members) > 0 {
-			lead := firstNonEmpty(strings.TrimSpace(blueprint.Starter.LeadSlug), "ceo")
+			lead := firstNonEmpty(strings.TrimSpace(blueprint.Starter.LeadSlug), "cos")
 			for i := range members {
-				members[i].System = members[i].Slug == lead || members[i].Slug == "ceo" || members[i].System
+				members[i].System = members[i].Slug == lead || members[i].Slug == "cos" || members[i].System
 			}
 			sort.SliceStable(members, func(i, j int) bool {
 				if members[i].System != members[j].System {
@@ -142,7 +142,7 @@ func memberSpecFromEmployeeBlueprint(blueprint operations.EmployeeBlueprint, sta
 		Expertise:    mergeUniqueStrings(normalizeStrings(blueprint.Skills), normalizeStrings(starter.Expertise)),
 		Personality:  personality,
 		AllowedTools: normalizeStrings(blueprint.Tools),
-		System:       starter.BuiltIn || slug == lead || slug == "ceo" || slug == "operator",
+		System:       starter.BuiltIn || slug == lead || slug == "cos" || slug == "operator",
 	}
 }
 
@@ -157,7 +157,7 @@ func memberSpecFromStarterBot(starter operations.StarterBot, lead string) Member
 		Role:        firstNonEmpty(strings.TrimSpace(starter.Role), humanizeSlug(slug)),
 		Expertise:   normalizeStrings(starter.Expertise),
 		Personality: strings.TrimSpace(starter.Personality),
-		System:      starter.BuiltIn || slug == lead || slug == "ceo",
+		System:      starter.BuiltIn || slug == lead || slug == "cos",
 	}
 }
 

@@ -60,7 +60,7 @@ const TASKS = [
     id: "task-done-005",
     channel: "product",
     title: "Cut release v0.84.0",
-    owner: "ceo",
+    owner: "cos",
     status: "done",
     task_type: "launch",
   },

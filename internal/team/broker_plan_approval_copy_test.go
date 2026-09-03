@@ -34,7 +34,7 @@ func TestHumanReadablePlanSummary(t *testing.T) {
 
 // TestOwnerLabelForPlan pins who the card says is asking.
 func TestOwnerLabelForPlan(t *testing.T) {
-	for in, want := range map[string]string{"": "The team", "office": "The team", "ceo": "@ceo", " pm ": "@pm"} {
+	for in, want := range map[string]string{"": "The team", "office": "The team", "cos": "@cos", " pm ": "@pm"} {
 		if got := ownerLabelForPlan(in); got != want {
 			t.Errorf("ownerLabelForPlan(%q) = %q, want %q", in, got, want)
 		}

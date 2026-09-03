@@ -19,7 +19,7 @@ func TestCurrentMainViewportLinesPrependsNeedsYouStrip(t *testing.T) {
 		Title:    "Approve launch copy",
 		Question: "Approve launch copy?",
 		Context:  "Need final sign-off before shipping.",
-		From:     "ceo",
+		From:     "cos",
 		Blocking: true,
 	}}
 	m.messages = []channelui.BrokerMessage{{ID: "msg-1", From: "pm", Content: "Main feed update."}}

@@ -28,7 +28,7 @@ func TestSkipTaskSeedsWelcomeOnly(t *testing.T) {
 	lead := officeLeadSlugFromMembers(b.members)
 	b.mu.Unlock()
 	if lead == "" {
-		lead = "ceo"
+		lead = "cos"
 	}
 	home := DMSlugFor(lead)
 	msgs := b.ChannelMessages(home)

@@ -21,12 +21,12 @@ func TestBuildSessionMemorySnapshotIncludesSerializableSummaries(t *testing.T) {
 		Kind:     "approval",
 		Title:    "Approve launch timing",
 		Question: "Should we ship tomorrow?",
-		From:     "ceo",
+		From:     "cos",
 		Blocking: true,
 		Status:   "pending",
 	}}, []RuntimeMessage{{
 		ID:      "msg-1",
-		From:    "ceo",
+		From:    "cos",
 		Content: "We need a final timing call before tomorrow.",
 	}})
 
@@ -45,7 +45,7 @@ func TestBuildSessionMemorySnapshotIncludesSerializableSummaries(t *testing.T) {
 	if len(snapshot.Requests) != 1 || snapshot.Requests[0].Summary == "" {
 		t.Fatalf("expected summarized request, got %+v", snapshot.Requests)
 	}
-	if len(snapshot.Messages) != 1 || !strings.Contains(snapshot.Messages[0].Summary, "@ceo:") {
+	if len(snapshot.Messages) != 1 || !strings.Contains(snapshot.Messages[0].Summary, "@cos:") {
 		t.Fatalf("expected summarized recent message, got %+v", snapshot.Messages)
 	}
 	if len(snapshot.NextSteps) == 0 {
@@ -109,7 +109,7 @@ func TestBuildSessionMemorySnapshotFromOfficeStateReconstructsContext(t *testing
 			ID:            "req-3",
 			Kind:          "confirm",
 			Status:        "pending",
-			From:          "ceo",
+			From:          "cos",
 			Title:         "Confirm launch plan",
 			Question:      "Should the team proceed with this launch plan?",
 			Blocking:      true,
@@ -124,10 +124,10 @@ func TestBuildSessionMemorySnapshotFromOfficeStateReconstructsContext(t *testing
 			Question: "Ignore me",
 		},
 	}, []officeActionLog{
-		{ID: "action-1", Kind: "task_created", Actor: "ceo", Summary: "Opened launch task", RelatedID: "task-7", CreatedAt: "2026-04-07T10:00:00Z"},
-		{ID: "action-2", Kind: "request_created", Actor: "ceo", Summary: "Asked for launch confirmation", RelatedID: "req-3", CreatedAt: "2026-04-07T10:05:00Z"},
+		{ID: "action-1", Kind: "task_created", Actor: "cos", Summary: "Opened launch task", RelatedID: "task-7", CreatedAt: "2026-04-07T10:00:00Z"},
+		{ID: "action-2", Kind: "request_created", Actor: "cos", Summary: "Asked for launch confirmation", RelatedID: "req-3", CreatedAt: "2026-04-07T10:05:00Z"},
 	}, []channelMessage{
-		{ID: "msg-1", From: "ceo", Content: "We need a launch decision today.", Timestamp: "2026-04-07T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "We need a launch decision today.", Timestamp: "2026-04-07T10:00:00Z"},
 		{ID: "msg-7", From: "fe", Content: "Release candidate is ready for review.", Timestamp: "2026-04-07T10:06:00Z"},
 	})
 
@@ -159,7 +159,7 @@ func TestSessionMemorySnapshotToRecoveryPreservesFields(t *testing.T) {
 	snapshot := SessionMemorySnapshot{
 		Focus:      "Keep the release on hold.",
 		NextSteps:  []string{"Wait for legal."},
-		Highlights: []string{"@ceo: Legal review is still pending."},
+		Highlights: []string{"@cos: Legal review is still pending."},
 	}
 	recovery := snapshot.ToRecovery()
 	if recovery.Focus != snapshot.Focus {
@@ -168,7 +168,7 @@ func TestSessionMemorySnapshotToRecoveryPreservesFields(t *testing.T) {
 	if len(recovery.NextSteps) != 1 || recovery.NextSteps[0] != "Wait for legal." {
 		t.Fatalf("unexpected next steps: %+v", recovery)
 	}
-	if len(recovery.Highlights) != 1 || recovery.Highlights[0] != "@ceo: Legal review is still pending." {
+	if len(recovery.Highlights) != 1 || recovery.Highlights[0] != "@cos: Legal review is still pending." {
 		t.Fatalf("unexpected highlights: %+v", recovery)
 	}
 }

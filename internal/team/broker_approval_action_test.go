@@ -19,7 +19,7 @@ func TestApprovalRequestStoresMaskedStructuredAction(t *testing.T) {
 	body, _ := json.Marshal(map[string]any{
 		"action":                "create",
 		"kind":                  "approval",
-		"from":                  "ceo",
+		"from":                  "cos",
 		"channel":               "team",
 		"title":                 "Send Email via Gmail",
 		"question":              "Approve?",

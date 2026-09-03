@@ -160,13 +160,13 @@ func TestBuildRuntimeSnapshotFormatsRecoveryAndCapabilities(t *testing.T) {
 		Requests: []RuntimeRequest{{
 			ID:       "req-1",
 			Title:    "Approve launch timing",
-			From:     "ceo",
+			From:     "cos",
 			Status:   "pending",
 			Blocking: true,
 		}},
 		Recent: []RuntimeMessage{{
 			ID:      "msg-1",
-			From:    "ceo",
+			From:    "cos",
 			Content: "We need a final timing call before tomorrow.",
 		}},
 		Artifacts: []RuntimeArtifact{
@@ -230,7 +230,7 @@ func TestBuildRuntimeSnapshotFormatsRecoveryAndCapabilities(t *testing.T) {
 		"Session mode: 1:1 with @pm",
 		"Pending human requests: 1",
 		"Retained execution artifacts: 2",
-		"Approve launch timing from @ceo.",
+		"Approve launch timing from @cos.",
 		"Use working_directory /tmp/wuphf-task-1",
 		"Execution artifacts:",
 		"Polish launch checklist [task] review: This task is retained as a live execution artifact with its current runtime context.",

@@ -61,7 +61,7 @@ func MailboxMessageBelongsToViewerOutbox(msg BrokerMessage, viewerSlug string) b
 }
 
 // MailboxMessageBelongsToViewerInbox is true when msg is addressed to
-// viewerSlug — either authored by a human ("you" / "human" / "ceo"),
+// viewerSlug — either authored by a human ("you" / "human" / "cos"),
 // tagging the viewer (or "all"), or replying within a thread the
 // viewer started. The viewer's own messages do not count as inbox.
 func MailboxMessageBelongsToViewerInbox(msg BrokerMessage, viewerSlug string, messagesByID map[string]BrokerMessage) bool {
@@ -73,7 +73,7 @@ func MailboxMessageBelongsToViewerInbox(msg BrokerMessage, viewerSlug string, me
 	switch from {
 	case viewerSlug:
 		return false
-	case "you", "human", "ceo":
+	case "you", "human", "cos":
 		return true
 	}
 	for _, tagged := range msg.Tagged {

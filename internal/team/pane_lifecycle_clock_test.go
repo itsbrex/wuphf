@@ -27,7 +27,7 @@ func TestDetectDeadPanesAfterSpawn_RecordsDeadPanesUnderManualClock(t *testing.T
 	deps := paneLifecycleDeps{
 		botPaneTargets: func() map[string]notificationTarget {
 			return map[string]notificationTarget{
-				"ceo": {PaneTarget: "wuphf-team:team.1"},
+				"cos": {PaneTarget: "wuphf-team:team.1"},
 				"fe":  {PaneTarget: "wuphf-team:team.2"},
 			}
 		},
@@ -44,7 +44,7 @@ func TestDetectDeadPanesAfterSpawn_RecordsDeadPanesUnderManualClock(t *testing.T
 	// clock past its 1500ms guard without the test goroutine blocking.
 	done := make(chan struct{})
 	go func() {
-		pl.DetectDeadPanesAfterSpawn([]officeMember{{Slug: "ceo"}, {Slug: "fe"}})
+		pl.DetectDeadPanesAfterSpawn([]officeMember{{Slug: "cos"}, {Slug: "fe"}})
 		close(done)
 	}()
 	// Wait for the After registration before advancing — same pattern
@@ -56,12 +56,12 @@ func TestDetectDeadPanesAfterSpawn_RecordsDeadPanesUnderManualClock(t *testing.T
 	// Both panes are reported dead -> both should be recorded + each
 	// should have posted a system message.
 	if len(recorded) != 2 {
-		t.Errorf("recorded = %v, want 2 entries (ceo, fe)", recorded)
+		t.Errorf("recorded = %v, want 2 entries (cos, fe)", recorded)
 	}
 	if posted != 2 {
 		t.Errorf("postSystemMessage calls = %d, want 2", posted)
 	}
-	for _, slug := range []string{"ceo", "fe"} {
+	for _, slug := range []string{"cos", "fe"} {
 		if reason, ok := recorded[slug]; !ok {
 			t.Errorf("recordFailure missing for %s", slug)
 		} else if !stringContains(reason, "pane died on launch") {
@@ -125,7 +125,7 @@ func TestPrimeVisibleAgents_SendsEnterWhenPaneNeedsPriming(t *testing.T) {
 	deps := paneLifecycleDeps{
 		botPaneTargets: func() map[string]notificationTarget {
 			return map[string]notificationTarget{
-				"ceo": {PaneTarget: "wuphf-team:team.1"},
+				"cos": {PaneTarget: "wuphf-team:team.1"},
 			}
 		},
 	}

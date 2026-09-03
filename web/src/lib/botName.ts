@@ -1,14 +1,14 @@
 /**
  * Format a bot slug for display.
  *
- * Short role abbreviations (ceo, pm, cro, cmo, seo, api, ux — up to 3 chars)
+ * Short role abbreviations (cos, pm, cro, cmo, seo, api, ux — up to 3 chars)
  * render UPPERCASE: matches how the gawkbot app treats short bot identifiers.
  *
  * Longer slugs (operator, planner, builder, reviewer, eng-1) render Title Case:
  * "Operator", "Planner", "Eng-1".
  *
  * Example:
- *   formatBotName('ceo')      -> 'CEO'
+ *   formatBotName('cos')      -> 'CEO'
  *   formatBotName('operator') -> 'Operator'
  *   formatBotName('eng-1')    -> 'Eng-1'
  */

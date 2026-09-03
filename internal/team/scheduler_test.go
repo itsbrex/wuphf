@@ -130,7 +130,7 @@ func TestSchedulerProcessOnce_BlockedTaskSkipsAlert(t *testing.T) {
 func TestSchedulerProcessOnce_RequestActiveFiresAlertAndPostsAutomation(t *testing.T) {
 	b := newSchedulerFixtureBroker(t)
 	b.requests = []humanInterview{{
-		ID: "r1", Channel: "team", Title: "approve", From: "ceo",
+		ID: "r1", Channel: "team", Title: "approve", From: "cos",
 		Question: "do this?", Blocking: true,
 		Status: "pending",
 	}}
@@ -189,8 +189,8 @@ func TestSchedulerRecordLedger_EmptyOwnerEscalates(t *testing.T) {
 	}
 	w := &watchdogScheduler{broker: b, clock: newManualClock(time.Now())}
 	_, decisionID := w.recordLedger("team", "task_unclaimed", "t1", "  ", "summary", "src-1")
-	if got.kind != "escalate_to_ceo" || got.owner != "ceo" {
-		t.Errorf("expected escalate_to_ceo for ceo; got kind=%q owner=%q", got.kind, got.owner)
+	if got.kind != "escalate_to_ceo" || got.owner != "cos" {
+		t.Errorf("expected escalate_to_ceo for cos; got kind=%q owner=%q", got.kind, got.owner)
 	}
 	if decisionID == "" {
 		t.Errorf("expected non-empty decision ID")
@@ -207,9 +207,9 @@ func TestSchedulerRecordLedger_RequestWaitingAsksHuman(t *testing.T) {
 		},
 	}
 	w := &watchdogScheduler{broker: b, clock: newManualClock(time.Now())}
-	_, _ = w.recordLedger("team", "request_waiting", "r1", "ceo", "summary", "")
-	if got.kind != "ask_human" || got.owner != "ceo" {
-		t.Errorf("expected ask_human routed to ceo; got kind=%q owner=%q", got.kind, got.owner)
+	_, _ = w.recordLedger("team", "request_waiting", "r1", "cos", "summary", "")
+	if got.kind != "ask_human" || got.owner != "cos" {
+		t.Errorf("expected ask_human routed to cos; got kind=%q owner=%q", got.kind, got.owner)
 	}
 }
 

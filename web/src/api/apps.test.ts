@@ -45,8 +45,8 @@ describe("requestAppBuild", () => {
     await requestAppBuild({ name: "Pipeline", description: "a board" });
 
     const body = post.mock.calls[0][1] as { channel: string; owner: string };
-    expect(body.channel).toBe("ceo__human");
-    expect(body.owner).toBe("ceo");
+    expect(body.channel).toBe("cos__human");
+    expect(body.owner).toBe("cos");
   });
 
   it("uses the same DM when improving an existing app", async () => {
@@ -57,7 +57,7 @@ describe("requestAppBuild", () => {
     });
 
     const body = post.mock.calls[0][1] as { channel: string; title: string };
-    expect(body.channel).toBe("ceo__human");
+    expect(body.channel).toBe("cos__human");
     expect(body.title).toBe("Improve app: Pipeline");
   });
 });

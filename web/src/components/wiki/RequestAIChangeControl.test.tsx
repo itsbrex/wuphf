@@ -92,7 +92,7 @@ describe("<RequestAIChangeControl>", () => {
       ],
       // The Chief of Staff's DM: the owner's conversation is where the task
       // belongs. It was the Librarian's DM until that bot stopped seeding.
-      { channel: "ceo__human", createdBy: "human" },
+      { channel: "cos__human", createdBy: "human" },
     );
     const link = screen.getByRole("link", { name: /Open task WIKI-9/ });
     expect(link).toHaveAttribute("href", "#/tasks/WIKI-9");

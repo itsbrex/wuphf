@@ -104,13 +104,13 @@ func TestDMHoldsExactlyItsTwoParticipants(t *testing.T) {
 // broker_channel_access.go deliberately removed the blanket read that the CEO,
 // the Librarian and the App Builder used to have over every channel, so that a
 // DM is readable by exactly its two participants. That fix was correct and it
-// worked. The SEED then handed the access straight back, by prepending "ceo"
+// worked. The SEED then handed the access straight back, by prepending "cos"
 // to every channel's member list -- DMs included.
 //
 // Measured before the fix:
 //
-//	app-builder__human members = [ceo app-builder]
-//	canAccess(ceo, app-builder__human) = true
+//	app-builder__human members = [cos app-builder]
+//	canAccess(cos, app-builder__human) = true
 //
 // The access check was never wrong. Its input was. A test on the check alone
 // would have stayed green through the whole bug, which is why this one asserts
@@ -133,8 +133,8 @@ func TestCEOCannotReadDMsItIsNotPartyTo(t *testing.T) {
 			t.Errorf("%s has no DM: the fixture is broken, so the privacy check below is vacuous", bot)
 			continue
 		}
-		if b.canAccessChannelLocked("ceo", dm) {
-			t.Errorf("ceo can read %s: a DM is private to its two participants", dm)
+		if b.canAccessChannelLocked("cos", dm) {
+			t.Errorf("cos can read %s: a DM is private to its two participants", dm)
 		}
 		if b.canAccessChannelLocked("librarian", dm) && bot != "librarian" {
 			t.Errorf("librarian can read %s: no bot gets a blanket read over other bots' DMs", dm)
@@ -151,8 +151,8 @@ func TestCEOCannotReadDMsItIsNotPartyTo(t *testing.T) {
 		t.Error("the human cannot read their own DM")
 	}
 	// And the CEO's own DM is still the CEO's.
-	if !b.canAccessChannelLocked("ceo", directSlugFor("human", "ceo")) {
-		t.Error("ceo cannot read its own DM")
+	if !b.canAccessChannelLocked("cos", directSlugFor("human", "cos")) {
+		t.Error("cos cannot read its own DM")
 	}
 }
 

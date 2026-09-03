@@ -44,7 +44,7 @@ func (e *channelCreateError) Error() string { return e.Msg }
 
 // createChannelLocked is the canonical channel-create path. It validates the
 // slug, applies the reserved-slug guard, validates members against
-// b.findMemberLocked, prepends "ceo", optionally adds the creator, persists,
+// b.findMemberLocked, prepends "cos", optionally adds the creator, persists,
 // and publishes the change event. Caller MUST hold b.mu.
 //
 // All of this used to be inlined in handleChannels' "create" case; pulling it
@@ -91,12 +91,12 @@ func (b *Broker) createChannelLocked(in channelCreateInput) (*teamChannel, *chan
 		}
 	}
 
-	final := append([]string{"ceo"}, validated...)
+	final := append([]string{"cos"}, validated...)
 	// CreatedBy is an actor slug, not a channel slug. normalizeChannelSlug
 	// rewrites "" to "general", which would silently auto-add a real office
 	// member named "general" as a channel member whenever CreatedBy was
 	// empty. normalizeActorSlug preserves "" so the guard below short-circuits.
-	if creator := normalizeActorSlug(in.CreatedBy); creator != "" && creator != "ceo" && b.findMemberLocked(creator) != nil {
+	if creator := normalizeActorSlug(in.CreatedBy); creator != "" && creator != "cos" && b.findMemberLocked(creator) != nil {
 		final = append(final, creator)
 	}
 

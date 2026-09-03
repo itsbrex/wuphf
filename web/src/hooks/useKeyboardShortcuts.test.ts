@@ -140,7 +140,7 @@ describe("Escape priority", () => {
   });
 
   it("closes activeBotSlug once search is closed", () => {
-    useAppStore.setState({ searchOpen: false, activeBotSlug: "ceo" });
+    useAppStore.setState({ searchOpen: false, activeBotSlug: "cos" });
     renderHook(() => useKeyboardShortcuts(), { wrapper });
     act(() => press("Escape"));
     expect(useAppStore.getState().activeBotSlug).toBeNull();

@@ -234,11 +234,11 @@ describe("messageMarkdown — @mentions render as chips", () => {
   });
 
   it("supports multiple mentions in one message", () => {
-    const { container } = renderChat("@pm and @ceo please review");
+    const { container } = renderChat("@pm and @cos please review");
     const chips = container.querySelectorAll(".mention");
     expect(chips.length).toBe(2);
     expect(chips[0].textContent).toBe("@pm");
-    expect(chips[1].textContent).toBe("@ceo");
+    expect(chips[1].textContent).toBe("@cos");
   });
 
   it("does not chip an @-address in an email body", () => {

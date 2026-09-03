@@ -42,7 +42,7 @@ example_artifacts:
     title: "Invoice follow-up sequence"
   - kind: report
     title: "Reconciliation packet"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/books/**": bookkeeper
   "team/invoices/**": invoicing
@@ -51,11 +51,11 @@ employee_blueprints:
   - bookkeeper-financial-analyst
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} bookkeeping operation."
   kickoff_prompt: "Stand up the {{brand_name}} bookkeeping operation end to end. Use the starter lanes, turn the objective into a repeatable finance system, create the first client-ready artifacts, and keep account-sensitive changes behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

@@ -194,7 +194,7 @@ func (b *Broker) postScanChipUpdate(dmSlug, websiteURL, status, label string) {
 	b.counter++
 	b.appendMessageLocked(channelMessage{
 		ID:        fmt.Sprintf("msg-%d", b.counter),
-		From:      "ceo",
+		From:      "cos",
 		Channel:   dmSlug,
 		Kind:      payload.Kind,
 		Content:   payload.Content,
@@ -251,7 +251,7 @@ func (b *Broker) postScanChipFailure(dmSlug, websiteURL, label, reason string) {
 	b.counter++
 	b.appendMessageLocked(channelMessage{
 		ID:        fmt.Sprintf("msg-%d", b.counter),
-		From:      "ceo",
+		From:      "cos",
 		Channel:   dmSlug,
 		Kind:      payload.Kind,
 		Content:   payload.Content,
@@ -316,7 +316,7 @@ func (b *Broker) postScanArticleLine(dmSlug, article string) {
 	b.counter++
 	b.appendMessageLocked(channelMessage{
 		ID:        fmt.Sprintf("msg-%d", b.counter),
-		From:      "ceo",
+		From:      "cos",
 		Channel:   dmSlug,
 		Kind:      "text",
 		Content:   "✓ " + article,

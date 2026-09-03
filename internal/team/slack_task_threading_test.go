@@ -17,7 +17,7 @@ import (
 func TestFormatOutboundCarriesSourceTaskID(t *testing.T) {
 	tr, _ := newTestSlackTransport(t, "C0123", newFakeSlackAPI())
 	out, ok := tr.FormatOutbound(channelMessage{
-		From: "ceo", Channel: "slack-general", Content: "delegating", SourceTaskID: "OFFICE-7",
+		From: "cos", Channel: "slack-general", Content: "delegating", SourceTaskID: "OFFICE-7",
 	})
 	if !ok {
 		t.Fatal("expected outbound to format")
@@ -34,7 +34,7 @@ func TestSendThreadsTaskMessageUnderRootCard(t *testing.T) {
 	seedCardTask(b, "OFFICE-7", LifecycleStateRunning)
 
 	out, _ := tr.FormatOutbound(channelMessage{
-		From: "ceo", Channel: "slack-general", Content: "ask @hermes for the totals", SourceTaskID: "OFFICE-7",
+		From: "cos", Channel: "slack-general", Content: "ask @hermes for the totals", SourceTaskID: "OFFICE-7",
 	})
 	if err := tr.Send(context.Background(), out); err != nil {
 		t.Fatalf("Send: %v", err)
@@ -93,7 +93,7 @@ func TestEnsureTaskThreadRootIdempotentUnderConcurrency(t *testing.T) {
 
 func TestTaskRootCardRendersDefinition(t *testing.T) {
 	task := &teamTask{
-		ID: "OFFICE-7", Title: "Recommend the cheaper plan", Owner: "ceo",
+		ID: "OFFICE-7", Title: "Recommend the cheaper plan", Owner: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Pick the cheaper 3-year cloud plan",
 			Deliverables:    []TaskDeliverable{{Name: "recommendation", Format: "chat post"}},
@@ -112,7 +112,7 @@ func TestTaskRootCardRendersDefinition(t *testing.T) {
 	}
 
 	// Falls back to Details when no Definition is set.
-	plain := &teamTask{ID: "OFFICE-8", Title: "x", Owner: "ceo", Details: "TESTING run — compare plans."}
+	plain := &teamTask{ID: "OFFICE-8", Title: "x", Owner: "cos", Details: "TESTING run — compare plans."}
 	if got := blocksText(t, buildSlackTaskCardBlocks(plain, "running", "")); !strings.Contains(got, "TESTING run") {
 		t.Errorf("no-definition card should show Details: %s", got)
 	}

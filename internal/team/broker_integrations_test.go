@@ -151,7 +151,7 @@ func TestIntegrationConnectStatusDisconnectAndAudit(t *testing.T) {
 	t.Setenv("HOME", tmp)
 	t.Setenv("WUPHF_RUNTIME_HOME", tmp)
 	t.Setenv("WUPHF_COMPOSIO_API_KEY", "cmp_test")
-	t.Setenv("WUPHF_COMPOSIO_USER_ID", "ceo@example.com")
+	t.Setenv("WUPHF_COMPOSIO_USER_ID", "cos@example.com")
 
 	var deletedAccount string
 	composioMux := http.NewServeMux()

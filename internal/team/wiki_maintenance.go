@@ -873,7 +873,7 @@ var triplePatterns = []struct {
 	pred string
 	keys []string
 }{
-	{"role_at", []string{"works at", "head of", "ceo of", "vp of", "founder of", "founded"}},
+	{"role_at", []string{"works at", "head of", "cos of", "vp of", "founder of", "founded"}},
 	{"based_in", []string{"based in", "lives in", "located in"}},
 	{"part_of", []string{"member of", "joined"}},
 }

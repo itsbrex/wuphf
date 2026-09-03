@@ -141,7 +141,7 @@ func TestBotMCPServersReturnsEveryLegacyKey(t *testing.T) {
 	withLegacyKeyForTest(t, legacy)
 
 	// Both branches: the DM/coding-bot minimal set and the full set.
-	t.Setenv("WUPHF_CHANNEL", DMSlugFor("ceo"))
+	t.Setenv("WUPHF_CHANNEL", DMSlugFor("cos"))
 	dm := botMCPServers("pm")
 	if !containsString(dm, ServerKey) || !containsString(dm, legacy) {
 		t.Errorf("DM branch returned %v, want both %q and %q", dm, ServerKey, legacy)

@@ -146,7 +146,7 @@ func TestFactLog_ConcurrentAppendsAllLand(t *testing.T) {
 		i := i
 		go func() {
 			defer wg.Done()
-			bot := []string{"pm", "eng", "sales", "cs", "ceo"}[i%5]
+			bot := []string{"pm", "eng", "sales", "cs", "cos"}[i%5]
 			_, err := log.Append(ctx, EntityKindCustomers, "northstar", "fact-"+string(rune('A'+i)), "", bot)
 			if err != nil {
 				t.Errorf("concurrent append %d: %v", i, err)
@@ -343,7 +343,7 @@ func TestFactLog_CountSinceSHA(t *testing.T) {
 	defer teardown()
 	ctx := context.Background()
 
-	if _, err := log.Append(ctx, EntityKindPeople, "ceo", "old fact", "", "pm"); err != nil {
+	if _, err := log.Append(ctx, EntityKindPeople, "cos", "old fact", "", "pm"); err != nil {
 		t.Fatalf("append old: %v", err)
 	}
 	// Grab the head sha AFTER the first fact committed.
@@ -356,14 +356,14 @@ func TestFactLog_CountSinceSHA(t *testing.T) {
 	// boundary so the next two appends land unambiguously AFTER `sha`'s
 	// commit time.
 	waitUntilNextSecond(t)
-	if _, err := log.Append(ctx, EntityKindPeople, "ceo", "new fact 1", "", "pm"); err != nil {
+	if _, err := log.Append(ctx, EntityKindPeople, "cos", "new fact 1", "", "pm"); err != nil {
 		t.Fatalf("append new 1: %v", err)
 	}
-	if _, err := log.Append(ctx, EntityKindPeople, "ceo", "new fact 2", "", "pm"); err != nil {
+	if _, err := log.Append(ctx, EntityKindPeople, "cos", "new fact 2", "", "pm"); err != nil {
 		t.Fatalf("append new 2: %v", err)
 	}
 
-	n, err := log.CountSinceSHA(ctx, EntityKindPeople, "ceo", sha)
+	n, err := log.CountSinceSHA(ctx, EntityKindPeople, "cos", sha)
 	if err != nil {
 		t.Fatalf("count since: %v", err)
 	}
@@ -372,13 +372,13 @@ func TestFactLog_CountSinceSHA(t *testing.T) {
 	}
 
 	// Empty sha returns total.
-	total, _ := log.CountSinceSHA(ctx, EntityKindPeople, "ceo", "")
+	total, _ := log.CountSinceSHA(ctx, EntityKindPeople, "cos", "")
 	if total != 3 {
 		t.Fatalf("expected 3 total; got %d", total)
 	}
 
 	// Unknown sha returns everything (safe default — brief has never synthesized).
-	all, _ := log.CountSinceSHA(ctx, EntityKindPeople, "ceo", "deadbeef")
+	all, _ := log.CountSinceSHA(ctx, EntityKindPeople, "cos", "deadbeef")
 	if all != 3 {
 		t.Fatalf("expected 3 on unknown sha; got %d", all)
 	}

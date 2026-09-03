@@ -14,7 +14,7 @@ import (
 func TestSidebarItems_OneOnOneReturnsNil(t *testing.T) {
 	m := channelModel{
 		sessionMode: string(team.SessionModeOneOnOne),
-		oneOnOneBot: "ceo",
+		oneOnOneBot: "cos",
 		channels:    []channelui.ChannelInfo{{Slug: "general"}},
 	}
 

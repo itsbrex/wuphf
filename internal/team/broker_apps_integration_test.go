@@ -24,7 +24,7 @@ func TestProposeAppApprovalSpawnsAppBuilderTask(t *testing.T) {
 	// 1. propose_app -> POST /requests with an app_proposal payload.
 	body, _ := json.Marshal(map[string]any{
 		"kind":     "approval",
-		"from":     "ceo",
+		"from":     "cos",
 		"channel":  "team",
 		"title":    "Build a new internal tool: Lead Scorer?",
 		"question": "Build a new internal tool: Lead Scorer?",
@@ -86,7 +86,7 @@ func TestProposeAppRejectionSpawnsNoTask(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{
 		"kind":     "approval",
-		"from":     "ceo",
+		"from":     "cos",
 		"channel":  "team",
 		"question": "Build a new internal tool: Throwaway?",
 		"blocking": false,

@@ -44,7 +44,7 @@ const TASK_DRAFTING = {
   comments: [
     {
       id: "c1",
-      author: "ceo",
+      author: "cos",
       isAgent: true,
       body: "Drafted spec based on our chat. Engineer, can you sanity-check Approach?",
       appendedAt: "2026-05-17T10:03:00Z",

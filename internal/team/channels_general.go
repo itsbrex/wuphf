@@ -93,7 +93,7 @@ func groupDMsEnabled() bool {
 //
 // Two independent signals, because a group row can be identified by either:
 // its slug is a GroupSlug hash, so it names no single partner bot (unlike
-// "human__ceo" or the legacy "dm-ceo"); and it carries more than two members.
+// "human__cos" or the legacy "dm-ceo"); and it carries more than two members.
 // Checking both catches a row whose members drifted as well as one whose slug
 // did, and the member count is the direct expression of the rule that matters
 // — three or more participants in one conversation is the thing being retired.

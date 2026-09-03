@@ -132,7 +132,7 @@ func TestPaneLifecycle_HasLiveSession(t *testing.T) {
 
 func TestPaneLifecycle_ListTeamPanesParsesOutput(t *testing.T) {
 	fake := newFakeTmuxRunner()
-	fake.outputs["list-panes"] = []byte("0 channel\n1 ceo\n2 fe\n")
+	fake.outputs["list-panes"] = []byte("0 channel\n1 cos\n2 fe\n")
 	setTmuxRunnerForTest(t, fake)
 
 	got, err := newPaneLifecycle("wuphf-team").ListTeamPanes()

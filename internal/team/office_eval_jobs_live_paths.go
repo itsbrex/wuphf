@@ -187,7 +187,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	createTask := func(title string, deps ...string) (string, error) {
 		body := map[string]any{
 			"action": "create", "channel": "general", "title": title,
-			"details": "Live-path probe work.", "owner": "eng", "created_by": "ceo",
+			"details": "Live-path probe work.", "owner": "eng", "created_by": "cos",
 		}
 		if len(deps) > 0 {
 			body["depends_on"] = deps
@@ -242,7 +242,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	aSnapshot := fx.broker.TaskByID(aID)
 	fx.launcher.sendTaskUpdate(
 		notificationTarget{Slug: "eng"},
-		officeActionLog{Kind: "task_created", Actor: "ceo", Channel: aSnapshot.Channel, RelatedID: aID},
+		officeActionLog{Kind: "task_created", Actor: "cos", Channel: aSnapshot.Channel, RelatedID: aID},
 		*aSnapshot,
 		"Work packet for a freshly created task — must dispatch.",
 	)
@@ -266,7 +266,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		return err
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: bID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: bID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Ship the QBR one-pager",
 			Deliverables:    []TaskDeliverable{{Name: "one-pager", Format: "markdown in the wiki"}},
@@ -276,7 +276,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		return err
 	}
 	if _, _, err := client.postJSON("/tasks", map[string]any{
-		"action": "assign", "id": bID, "channel": "general", "owner": "eng", "created_by": "ceo",
+		"action": "assign", "id": bID, "channel": "general", "owner": "eng", "created_by": "cos",
 	}); err != nil {
 		return err
 	}
@@ -376,7 +376,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		eParked != nil && eParked.LifecycleState == LifecycleStateDrafting,
 		fmt.Sprintf("state=%s", eParked.LifecycleState), "")
 	eStatus, eBody, err := client.postJSON("/tasks", map[string]any{
-		"action": "complete", "id": eID, "channel": "general", "created_by": "ceo",
+		"action": "complete", "id": eID, "channel": "general", "created_by": "cos",
 	})
 	if err != nil {
 		return err
@@ -402,7 +402,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	eTaskSnapshot := fx.broker.TaskByID(eID)
 	fx.launcher.sendTaskUpdate(
 		notificationTarget{Slug: "eng"},
-		officeActionLog{Kind: "task_updated", Actor: "ceo", Channel: eTaskSnapshot.Channel, RelatedID: eID},
+		officeActionLog{Kind: "task_updated", Actor: "cos", Channel: eTaskSnapshot.Channel, RelatedID: eID},
 		*eTaskSnapshot,
 		"Work packet for a parked task — must not dispatch.",
 	)
@@ -435,7 +435,7 @@ func evalJobLivePaths(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		return err
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: upID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: upID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Publish the competitor pricing research",
 			Deliverables:    []TaskDeliverable{{Name: "research brief", Format: "markdown in the wiki"}},

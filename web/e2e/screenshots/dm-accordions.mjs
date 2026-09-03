@@ -40,8 +40,8 @@ const { browser, context, page } = await launchBrowser({
   viewport: { width: 1280, height: 760 },
 });
 
-const AGENT_SLUG = "ceo";
-const DM_URL = "/#/dm/ceo";
+const AGENT_SLUG = "cos";
+const DM_URL = "/#/dm/cos";
 
 // Members payload mirrors the `/api/office-members` shape consumed by the
 // sidebar. We only need enough for the agent rail to render; one member is
@@ -73,7 +73,7 @@ const MEMBERS = {
   ],
 };
 
-// Two open tasks for @ceo so Active tasks renders rows instead of the empty
+// Two open tasks for @cos so Active tasks renders rows instead of the empty
 // state — keeps the section a meaningful height rather than a one-liner.
 const TASK_LIST = {
   tasks: [
@@ -122,7 +122,7 @@ const BLOCKING_REQUEST = {
       id: "req-1",
       from: AGENT_SLUG,
       question:
-        "@ceo wants to conn mod def: gj5en67fz04. Approve?",
+        "@cos wants to conn mod def: gj5en67fz04. Approve?",
       title: "CONN MOD DEF: gj5en67fz04 — [REDACTED] via Notion",
       kind: "external_action",
       blocking: true,

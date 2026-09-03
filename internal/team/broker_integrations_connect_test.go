@@ -96,8 +96,8 @@ func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	id1 := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "ceo", "Notion", "", "Create the launch page")
-	id1b := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "ceo", "Notion", "", "Create the launch page")
+	id1 := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "cos", "Notion", "", "Create the launch page")
+	id1b := b.ensureFallbackRequest("notion", "NOTION_CREATE_PAGE", "team", "cos", "Notion", "", "Create the launch page")
 	if id1 == "" || id1 != id1b {
 		t.Fatalf("same (platform, action) must dedupe: id1=%q id1b=%q", id1, id1b)
 	}
@@ -105,7 +105,7 @@ func TestEnsureFallbackRequestDedupesPerAction(t *testing.T) {
 		t.Fatalf("expected one handoff card for the repeated action, got %d", got)
 	}
 
-	id2 := b.ensureFallbackRequest("notion", "NOTION_APPEND_BLOCK", "team", "ceo", "Notion", "", "Append a block")
+	id2 := b.ensureFallbackRequest("notion", "NOTION_APPEND_BLOCK", "team", "cos", "Notion", "", "Append a block")
 	if id2 == id1 {
 		t.Fatalf("a different action type must raise its own card, got %q for both", id2)
 	}
@@ -152,7 +152,7 @@ func TestResolveRaisesAndDedupesConnectCard(t *testing.T) {
 		body, _ := json.Marshal(integrationResolveRequest{
 			Platform: "gmail",
 			ActionID: "GMAIL_SEND_EMAIL",
-			Bot:      "ceo",
+			Bot:      "cos",
 			Channel:  "team",
 			Data:     map[string]any{"to": "lead@acme.com"},
 		})
@@ -206,7 +206,7 @@ func TestFanOutConnectedResolvesParkedCard(t *testing.T) {
 	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	reqID := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
+	reqID := b.ensureConnectRequest("gmail", "team", "cos", "Gmail", "")
 	if reqID == "" {
 		t.Fatalf("ensureConnectRequest returned no id")
 	}
@@ -263,7 +263,7 @@ func TestExpireStaleConnectCard(t *testing.T) {
 	t.Setenv("COMPOSIO_CACHE_DIR", "")
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 
-	id := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
+	id := b.ensureConnectRequest("gmail", "team", "cos", "Gmail", "")
 	if id == "" {
 		t.Fatalf("ensureConnectRequest returned no id")
 	}
@@ -317,7 +317,7 @@ func TestConnectStatusFanOutEndToEnd(t *testing.T) {
 	t.Setenv("HOME", tmp)
 	t.Setenv("WUPHF_RUNTIME_HOME", tmp)
 	t.Setenv("WUPHF_COMPOSIO_API_KEY", "cmp_test")
-	t.Setenv("WUPHF_COMPOSIO_USER_ID", "ceo@example.com")
+	t.Setenv("WUPHF_COMPOSIO_USER_ID", "cos@example.com")
 
 	composioMux := http.NewServeMux()
 	composioMux.HandleFunc("/connected_accounts/ca_123", func(w http.ResponseWriter, _ *http.Request) {
@@ -335,7 +335,7 @@ func TestConnectStatusFanOutEndToEnd(t *testing.T) {
 
 	// Park a Connect card directly (the resolve path that raises it is covered
 	// separately; here we exercise the connect-status -> fan-out wiring).
-	reqID := b.ensureConnectRequest("gmail", "team", "ceo", "Gmail", "")
+	reqID := b.ensureConnectRequest("gmail", "team", "cos", "Gmail", "")
 	if got := len(activeConnectCards(b, "gmail")); got != 1 {
 		t.Fatalf("expected a parked connect card, got %d", got)
 	}

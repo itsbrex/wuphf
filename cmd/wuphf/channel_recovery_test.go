@@ -41,14 +41,14 @@ func TestCurrentAwaySummaryUsesRecoveryFocus(t *testing.T) {
 			ID:       "req-1",
 			Title:    "Review launch scope",
 			Question: "Review the proposed launch scope.",
-			From:     "ceo",
+			From:     "cos",
 			Blocking: true,
 			Status:   "pending",
 		},
 	}
 
 	got := m.currentAwaySummary()
-	if !strings.Contains(got, "Review launch scope from @ceo") {
+	if !strings.Contains(got, "Review launch scope from @cos") {
 		t.Fatalf("expected focus summary, got %q", got)
 	}
 	if !strings.Contains(got, "Next: Answer the blocking human request before moving more work") {
@@ -64,10 +64,10 @@ func TestBuildRecoveryLinesShowsSummaryAndHighlights(t *testing.T) {
 		{ID: "task-1", Title: "Ship launch checklist", Owner: "pm", Status: "in_progress", ExecutionMode: "local_worktree", WorktreePath: "/tmp/wuphf-task-1"},
 	}
 	m.requests = []channelui.Interview{
-		{ID: "req-1", Title: "Review launch scope", Question: "Review the launch scope", From: "ceo", Blocking: true, Status: "pending"},
+		{ID: "req-1", Title: "Review launch scope", Question: "Review the launch scope", From: "cos", Blocking: true, Status: "pending"},
 	}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Need final scope review before launch.", Timestamp: "2026-04-06T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Need final scope review before launch.", Timestamp: "2026-04-06T10:00:00Z"},
 		{ID: "msg-2", From: "pm", Content: "Checklist is nearly ready.", Timestamp: "2026-04-06T10:01:00Z"},
 	}
 
@@ -98,10 +98,10 @@ func TestBuildRecoveryLinesIncludesTranscriptSurgeryActions(t *testing.T) {
 		{ID: "task-1", Title: "Ship launch checklist", Owner: "pm", Status: "in_progress"},
 	}
 	m.requests = []channelui.Interview{
-		{ID: "req-1", Title: "Review launch scope", Question: "Review the launch scope", From: "ceo", Blocking: true, Status: "pending"},
+		{ID: "req-1", Title: "Review launch scope", Question: "Review the launch scope", From: "cos", Blocking: true, Status: "pending"},
 	}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Need final scope review before launch.", Timestamp: "2026-04-06T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Need final scope review before launch.", Timestamp: "2026-04-06T10:00:00Z"},
 		{ID: "msg-2", From: "pm", Content: "Checklist is nearly ready.", ReplyTo: "msg-1", Timestamp: "2026-04-06T10:01:00Z"},
 	}
 

@@ -64,7 +64,7 @@ function mergeMemberProfile(
 type ChannelMemberAction = "add" | "enable" | "disable" | "remove";
 
 function isLeadMember(member: OfficeMember): boolean {
-  return member.built_in === true || member.slug === "ceo";
+  return member.built_in === true || member.slug === "cos";
 }
 
 function isActiveMember(member: OfficeMember): boolean {

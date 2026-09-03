@@ -19,7 +19,7 @@ func TestDuplicateBotBroadcastIsSuppressed(t *testing.T) {
 	b.messages = []channelMessage{
 		{
 			ID:        "msg-1",
-			From:      "ceo",
+			From:      "cos",
 			Channel:   "team",
 			Content:   "Ball is in reviewer's court, shipping the PR now.",
 			ReplyTo:   "",
@@ -32,15 +32,15 @@ func TestDuplicateBotBroadcastIsSuppressed(t *testing.T) {
 	defer b.mu.Unlock()
 
 	// Byte-identical → drop.
-	if !b.isDuplicateBotBroadcastLocked("ceo", "team", "", "Ball is in reviewer's court, shipping the PR now.") {
+	if !b.isDuplicateBotBroadcastLocked("cos", "team", "", "Ball is in reviewer's court, shipping the PR now.") {
 		t.Error("exact duplicate should be detected")
 	}
 	// Paraphrased but same semantic content → drop (Jaccard over word set).
-	if !b.isDuplicateBotBroadcastLocked("ceo", "team", "", "Ball is in the reviewer's court — shipping the PR now.") {
+	if !b.isDuplicateBotBroadcastLocked("cos", "team", "", "Ball is in the reviewer's court — shipping the PR now.") {
 		t.Error("near-duplicate with trivial punctuation drift should be detected")
 	}
 	// Truly different content → allow.
-	if b.isDuplicateBotBroadcastLocked("ceo", "team", "", "Planner is blocked on a missing spec.") {
+	if b.isDuplicateBotBroadcastLocked("cos", "team", "", "Planner is blocked on a missing spec.") {
 		t.Error("distinct content must not be flagged duplicate")
 	}
 	// Different bot → allow.
@@ -48,7 +48,7 @@ func TestDuplicateBotBroadcastIsSuppressed(t *testing.T) {
 		t.Error("duplicate detection must scope to the sender")
 	}
 	// Different thread → allow.
-	if b.isDuplicateBotBroadcastLocked("ceo", "team", "msg-99", "Ball is in reviewer's court, shipping the PR now.") {
+	if b.isDuplicateBotBroadcastLocked("cos", "team", "msg-99", "Ball is in reviewer's court, shipping the PR now.") {
 		t.Error("duplicate detection must scope to (channel, thread)")
 	}
 }
@@ -60,11 +60,11 @@ func TestDuplicateBotBroadcastWindowExpires(t *testing.T) {
 	old := time.Now().UTC().Add(-2 * duplicateBroadcastWindow).Format(time.RFC3339)
 	b.mu.Lock()
 	b.messages = []channelMessage{
-		{ID: "msg-1", From: "ceo", Channel: "team", Content: "same content", Timestamp: old},
+		{ID: "msg-1", From: "cos", Channel: "team", Content: "same content", Timestamp: old},
 	}
 	defer b.mu.Unlock()
 
-	if b.isDuplicateBotBroadcastLocked("ceo", "team", "", "same content") {
+	if b.isDuplicateBotBroadcastLocked("cos", "team", "", "same content") {
 		t.Error("messages older than duplicateBroadcastWindow must not trigger dedup")
 	}
 }
@@ -86,14 +86,14 @@ func TestStaleUnansweredFilteredOnResume(t *testing.T) {
 	fresh := time.Now().UTC().Add(-5 * time.Minute).Format(time.RFC3339)
 	b.mu.Lock()
 	// Pin members explicitly so the test stays self-contained: this
-	// scenario only cares about ceo + planner routing. Defense-in-depth
+	// scenario only cares about cos + planner routing. Defense-in-depth
 	// against future leaks — the root cause (launcher tests leaking a
 	// youtube-factory manifest into the init-time WUPHF_RUNTIME_HOME) is
 	// fixed in the same PR, but the buildResumePackets inPack-drop path
 	// fails silently (no error, just a missing packet) so any new leak
 	// would be painful to re-diagnose.
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "planner", Name: "Planner"},
 	}
 	b.messages = []channelMessage{

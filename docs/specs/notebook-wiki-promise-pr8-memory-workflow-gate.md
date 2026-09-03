@@ -202,7 +202,7 @@ All new tests live in `internal/team/` following the existing table-driven Go te
 - `TestAutoNotebookWriter_CaptureSignal_DropOnSaturation`: fill `captureSignalCh`; emit one more event; assert `captureSaturated.Load() == 1`, no panic, `Written` still increments.
 
 **`memoryWorkflowRequirementForTask` widening (`memory_workflow_test.go`):**
-- `TestMemoryWorkflowRequirementForTask_NonResearchWithOwner_Required`: task with `Owner = "ceo"`, `TaskType = "general"`; assert `Required: true`.
+- `TestMemoryWorkflowRequirementForTask_NonResearchWithOwner_Required`: task with `Owner = "cos"`, `TaskType = "general"`; assert `Required: true`.
 - `TestMemoryWorkflowRequirementForTask_NoOwner_NotRequired`: task with `Owner = ""`; assert `Required: false`.
 - `TestMemoryWorkflowRequirementForTask_DoneTaskNoGate_NotRequired`: task with `Status = "done"`, `MemoryWorkflow == nil`; assert `Required: false` (backward compat guard).
 

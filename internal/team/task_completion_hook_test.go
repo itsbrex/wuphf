@@ -14,11 +14,11 @@ func newCompletionHookBroker(t *testing.T) *Broker {
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -29,13 +29,13 @@ func completionHookCreateDefinedTask(t *testing.T, b *Broker) string {
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Close the Acme Corp renewal",
 		Details: "Coordinate with @eng on the Acme Corp renewal brief.",
-		Owner:   "eng", CreatedBy: "ceo",
+		Owner:   "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Renew Acme Corp for 12 months",
 			Deliverables:    []TaskDeliverable{{Name: "renewal brief", Format: "markdown in the wiki"}},
@@ -62,7 +62,7 @@ func finishTask(t *testing.T, b *Broker, taskID, artifactPath string) error {
 	}
 	if cur := b.TaskByID(taskID); cur != nil && !strings.EqualFold(strings.TrimSpace(cur.status), "done") {
 		_, err := b.MutateTask(TaskPostRequest{
-			Action: "approve", ID: taskID, Channel: "team", CreatedBy: "ceo",
+			Action: "approve", ID: taskID, Channel: "team", CreatedBy: "cos",
 			ArtifactPath: artifactPath,
 		})
 		return err
@@ -145,7 +145,7 @@ func TestArtifactGate_LegacyTaskWithoutDefinitionUnaffected(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Send the weekly digest",
-		Details: "Send it to the list.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Send it to the list.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -183,7 +183,7 @@ func TestReopen_OwnedTaskReturnsToRunning(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the launch checklist",
-		Details: "Checklist work.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Checklist work.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -192,7 +192,7 @@ func TestReopen_OwnedTaskReturnsToRunning(t *testing.T) {
 	if err := finishTask(t, b, created.Task.ID, ""); err != nil {
 		t.Fatalf("finish: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "cos"}); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
 	task := b.TaskByID(created.Task.ID)
@@ -211,15 +211,15 @@ func TestReopen_OwnerlessTaskReturnsToReady(t *testing.T) {
 	b := newCompletionHookBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Backlog item to triage",
-		Details: "No owner yet.", CreatedBy: "ceo",
+		Details: "No owner yet.", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "cancel", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "cancel", ID: created.Task.ID, Channel: "team", CreatedBy: "cos"}); err != nil {
 		t.Fatalf("cancel: %v", err)
 	}
-	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "reopen", ID: created.Task.ID, Channel: "team", CreatedBy: "cos"}); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
 	task := b.TaskByID(created.Task.ID)
@@ -268,7 +268,7 @@ func TestTaskCompletionEntities_Deterministic(t *testing.T) {
 	task := teamTask{
 		ID:      "TASK-9",
 		Title:   "Close the renewal with @eng",
-		Details: "Loop in @ceo and @human for sign-off. cc @eng again.",
+		Details: "Loop in @cos and @human for sign-off. cc @eng again.",
 		Definition: &TaskDefinition{
 			Goal: "Renew the Acme Corp account and brief Globex Industries on timing",
 			Deliverables: []TaskDeliverable{
@@ -279,7 +279,7 @@ func TestTaskCompletionEntities_Deterministic(t *testing.T) {
 	got := taskCompletionEntities(task)
 	want := map[string]EntityKind{
 		"eng":               EntityKindPeople,
-		"ceo":               EntityKindPeople,
+		"cos":               EntityKindPeople,
 		"acme-corp":         EntityKindCompanies,
 		"globex-industries": EntityKindCompanies,
 	}

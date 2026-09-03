@@ -175,7 +175,7 @@ func TestBootstrapHumanHasPosted_AgentOnlyMessages(t *testing.T) {
 	b.messages = []channelMessage{
 		{
 			ID:        "msg-1",
-			From:      "ceo",
+			From:      "cos",
 			Channel:   "team",
 			Content:   "bot message one",
 			Timestamp: "2026-05-06T10:00:00Z",

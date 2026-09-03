@@ -238,7 +238,7 @@ func main() {
 	packFlag := flag.String("pack", "", "Operation blueprint ID (legacy pack alias supported)")
 	fromScratchFlag := flag.Bool("from-scratch", false, "Start without a saved blueprint and synthesize the first operation from the directive")
 	providerFlag := flag.String("provider", "", "LLM provider override for this run (claude-code, codex, opencode)")
-	oneOnOne := flag.Bool("1o1", false, "Launch a direct 1:1 session with a single bot (default ceo)")
+	oneOnOne := flag.Bool("1o1", false, "Launch a direct 1:1 session with a single bot (default cos)")
 	channelView := flag.Bool("channel-view", false, "Run as channel view (internal)")
 	channelApp := flag.String("channel-app", "", "Start channel view on a specific app (internal)")
 	threadsCollapsed := flag.Bool("threads-collapsed", false, "Start with threads collapsed (default: expanded)")

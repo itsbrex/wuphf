@@ -156,7 +156,7 @@ func TestRepoCommitRecordsSlugIdentity(t *testing.T) {
 	}
 
 	// Act
-	sha, bytesWritten, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz brief")
+	sha, bytesWritten, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz brief")
 	if err != nil {
 		t.Fatalf("commit: %v", err)
 	}
@@ -175,8 +175,8 @@ func TestRepoCommitRecordsSlugIdentity(t *testing.T) {
 	if len(refs) == 0 {
 		t.Fatal("expected at least one log entry")
 	}
-	if refs[0].Author != "ceo" {
-		t.Fatalf("expected author ceo, got %q", refs[0].Author)
+	if refs[0].Author != "cos" {
+		t.Fatalf("expected author cos, got %q", refs[0].Author)
 	}
 	if !strings.Contains(refs[0].Message, "add nazz brief") {
 		t.Fatalf("expected message to contain commit msg, got %q", refs[0].Message)
@@ -197,7 +197,7 @@ func TestRepoCommitRejectsPathTraversal(t *testing.T) {
 		"team/foo.txt",
 	}
 	for _, p := range cases {
-		if _, _, err := repo.Commit(ctx, "ceo", p, "x", "create", "bad"); err == nil {
+		if _, _, err := repo.Commit(ctx, "cos", p, "x", "create", "bad"); err == nil {
 			t.Fatalf("expected error for %q", p)
 		}
 	}
@@ -209,7 +209,7 @@ func TestRepoCommitRejectsEmptyContent(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/x.md", "  \n", "create", "m"); err == nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/x.md", "  \n", "create", "m"); err == nil {
 		t.Fatal("expected empty content to be rejected")
 	}
 }
@@ -220,7 +220,7 @@ func TestRepoCommitAppendSection(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/x.md", "# X\n\nfirst", "create", "start"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/x.md", "# X\n\nfirst", "create", "start"); err != nil {
 		t.Fatalf("create: %v", err)
 	}
 	if _, _, err := repo.Commit(ctx, "eng", "team/playbooks/x.md", "## Step 2\n\nmore", "append_section", "extend"); err != nil {
@@ -268,7 +268,7 @@ func TestRepoIndexRegenProducesValidMarkdown(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add"); err != nil {
 		t.Fatalf("commit: %v", err)
 	}
 	if _, _, err := repo.Commit(ctx, "eng", "team/projects/wiki.md", "# LLM wiki\n", "create", "add"); err != nil {
@@ -296,7 +296,7 @@ func TestRepoBackupMirror(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n", "create", "m"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n", "create", "m"); err != nil {
 		t.Fatalf("commit: %v", err)
 	}
 	if err := repo.BackupMirror(ctx); err != nil {
@@ -313,7 +313,7 @@ func TestRepoRestoreFromBackup(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n", "create", "m"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n", "create", "m"); err != nil {
 		t.Fatalf("commit: %v", err)
 	}
 	if err := repo.BackupMirror(ctx); err != nil {

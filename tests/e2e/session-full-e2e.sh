@@ -201,7 +201,7 @@ assert_api POST "http://127.0.0.1:7890/skills" \
 echo ""
 echo "T09: CEO proposal"
 assert_api POST "http://127.0.0.1:7890/skills" \
-  '{"action":"propose","name":"standup-summary","title":"Standup","description":"Daily standup","content":"Summarize","created_by":"ceo","channel":"general"}' \
+  '{"action":"propose","name":"standup-summary","title":"Standup","description":"Daily standup","content":"Summarize","created_by":"cos","channel":"general"}' \
   200 "Propose skill"
 
 echo ""
@@ -245,7 +245,7 @@ curl -s -X POST "http://127.0.0.1:7890/messages" -H "Content-Type: application/j
   -d '{"channel":"general","from":"you","content":"Human to CEO"}' 2>/dev/null >/dev/null
 curl -s -X POST "http://127.0.0.1:7890/messages" -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"ceo","content":"CEO to human"}' 2>/dev/null >/dev/null
+  -d '{"channel":"general","from":"cos","content":"CEO to human"}' 2>/dev/null >/dev/null
 curl -s -X POST "http://127.0.0.1:7890/messages" -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
   -d '{"channel":"general","from":"pm","content":"PM team update"}' 2>/dev/null >/dev/null
@@ -253,7 +253,7 @@ sleep 1
 
 echo "T16: /reset-dm clears human-CEO DMs"
 assert_api POST "http://127.0.0.1:7890/reset-dm" \
-  '{"agent":"ceo","channel":"general"}' 200 "Reset DMs"
+  '{"agent":"cos","channel":"general"}' 200 "Reset DMs"
 
 echo ""
 echo "T17: PM message preserved"
@@ -276,7 +276,7 @@ echo "T19: Typing indicator appears after @mention"
 # Post the tagged message (no blocking requests since Esc Pause runs last)
 POST_RESULT=$(curl -s -w "%{http_code}" -X POST "http://127.0.0.1:7890/messages" -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"you","content":"@ceo status report","tagged":["ceo"]}' 2>/dev/null)
+  -d '{"channel":"general","from":"you","content":"@cos status report","tagged":["cos"]}' 2>/dev/null)
 POST_CODE=$(echo "$POST_RESULT" | tail -c 4)
 
 sleep 1
@@ -302,7 +302,7 @@ echo "T21: Typing clears after agent replies"
 # The real test is whether the lastTaggedAt was cleared by the FROM field match
 CEO_REPLY=$(curl -s -w "%{http_code}" -X POST "http://127.0.0.1:7890/messages" -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"ceo","content":"Here is the status report."}' 2>/dev/null)
+  -d '{"channel":"general","from":"cos","content":"Here is the status report."}' 2>/dev/null)
 CEO_CODE=$(echo "$CEO_REPLY" | tail -c 4)
 sleep 2
 if [ "$CEO_CODE" = "200" ]; then
@@ -312,7 +312,7 @@ if [ "$CEO_CODE" = "200" ]; then
 import json,sys
 d=json.load(sys.stdin)
 for m in d.get('members',[]):
-    if m['slug']=='ceo' and m.get('liveActivity'):
+    if m['slug']=='cos' and m.get('liveActivity'):
         print('active')
         break
 " 2>/dev/null)
@@ -475,7 +475,7 @@ start_office
 echo ""
 echo "T34: /members returns all agents"
 MEMBERS=$(curl -s "http://127.0.0.1:7890/members?channel=general" -H "Authorization: Bearer $BROKER_TOKEN" 2>/dev/null)
-for agent in ceo pm fe be ai designer; do
+for agent in cos pm fe be ai designer; do
   if echo "$MEMBERS" | grep -q "\"$agent\"" 2>/dev/null; then
     ok "$agent in /members"
   else

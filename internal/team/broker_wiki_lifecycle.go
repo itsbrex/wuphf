@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/nex-crm/wuphf/internal/config"
@@ -80,6 +81,11 @@ func (b *Broker) WikiInitErr() error {
 
 func (b *Broker) initWikiWorker() {
 	repo := NewRepo()
+	// A wiki written before the lead bot was renamed keeps its files under
+	// the old slug; move them so agents/<slug>/SOUL.md and the people
+	// article resolve for "cos".
+	migrateLegacyLeadSlugDir(filepath.Join(repo.Root(), "agents"))
+	migrateLegacyLeadSlugFile(filepath.Join(repo.Root(), "team", "people"), ".md")
 	lifecycleCtx := b.brokerLifecycleContext()
 	ctx, cancel := context.WithTimeout(lifecycleCtx, 30*time.Second)
 	defer cancel()

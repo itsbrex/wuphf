@@ -33,7 +33,7 @@ func TestTaskDetailNeverLeaksTheHumanNote(t *testing.T) {
 
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Draft the memo",
-		CreatedBy: "human", Owner: "ceo",
+		CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create task: %v", err)
@@ -105,7 +105,7 @@ func TestHumanNoteSurvivesInProcessAfterWireRedaction(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Still needs the note",
-		CreatedBy: "human", Owner: "ceo",
+		CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)

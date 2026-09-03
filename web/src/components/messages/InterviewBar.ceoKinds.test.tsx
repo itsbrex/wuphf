@@ -86,7 +86,7 @@ beforeEach(() => {
   postMessageMock.mockResolvedValue({
     id: "msg-stub",
     from: "human",
-    channel: "ceo__human",
+    channel: "cos__human",
     content: "",
     timestamp: new Date().toISOString(),
   });
@@ -885,7 +885,7 @@ describe("CeoCardSection", () => {
     await waitFor(() =>
       expect(postMessageMock).toHaveBeenCalledWith(
         "Acme Test QA",
-        "ceo__human",
+        "cos__human",
       ),
     );
   });
@@ -906,7 +906,7 @@ describe("CeoCardSection", () => {
     fireEvent.click(screen.getByText("Niche CRM"));
 
     await waitFor(() =>
-      expect(postMessageMock).toHaveBeenCalledWith("Niche CRM", "ceo__human"),
+      expect(postMessageMock).toHaveBeenCalledWith("Niche CRM", "cos__human"),
     );
   });
 
@@ -999,7 +999,7 @@ describe("InterviewBar", () => {
       },
     };
 
-    render(<InterviewBar channelSlug="ceo__human" />, {
+    render(<InterviewBar channelSlug="cos__human" />, {
       wrapper: makeWrapper(suggestion),
     });
 

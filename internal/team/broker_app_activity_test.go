@@ -11,7 +11,7 @@ func TestAppBuilderRunTaskIDResolvesEditChannel(t *testing.T) {
 	b := &Broker{}
 	b.tasks = append(b.tasks,
 		teamTask{ID: "OFFICE-7", Owner: appBuilderSlug, Channel: "task-office-7"},
-		teamTask{ID: "OFFICE-8", Owner: "ceo", Channel: "task-office-8"},
+		teamTask{ID: "OFFICE-8", Owner: "cos", Channel: "task-office-8"},
 	)
 	tests := []struct {
 		name    string

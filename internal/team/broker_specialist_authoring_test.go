@@ -30,7 +30,7 @@ func autonomyBroker(t *testing.T) *Broker {
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", Role: "Chief Executive"},
+		{Slug: "cos", Name: "CEO", Role: "Chief Executive"},
 		{Slug: "designer", Name: "Designer", Role: "Designer"},
 		{Slug: "eng", Name: "Engineer", Role: "Engineer"},
 	}
@@ -39,7 +39,7 @@ func autonomyBroker(t *testing.T) *Broker {
 		// The designer's 1:1 with the human — where the human asks for work.
 		{Slug: "designer__human", Name: "designer__human", Type: "dm",
 			Members: []string{"human", "designer"}},
-		{Slug: "delivery", Name: "delivery", Members: []string{"human", "ceo", "designer", "eng"}},
+		{Slug: "delivery", Name: "delivery", Members: []string{"human", "cos", "designer", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -98,10 +98,10 @@ func TestSpecialistStillCannotReassignApproveOrReject(t *testing.T) {
 	b := autonomyBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "delivery", Title: "Ship the pricing page",
-		Details: "CEO-scoped work.", Owner: "eng", CreatedBy: "ceo", TaskType: "issue",
+		Details: "CEO-scoped work.", Owner: "eng", CreatedBy: "cos", TaskType: "issue",
 	})
 	if err != nil {
-		t.Fatalf("ceo create: %v", err)
+		t.Fatalf("cos create: %v", err)
 	}
 	id := created.Task.ID
 
@@ -119,17 +119,17 @@ func TestCEORetainsFullIssueAuthority(t *testing.T) {
 	b := autonomyBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "delivery", Title: "Plan the launch",
-		Details: "Lead-scoped.", Owner: "designer", CreatedBy: "ceo", TaskType: "issue",
+		Details: "Lead-scoped.", Owner: "designer", CreatedBy: "cos", TaskType: "issue",
 	})
 	if err != nil {
-		t.Fatalf("ceo must still create: %v", err)
+		t.Fatalf("cos must still create: %v", err)
 	}
 	startPlanning(t, b, created.Task.ID)
 	if _, err := b.MutateTask(TaskPostRequest{
 		Action: "reassign", ID: created.Task.ID, Channel: "delivery",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	}); err != nil {
-		t.Fatalf("ceo must still reassign: %v", err)
+		t.Fatalf("cos must still reassign: %v", err)
 	}
 }
 
@@ -171,10 +171,10 @@ func TestCommentRemainsOpenToSpecialists(t *testing.T) {
 	b := autonomyBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "delivery", Title: "Ship the pricing page",
-		Details: "x", Owner: "eng", CreatedBy: "ceo", TaskType: "issue",
+		Details: "x", Owner: "eng", CreatedBy: "cos", TaskType: "issue",
 	})
 	if err != nil {
-		t.Fatalf("ceo create: %v", err)
+		t.Fatalf("cos create: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
 		Action: "comment", ID: created.Task.ID, Channel: "delivery",

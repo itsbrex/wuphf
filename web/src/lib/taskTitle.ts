@@ -15,7 +15,7 @@ const SELF_HEAL_TITLE_PREFIX_RE = /^\[@([a-z0-9_-]+)\]\s+/i;
  * sub-task rows). Returns the original title unchanged when no prefix
  * is present.
  *
- *   "[@ceo] Bot stuck on: Send VC outreach" → "Bot stuck on: Send VC outreach"
+ *   "[@cos] Bot stuck on: Send VC outreach" → "Bot stuck on: Send VC outreach"
  *   "Send VC outreach email"                   → "Send VC outreach email"
  */
 export function formatTaskTitleForDisplay(

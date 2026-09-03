@@ -64,7 +64,7 @@ func TestGovernorBudgetUsesRecordedUsage(t *testing.T) {
 	b.governor = newGovernor(governorConfig{MaxSessionTokens: 1000}, 0, 0)
 
 	// Seed session usage through the real accounting path.
-	b.RecordBotUsage("ceo", "claude", provider.ClaudeUsage{InputTokens: 600, OutputTokens: 600})
+	b.RecordBotUsage("cos", "claude", provider.ClaudeUsage{InputTokens: 600, OutputTokens: 600})
 	b.governorNoteTurn()
 	if !b.GovernorStatus().Paused {
 		t.Fatalf("expected budget pause once session usage (1200) crossed 1000")
@@ -83,12 +83,12 @@ func TestGovernorStopCancelsInFlight(t *testing.T) {
 	ctl := &fakeHeadlessController{mu: make(chan string, 1)}
 	b.SetHeadlessDispatchController(ctl)
 
-	b.GovernorStop("ceo")
+	b.GovernorStop("cos")
 	if !b.GovernorStatus().Paused {
 		t.Fatalf("stop should pause dispatch")
 	}
-	if len(ctl.cancelled) != 1 || ctl.cancelled[0] != "ceo" {
-		t.Fatalf("controller cancel = %v, want [ceo]", ctl.cancelled)
+	if len(ctl.cancelled) != 1 || ctl.cancelled[0] != "cos" {
+		t.Fatalf("controller cancel = %v, want [cos]", ctl.cancelled)
 	}
 }
 
@@ -191,7 +191,7 @@ func TestHandleGovernorCapsBodySize(t *testing.T) {
 func TestGovernorResumeMoreRaisesBudget(t *testing.T) {
 	b := newGovernorTestBroker(t)
 	b.governor = newGovernor(governorConfig{MaxSessionTokens: 1000}, 0, 0)
-	b.RecordBotUsage("ceo", "claude", provider.ClaudeUsage{InputTokens: 1000})
+	b.RecordBotUsage("cos", "claude", provider.ClaudeUsage{InputTokens: 1000})
 	b.governorNoteTurn()
 	if !b.GovernorStatus().Paused {
 		t.Fatalf("precondition: should be paused on budget")

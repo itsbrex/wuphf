@@ -66,7 +66,7 @@ func DisplayName(slug string) string {
 		return member.Name
 	}
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "Chief of Staff"
 	case "pm":
 		return "Product Manager"
@@ -100,7 +100,7 @@ func RoleLabel(slug string) string {
 		return member.Role
 	}
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "strategy"
 	case "pm":
 		return "product"

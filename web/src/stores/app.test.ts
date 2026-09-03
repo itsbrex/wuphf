@@ -35,7 +35,7 @@ describe("DM channel helpers", () => {
     // Lower lexicographic side comes first; this is what the broker
     // expects on /dm endpoints and what useBrokerEvents matches against
     // when suppressing unread for the active DM.
-    expect(directChannelSlug("ceo")).toBe("ceo__human");
+    expect(directChannelSlug("cos")).toBe("cos__human");
     expect(directChannelSlug("pm")).toBe("human__pm");
   });
 
@@ -44,7 +44,7 @@ describe("DM channel helpers", () => {
       activeThread: { id: "thread-1", channelSlug: "engineering" },
       lastMessageId: "msg-1",
       clearedMessageIdsByChannel: { general: "msg-0" },
-      activeBotSlug: "ceo",
+      activeBotSlug: "cos",
       lastConversationalChannel: "engineering",
       searchOpen: true,
       composerSearchInitialQuery: "stuck task",
@@ -386,38 +386,38 @@ describe("pendingComposerDraft (one-shot composer prefill)", () => {
   it("returns and clears the draft when the channel matches", () => {
     useAppStore
       .getState()
-      .setPendingComposerDraft("ceo__human", "Build a Stripe webhook handler");
+      .setPendingComposerDraft("cos__human", "Build a Stripe webhook handler");
 
     // The first consume for the matching channel returns the seeded text.
     expect(
-      useAppStore.getState().consumePendingComposerDraft("ceo__human"),
+      useAppStore.getState().consumePendingComposerDraft("cos__human"),
     ).toBe("Build a Stripe webhook handler");
 
     // It is one-shot: the store is cleared, so a second consume is null and
     // a later revisit to the same channel does not re-apply it.
     expect(useAppStore.getState().pendingComposerDraft).toBeNull();
     expect(
-      useAppStore.getState().consumePendingComposerDraft("ceo__human"),
+      useAppStore.getState().consumePendingComposerDraft("cos__human"),
     ).toBeNull();
   });
 
   it("leaves the draft intact when a different channel consumes", () => {
     useAppStore
       .getState()
-      .setPendingComposerDraft("ceo__human", "Draft for the CEO DM");
+      .setPendingComposerDraft("cos__human", "Draft for the CEO DM");
 
     // A mismatched channel must not steal another channel's draft.
     expect(
       useAppStore.getState().consumePendingComposerDraft("general"),
     ).toBeNull();
     expect(useAppStore.getState().pendingComposerDraft).toEqual({
-      channel: "ceo__human",
+      channel: "cos__human",
       text: "Draft for the CEO DM",
     });
 
     // The intended channel still receives it.
     expect(
-      useAppStore.getState().consumePendingComposerDraft("ceo__human"),
+      useAppStore.getState().consumePendingComposerDraft("cos__human"),
     ).toBe("Draft for the CEO DM");
   });
 });
@@ -510,9 +510,9 @@ describe("recordComputerEvent", () => {
   it("keeps slugs independent", () => {
     const store = useAppStore.getState();
     store.recordComputerEvent({ slug: "growth", state: "ready" });
-    store.recordComputerEvent({ slug: "ceo", state: "off" });
+    store.recordComputerEvent({ slug: "cos", state: "off" });
     expect(useAppStore.getState().computerStates.growth.state).toBe("ready");
-    expect(useAppStore.getState().computerStates.ceo.state).toBe("off");
+    expect(useAppStore.getState().computerStates.cos.state).toBe("off");
   });
 
   it("routes slug-less events to the runtime build log", () => {

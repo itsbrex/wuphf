@@ -195,9 +195,9 @@ describe("<AgentProfilePanel>", () => {
   it("renders channels the bot is a member of", async () => {
     getChannelsMock.mockResolvedValue({
       channels: [
-        { slug: "general", name: "general", members: ["planner", "ceo"] },
+        { slug: "general", name: "general", members: ["planner", "cos"] },
         { slug: "engineering", name: "engineering", members: ["planner"] },
-        { slug: "marketing", name: "marketing", members: ["ceo"] },
+        { slug: "marketing", name: "marketing", members: ["cos"] },
       ],
     });
 
@@ -282,7 +282,7 @@ describe("<AgentProfilePanel>", () => {
   it("renders permissions section with correct role for built-in (lead) bot", async () => {
     const leadBot: OfficeMember = {
       ...baseBot,
-      slug: "ceo",
+      slug: "cos",
       name: "CEO",
       built_in: true,
     };

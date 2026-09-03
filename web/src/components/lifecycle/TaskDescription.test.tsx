@@ -32,7 +32,7 @@ const DRAFT_DETAIL = (
     trustLevel: "draft",
     representation: "html",
     htmlPath: `wiki/visual-artifacts/${id}.html`,
-    createdBy: "ceo",
+    createdBy: "cos",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     contentHash: `hash-${id}`,

@@ -24,9 +24,9 @@ func taskChangedLauncher() *Launcher {
 	return &Launcher{
 		focusMode: true,
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "designer", Name: "Designer"},
 				{Slug: "eng", Name: "Engineer"},
 			},
@@ -68,12 +68,12 @@ func TestTaskChangedWakesTheCEOByDefault(t *testing.T) {
 		From:    "you",
 		Kind:    "task_changed",
 		Channel: "team",
-		Content: "Updated DUNDE-13 (Ship the docs): title -> \"Ship the docs\". @ceo — you own this.",
-		Tagged:  []string{"ceo"},
+		Content: "Updated DUNDE-13 (Ship the docs): title -> \"Ship the docs\". @cos — you own this.",
+		Tagged:  []string{"cos"},
 	})
 
 	for _, tgt := range immediate {
-		if tgt.Slug == "ceo" {
+		if tgt.Slug == "cos" {
 			return
 		}
 	}

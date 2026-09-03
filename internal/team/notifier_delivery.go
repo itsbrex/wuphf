@@ -331,7 +331,7 @@ func (l *Launcher) sendChannelUpdate(target notificationTarget, msg channelMessa
 // conversation via deterministic templates and no LLM should fire.
 //
 // In production the CEO DM lands at the canonical pair-sorted slug
-// ("ceo__human"), not the reserved CEOOnboardingDMSlug constant — that
+// ("cos__human"), not the reserved CEOOnboardingDMSlug constant — that
 // constant is for the state record only. So we match on "DM whose
 // target bot is Chief of Staff" instead of a literal slug comparison.
 //
@@ -352,7 +352,7 @@ func isDeterministicPhase2CEODM(channel string) bool {
 	}
 	ch := normalizeChannelSlug(channel)
 	target := DMTargetBot(ch)
-	if target != "ceo" && ch != onboarding.CEOOnboardingDMSlug {
+	if target != "cos" && ch != onboarding.CEOOnboardingDMSlug {
 		return false
 	}
 	s, err := onboarding.Load()

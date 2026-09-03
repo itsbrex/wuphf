@@ -17,7 +17,7 @@ func TestEditActionRenamesWithoutMovingStatus(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Old name",
-		Details: "old body", CreatedBy: "human", Owner: "ceo",
+		Details: "old body", CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
@@ -52,7 +52,7 @@ func TestEditActionClearsDescription(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Has a body",
-		Details: "delete me", CreatedBy: "human", Owner: "ceo",
+		Details: "delete me", CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
@@ -73,7 +73,7 @@ func TestEditActionRejectsEmptyTitle(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Keeps its name",
-		CreatedBy: "human", Owner: "ceo",
+		CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create failed: %v", err)
@@ -97,7 +97,7 @@ func TestEditActionAnnouncesTheChange(t *testing.T) {
 	b := newTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Before",
-		CreatedBy: "human", Owner: "ceo",
+		CreatedBy: "human", Owner: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create failed: %v", err)

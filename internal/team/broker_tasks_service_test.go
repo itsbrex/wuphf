@@ -55,7 +55,7 @@ func TestListTasksFiltersByChannelStatusOwnerAndDone(t *testing.T) {
 func TestListTasksRejectsSingleChannelNonMember(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "private", Name: "private", Members: []string{"ceo"}},
+		{Slug: "private", Name: "private", Members: []string{"cos"}},
 	}
 	b.tasks = []teamTask{
 		{ID: "private-task", Channel: "private", Title: "Private", status: "open"},
@@ -71,7 +71,7 @@ func TestListTasksAllChannelsStillChecksViewerAccess(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
 		{Slug: "general", Name: "general", Members: []string{"pm"}},
-		{Slug: "private", Name: "private", Members: []string{"ceo"}},
+		{Slug: "private", Name: "private", Members: []string{"cos"}},
 	}
 	b.tasks = []teamTask{
 		{ID: "general-task", Channel: "general", Title: "General", status: "open"},
@@ -134,10 +134,10 @@ func TestAckTaskRejectsInvalidOwnerAndMissingTask(t *testing.T) {
 func TestMutateTaskCreatesAndCompletesTask(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo"}},
+		{Slug: "general", Name: "general", Members: []string{"cos"}},
 	}
 
-	// Issues can only be created by @ceo or the human. @ceo is also a
+	// Issues can only be created by @cos or the human. @cos is also a
 	// trusted sender, so it keeps access to the per-task channel that is
 	// now minted on create — which is what authorizes the later "complete".
 	created, err := b.MutateTask(TaskPostRequest{
@@ -145,7 +145,7 @@ func TestMutateTaskCreatesAndCompletesTask(t *testing.T) {
 		Channel:   "general",
 		Title:     "Write the plan",
 		Owner:     "alice",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -184,7 +184,7 @@ func TestMutateTaskCreatesAndCompletesTask(t *testing.T) {
 		Action:    "complete",
 		ID:        created.Task.ID,
 		Channel:   "general",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	var parkedMutationErr *TaskMutationError
 	if !errors.As(parkedErr, &parkedMutationErr) || parkedMutationErr.Kind != TaskMutationConflict {
@@ -213,7 +213,7 @@ func TestMutateTaskCreatesAndCompletesTask(t *testing.T) {
 		Action:    "complete",
 		ID:        created.Task.ID,
 		Channel:   "general",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask complete: %v", err)
@@ -242,13 +242,13 @@ func TestMutateTaskCreatesAndCompletesTask(t *testing.T) {
 func TestMutateTaskOwnerlessCreateLandsReadyAndRunsOnAssign(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"ceo"}},
+		{Slug: "general", Name: "general", Members: []string{"cos"}},
 	}
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
 		Channel:   "general",
 		Title:     "Staff me later",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -261,7 +261,7 @@ func TestMutateTaskOwnerlessCreateLandsReadyAndRunsOnAssign(t *testing.T) {
 		ID:        created.Task.ID,
 		Channel:   "general",
 		Owner:     "alice",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask assign: %v", err)
@@ -419,7 +419,7 @@ func TestMutateTaskAuthorizesExistingTaskAgainstActualChannel(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
 		{Slug: "general", Name: "general", Members: []string{"pm"}},
-		{Slug: "private", Name: "private", Members: []string{"ceo"}},
+		{Slug: "private", Name: "private", Members: []string{"cos"}},
 	}
 	b.tasks = []teamTask{
 		{ID: "task-1", Channel: "private", Title: "Private task", Owner: "alice", status: "review", reviewState: "ready_for_review"},
@@ -428,7 +428,7 @@ func TestMutateTaskAuthorizesExistingTaskAgainstActualChannel(t *testing.T) {
 	got, err := b.MutateTask(TaskPostRequest{
 		Action:    "complete",
 		ID:        "task-1",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask complete with actual channel access: %v", err)
@@ -445,7 +445,7 @@ func TestMutateTaskReturnsTypedErrors(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
 		{Slug: "general", Name: "general", Members: []string{"pm"}},
-		{Slug: "private", Name: "private", Members: []string{"ceo"}},
+		{Slug: "private", Name: "private", Members: []string{"cos"}},
 	}
 	b.tasks = []teamTask{
 		{ID: "task-1", Channel: "general", Title: "Task", Owner: "alice", status: "open"},

@@ -21,7 +21,7 @@ if (!OUT) {
 }
 
 const MEMBERS = [
-  { slug: "ceo", name: "CEO", role: "Lead agent", online: true },
+  { slug: "cos", name: "CEO", role: "Lead agent", online: true },
   { slug: "builder", name: "Builder", role: "Engineering", online: true },
   { slug: "design", name: "Designer", role: "Product design", online: false },
   { slug: "research", name: "Researcher", role: "Research", online: false },
@@ -30,7 +30,7 @@ const MEMBERS = [
 
 const messages = Array.from({ length: 30 }, (_, i) => ({
   id: `msg-${i + 1}`,
-  from: i % 3 === 0 ? "ceo" : i % 3 === 1 ? "builder" : "design",
+  from: i % 3 === 0 ? "cos" : i % 3 === 1 ? "builder" : "design",
   channel: "general",
   content: `Message ${i + 1}: lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.`,
   timestamp: `2026-05-${String((i % 28) + 1).padStart(2, "0")}T12:00:00Z`,
@@ -51,7 +51,7 @@ await installCommonMocks(context, {
               slug: "general",
               name: "general",
               description: "Team discussion",
-              members: ["human", "ceo", "builder", "design"],
+              members: ["human", "cos", "builder", "design"],
             },
           ],
         }),

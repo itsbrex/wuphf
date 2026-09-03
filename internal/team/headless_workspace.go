@@ -42,6 +42,7 @@ func botScratchDir(slug string) string {
 	root := ""
 	if home := config.RuntimeHomeDir(); home != "" {
 		root = filepath.Join(home, ".wuphf", "agent-scratch")
+		migrateLegacyLeadSlugDir(root)
 	} else {
 		root = filepath.Join(os.TempDir(), "wuphf-agent-scratch")
 	}

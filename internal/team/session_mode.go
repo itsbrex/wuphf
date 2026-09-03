@@ -6,7 +6,7 @@ const (
 	SessionModeOffice   = "office"
 	SessionModeOneOnOne = "1o1"
 
-	DefaultOneOnOneBot = "ceo"
+	DefaultOneOnOneBot = "cos"
 )
 
 func NormalizeSessionMode(mode string) string {

@@ -70,7 +70,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	createTask := func(title, details, owner string) (id, channel string, err error) {
 		status, raw, err := client.postJSON("/tasks", map[string]any{
 			"action": "create", "channel": "general", "title": title,
-			"details": details, "owner": owner, "created_by": "ceo",
+			"details": details, "owner": owner, "created_by": "cos",
 		})
 		if err != nil {
 			return "", "", fmt.Errorf("create %q: %w", title, err)
@@ -136,7 +136,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	}
 	fx.launcher.sendTaskUpdate(
 		notificationTarget{Slug: "eng"},
-		officeActionLog{Kind: "task_updated", Actor: "ceo", Channel: aChannel, RelatedID: aID},
+		officeActionLog{Kind: "task_updated", Actor: "cos", Channel: aChannel, RelatedID: aID},
 		*aTask,
 		"Work packet for the launch brief.",
 	)
@@ -165,7 +165,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	jID, jChannel, err := createTask(
 		"Build a single-page landing page for MeetingMind",
 		"Ship the MeetingMind landing page. Definition of done: a file landing/index.html exists. Don't tell me it's done unless that check passes.",
-		"ceo",
+		"cos",
 	)
 	if err != nil {
 		return err
@@ -184,7 +184,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	// structured verification failure — not pass because a stale
 	// landing/index.html happens to exist in the broker process cwd.
 	missStatus, missBody, err := client.postJSON("/tasks", map[string]any{
-		"action": "complete", "id": jID, "channel": jChannel, "created_by": "ceo",
+		"action": "complete", "id": jID, "channel": jChannel, "created_by": "cos",
 	})
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	// Produce the deliverable where the owner's turns actually run: the
 	// bot scratch dir (the task has no worktree). This is the isolation
 	// contract — the gate must look at the bot's working dir.
-	deliverable := filepath.Join(botScratchDir("ceo"), "landing", "index.html")
+	deliverable := filepath.Join(botScratchDir("cos"), "landing", "index.html")
 	if err := os.MkdirAll(filepath.Dir(deliverable), 0o755); err != nil {
 		return err
 	}
@@ -207,7 +207,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 		return err
 	}
 	hitStatus, hitBody, err := client.postJSON("/tasks", map[string]any{
-		"action": "complete", "id": jID, "channel": jChannel, "created_by": "ceo",
+		"action": "complete", "id": jID, "channel": jChannel, "created_by": "cos",
 	})
 	if err != nil {
 		return err
@@ -235,7 +235,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 		fmt.Sprintf("lifecycle=%s result=%+v", detail.Task.LifecycleState, detail.Task.VerificationResult), "")
 
 	// ── (d) Halt note packet carries the do-not-revert instruction ────────
-	dID, dChannel, err := createTask("Refresh the pricing page copy (workspace d)", "Probe for the Stop contract.", "ceo")
+	dID, dChannel, err := createTask("Refresh the pricing page copy (workspace d)", "Probe for the Stop contract.", "cos")
 	if err != nil {
 		return err
 	}
@@ -246,7 +246,7 @@ func evalJobWorkspaceIsolation(fx *officeEvalFixture, r *OfficeEvalReport) error
 	halted := dTask != nil && dTask.HumanNotePending != nil && dTask.HumanNotePending.Halt
 	packet := ""
 	if dTask != nil {
-		packet = fx.launcher.notifyCtx().BuildTaskExecutionPacket("ceo", officeActionLog{Actor: "ceo"}, *dTask, "continue")
+		packet = fx.launcher.notifyCtx().BuildTaskExecutionPacket("cos", officeActionLog{Actor: "cos"}, *dTask, "continue")
 	}
 	r.add(job, "Halt note's packet says do-not-revert: pause, report state, wait",
 		halted && strings.Contains(packet, "Do NOT discard or revert any work. Report state and wait.") &&

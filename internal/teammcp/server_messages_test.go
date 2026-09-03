@@ -38,7 +38,7 @@ func TestFormatMessagesStillClipsBotContent(t *testing.T) {
 
 	out := formatMessages([]brokerMessage{
 		{ID: "msg-2", From: "eng", Content: long, Timestamp: "2026-06-12T10:00:00Z"},
-	}, "ceo")
+	}, "cos")
 	if strings.Contains(out, tail) {
 		t.Errorf("bot message was not clipped: tail marker should be truncated away")
 	}
@@ -48,7 +48,7 @@ func TestFormatMessagesStillClipsBotContent(t *testing.T) {
 
 	auto := formatMessages([]brokerMessage{
 		{ID: "msg-3", From: "wuphf", Kind: "automation", Content: long, Timestamp: "2026-06-12T10:00:00Z"},
-	}, "ceo")
+	}, "cos")
 	if strings.Contains(auto, tail) {
 		t.Errorf("automation message was not clipped")
 	}

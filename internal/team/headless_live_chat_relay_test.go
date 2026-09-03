@@ -49,7 +49,7 @@ func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 	var logs []string
 	relay := newHeadlessLiveChatRelay(
 		l,
-		"ceo",
+		"cos",
 		"team",
 		fmt.Sprintf(`Reply using team_broadcast with reply_to_id "%s".`, root.ID),
 		func(line string) { logs = append(logs, line) },
@@ -62,14 +62,14 @@ func TestHeadlessLiveChatRelayPostsStreamedTextToChannel(t *testing.T) {
 		t.Fatalf("expected human root + streamed bot message, got %d: %+v", len(msgs), msgs)
 	}
 	got := msgs[1]
-	if got.From != "ceo" || got.Content != "I will check the live stream now." || got.ReplyTo != root.ID {
+	if got.From != "cos" || got.Content != "I will check the live stream now." || got.ReplyTo != root.ID {
 		t.Fatalf("unexpected streamed message: %+v", got)
 	}
 	if len(logs) != 1 {
 		t.Fatalf("expected relay log entry, got %+v", logs)
 	}
 
-	_, posted, err := l.postHeadlessFinalMessageIfSilent("ceo", "team", "", "late summary", startedAt)
+	_, posted, err := l.postHeadlessFinalMessageIfSilent("cos", "team", "", "late summary", startedAt)
 	if err != nil {
 		t.Fatalf("fallback post: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestOpenAICompatLiveChatRelayDoesNotPostJSONToolShape(t *testing.T) {
 		t.Fatalf("post human message: %v", err)
 	}
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "cos", "team", "", nil)
 	sinks := &fakeTurnSinks{}
 	st := newOpenAICompatTurnState(sinks, relay)
 
@@ -108,7 +108,7 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 	l := &Launcher{broker: b}
 	relay := newHeadlessLiveChatRelay(
 		l,
-		"ceo",
+		"cos",
 		"team",
 		fmt.Sprintf(`Reply using team_broadcast with reply_to_id "%s".`, root.ID),
 		nil,
@@ -121,7 +121,7 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 		t.Fatalf("expected issue to post immediately, got %+v", msgs)
 	}
 	got := msgs[1]
-	if got.From != "ceo" || got.Kind != botIssueMessageKind || got.ReplyTo != root.ID || got.Content != "Incident: browser access is not available" {
+	if got.From != "cos" || got.Kind != botIssueMessageKind || got.ReplyTo != root.ID || got.Content != "Incident: browser access is not available" {
 		t.Fatalf("unexpected issue message: %+v", got)
 	}
 	if approval := msgs[2]; approval.From != "system" || approval.Kind != "approval" || approval.EventID == "" || approval.Content == "" {
@@ -139,7 +139,7 @@ func TestHeadlessLiveChatRelayReportsIssueImmediately(t *testing.T) {
 func TestHeadlessLiveChatRelayFlushesBufferedTextBeforeIssue(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "cos", "team", "", nil)
 
 	relay.OnText("I found context and will continue")
 	relay.ReportIssue("browser access is not available")
@@ -159,7 +159,7 @@ func TestHeadlessLiveChatRelayFlushesBufferedTextBeforeIssue(t *testing.T) {
 func TestHeadlessLiveChatRelayPreservesWhitespaceChunks(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "cos", "team", "", nil)
 
 	relay.OnText("Starting live")
 	relay.OnText(" ")
@@ -180,7 +180,7 @@ func TestOpenAICompatToolErrorReportsIssueToChat(t *testing.T) {
 		t.Fatalf("post human message: %v", err)
 	}
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "cos", "team", "", nil)
 	sinks := &fakeTurnSinks{}
 	st := newOpenAICompatTurnState(sinks, relay)
 
@@ -201,7 +201,7 @@ func TestOpenAICompatToolErrorReportsIssueToChat(t *testing.T) {
 func TestReportIncidentSuppressesStructuredPayloads(t *testing.T) {
 	b := newTestBroker(t)
 
-	_, _, posted, err := b.ReportIncident("ceo", "team", "", `{"error":"browser access is not available"}`)
+	_, _, posted, err := b.ReportIncident("cos", "team", "", `{"error":"browser access is not available"}`)
 	if err != nil {
 		t.Fatalf("report incident: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestReportIncidentSuppressesStructuredPayloads(t *testing.T) {
 func TestReportIncidentDedupesRepeatedStreamIssue(t *testing.T) {
 	b := newTestBroker(t)
 	l := &Launcher{broker: b}
-	relay := newHeadlessLiveChatRelay(l, "ceo", "team", "", nil)
+	relay := newHeadlessLiveChatRelay(l, "cos", "team", "", nil)
 
 	relay.ReportIssue("browser access is not available")
 	relay.ReportIssue("ERROR: browser access is not available")
@@ -245,7 +245,7 @@ func TestReportIncidentAttachesActiveTaskAndWaitsForApproval(t *testing.T) {
 		Channel:   "team",
 		Title:     "Use the browser",
 		Owner:     "eng",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "feature",
 	})
 	if err != nil || reused {
@@ -525,17 +525,17 @@ func TestIncidentDoesNotCountAsSubstantiveProgress(t *testing.T) {
 	l := &Launcher{broker: b}
 	startedAt := time.Now().UTC().Add(-1 * time.Second)
 
-	if _, _, posted, err := b.ReportIncident("ceo", "team", "", "browser access is not available"); err != nil || !posted {
+	if _, _, posted, err := b.ReportIncident("cos", "team", "", "browser access is not available"); err != nil || !posted {
 		t.Fatalf("report incident: posted=%v err=%v", posted, err)
 	}
-	if l.botPostedSubstantiveMessageSince("ceo", startedAt) {
+	if l.botPostedSubstantiveMessageSince("cos", startedAt) {
 		t.Fatal("agent_issue should not count as substantive progress")
 	}
 
-	if _, err := b.PostMessage("ceo", "team", "I can continue with the code inspection.", nil, ""); err != nil {
+	if _, err := b.PostMessage("cos", "team", "I can continue with the code inspection.", nil, ""); err != nil {
 		t.Fatalf("post normal message: %v", err)
 	}
-	if !l.botPostedSubstantiveMessageSince("ceo", startedAt) {
+	if !l.botPostedSubstantiveMessageSince("cos", startedAt) {
 		t.Fatal("normal streamed prose should count as substantive progress")
 	}
 }

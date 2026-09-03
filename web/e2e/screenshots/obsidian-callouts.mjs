@@ -61,11 +61,11 @@ const ARTICLE = {
     "> [!note] Cross-references",
     "> See also [[people/alex-kim]], [[companies/acme-corp]], and the [[playbooks/enterprise-pricing-objections|enterprise-pricing playbook]].",
   ].join("\n"),
-  last_edited_by: "ceo",
+  last_edited_by: "cos",
   last_edited_ts: "2026-05-17T14:32:00Z",
   commit_sha: "a1b2c3d",
   revisions: 12,
-  contributors: ["ceo", "pm", "archivist"],
+  contributors: ["cos", "pm", "archivist"],
   backlinks: [],
   word_count: 230,
   categories: ["Active pilot", "Enterprise"],
@@ -75,13 +75,13 @@ const ARTICLE = {
 };
 
 const CATALOG = [
-  { path: "people/sarah-chen", title: "Sarah Chen", author_slug: "ceo",
+  { path: "people/sarah-chen", title: "Sarah Chen", author_slug: "cos",
     last_edited_ts: ARTICLE.last_edited_ts, group: "people" },
-  { path: "people/alex-kim", title: "Alex Kim", author_slug: "ceo",
+  { path: "people/alex-kim", title: "Alex Kim", author_slug: "cos",
     last_edited_ts: ARTICLE.last_edited_ts, group: "people" },
-  { path: "companies/acme-corp", title: "Acme Corp", author_slug: "ceo",
+  { path: "companies/acme-corp", title: "Acme Corp", author_slug: "cos",
     last_edited_ts: ARTICLE.last_edited_ts, group: "companies" },
-  { path: "companies/contoso", title: "Contoso", author_slug: "ceo",
+  { path: "companies/contoso", title: "Contoso", author_slug: "cos",
     last_edited_ts: ARTICLE.last_edited_ts, group: "companies" },
   // initech and globex deliberately absent → render as broken wikilinks
   // (red) to prove cross-reference resolution survives the callout boundary.

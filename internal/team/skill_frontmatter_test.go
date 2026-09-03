@@ -261,7 +261,7 @@ func TestTeamSkillToFrontmatter(t *testing.T) {
 		Status:             "disabled",
 		DisabledFromStatus: "proposed",
 		Tags:               []string{"comms", "daily"},
-		OwnerBots:          []string{"ceo", "ops"},
+		OwnerBots:          []string{"cos", "ops"},
 		Trigger:            "Every morning",
 		WorkflowProvider:   "zapier",
 		WorkflowKey:        "wk-digest",
@@ -338,9 +338,9 @@ func TestSkillFrontmatterOwnerBotsRoundTrip(t *testing.T) {
 		Metadata: SkillMetadata{
 			Wuphf: SkillWuphfMeta{
 				Title:     "Share Results",
-				CreatedBy: "ceo",
+				CreatedBy: "cos",
 				Status:    "active",
-				OwnerBots: []string{"ceo", "ops", "eng"},
+				OwnerBots: []string{"cos", "ops", "eng"},
 			},
 		},
 	}

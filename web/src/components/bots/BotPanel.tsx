@@ -220,9 +220,9 @@ function BotPanelView({ agent, onClose }: BotPanelViewProps) {
   // Broker rejects remove / disable for any `built_in` member (lead bot).
   // Use `!== true` (not `!bot.built_in`) so an absent field isn't silently
   // treated as "removable" — we want explicit permission, not optimistic.
-  // Keep the `ceo` literal as legacy fallback for stored rosters that
+  // Keep the `cos` literal as legacy fallback for stored rosters that
   // predate the BuiltIn field getting serialized.
-  const isLead = agent.built_in === true || agent.slug === "ceo";
+  const isLead = agent.built_in === true || agent.slug === "cos";
   const canRemove = !isLead;
   // The toggle is per-channel; off conversation routes there is no channel
   // to scope the action to, so we hide the toggle entirely rather than

@@ -178,7 +178,7 @@ func fetchAccessibleChannels(ctx context.Context, slug string) []brokerChannelSu
 	}
 
 	slug = strings.TrimSpace(slug)
-	if slug == "" || slug == "ceo" {
+	if slug == "" || slug == "cos" {
 		return deduped
 	}
 	out := make([]brokerChannelSummary, 0, len(deduped))

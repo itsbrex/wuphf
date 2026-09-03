@@ -197,7 +197,7 @@ func TestPlaybookSynthesizer_ContradictionCalloutsPassThrough(t *testing.T) {
 
 	writePlaybookSource(t, worker, "dispute", seededPlaybookBody)
 	_, _ = execLog.Append(ctx, "dispute", PlaybookOutcomeSuccess, "worked without step 2.", "", "cmo")
-	_, _ = execLog.Append(ctx, "dispute", PlaybookOutcomeAborted, "failed without step 2.", "", "ceo")
+	_, _ = execLog.Append(ctx, "dispute", PlaybookOutcomeAborted, "failed without step 2.", "", "cos")
 
 	_, _ = synth.SynthesizeNow(ctx, "dispute", "human")
 	waitForSynthCount(t, pub, 1, 3*time.Second)

@@ -19,7 +19,7 @@ import (
 // and resurrecting finished work.
 func TestTeamTaskAssignRoutesToReassign(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	var got map[string]any
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +30,7 @@ func TestTeamTaskAssignRoutesToReassign(t *testing.T) {
 	withBrokerURL(t, srv.URL)
 
 	if _, _, err := handleTeamTask(context.Background(), nil, TeamTaskArgs{
-		Action: "assign", ID: "OFFICE-1", Owner: "designer", MySlug: "ceo",
+		Action: "assign", ID: "OFFICE-1", Owner: "designer", MySlug: "cos",
 	}); err != nil {
 		t.Fatalf("assign returned a transport error: %v", err)
 	}

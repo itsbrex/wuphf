@@ -44,13 +44,13 @@ const legacyBrokerStateFixture = `{
     {"id":"issue-1","agent":"dwight","channel":"general","detail":"tool timeout","normalized_key":"tool-timeout","count":2,"created_at":"2026-01-05T10:00:00Z","updated_at":"2026-01-05T10:30:00Z"}
   ],
   "members": [
-    {"slug":"ceo","name":"CEO","role":"Chief Executive"},
+    {"slug":"cos","name":"CEO","role":"Chief Executive"},
     {"slug":"dwight","name":"Dwight","role":"Sales"},
     {"slug":"angela","name":"Angela","role":"Accounting"}
   ],
   "channels": [
-    {"slug":"general","name":"general","members":["ceo","dwight","angela"]},
-    {"slug":"product","name":"product","members":["ceo","angela"]}
+    {"slug":"general","name":"general","members":["cos","dwight","angela"]},
+    {"slug":"product","name":"product","members":["cos","angela"]}
   ],
   "tasks": [
     {"id":"task-1","channel":"general","title":"shipped before the rename","status":"done","lifecycle_state":"merged","owner":"dwight"},
@@ -178,7 +178,7 @@ func TestPhase6MigrationLoadsLegacyWorkspaceClean(t *testing.T) {
 		}
 	}
 	// The pre-existing roster must survive untouched (no clobber, no additions).
-	legacy := []string{"ceo", "dwight", "angela"}
+	legacy := []string{"cos", "dwight", "angela"}
 	for _, slug := range legacy {
 		if _, found := memberBySlug(t, b, slug); !found {
 			t.Fatalf("legacy member %q was lost during migration", slug)
@@ -359,7 +359,7 @@ func TestPhase6MigrationRoundTripsThroughSave(t *testing.T) {
 	b2 := NewBrokerAt(path)
 	runStartupMigrations(b2)
 
-	for _, slug := range []string{"ceo", "dwight", "angela"} {
+	for _, slug := range []string{"cos", "dwight", "angela"} {
 		if _, ok := memberBySlug(t, b2, slug); !ok {
 			t.Fatalf("legacy member %q missing after save+reload", slug)
 		}

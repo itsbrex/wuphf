@@ -456,10 +456,10 @@ export function CeoCardSection() {
         // would let a slow/hung /messages call freeze the wizard in
         // "submitting" even though /onboarding/answer has already
         // committed the real state. CodeRabbit on PR #988.
-        void postMessage(echo, directChannelSlug("ceo"))
+        void postMessage(echo, directChannelSlug("cos"))
           .then(() =>
             queryClient.invalidateQueries({
-              queryKey: ["messages", directChannelSlug("ceo")],
+              queryKey: ["messages", directChannelSlug("cos")],
             }),
           )
           .catch((echoErr: unknown) => {

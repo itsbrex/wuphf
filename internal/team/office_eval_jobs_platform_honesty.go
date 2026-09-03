@@ -58,7 +58,7 @@ func evalJobPlatformHonesty(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		Title:     "Research the launch plan",
 		Details:   "Long-running research task used to exercise the stall watchdog.",
 		Owner:     "eng",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "issue",
 	})
 	if err != nil {

@@ -10,7 +10,7 @@ import (
 // handleBridge is the CEO-only endpoint for cross-channel bridging:
 // when context relevant to channel B exists in channel A, the CEO
 // can carry a summarized version into B with a recorded signal +
-// decision + action trail. Restricted to actor="ceo" because a
+// decision + action trail. Restricted to actor="cos" because a
 // bridge writes to a channel the bridging bot may not be a Member
 // of (canAccessChannelLocked would otherwise reject the post).
 //
@@ -18,7 +18,7 @@ import (
 //
 //	POST /bridge
 //	{
-//	  "actor":         "ceo",
+//	  "actor":         "cos",
 //	  "source_channel": "engineering",
 //	  "target_channel": "go-to-market",
 //	  "summary":       "...",
@@ -71,7 +71,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 	}
 
 	actor := normalizeActorSlug(body.Actor)
-	if actor != "ceo" {
+	if actor != "cos" {
 		http.Error(w, "only the Chief of Staff can bridge channel context", http.StatusForbidden)
 		return
 	}
@@ -105,7 +105,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 		Title:      "Cross-channel bridge",
 		Content:    fmt.Sprintf("Chief of Staff bridged context from #%s to #%s: %s", source, target, summary),
 		Channel:    target,
-		Owner:      "ceo",
+		Owner:      "cos",
 		Confidence: "explicit",
 		Urgency:    "normal",
 	}})
@@ -122,7 +122,7 @@ func (b *Broker) handleBridge(w http.ResponseWriter, r *http.Request) {
 		target,
 		fmt.Sprintf("Chief of Staff bridged context from #%s to #%s.", source, target),
 		"Relevant context existed in another channel, so the Chief of Staff carried it into this channel explicitly.",
-		"ceo",
+		"cos",
 		signalIDs,
 		false,
 		false,

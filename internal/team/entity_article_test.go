@@ -36,7 +36,7 @@ func TestBuildEntityArticle_Skeleton(t *testing.T) {
 		Title: "Acme Corp",
 		Facts: []Fact{
 			completionFact(EntityKindCompanies, "acme-corp", "TASK-3", "team/playbooks/acme-renewal.md", "[[people/eng]]", "eng", t0),
-			{ID: "f2", Kind: EntityKindCompanies, Slug: "acme-corp", Text: "Prefers quarterly billing.", SourcePath: "agents/eng/notes.md", RecordedBy: "ceo", CreatedAt: t0.Add(time.Hour)},
+			{ID: "f2", Kind: EntityKindCompanies, Slug: "acme-corp", Text: "Prefers quarterly billing.", SourcePath: "agents/eng/notes.md", RecordedBy: "cos", CreatedAt: t0.Add(time.Hour)},
 		},
 		Associated: []entityAssociation{{Kind: EntityKindPeople, Slug: "eng", SharedFacts: 2}},
 	}
@@ -60,7 +60,7 @@ func TestBuildEntityArticle_Skeleton(t *testing.T) {
 		"- [[people/eng]] — 2 shared facts",
 		"## References",
 		"[^1]: Task TASK-3 — artifact: [team/playbooks/acme-renewal.md](team/playbooks/acme-renewal.md); recorded by eng on 2026-06-10.",
-		"[^2]: artifact: [agents/eng/notes.md](agents/eng/notes.md); recorded by ceo on 2026-06-10.",
+		"[^2]: artifact: [agents/eng/notes.md](agents/eng/notes.md); recorded by cos on 2026-06-10.",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("article missing %q\n--- article ---\n%s", want, got)
@@ -96,7 +96,7 @@ func TestBuildEntityArticle_Skeleton(t *testing.T) {
 func TestBuildEntityArticle_ProseSectionRoundTrips(t *testing.T) {
 	data := entityArticleData{
 		Kind: EntityKindPeople, Slug: "eng", Title: "Eng",
-		Facts: []Fact{{ID: "f1", Kind: EntityKindPeople, Slug: "eng", Text: "Owns the broker.", RecordedBy: "ceo", CreatedAt: time.Now().UTC()}},
+		Facts: []Fact{{ID: "f1", Kind: EntityKindPeople, Slug: "eng", Text: "Owns the broker.", RecordedBy: "cos", CreatedAt: time.Now().UTC()}},
 		Prose: "Eng has led the renewal motion since spring.",
 	}
 	got := buildEntityArticle(data)

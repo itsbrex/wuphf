@@ -85,7 +85,7 @@ log_test "Post via broker API"
 RESULT=$(curl -s -X POST http://127.0.0.1:7890/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"from":"you","content":"Let'\''s build an AI notetaker company. @ceo what'\''s our strategy? @pm what features should v1 have?","tagged":["ceo","pm"]}')
+  -d '{"from":"you","content":"Let'\''s build an AI notetaker company. @cos what'\''s our strategy? @pm what features should v1 have?","tagged":["cos","pm"]}')
 if echo "$RESULT" | grep -q "id"; then pass; else fail "$RESULT"; fi
 
 log_test "Message in broker"

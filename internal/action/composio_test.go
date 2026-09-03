@@ -81,7 +81,7 @@ func TestComposioRESTActionHappyPath(t *testing.T) {
 
 	client := &ComposioREST{
 		APIKey:  "cmp_test",
-		UserID:  "ceo@example.com",
+		UserID:  "cos@example.com",
 		BaseURL: server.URL,
 		Client:  server.Client(),
 	}
@@ -114,7 +114,7 @@ func TestComposioRESTActionHappyPath(t *testing.T) {
 		Platform:      "gmail",
 		ActionID:      "GMAIL_SEND_EMAIL",
 		ConnectionKey: "ca_123",
-		Data:          map[string]any{"to": "ceo@example.com"},
+		Data:          map[string]any{"to": "cos@example.com"},
 		DryRun:        true,
 	})
 	if err != nil {
@@ -128,7 +128,7 @@ func TestComposioRESTActionHappyPath(t *testing.T) {
 		Platform:      "gmail",
 		ActionID:      "GMAIL_SEND_EMAIL",
 		ConnectionKey: "ca_123",
-		Data:          map[string]any{"to": "ceo@example.com"},
+		Data:          map[string]any{"to": "cos@example.com"},
 	})
 	if err != nil {
 		t.Fatalf("execute: %v", err)
@@ -218,7 +218,7 @@ func TestComposioRESTIntegrationLifecycle(t *testing.T) {
 
 	client := &ComposioREST{
 		APIKey:  "cmp_test",
-		UserID:  "ceo@example.com",
+		UserID:  "cos@example.com",
 		BaseURL: server.URL,
 		Client:  server.Client(),
 	}
@@ -247,8 +247,8 @@ func TestComposioRESTIntegrationLifecycle(t *testing.T) {
 	if got := connectBody["auth_config_id"]; got != "auth_123" {
 		t.Fatalf("expected auth_config_id auth_123, got %#v", got)
 	}
-	if got := connectBody["user_id"]; got != "ceo@example.com" {
-		t.Fatalf("expected user_id ceo@example.com, got %#v", got)
+	if got := connectBody["user_id"]; got != "cos@example.com" {
+		t.Fatalf("expected user_id cos@example.com, got %#v", got)
 	}
 	if started.AuthURL == "" || started.ConnectID != "ca_123" || started.Status != "initiated" {
 		t.Fatalf("unexpected start result: %+v", started)
@@ -764,7 +764,7 @@ func TestComposioRESTResponseCapErrorsCleanly(t *testing.T) {
 
 	client := &ComposioREST{
 		APIKey:  "cmp_test",
-		UserID:  "ceo@example.com",
+		UserID:  "cos@example.com",
 		BaseURL: server.URL,
 		Client:  server.Client(),
 	}
@@ -856,7 +856,7 @@ func TestComposioRESTCatalogHidesComposioToolkits(t *testing.T) {
 
 	client := &ComposioREST{
 		APIKey:  "cmp_test",
-		UserID:  "ceo@example.com",
+		UserID:  "cos@example.com",
 		BaseURL: server.URL,
 		Client:  server.Client(),
 	}
@@ -906,7 +906,7 @@ func TestComposioRESTCreatesV3AuthConfig(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	res, err := client.StartIntegrationConnection(context.Background(), IntegrationConnectRequest{Platform: "gmail"})
 	if err != nil {

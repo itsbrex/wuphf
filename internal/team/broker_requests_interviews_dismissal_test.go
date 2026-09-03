@@ -18,8 +18,8 @@ func TestAnswerIsSilentDismissal(t *testing.T) {
 	}{
 		{"bare acknowledge on a notice is silent", humanInterview{Kind: "notice", From: "app-builder"}, interviewAnswer{ChoiceID: "acknowledge"}, true},
 		{"acknowledge with a note still posts", humanInterview{Kind: "notice", From: "app-builder"}, interviewAnswer{ChoiceID: "acknowledge", CustomText: "ship it tomorrow"}, false},
-		{"approval acknowledge still posts", humanInterview{Kind: "approval", From: "ceo"}, interviewAnswer{ChoiceID: "acknowledge"}, false},
-		{"approve on a notice still posts", humanInterview{Kind: "notice", From: "ceo"}, interviewAnswer{ChoiceID: "approve"}, false},
+		{"approval acknowledge still posts", humanInterview{Kind: "approval", From: "cos"}, interviewAnswer{ChoiceID: "acknowledge"}, false},
+		{"approve on a notice still posts", humanInterview{Kind: "notice", From: "cos"}, interviewAnswer{ChoiceID: "approve"}, false},
 		{"case and padding are ignored", humanInterview{Kind: " Notice "}, interviewAnswer{ChoiceID: " Acknowledge "}, true},
 	}
 	for _, tc := range cases {

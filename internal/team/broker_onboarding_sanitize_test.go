@@ -409,7 +409,7 @@ func TestSeedMinimalScratchLocked(t *testing.T) {
 	if len(b.members) != 1 {
 		t.Fatalf("expected 1 member after scratch seed, got %d: %v", len(b.members), b.members)
 	}
-	if b.members[0].Slug != "ceo" {
+	if b.members[0].Slug != "cos" {
 		t.Errorf("expected CEO as sole member, got slug %q", b.members[0].Slug)
 	}
 	if !b.members[0].BuiltIn {
@@ -430,7 +430,7 @@ func TestSeedMinimalScratchLocked(t *testing.T) {
 	if len(b.channels) != wantCount {
 		t.Fatalf("expected %d channel(s) after scratch seed, got %d: %v", wantCount, len(b.channels), b.channels)
 	}
-	if b.findChannelLocked(channel.DirectSlug("human", "ceo")) == nil {
+	if b.findChannelLocked(channel.DirectSlug("human", "cos")) == nil {
 		t.Fatalf("scratch seed produced no DM with the lead: %v", b.channels)
 	}
 

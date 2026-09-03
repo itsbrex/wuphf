@@ -19,9 +19,9 @@ func TestRepoCommitAndReadBotFile(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	rel := botFileRel("ceo", "SOUL")
+	rel := botFileRel("cos", "SOUL")
 
-	sha, n, err := repo.CommitBotFile(ctx, "ceo", rel, "# SOUL — @ceo\nbe excellent", "create", "")
+	sha, n, err := repo.CommitBotFile(ctx, "cos", rel, "# SOUL — @cos\nbe excellent", "create", "")
 	if err != nil {
 		t.Fatalf("commit create: %v", err)
 	}
@@ -33,25 +33,25 @@ func TestRepoCommitAndReadBotFile(t *testing.T) {
 	}
 
 	// create-again must fail so a human's file is never silently clobbered.
-	if _, _, err := repo.CommitBotFile(ctx, "ceo", rel, "x", "create", ""); err == nil {
+	if _, _, err := repo.CommitBotFile(ctx, "cos", rel, "x", "create", ""); err == nil {
 		t.Fatal("second create must fail")
 	}
 	// replace updates it.
-	if _, _, err := repo.CommitBotFile(ctx, "ceo", rel, "# SOUL — @ceo\nrevised", "replace", ""); err != nil {
+	if _, _, err := repo.CommitBotFile(ctx, "cos", rel, "# SOUL — @cos\nrevised", "replace", ""); err != nil {
 		t.Fatalf("replace: %v", err)
 	}
 	if data, _ := os.ReadFile(filepath.Join(repo.Root(), rel)); !strings.Contains(string(data), "revised") {
 		t.Fatalf("replace should update content: %q", data)
 	}
 	// a non-bot path is rejected by the validator inside Commit.
-	if _, _, err := repo.CommitBotFile(ctx, "ceo", "team/people/x.md", "x", "create", ""); err == nil {
+	if _, _, err := repo.CommitBotFile(ctx, "cos", "team/people/x.md", "x", "create", ""); err == nil {
 		t.Fatal("invalid bot-file path must be rejected")
 	}
 }
 
 func TestValidateBotFilePath(t *testing.T) {
 	ok := []string{
-		"agents/ceo/SOUL.md",
+		"agents/cos/SOUL.md",
 		"agents/eng/IDENTITY.md",
 		"agents/growth-ops/OPERATIONS.md",
 		"agents/pam/TOOLS.md",
@@ -65,18 +65,18 @@ func TestValidateBotFilePath(t *testing.T) {
 
 	bad := []string{
 		"",
-		"agents/ceo/SOUL.md/.",                // non-canonical (trailing /.)
-		"agents/ceo/SOUL.md/",                 // non-canonical (trailing slash)
-		"agents/ceo/MEMORY.md",                // not a canonical file
-		"agents/ceo/HEARTBEAT.md",             // dropped by design
-		"agents/ceo/soul.md",                  // wrong case
-		"agents/ceo/notebook/2026-01-01-x.md", // notebook subtree is off-limits
-		"agents/ceo/SOUL",                     // missing .md
-		"team/people/ceo.md",                  // article subtree
+		"agents/cos/SOUL.md/.",                // non-canonical (trailing /.)
+		"agents/cos/SOUL.md/",                 // non-canonical (trailing slash)
+		"agents/cos/MEMORY.md",                // not a canonical file
+		"agents/cos/HEARTBEAT.md",             // dropped by design
+		"agents/cos/soul.md",                  // wrong case
+		"agents/cos/notebook/2026-01-01-x.md", // notebook subtree is off-limits
+		"agents/cos/SOUL",                     // missing .md
+		"team/people/cos.md",                  // article subtree
 		"agents/../etc/passwd",                // traversal
-		"agents/ceo/../eng/SOUL.md",           // traversal into another bot
-		"/agents/ceo/SOUL.md",                 // absolute
-		"agents/ceo/sub/SOUL.md",              // nested
+		"agents/cos/../eng/SOUL.md",           // traversal into another bot
+		"/agents/cos/SOUL.md",                 // absolute
+		"agents/cos/sub/SOUL.md",              // nested
 		"USER.md",                             // office file only at office/USER.md
 		"bots/Bad Slug/SOUL.md",               // invalid slug
 	}
@@ -150,7 +150,7 @@ func TestRenderBotFilesDeterministic(t *testing.T) {
 
 func TestBotFilesPromptBlock(t *testing.T) {
 	// No reader wired -> empty (tests that don't mock a wiki backend).
-	if got := (&promptBuilder{}).botFilesPromptBlock("ceo"); got != "" {
+	if got := (&promptBuilder{}).botFilesPromptBlock("cos"); got != "" {
 		t.Errorf("nil reader should produce empty block, got %q", got)
 	}
 
@@ -159,7 +159,7 @@ func TestBotFilesPromptBlock(t *testing.T) {
 		botInstruction: func(string, string) string { return "" },
 		officeUser:     func() string { return "" },
 	}
-	if got := empty.botFilesPromptBlock("ceo"); got != "" {
+	if got := empty.botFilesPromptBlock("cos"); got != "" {
 		t.Errorf("all-empty files should produce empty block, got %q", got)
 	}
 
@@ -168,16 +168,16 @@ func TestBotFilesPromptBlock(t *testing.T) {
 		botInstruction: func(_, name string) string {
 			switch name {
 			case "SOUL":
-				return "# SOUL — @ceo\nlead persona"
+				return "# SOUL — @cos\nlead persona"
 			case "OPERATIONS":
-				return "# OPERATIONS — @ceo\ndecompose"
+				return "# OPERATIONS — @cos\ndecompose"
 			default:
 				return ""
 			}
 		},
 		officeUser: func() string { return "# USER\nthe human" },
 	}
-	got := pb.botFilesPromptBlock("ceo")
+	got := pb.botFilesPromptBlock("cos")
 	for _, want := range []string{"YOUR FILES (authoritative)", "lead persona", "decompose", "the human"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("block missing %q:\n%s", want, got)

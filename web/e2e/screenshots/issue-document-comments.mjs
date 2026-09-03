@@ -51,7 +51,7 @@ const DECISION_PACKET = {
     feedback: [
       {
         id: "comment-ceo",
-        author: "ceo",
+        author: "cos",
         body: "Blocked on confirming whether security wants IP address in the first release.",
         appendedAt: "2026-05-21T04:30:00Z",
       },

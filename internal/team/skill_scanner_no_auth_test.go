@@ -59,7 +59,7 @@ func TestSkillScanner_NoLLMConfigured_BailsAfterFirstCall(t *testing.T) {
 	// team/about/{README,company,owner}.md, all with no auth available.
 	for _, name := range []string{"README", "company", "owner"} {
 		rel := filepath.Join("team", "about", name+".md")
-		if _, _, err := repo.Commit(context.Background(), "ceo", rel,
+		if _, _, err := repo.Commit(context.Background(), "cos", rel,
 			"# "+name+"\n\nseed body\n", "create", "seed "+name); err != nil {
 			t.Fatalf("seed %s: %v", name, err)
 		}

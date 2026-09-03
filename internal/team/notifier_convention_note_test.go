@@ -17,7 +17,7 @@ func TestSlackChannelConventionNote(t *testing.T) {
 	b.channels = append(b.channels, teamChannel{
 		Slug:    "slack-office",
 		Name:    "slack-office",
-		Members: []string{"ceo"},
+		Members: []string{"cos"},
 		Surface: &channelSurface{Provider: "slack", RemoteID: "C0123"},
 	})
 	b.mu.Unlock()

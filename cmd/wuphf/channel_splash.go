@@ -246,7 +246,7 @@ func (m splashModel) renderCast() string {
 		var spriteLines []string
 
 		switch {
-		case member.Slug == "ceo":
+		case member.Slug == "cos":
 			if ceoVariant != "normal" {
 				spriteLines = avatar.RenderCEOVariant(ceoVariant, m.frame)
 			} else {

@@ -20,17 +20,17 @@ import (
 	"testing"
 )
 
-// newHumanNoteTestBroker seeds a broker with a general channel, a ceo+eng
+// newHumanNoteTestBroker seeds a broker with a general channel, a cos+eng
 // roster, and one running task owned by eng in #general.
 func newHumanNoteTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "general", Name: "general", Members: []string{"human", "cos", "eng"}},
 	}
 	b.tasks = []teamTask{
 		{
@@ -87,7 +87,7 @@ func TestHumanNote_UnnamedHaltMarksRunningWorkOnly(t *testing.T) {
 	// A waiting sibling and a system task in the same room.
 	b.tasks = append(b.tasks,
 		teamTask{ID: "task-note-2", Channel: "general", Title: "Done work", Owner: "eng", status: "done"},
-		teamTask{ID: "task-note-3", Channel: "general", Title: "Backup & Migration", Owner: "ceo", status: "in_progress", System: true},
+		teamTask{ID: "task-note-3", Channel: "general", Title: "Backup & Migration", Owner: "cos", status: "in_progress", System: true},
 	)
 
 	// Names no task: the halt is what carries it to the running work.
@@ -116,7 +116,7 @@ func TestHumanNote_UnnamedHaltMarksRunningWorkOnly(t *testing.T) {
 func TestHumanNote_AgentPostDoesNotMark(t *testing.T) {
 	t.Parallel()
 	b := newHumanNoteTestBroker(t)
-	if _, err := b.PostMessage("ceo", "general", "stop and think about the sequencing here", nil, ""); err != nil {
+	if _, err := b.PostMessage("cos", "general", "stop and think about the sequencing here", nil, ""); err != nil {
 		t.Fatalf("bot post: %v", err)
 	}
 	if task := b.TaskByID("task-note-1"); task.HumanNotePending != nil {

@@ -162,7 +162,7 @@ func TestGeneralChannelKillSwitchNeverDeletes(t *testing.T) {
 	b.channels = append(b.channels, teamChannel{
 		Slug:    GeneralChannelSlug,
 		Name:    GeneralChannelSlug,
-		Members: []string{"ceo"},
+		Members: []string{"cos"},
 	})
 	b.messages = append(b.messages, channelMessage{
 		ID: "msg-1", From: "human", Channel: GeneralChannelSlug, Content: "the old room",
@@ -214,17 +214,17 @@ func TestHomeChannelForHasExactlyThreeOutcomes(t *testing.T) {
 		b := newRawTestBroker(t)
 		b.mu.Lock()
 		defer b.mu.Unlock()
-		b.members = []officeMember{{Slug: "ceo", Name: "CEO", BuiltIn: true}}
+		b.members = []officeMember{{Slug: "cos", Name: "CEO", BuiltIn: true}}
 		b.rebuildMemberIndexLocked()
 
-		got, err := b.homeChannelForLocked("ceo")
+		got, err := b.homeChannelForLocked("cos")
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if got == GeneralChannelSlug || got == "" {
 			t.Fatalf("expected a DM slug, got %q", got)
 		}
-		if DMTargetBot(got) != "ceo" {
+		if DMTargetBot(got) != "cos" {
 			t.Errorf("routed to %q, which is not the CEO's DM", got)
 		}
 		// The DM must actually exist afterwards, not just be named.
@@ -301,7 +301,7 @@ func TestGroupDMKillSwitchRefusesAtTheAPI(t *testing.T) {
 		return resp
 	}
 
-	group := []string{"human", "ceo", "librarian"}
+	group := []string{"human", "cos", "librarian"}
 
 	t.Run("switch on: a group DM is created", func(t *testing.T) {
 		defer channel.SetGroupDMsEnabledForTest(true)()
@@ -317,7 +317,7 @@ func TestGroupDMKillSwitchRefusesAtTheAPI(t *testing.T) {
 		defer channel.SetGroupDMsEnabledForTest(false)()
 		// A fresh member set, so the exemption for already-existing groups
 		// (which the subtest above created) does not mask the refusal.
-		fresh := []string{"human", "ceo", "app-builder"}
+		fresh := []string{"human", "cos", "app-builder"}
 		for _, payload := range []map[string]any{
 			{"members": fresh, "type": "group"},  // explicit
 			{"members": fresh, "type": "direct"}, // the >2-members upgrade
@@ -342,8 +342,8 @@ func TestGroupDMKillSwitchRefusesAtTheAPI(t *testing.T) {
 		// so — the refusal is keyed on the member count, not on the label,
 		// because two participants is exactly what the new model wants.
 		for _, payload := range []map[string]any{
-			{"members": []string{"human", "ceo"}, "type": "direct"},
-			{"members": []string{"human", "ceo"}, "type": "group"},
+			{"members": []string{"human", "cos"}, "type": "direct"},
+			{"members": []string{"human", "cos"}, "type": "group"},
 		} {
 			resp := postDM(t, payload)
 			raw, _ := io.ReadAll(resp.Body)
@@ -371,9 +371,9 @@ func TestGroupDMKillSwitchWithholdsFromListing(t *testing.T) {
 	b.mu.Lock()
 	b.channels = append(b.channels,
 		teamChannel{Slug: "abc123groupslug", Name: "Group DM", Type: "dm",
-			Members: []string{"human", "ceo", "librarian"}},
-		teamChannel{Slug: DMSlugFor("ceo"), Name: "CEO", Type: "dm",
-			Members: []string{"human", "ceo"}},
+			Members: []string{"human", "cos", "librarian"}},
+		teamChannel{Slug: DMSlugFor("cos"), Name: "CEO", Type: "dm",
+			Members: []string{"human", "cos"}},
 	)
 	b.mu.Unlock()
 
@@ -466,11 +466,11 @@ func TestNamedChannelRetirementKeepsBridgesAndAppThreads(t *testing.T) {
 
 	b.mu.Lock()
 	b.channels = append(b.channels,
-		teamChannel{Slug: "product", Name: "product", Members: []string{"ceo"}},
-		teamChannel{Slug: "slack-sales", Name: "slack-sales", Members: []string{"ceo"},
+		teamChannel{Slug: "product", Name: "product", Members: []string{"cos"}},
+		teamChannel{Slug: "slack-sales", Name: "slack-sales", Members: []string{"cos"},
 			Surface: &channelSurface{Provider: "slack", RemoteID: "C123"}},
-		teamChannel{Slug: appEditChannelPrefix + "abc", Name: "app build", Members: []string{"ceo"}},
-		teamChannel{Slug: DMSlugFor("ceo"), Name: "CEO", Type: "dm", Members: []string{"human", "ceo"}},
+		teamChannel{Slug: appEditChannelPrefix + "abc", Name: "app build", Members: []string{"cos"}},
+		teamChannel{Slug: DMSlugFor("cos"), Name: "CEO", Type: "dm", Members: []string{"human", "cos"}},
 	)
 	b.mu.Unlock()
 

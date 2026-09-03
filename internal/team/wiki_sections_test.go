@@ -72,7 +72,7 @@ func TestDiscoverSectionsBlueprintPlusDiscovered(t *testing.T) {
 	repo, worker := sectionsTestRepo(t)
 	// Blueprint declares people + playbooks. Bots later write
 	// articles under retrospectives/ and templates/.
-	writeArticle(t, worker, "ceo", "team/people/nazz.md", "# Nazz\n")
+	writeArticle(t, worker, "cos", "team/people/nazz.md", "# Nazz\n")
 	writeArticle(t, worker, "pm", "team/playbooks/onboarding.md", "# Onboarding\n")
 	writeArticle(t, worker, "reviewer", "team/retrospectives/q1.md", "# Q1\n")
 	writeArticle(t, worker, "designer", "team/templates/brief.md", "# Brief\n")
@@ -160,7 +160,7 @@ func TestDiscoverSectionsDiscoveredOnlyAlphabetical(t *testing.T) {
 
 func TestDiscoverSectionsSkipsSystemSubtrees(t *testing.T) {
 	repo, worker := sectionsTestRepo(t)
-	writeArticle(t, worker, "ceo", "team/people/nazz.md", "# Nazz\n")
+	writeArticle(t, worker, "cos", "team/people/nazz.md", "# Nazz\n")
 
 	for _, rel := range []string{
 		"team/inbox/raw-import.md",
@@ -304,7 +304,7 @@ func TestWikiSectionsCacheEmitsEventOnNewSection(t *testing.T) {
 
 	// Seed one article in the "people" dir so the initial compute is
 	// stable before we add a new section.
-	writeArticle(t, worker, "ceo", "team/people/seed.md", "# seed\n")
+	writeArticle(t, worker, "cos", "team/people/seed.md", "# seed\n")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -355,8 +355,8 @@ func sectionPresent(sections []DiscoveredSection, slug string) bool {
 
 func TestWikiSectionsCacheStartSynchronousCompute(t *testing.T) {
 	_, worker := sectionsTestRepo(t)
-	writeArticle(t, worker, "ceo", "team/people/nazz.md", "# Nazz\n")
-	writeArticle(t, worker, "ceo", "team/templates/brief.md", "# Brief\n")
+	writeArticle(t, worker, "cos", "team/people/nazz.md", "# Nazz\n")
+	writeArticle(t, worker, "cos", "team/templates/brief.md", "# Brief\n")
 
 	bp := &operations.Blueprint{
 		WikiSchema: &operations.BlueprintWikiSchema{

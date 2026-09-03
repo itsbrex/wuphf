@@ -122,7 +122,7 @@ func TestOpenAICompatPromptedToolsPrompt_NilSchema(t *testing.T) {
 			"properties": map[string]any{"x": map[string]any{"type": "string"}},
 		}},
 	}
-	out := openAICompatPromptedToolsPrompt("ceo", "ORIGINAL", tools)
+	out := openAICompatPromptedToolsPrompt("cos", "ORIGINAL", tools)
 
 	if !strings.Contains(out, "- no_schema_tool: A tool that has no schema.\n  schema: {}\n") {
 		t.Errorf("nil-schema tool should render `schema: {}`; got:\n%s", out)

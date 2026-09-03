@@ -17,7 +17,7 @@ func TestPushHeadlessEventEncodesDiscriminatorAndPushes(t *testing.T) {
 	pushHeadlessEvent(stream, HeadlessEvent{
 		Type:     HeadlessEventTypeIdle,
 		Provider: HeadlessProviderClaude,
-		Bot:      "ceo",
+		Bot:      "cos",
 		TaskID:   "task-42",
 		Text:     "reply ready · ttft 120ms",
 		Status:   "idle",
@@ -46,7 +46,7 @@ func TestPushHeadlessEventEncodesDiscriminatorAndPushes(t *testing.T) {
 	if decoded.Type != HeadlessEventTypeIdle {
 		t.Fatalf("type: want idle, got %q", decoded.Type)
 	}
-	if decoded.Provider != HeadlessProviderClaude || decoded.Bot != "ceo" {
+	if decoded.Provider != HeadlessProviderClaude || decoded.Bot != "cos" {
 		t.Fatalf("provider/bot: %+v", decoded)
 	}
 	if decoded.StartedAt == "" {
@@ -121,13 +121,13 @@ func TestEmitHeadlessTextDropsEmptyAndCarriesTurn(t *testing.T) {
 	stream := &botStreamBuffer{subs: make(map[int]botStreamSubscriber)}
 
 	// Empty / whitespace-only text must not produce an event.
-	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "ceo", "task-1", "", "claude.text")
-	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "ceo", "task-1", "   ", "claude.text")
+	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "cos", "task-1", "", "claude.text")
+	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "cos", "task-1", "   ", "claude.text")
 	if got := stream.recentTask("task-1"); len(got) != 0 {
 		t.Fatalf("empty text must be dropped, got %d lines: %v", len(got), got)
 	}
 
-	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "ceo", "task-1", "shipping the update", "claude.text")
+	emitHeadlessText(stream, "turn-1", HeadlessProviderClaude, "cos", "task-1", "shipping the update", "claude.text")
 	got := stream.recentTask("task-1")
 	if len(got) != 1 {
 		t.Fatalf("expected 1 text event, got %d: %v", len(got), got)
@@ -223,7 +223,7 @@ func TestEmitHeadlessManifestAggregatesAndSorts(t *testing.T) {
 	// Read called 3 times, Edit called 1 time, Bash called 2 times — expect
 	// Bash×2, Edit×1, Read×3 in alphabetical order.
 	toolNames := []string{"Read", "Bash", "Edit", "Read", "Bash", "Read"}
-	emitHeadlessManifest(stream, "turn-m1", HeadlessProviderClaude, "ceo", "task-99", "",
+	emitHeadlessManifest(stream, "turn-m1", HeadlessProviderClaude, "cos", "task-99", "",
 		toolNames, 1420, metrics, &headlessTokenUsage{InputTokens: 500, OutputTokens: 300})
 
 	lines := stream.recentTask("task-99")
@@ -340,7 +340,7 @@ func TestEmitHeadlessManifestNilStreamIsSafe(t *testing.T) {
 			t.Fatalf("emitHeadlessManifest on nil stream panicked: %v", r)
 		}
 	}()
-	emitHeadlessManifest(nil, "t", HeadlessProviderClaude, "ceo", "task-1", "",
+	emitHeadlessManifest(nil, "t", HeadlessProviderClaude, "cos", "task-1", "",
 		[]string{"Read"}, 100, headlessProgressMetrics{}, nil)
 }
 
@@ -352,7 +352,7 @@ func TestEmitHeadlessManifestNilStreamIsSafe(t *testing.T) {
 func TestEmitHeadlessManifestFiltersEmptyToolNames(t *testing.T) {
 	stream := &botStreamBuffer{subs: make(map[int]botStreamSubscriber)}
 	toolNames := []string{"Read", "", "  ", "Edit", ""}
-	emitHeadlessManifest(stream, "turn-f1", HeadlessProviderClaude, "ceo", "task-f", "",
+	emitHeadlessManifest(stream, "turn-f1", HeadlessProviderClaude, "cos", "task-f", "",
 		toolNames, 0, headlessProgressMetrics{}, nil)
 	lines := stream.recentTask("task-f")
 	if len(lines) != 1 {

@@ -63,7 +63,7 @@ func TestWikiWorkerEnqueueHappyPath(t *testing.T) {
 	defer teardown()
 
 	// Act
-	sha, n, err := worker.Enqueue(context.Background(), "ceo", "team/people/nazz.md",
+	sha, n, err := worker.Enqueue(context.Background(), "cos", "team/people/nazz.md",
 		"# Nazz\n\nFounder.\n", "create", "add nazz brief")
 
 	// Assert
@@ -89,7 +89,7 @@ func TestWikiWorkerEnqueueHappyPath(t *testing.T) {
 		t.Fatal("expected at least one SSE event")
 	}
 	evt := events[0]
-	if evt.Path != "team/people/nazz.md" || evt.AuthorSlug != "ceo" || evt.CommitSHA == "" || evt.Timestamp == "" {
+	if evt.Path != "team/people/nazz.md" || evt.AuthorSlug != "cos" || evt.CommitSHA == "" || evt.Timestamp == "" {
 		t.Fatalf("unexpected event shape: %+v", evt)
 	}
 	// Event must NOT carry article content.
@@ -117,7 +117,7 @@ func TestWikiWorkerQueueSaturation(t *testing.T) {
 	// Act — fill the buffer, then overflow.
 	for i := 0; i < wikiRequestBuffer; i++ {
 		req := wikiWriteRequest{
-			Slug:    "ceo",
+			Slug:    "cos",
 			Path:    "team/people/x.md",
 			Content: "x",
 			Mode:    "create",
@@ -130,7 +130,7 @@ func TestWikiWorkerQueueSaturation(t *testing.T) {
 		}
 	}
 	// Overflow request should get saturated error.
-	_, _, err := worker.Enqueue(context.Background(), "ceo", "team/people/overflow.md",
+	_, _, err := worker.Enqueue(context.Background(), "cos", "team/people/overflow.md",
 		"x", "create", "overflow")
 
 	// Assert
@@ -148,7 +148,7 @@ func TestWikiWorkerStoppedReturnsError(t *testing.T) {
 	}
 	worker := NewWikiWorker(repo, nil)
 	// Never started
-	if _, _, err := worker.Enqueue(context.Background(), "ceo", "team/people/x.md", "x", "create", "m"); !errors.Is(err, ErrWorkerStopped) {
+	if _, _, err := worker.Enqueue(context.Background(), "cos", "team/people/x.md", "x", "create", "m"); !errors.Is(err, ErrWorkerStopped) {
 		t.Fatalf("expected ErrWorkerStopped, got %v", err)
 	}
 }
@@ -195,7 +195,7 @@ func TestWikiWorkerBackupDebounce(t *testing.T) {
 	defer teardown()
 
 	// First write — should trigger a backup.
-	if _, _, err := worker.Enqueue(context.Background(), "ceo", "team/people/a.md", "# a\n", "create", "m"); err != nil {
+	if _, _, err := worker.Enqueue(context.Background(), "cos", "team/people/a.md", "# a\n", "create", "m"); err != nil {
 		t.Fatalf("first enqueue: %v", err)
 	}
 	// Let backup land
@@ -208,7 +208,7 @@ func TestWikiWorkerBackupDebounce(t *testing.T) {
 	}
 
 	// Immediate second write — debounce should skip this backup.
-	if _, _, err := worker.Enqueue(context.Background(), "ceo", "team/people/b.md", "# b\n", "create", "m"); err != nil {
+	if _, _, err := worker.Enqueue(context.Background(), "cos", "team/people/b.md", "# b\n", "create", "m"); err != nil {
 		t.Fatalf("second enqueue: %v", err)
 	}
 	// Without debounce we would expect b.md in backup too within the window,
@@ -235,7 +235,7 @@ func TestWikiSearchReturnsHits(t *testing.T) {
 	worker, _, _, teardown := newStartedWorker(t)
 	defer teardown()
 	ctx := context.Background()
-	if _, _, err := worker.Enqueue(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounded WUPHF in 2026.\n", "create", "m"); err != nil {
+	if _, _, err := worker.Enqueue(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounded WUPHF in 2026.\n", "create", "m"); err != nil {
 		t.Fatalf("enqueue: %v", err)
 	}
 
@@ -269,7 +269,7 @@ func TestWikiReadArticle(t *testing.T) {
 	worker, _, _, teardown := newStartedWorker(t)
 	defer teardown()
 	ctx := context.Background()
-	if _, _, err := worker.Enqueue(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "m"); err != nil {
+	if _, _, err := worker.Enqueue(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "m"); err != nil {
 		t.Fatalf("enqueue: %v", err)
 	}
 	bytes, err := readArticle(worker.Repo(), "team/people/nazz.md")
@@ -330,7 +330,7 @@ func TestBrokerWikiHandlersEndToEnd(t *testing.T) {
 
 	// Act — write an article via POST /wiki/write
 	writeBody, _ := json.Marshal(map[string]any{
-		"slug":           "ceo",
+		"slug":           "cos",
 		"path":           "team/people/nazz.md",
 		"content":        "# Nazz\n\nFounder.\n",
 		"mode":           "create",
@@ -557,7 +557,7 @@ func TestWikiPublishViaBroker(t *testing.T) {
 	b := newTestBroker(t)
 	ch, unsubscribe := b.SubscribeWikiEvents(4)
 	defer unsubscribe()
-	evt := wikiWriteEvent{Path: "team/x.md", CommitSHA: "abc", AuthorSlug: "ceo", Timestamp: "now"}
+	evt := wikiWriteEvent{Path: "team/x.md", CommitSHA: "abc", AuthorSlug: "cos", Timestamp: "now"}
 	b.PublishWikiEvent(evt)
 	select {
 	case got := <-ch:
@@ -726,7 +726,7 @@ func TestWikiWorkerNilIndex_NoPanic(t *testing.T) {
 		<-worker.Done()
 	}()
 
-	sha, n, err := worker.Enqueue(context.Background(), "ceo", "team/people/test.md",
+	sha, n, err := worker.Enqueue(context.Background(), "cos", "team/people/test.md",
 		"# Test\n\nContent.\n", "create", "add test article")
 	if err != nil {
 		t.Fatalf("Enqueue: %v", err)

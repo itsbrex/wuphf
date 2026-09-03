@@ -62,7 +62,7 @@ func TestCreateTelegramChannelRejectsNonTelegramSurface(t *testing.T) {
 	b.channels = append(b.channels, teamChannel{
 		Slug:    "standup",
 		Name:    "Standup",
-		Members: []string{"ceo"},
+		Members: []string{"cos"},
 	})
 	b.mu.Unlock()
 
@@ -86,17 +86,17 @@ func TestCreateTelegramChannelSkipsUnadoptedManifestMembers(t *testing.T) {
 	b := newTestBroker(t)
 	defer b.Stop()
 
-	// Broker has only "ceo". The manifest lists two additional desired-state
+	// Broker has only "cos". The manifest lists two additional desired-state
 	// members that haven't connected yet — use neutral slugs so the test
 	// isn't coupled to any particular bot set.
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO", BuiltIn: true}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO", BuiltIn: true}}
 	b.memberIndex = nil // force lazy rebuild on next findMemberLocked
 	b.mu.Unlock()
 
 	manifestPath := filepath.Join(t.TempDir(), "company.json")
 	raw, err := json.Marshal(company.Manifest{
-		Lead: "ceo",
+		Lead: "cos",
 		Members: []company.MemberSpec{
 			{Slug: "agent-a"},
 			{Slug: "agent-b"},
@@ -119,10 +119,10 @@ func TestCreateTelegramChannelSkipsUnadoptedManifestMembers(t *testing.T) {
 		t.Fatal("got nil channel")
 	}
 
-	// Only the adopted "ceo" must be present. Checking exact set catches a
+	// Only the adopted "cos" must be present. Checking exact set catches a
 	// broken path that returns an empty list.
-	if len(ch.Members) != 1 || ch.Members[0] != "ceo" {
-		t.Fatalf("expected channel members [ceo], got %v", ch.Members)
+	if len(ch.Members) != 1 || ch.Members[0] != "cos" {
+		t.Fatalf("expected channel members [cos], got %v", ch.Members)
 	}
 }
 

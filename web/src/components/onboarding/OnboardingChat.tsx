@@ -31,7 +31,7 @@ import type { CeoSuggestion } from "./types";
 import { useOnboardingState } from "./useOnboardingState";
 
 /** Bot slug used in the broker for the onboarding CEO. */
-const CEO_AGENT_SLUG = "ceo";
+const CEO_AGENT_SLUG = "cos";
 
 /** The broker canonicalises DM channels as pair-sorted slugs. */
 const CEO_ONBOARDING_CHANNEL = directChannelSlug(CEO_AGENT_SLUG);

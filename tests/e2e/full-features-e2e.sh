@@ -182,7 +182,7 @@ assert_api POST "http://127.0.0.1:7890/skills" \
   409 "Duplicate returns 409"
 
 assert_api POST "http://127.0.0.1:7890/skills" \
-  '{"action":"propose","name":"standup-summary","title":"Standup","description":"Daily standup","content":"Summarize","created_by":"ceo","channel":"general"}' \
+  '{"action":"propose","name":"standup-summary","title":"Standup","description":"Daily standup","content":"Summarize","created_by":"cos","channel":"general"}' \
   200 "CEO proposal"
 
 assert_api DELETE "http://127.0.0.1:7890/skills" \
@@ -221,7 +221,7 @@ curl -s -X POST "http://127.0.0.1:7890/messages" \
 curl -s -X POST "http://127.0.0.1:7890/messages" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"ceo","content":"Hello human"}' 2>/dev/null >/dev/null
+  -d '{"channel":"general","from":"cos","content":"Hello human"}' 2>/dev/null >/dev/null
 
 curl -s -X POST "http://127.0.0.1:7890/messages" \
   -H "Content-Type: application/json" \
@@ -232,7 +232,7 @@ sleep 1
 
 # Reset DMs with CEO
 assert_api POST "http://127.0.0.1:7890/reset-dm" \
-  '{"agent":"ceo","channel":"general"}' \
+  '{"agent":"cos","channel":"general"}' \
   200 "Reset DMs with CEO"
 
 # Verify CEO and human DMs gone, PM message kept
@@ -304,13 +304,13 @@ sleep 1
 curl -s -X POST "http://127.0.0.1:7890/messages" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"ceo","content":"Here is my analysis for you.","tagged":[]}' 2>/dev/null >/dev/null
+  -d '{"channel":"general","from":"cos","content":"Here is my analysis for you.","tagged":[]}' 2>/dev/null >/dev/null
 
 # Post a delegation message from CEO to PM (should be hidden in 1:1)
 curl -s -X POST "http://127.0.0.1:7890/messages" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"ceo","content":"@pm please review the roadmap","tagged":["pm"]}' 2>/dev/null >/dev/null
+  -d '{"channel":"general","from":"cos","content":"@pm please review the roadmap","tagged":["pm"]}' 2>/dev/null >/dev/null
 
 sleep 3
 screenshot "t10-1o1-filtering"

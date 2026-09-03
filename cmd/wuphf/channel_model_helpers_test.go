@@ -9,7 +9,7 @@ import (
 
 func TestFilterInsightMessagesKeepsAutomationAndNex(t *testing.T) {
 	messages := []channelui.BrokerMessage{
-		{ID: "m1", From: "ceo", Content: "talk", Kind: "human_decision"},
+		{ID: "m1", From: "cos", Content: "talk", Kind: "human_decision"},
 		{ID: "m2", From: "nex", Content: "policy"},
 		{ID: "m3", From: "fe", Content: "automation tick", Kind: "automation"},
 		{ID: "m4", From: "fe", Content: "regular"},
@@ -150,7 +150,7 @@ func TestRenderUsageStripBuildsBotColumn(t *testing.T) {
 	usage := channelui.UsageState{
 		Bots: map[string]channelui.UsageTotals{
 			"fe":  {InputTokens: 100, OutputTokens: 50, TotalTokens: 150, CostUsd: 0.5},
-			"ceo": {InputTokens: 5, OutputTokens: 1, TotalTokens: 6},
+			"cos": {InputTokens: 5, OutputTokens: 1, TotalTokens: 6},
 		},
 	}
 	members := []channelui.Member{{Slug: "fe", Name: "Frontend"}}

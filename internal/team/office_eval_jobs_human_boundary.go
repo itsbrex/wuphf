@@ -27,14 +27,14 @@ func evalJobHumanBoundary(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// --- (a) E5: placeholder define raises the batched interview ---
 	created, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Send the Q4 renewal outreach",
-		Details: "Renewal outreach emails for the Q4 book.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Renewal outreach emails for the Q4 book.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		return err
 	}
 	taskID := created.Task.ID
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: taskID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: taskID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal: "Email [CONTACT NAME] at Acme about the Q4 renewal",
 			Deliverables: []TaskDeliverable{
@@ -66,7 +66,7 @@ func evalJobHumanBoundary(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// Idempotence: re-defining with the holes still open must not stack a
 	// second interview (the dedupe key + active-interview check both guard).
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: taskID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: taskID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{Goal: "Email [CONTACT NAME] at Acme about the Q4 renewal"},
 	}); err != nil {
 		return err
@@ -79,13 +79,13 @@ func evalJobHumanBoundary(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// front — the batched interview is where access gets granted.
 	accessTask, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Pull the billing export",
-		Details: "Monthly billing export for finance.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Monthly billing export for finance.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		return err
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: accessTask.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: accessTask.Task.ID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:         "Export the month's billing data to the wiki",
 			AccessNeeded: []string{"billing dashboard account"},
@@ -102,13 +102,13 @@ func evalJobHumanBoundary(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// nag the human — the gate fires on genuine gaps only.
 	cleanTask, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Refresh the pricing page copy",
-		Details: "Update the pricing page with the new tiers.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Update the pricing page with the new tiers.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		return err
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: cleanTask.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: cleanTask.Task.ID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Publish the updated pricing page copy with the three new tiers",
 			Deliverables:    []TaskDeliverable{{Name: "pricing copy", Format: "markdown in the wiki"}},

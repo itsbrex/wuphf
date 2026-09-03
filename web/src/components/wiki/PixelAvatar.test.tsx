@@ -14,7 +14,7 @@ describe("<PixelAvatar> (wiki wrapper)", () => {
   });
 
   it("applies a default wiki className when none is provided", () => {
-    const { container } = render(<PixelAvatar slug="ceo" size={14} />);
+    const { container } = render(<PixelAvatar slug="cos" size={14} />);
     const canvas = container.querySelector("canvas");
     expect(canvas?.className).toContain("wk-avatar");
   });

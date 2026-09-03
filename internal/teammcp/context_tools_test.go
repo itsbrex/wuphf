@@ -252,7 +252,7 @@ func TestContextPromoteUsesNotebookPromotionAndUpdatesWorkflow(t *testing.T) {
 		paths = append(paths, r.URL.Path)
 		switch r.URL.Path {
 		case "/notebook/promote":
-			_ = json.NewEncoder(w).Encode(map[string]any{"promotion_id": "rvw-1", "reviewer_slug": "ceo", "state": "pending", "human_only": false})
+			_ = json.NewEncoder(w).Encode(map[string]any{"promotion_id": "rvw-1", "reviewer_slug": "cos", "state": "pending", "human_only": false})
 		case "/tasks/memory-workflow":
 			workflowBody = auth.lastBody
 			_ = json.NewEncoder(w).Encode(map[string]any{"updated": true})

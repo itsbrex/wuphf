@@ -45,7 +45,7 @@ func TestCurrentArtifactSummaryUsesLogsAndWorkflows(t *testing.T) {
 	writeWorkflowRun(t, home, "one", "daily-digest", `{"provider":"one","workflow_key":"daily-digest","run_id":"run-1","status":"success","started_at":"2026-04-07T10:02:00Z","finished_at":"2026-04-07T10:03:00Z"}`)
 
 	m := newChannelModel(false)
-	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve copy", Question: "Approve copy?", From: "ceo"}}
+	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve copy", Question: "Approve copy?", From: "cos"}}
 
 	got := m.currentArtifactSummary()
 	if !strings.Contains(got, "task run") {
@@ -76,7 +76,7 @@ func TestBuildArtifactLinesShowsTaskLogsWorkflowRunsAndApprovals(t *testing.T) {
 		Title:         "Approve launch copy",
 		Question:      "Approve launch copy?",
 		Context:       "Need final sign-off on the launch blurb.",
-		From:          "ceo",
+		From:          "cos",
 		RecommendedID: "approve",
 		CreatedAt:     time.Now().Add(-time.Minute).Format(time.RFC3339),
 	}}

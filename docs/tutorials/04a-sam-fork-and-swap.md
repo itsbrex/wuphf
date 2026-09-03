@@ -21,7 +21,7 @@ ls ~/.wuphf/agents/
 
 #### Verify
 
-- The directory contains one JSON file per bot (`ceo.json`,
+- The directory contains one JSON file per bot (`cos.json`,
   `eng.json`, `dsg.json`, `cmo.json`).
 - Each file has `name`, `slug`, `system_prompt`, and `tools` keys.
 

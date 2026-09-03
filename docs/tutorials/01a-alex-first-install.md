@@ -48,7 +48,7 @@ the first form-fill card immediately.
 #### Verify
 
 - The office shell is visible with a sidebar.
-- The CEO DM is open (`dm:ceo:onboarding`).
+- The CEO DM is open (`dm:cos:onboarding`).
 - A card asking for office name (or first question) is visible.
 - No login screen. No "create your team" wizard.
 

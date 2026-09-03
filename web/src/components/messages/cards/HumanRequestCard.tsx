@@ -7,7 +7,7 @@
  * to render as a bare sentence:
  *
  *   Office 23:58
- *   ❓ @ceo asks you (blocking) (request request-3): Add Prospector to the
+ *   ❓ @cos asks you (blocking) (request request-3): Add Prospector to the
  *   team? Answer it in the Inbox, or reply in this thread.
  *
  * Three things were wrong with that, and this card fixes all three:
@@ -20,7 +20,7 @@
  *     message really is sent by "system" (deliberately — notifyBotsLoop
  *     skips system senders, so attributing it to the asking bot would make the
  *     announcement wake other bots). The card reads the real asker out of the
- *     payload and renders THAT, so the byline is "@ceo asks you".
+ *     payload and renders THAT, so the byline is "@cos asks you".
  *
  *  3. It pointed at "the Inbox", a destination the nav no longer has — the
  *     standalone Inbox was consolidated into Tasks.

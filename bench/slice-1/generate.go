@@ -153,7 +153,7 @@ var people = []person{
 	{"kiran-joshi", "Kiran Joshi", "dunder-mifflin", "it-director"},
 	{"nora-finch", "Nora Finch", "dunder-mifflin", "cfo"},
 	// Northwind
-	{"oscar-delmar", "Oscar Delmar", "northwind", "ceo"},
+	{"oscar-delmar", "Oscar Delmar", "northwind", "cos"},
 	{"tessa-mori", "Tessa Mori", "northwind", "vp-marketing"},
 	{"jonah-pike", "Jonah Pike", "northwind", "partnerships-lead"},
 	{"amina-reyes", "Amina Reyes", "northwind", "head-of-people"},
@@ -868,7 +868,7 @@ func humanizeRole(slug string) string {
 	caps := map[string]string{
 		"vp":  "VP",
 		"cto": "CTO",
-		"ceo": "CEO",
+		"cos": "CEO",
 		"cfo": "CFO",
 		"pm":  "PM",
 		"it":  "IT",

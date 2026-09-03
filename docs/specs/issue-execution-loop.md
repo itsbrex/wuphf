@@ -65,7 +65,7 @@ Human posts work
 - Decision Packet auto-seeded on Issue create (no more "decision packet not yet available" 404)
 - Issues default to `task_type="issue"` (legacy follow_up/research/feature/launch/bugfix get overridden)
 - Tasks created via team_task land in drafting (not in_progress)
-- POST /tasks/{id}/comment emits channel message tagging [ceo, ...@mentions] — wakes bots
+- POST /tasks/{id}/comment emits channel message tagging [cos, ...@mentions] — wakes bots
 - Close Issue button on IssueDocument (two-step with reason)
 
 ## Slice plan (execute in this order)
@@ -230,7 +230,7 @@ Changes:
 - Should "Close issue" run a reject (terminal) or a cancel (soft)?
   Today: reject. Linear's "Cancelled" maps cleanly to this.
 - When the owner is the same as the creator (CEO assigned itself),
-  should the chat card still show "@ceo starting work" or suppress it
+  should the chat card still show "@cos starting work" or suppress it
   as redundant? Decision: show it — even self-assignment is a real
   state change worth surfacing.
 - When auto-resolve creates an Issue on team_action_execute (the

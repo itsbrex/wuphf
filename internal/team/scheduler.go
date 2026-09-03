@@ -331,7 +331,7 @@ func (w *watchdogScheduler) processRequestJob(job schedulerJob) {
 			alert.ID,
 			"watchdog",
 			"Office watchdog",
-			[]string{"ceo"},
+			[]string{"cos"},
 			req.ReplyTo,
 		)
 	}
@@ -478,12 +478,12 @@ func (w *watchdogScheduler) recordLedger(channel, kind, targetID, owner, summary
 	if decisionOwner == "" {
 		decisionKind = "escalate_to_ceo"
 		decisionReason = "The watchdog detected work without a live owner, so the Chief of Staff should re-triage it."
-		decisionOwner = "ceo"
+		decisionOwner = "cos"
 	}
 	if kind == "request_waiting" {
 		decisionKind = "ask_human"
 		decisionReason = "The watchdog detected a pending human decision that is still blocking the team."
-		decisionOwner = "ceo"
+		decisionOwner = "cos"
 		requiresHuman = true
 		blocking = true
 	}

@@ -194,8 +194,8 @@ scenario_01a_alex_first_install() {
   local members channels
   members="$(api GET /office-members | jq -r '[.members[].slug] | sort | join(",")')"
   channels="$(api GET /channels | jq -r '[.channels[].slug] | join(",")')"
-  if [ "$members" != "ceo,executor,planner,reviewer" ]; then
-    record_result "01a" "fail" "expected ceo+planner+executor+reviewer roster, got: $members"
+  if [ "$members" != "cos,executor,planner,reviewer" ]; then
+    record_result "01a" "fail" "expected cos+planner+executor+reviewer roster, got: $members"
     return 1
   fi
   if ! echo "$channels" | grep -q "general"; then
@@ -304,7 +304,7 @@ scenario_04a_sam_forkswap() {
   roster="$(api GET /office-members \
     | jq -r '[.members[] | select(.slug != null and .role != null and .name != null) | .slug] | sort | join(",")' \
     || true)"
-  if [ "$roster" != "ceo,executor,planner,reviewer" ]; then
+  if [ "$roster" != "cos,executor,planner,reviewer" ]; then
     record_result "04a" "fail" "expected 4-agent roster with slug+role+name, got: $roster"
     return 1
   fi

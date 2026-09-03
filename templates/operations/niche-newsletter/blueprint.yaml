@@ -42,7 +42,7 @@ example_artifacts:
     title: "Editorial calendar"
   - kind: report
     title: "Subscriber growth report"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/editorial/**": editor
   "team/audience/**": growth
@@ -51,11 +51,11 @@ employee_blueprints:
   - workflow-automation-builder
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} newsletter."
   kickoff_prompt: "Stand up the {{brand_name}} newsletter end to end. Find the angle, ship the first issue, run the subscriber growth loop, and keep every send to the list and every paid commitment behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

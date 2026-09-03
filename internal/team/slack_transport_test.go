@@ -290,7 +290,7 @@ func newTestBrokerWithSlackChannel(t *testing.T, channelID string) *Broker {
 	b.channels = append(b.channels, teamChannel{
 		Slug:    "slack-general",
 		Name:    "slack-general",
-		Members: []string{"ceo", "pm"},
+		Members: []string{"cos", "pm"},
 		Surface: &channelSurface{
 			Provider:    "slack",
 			RemoteID:    channelID,
@@ -509,7 +509,7 @@ func TestSlackResolveUser(t *testing.T) {
 func TestSlackFormatOutbound(t *testing.T) {
 	tr, _ := newTestSlackTransport(t, "C0123", newFakeSlackAPI())
 
-	out, ok := tr.FormatOutbound(channelMessage{Channel: "slack-general", From: "ceo", Title: "Update", Content: "All good"})
+	out, ok := tr.FormatOutbound(channelMessage{Channel: "slack-general", From: "cos", Title: "Update", Content: "All good"})
 	if !ok {
 		t.Fatal("expected ok=true for mapped channel")
 	}
@@ -602,9 +602,9 @@ func TestSlackFormatOutboundKinds(t *testing.T) {
 		{"agent", channelMessage{From: "pm", Content: "hi"}, "*pm*: hi"},
 		{"system", channelMessage{From: "system", Content: "routing"}, "→ _routing_"},
 		{"automation", channelMessage{Kind: "automation", Source: "github", Content: "merged"}, "🤖 *[github]*: merged"},
-		{"skill", channelMessage{Kind: "skill_invocation", From: "ceo", Content: "x"}, "⚡ *ceo* invoked a skill"},
+		{"skill", channelMessage{Kind: "skill_invocation", From: "cos", Content: "x"}, "⚡ *cos* invoked a skill"},
 		{"proposal", channelMessage{Kind: "skill_proposal", Content: "auto-deploy"}, "💡 *Skill proposed*: auto-deploy"},
-		{"decision", channelMessage{Kind: "interview", From: "ceo", Content: "ship?", Title: "Release"}, "📋 *Decision needed* from ceo\n\nship?\n\n_Release_"},
+		{"decision", channelMessage{Kind: "interview", From: "cos", Content: "ship?", Title: "Release"}, "📋 *Decision needed* from cos\n\nship?\n\n_Release_"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

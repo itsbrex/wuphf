@@ -105,11 +105,11 @@ const STATE_SCAN_DONE = {
 
 // Messages on the CEO DM for the reveal frame — the staggered "✓ <article>"
 // lines that replace the old Step3bAnalysis reveal animation.
-const dmSlug = "dm:ceo:onboarding";
+const dmSlug = "dm:cos:onboarding";
 const SCAN_REVEAL_MESSAGES = [
   {
     id: "msg-1",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "text",
     content: "Office name?",
@@ -117,7 +117,7 @@ const SCAN_REVEAL_MESSAGES = [
   },
   {
     id: "msg-2",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "text",
     content: "What does Acme Billing do?",
@@ -125,7 +125,7 @@ const SCAN_REVEAL_MESSAGES = [
   },
   {
     id: "msg-3",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "text",
     content: "Got a website I can scan for context?",
@@ -133,7 +133,7 @@ const SCAN_REVEAL_MESSAGES = [
   },
   {
     id: "msg-4",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "ceo_scan_chip",
     content: "Scanning anthropic.com…",
@@ -142,7 +142,7 @@ const SCAN_REVEAL_MESSAGES = [
   },
   {
     id: "msg-5",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "ceo_scan_chip",
     content: "Wiki updated ✓",
@@ -155,7 +155,7 @@ const SCAN_REVEAL_MESSAGES = [
   },
   {
     id: "msg-6",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "text",
     content: "✓ team/about/company.md",

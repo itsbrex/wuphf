@@ -22,10 +22,10 @@ func newSharedRoomTestBroker(t *testing.T, room string, tasks ...teamTask) *Brok
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 	}
-	b.channels = []teamChannel{{Slug: room, Name: room, Members: []string{"human", "ceo", "eng"}}}
+	b.channels = []teamChannel{{Slug: room, Name: room, Members: []string{"human", "cos", "eng"}}}
 	b.tasks = tasks
 	return b
 }

@@ -159,7 +159,7 @@ func FlattenThreadMessages(messages []BrokerMessage, expanded map[string]bool) [
 // ThreadParticipants returns the distinct display names of every
 // descendant sender under rootID in walk-order (depth-first, children
 // in slice order). Names are resolved via the package's office
-// directory so a "ceo" slug becomes its display name. The root sender
+// directory so a "cos" slug becomes its display name. The root sender
 // is intentionally excluded — only replies count. A visited set guards
 // against cyclic adjacency so malformed broker data can't hang the
 // walk.

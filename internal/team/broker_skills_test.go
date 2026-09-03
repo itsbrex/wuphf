@@ -43,7 +43,7 @@ func TestHandlePostSkill_RejectsDuplicateName(t *testing.T) {
 			"title":"Dup",
 			"description":"Dup skill body.",
 			"content":"do the thing",
-			"created_by":"ceo",
+			"created_by":"cos",
 			"channel":"team"
 		}`, name))
 		req := httptest.NewRequest(http.MethodPost, "/skills", body)
@@ -121,12 +121,12 @@ func TestInvokeSkillTracksInvokerChannelAndExecutionMetadata(t *testing.T) {
 		Title:     "Bootstrap Automated YouTube Factory",
 		Status:    "active",
 		Channel:   "team",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	b.channels = append(b.channels, teamChannel{
 		Slug:    "youtube-factory",
 		Name:    "YouTube Factory",
-		Members: []string{"ceo", "ops"},
+		Members: []string{"cos", "ops"},
 	})
 	b.mu.Unlock()
 
@@ -169,7 +169,7 @@ func TestInvokeSkillTracksInvokerChannelAndExecutionMetadata(t *testing.T) {
 func TestInvokeSkillCreatesSkillRunTask(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO", Role: "lead"}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO", Role: "lead"}}
 	b.skills = append(b.skills, teamSkill{
 		ID:      "skill-deploy",
 		Name:    "deploy",
@@ -218,8 +218,8 @@ func TestInvokeSkillCreatesSkillRunTask(t *testing.T) {
 	if found.PipelineID != "skill_invocation" {
 		t.Errorf("expected PipelineID=skill_invocation, got %q", found.PipelineID)
 	}
-	if found.Owner != "ceo" {
-		t.Errorf("expected owner=ceo (office lead), got %q", found.Owner)
+	if found.Owner != "cos" {
+		t.Errorf("expected owner=cos (office lead), got %q", found.Owner)
 	}
 	if !strings.Contains(found.Title, "Deploy to Production") {
 		t.Errorf("expected task title to contain skill title, got %q", found.Title)
@@ -236,14 +236,14 @@ func TestInvokeSkillCreatesSkillRunTask(t *testing.T) {
 func TestBuildPromptLeadIncludesSkillAwareness(t *testing.T) {
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "fe", Name: "Frontend Engineer"},
 			},
 		},
 	}
-	prompt := l.buildPrompt("ceo")
+	prompt := l.buildPrompt("cos")
 	if !strings.Contains(prompt, "SKILL & BOT AWARENESS") {
 		t.Fatalf("expected SKILL & BOT AWARENESS block in lead prompt")
 	}
@@ -259,10 +259,10 @@ func TestBuildPromptLeadIncludesSkillAwareness(t *testing.T) {
 func TestSkillCreatePersistenceRoundTrip(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO", Role: "lead"}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO", Role: "lead"}}
 	for i := range b.channels {
 		if b.channels[i].Slug == "team" {
-			b.channels[i].Members = append(b.channels[i].Members, "ceo")
+			b.channels[i].Members = append(b.channels[i].Members, "cos")
 		}
 	}
 	b.mu.Unlock()
@@ -271,7 +271,7 @@ func TestSkillCreatePersistenceRoundTrip(t *testing.T) {
 		"title":"Persist Skill",
 		"description":"Persisted skill",
 		"content":"1. Do the thing",
-		"created_by":"ceo",
+		"created_by":"cos",
 		"channel":"team"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/skills", body)
@@ -352,7 +352,7 @@ func TestHandlePostSkill_WritesWikiFile(t *testing.T) {
 		"title":"Flake Quarantine",
 		"description":"Move repeatedly-flaking E2E tests to a quarantine lane.",
 		"content":"# Flake Quarantine\n\nQuarantine flakes that fail >3 times in 24h.",
-		"created_by":"ceo",
+		"created_by":"cos",
 		"channel":"team",
 		"tags":["qa","ci"]
 	}`)
@@ -391,7 +391,7 @@ func TestHandlePostSkill_RejectsProposeAction(t *testing.T) {
 		"title":"Stale Proposal",
 		"description":"Sent by a stale caller.",
 		"content":"1. Do the thing",
-		"created_by":"ceo",
+		"created_by":"cos",
 		"channel":"team"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/skills", body)
@@ -417,7 +417,7 @@ func TestHandlePostSkill_RequiresDescription(t *testing.T) {
 		"name":"no-desc-skill",
 		"title":"No Description",
 		"content":"step 1.",
-		"created_by":"ceo"
+		"created_by":"cos"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/skills", body)
 	rec := httptest.NewRecorder()
@@ -443,7 +443,7 @@ func TestBackfillSkillFilesFromState_WritesMissingFiles(t *testing.T) {
 		Title:       "Flake Quarantine",
 		Description: "Move flakes to a quarantine lane.",
 		Content:     "# Flake Quarantine\n\nQuarantine flakes.",
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 		Channel:     "team",
 		Status:      "active",
 		CreatedAt:   now,
@@ -456,7 +456,7 @@ func TestBackfillSkillFilesFromState_WritesMissingFiles(t *testing.T) {
 		Title:       "Archived",
 		Description: "Already retired.",
 		Content:     "old body",
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 		Channel:     "team",
 		Status:      "archived",
 		CreatedAt:   now,
@@ -497,7 +497,7 @@ func TestBackfillSkillFilesFromState_PreservesExistingFile(t *testing.T) {
 		"title":"Already On Disk",
 		"description":"Skill that already has SKILL.md.",
 		"content":"# Already On Disk\n\nbody.",
-		"created_by":"ceo",
+		"created_by":"cos",
 		"channel":"team"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/skills", body)

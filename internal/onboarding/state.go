@@ -42,7 +42,7 @@ const (
 
 // CEOOnboardingDMSlug is the reserved channel slug for the CEO onboarding DM.
 // The CEO transcript lives in b.messages under this channel — not in state.
-const CEOOnboardingDMSlug = "dm:ceo:onboarding"
+const CEOOnboardingDMSlug = "dm:cos:onboarding"
 
 // FormAnswers holds the staged deterministic form answers collected during
 // the onboarding conversation. Fields are committed incrementally via
@@ -110,7 +110,7 @@ type State struct {
 	Phase string `json:"phase,omitempty"`
 
 	// CEODMChannelID is the reserved channel slug for the CEO onboarding DM
-	// (dm:ceo:onboarding). The CEO transcript lives in b.messages — not here.
+	// (dm:cos:onboarding). The CEO transcript lives in b.messages — not here.
 	CEODMChannelID string `json:"ceo_dm_channel_id,omitempty"`
 
 	// PendingSuggestion is the last CEO suggestion card emitted that the user

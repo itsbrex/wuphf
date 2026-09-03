@@ -96,13 +96,13 @@ name: Legacy Pack
 kind: legacy
 description: A pack without any of the new pack-preview metadata.
 objective: Prove backwards compatibility.
-default_reviewer: ceo
+default_reviewer: cos
 employee_blueprints:
   - workflow-automation-builder
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   agents:
-    - slug: ceo
+    - slug: cos
       name: CEO
       role: lead
       employee_blueprint: workflow-automation-builder
@@ -113,22 +113,22 @@ starter:
     - slug: command
       name: command
       description: command channel
-      members: [ceo]
+      members: [cos]
     - slug: build
       name: build
       description: build channel
-      members: [ceo]
+      members: [cos]
     - slug: review
       name: review
       description: review channel
-      members: [ceo]
+      members: [cos]
     - slug: notes
       name: notes
       description: notes channel
-      members: [ceo]
+      members: [cos]
   tasks:
     - channel: command
-      owner: ceo
+      owner: cos
       title: "Kick off"
       details: "Kick off the legacy pack."
 `

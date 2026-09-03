@@ -236,7 +236,7 @@ func TestOfficeMembersListIncludesPresence(t *testing.T) {
 	host := &brokerTransportHost{broker: b}
 	if err := host.UpsertParticipant(context.Background(),
 		transport.Participant{AdapterName: openclawAdapterName, Key: "session-ceo"},
-		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "ceo"},
+		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "cos"},
 	); err != nil {
 		t.Fatalf("UpsertParticipant: %v", err)
 	}
@@ -253,24 +253,24 @@ func TestOfficeMembersListIncludesPresence(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	var ceo *officeMemberListEntry
+	var cos *officeMemberListEntry
 	for i := range resp.Members {
-		if resp.Members[i].Slug == "ceo" {
-			ceo = &resp.Members[i]
+		if resp.Members[i].Slug == "cos" {
+			cos = &resp.Members[i]
 			break
 		}
 	}
-	if ceo == nil {
-		t.Fatal("ceo not in /office-members response")
+	if cos == nil {
+		t.Fatal("cos not in /office-members response")
 	}
-	if !ceo.Online {
-		t.Errorf("ceo.online: got false, want true after UpsertParticipant")
+	if !cos.Online {
+		t.Errorf("cos.online: got false, want true after UpsertParticipant")
 	}
-	if ceo.LastSeenAt == "" {
-		t.Errorf("ceo.last_seen_at: got empty, want RFC3339 timestamp")
+	if cos.LastSeenAt == "" {
+		t.Errorf("cos.last_seen_at: got empty, want RFC3339 timestamp")
 	}
-	if _, err := time.Parse(time.RFC3339, ceo.LastSeenAt); err != nil {
-		t.Errorf("last_seen_at not RFC3339: %v (got %q)", err, ceo.LastSeenAt)
+	if _, err := time.Parse(time.RFC3339, cos.LastSeenAt); err != nil {
+		t.Errorf("last_seen_at not RFC3339: %v (got %q)", err, cos.LastSeenAt)
 	}
 }
 
@@ -354,12 +354,12 @@ func TestResetClearsPresenceMaps(t *testing.T) {
 
 	if err := host.UpsertParticipant(context.Background(),
 		transport.Participant{AdapterName: openclawAdapterName, Key: "session-x"},
-		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "ceo"},
+		transport.Binding{Scope: transport.ScopeMember, MemberSlug: "cos"},
 	); err != nil {
 		t.Fatalf("UpsertParticipant: %v", err)
 	}
 	b.mu.Lock()
-	if _, ok := b.memberPresence["ceo"]; !ok {
+	if _, ok := b.memberPresence["cos"]; !ok {
 		b.mu.Unlock()
 		t.Fatal("precondition: presence record not stored")
 	}

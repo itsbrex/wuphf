@@ -37,7 +37,7 @@ appears with a CEO DM open.
 
 ## Stage 2 — CEO greets (deterministic form fills)
 
-The CEO DM is open at `dm:ceo:onboarding`. CEO sends the first card
+The CEO DM is open at `dm:cos:onboarding`. CEO sends the first card
 immediately. No LLM call at this stage.
 
 Each card commits before the next appears:
@@ -99,7 +99,7 @@ the last committed phase:
 
 On reopen, `RootRoute` reads `/onboarding/state`. If `phase` is set and
 `onboarded` is false, the Shell renders `OnboardingDMRoute` and
-redirects generic URLs to `dm:ceo:onboarding`.
+redirects generic URLs to `dm:cos:onboarding`.
 
 ---
 

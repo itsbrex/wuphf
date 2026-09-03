@@ -22,11 +22,11 @@ func newNoHomeNotifTestBroker(t *testing.T) (*Broker, *teamTask) {
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: GeneralChannelSlug, Name: GeneralChannelSlug, Members: []string{"human", "ceo", "eng"}},
+		{Slug: GeneralChannelSlug, Name: GeneralChannelSlug, Members: []string{"human", "cos", "eng"}},
 	}
 	b.tasks = []teamTask{{
 		ID: "OFFICE-77", Title: "Homeless task", Owner: "eng",
@@ -53,19 +53,19 @@ func TestHomelessTaskCardsNeverLandInGeneral(t *testing.T) {
 		fire func(b *Broker, task *teamTask)
 	}{
 		{"reassign", func(b *Broker, task *teamTask) {
-			b.postTaskReassignNotificationsLocked("ceo", task, "designer")
+			b.postTaskReassignNotificationsLocked("cos", task, "designer")
 		}},
 		{"cancel", func(b *Broker, task *teamTask) {
-			b.postTaskCancelNotificationsLocked("ceo", task, "no longer needed")
+			b.postTaskCancelNotificationsLocked("cos", task, "no longer needed")
 		}},
 		{"request_changes", func(b *Broker, task *teamTask) {
-			b.postTaskRequestChangesNotificationsLocked("ceo", task, "needs another pass")
+			b.postTaskRequestChangesNotificationsLocked("cos", task, "needs another pass")
 		}},
 		{"rejected", func(b *Broker, task *teamTask) {
-			b.postTaskRejectedNotificationsLocked("ceo", task, "not this quarter")
+			b.postTaskRejectedNotificationsLocked("cos", task, "not this quarter")
 		}},
 		{"issue_created", func(b *Broker, task *teamTask) {
-			_ = b.postIssueCreatedCardLocked("ceo", task)
+			_ = b.postIssueCreatedCardLocked("cos", task)
 		}},
 	}
 
@@ -101,7 +101,7 @@ func TestTaskCardsStillPostWhenTheTaskHasAHome(t *testing.T) {
 	b.mu.Lock()
 	task.Channel = GeneralChannelSlug
 	before := len(b.messages)
-	b.postTaskReassignNotificationsLocked("ceo", task, "designer")
+	b.postTaskReassignNotificationsLocked("cos", task, "designer")
 	posted := len(b.messages) - before
 	b.mu.Unlock()
 

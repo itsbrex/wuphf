@@ -23,7 +23,7 @@ import (
 // a typed approvalContext and understands steer/hold options this binary gate
 // deliberately does not offer.
 type createApproval struct {
-	// Actor is the requesting bot slug (defaults to "ceo" when empty).
+	// Actor is the requesting bot slug (defaults to "cos" when empty).
 	Actor string
 	// Subject names the thing being created in error copy, already sigiled:
 	// "@growth" for a member, "#launch" for a channel.
@@ -58,7 +58,7 @@ func requireHumanCreateApproval(ctx context.Context, req createApproval) error {
 
 	actor := strings.TrimSpace(req.Actor)
 	if actor == "" {
-		actor = "ceo"
+		actor = "cos"
 	}
 
 	// Advertise ONLY a binary approve/reject pair. These gates have a binary

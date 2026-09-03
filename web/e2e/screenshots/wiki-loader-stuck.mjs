@@ -29,10 +29,10 @@ const STUB_ARTICLE = {
   title: "About",
   content:
     "# About\n\nThis team works on local-first AI agents. The home page is the wiki, and the wiki writes itself as agents do work.",
-  last_edited_by: "ceo",
+  last_edited_by: "cos",
   last_edited_ts: "2026-05-19T12:00:00Z",
   revisions: 4,
-  contributors: ["ceo", "pm"],
+  contributors: ["cos", "pm"],
   backlinks: [],
   word_count: 42,
   categories: ["About"],

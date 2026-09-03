@@ -15296,7 +15296,7 @@ export const KNOWN_AVATAR_SPRITES: Record<string, KnownAvatarSprite> = {
 }
 
 export const KNOWN_AVATAR_SLUG_MAP: Record<string, string> = {
-  "ceo": "hybridCeo",
+  "cos": "hybridCeo",
   "pm": "hybridPm",
   "planner": "hybridPm",
   "product": "hybridPm",

@@ -52,8 +52,8 @@ func TestResolveReviewerNicheCRM(t *testing.T) {
 		{"team/customers/acme-co.md", "growth"},
 		{"team/product/roadmap.md", "builder"},
 		{"team/reviews/q4-retro.md", "reviewer"},
-		{"team/random/other.md", "ceo"},
-		{"", "ceo"},
+		{"team/random/other.md", "cos"},
+		{"", "cos"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestResolveReviewerYoutubeFactory(t *testing.T) {
 		{"team/packaging/ep-01-thumb.md", "packaging-lead"},
 		{"team/growth/shorts-plan.md", "growth-ops"},
 		{"team/revenue/sponsor-tracker.md", "monetization"},
-		{"team/unmatched/thing.md", "ceo"},
+		{"team/unmatched/thing.md", "cos"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {
@@ -94,8 +94,8 @@ func TestResolveReviewerYoutubeFactory(t *testing.T) {
 
 func TestResolveReviewerFallsBackToCEOWhenUnconfigured(t *testing.T) {
 	bp := Blueprint{}
-	if got := bp.ResolveReviewer("team/anything.md"); got != "ceo" {
-		t.Fatalf("expected fallback 'ceo', got %q", got)
+	if got := bp.ResolveReviewer("team/anything.md"); got != "cos" {
+		t.Fatalf("expected fallback 'cos', got %q", got)
 	}
 }
 

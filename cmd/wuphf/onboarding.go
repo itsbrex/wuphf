@@ -984,7 +984,7 @@ func defaultTemplates() []taskTemplate {
 		{ID: "repo-structure", Title: "Set up repo structure", OwnerSlug: "executor"},
 		{ID: "product-spec", Title: "Write the product spec", OwnerSlug: "planner"},
 		{ID: "readme", Title: "Write the README", OwnerSlug: "planner"},
-		{ID: "competitive-audit", Title: "Audit the competition", OwnerSlug: "ceo"},
+		{ID: "competitive-audit", Title: "Audit the competition", OwnerSlug: "cos"},
 	}
 }
 

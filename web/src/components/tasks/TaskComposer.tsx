@@ -125,7 +125,7 @@ export function TaskComposer() {
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const submitLockRef = useRef(false);
 
-  // The configured team lead (default "ceo") is the composer's default owner.
+  // The configured team lead (default "cos") is the composer's default owner.
   const leadSlug = resolveLeadSlug(configQuery.data?.team_lead_slug, members);
   const ownerSlug = ownerChoice ?? leadSlug;
 

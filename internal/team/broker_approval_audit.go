@@ -10,7 +10,7 @@ import (
 // ApprovalAuditEntry is a persisted correlation record connecting a human's
 // approval decision on an action_request to the resulting execution and the
 // chat outcome message that surfaced it. Bug B Layer 2 — the audit trail
-// the inbox UI uses to render "I approved this at 13:15 → @ceo executed it
+// the inbox UI uses to render "I approved this at 13:15 → @cos executed it
 // at 13:16 → outcome was X" underneath an answered request.
 //
 // One entry is written per terminal disposition (executed_ok,

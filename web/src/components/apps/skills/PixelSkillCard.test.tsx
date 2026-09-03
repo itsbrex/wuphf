@@ -188,7 +188,7 @@ describe("<PixelSkillCard>", () => {
     render(
       <PixelSkillCard
         skill={makeSkill({
-          created_by: "ceo",
+          created_by: "cos",
           created_at: "2026-04-01T10:00:00Z",
           updated_at: "2026-05-07T10:00:00Z",
           source: "wiki:grill-me",
@@ -203,7 +203,7 @@ describe("<PixelSkillCard>", () => {
     expect(back.textContent).toContain("Active");
     expect(back.textContent).toContain("Owners");
     expect(back.textContent).toContain("Created by");
-    expect(back.textContent).toContain("@ceo");
+    expect(back.textContent).toContain("@cos");
     expect(back.textContent).toContain("Source");
     expect(back.textContent).toContain("wiki:grill-me");
   });

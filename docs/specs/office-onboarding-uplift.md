@@ -121,7 +121,7 @@ replayable from a Help entry via `requestShowOfficeTour()`. Slide motion uses `s
 when available, synchronous fallback otherwise, disabled under `prefers-reduced-motion`.
 
 **Mock sidebar** (`TourMockupSidebar`): a faithful mock of WUPHF's real left sidebar — workspace
-label, `#general`/`#engineering` channel group, `@ceo`/`@analyst`/`@engineer` bot rows with
+label, `#general`/`#engineering` channel group, `@cos`/`@analyst`/`@engineer` bot rows with
 `PixelAvatar`s. Completion ticks light up per slide so the user watches their office fill in.
 `aria-hidden` on slides.
 

@@ -28,7 +28,7 @@ func TestStylesProduceRenderableOutput(t *testing.T) {
 	styleProducesOutput(t, "ComposerBorderStyle/focus", ComposerBorderStyle(40, true), "x")
 	styleProducesOutput(t, "TimestampStyle", TimestampStyle(), "10:00")
 	styleProducesOutput(t, "MutedTextStyle", MutedTextStyle(), "muted")
-	styleProducesOutput(t, "AgentNameStyle/known", BotNameStyle("ceo"), "CEO")
+	styleProducesOutput(t, "AgentNameStyle/known", BotNameStyle("cos"), "CEO")
 	styleProducesOutput(t, "AgentNameStyle/unknown", BotNameStyle("does-not-exist"), "x")
 	styleProducesOutput(t, "ActiveChannelStyle", ActiveChannelStyle(), "office")
 	styleProducesOutput(t, "DateSeparatorStyle", DateSeparatorStyle(), "today")
@@ -37,7 +37,7 @@ func TestStylesProduceRenderableOutput(t *testing.T) {
 
 func TestBotAvatarKnownAndUnknownSlugs(t *testing.T) {
 	cases := map[string]string{
-		"ceo":      "◆",
+		"cos":      "◆",
 		"pm":       "▣",
 		"fe":       "▤",
 		"be":       "▥",
@@ -58,8 +58,8 @@ func TestBotAvatarKnownAndUnknownSlugs(t *testing.T) {
 }
 
 func TestMascotAccentFallsBackForUnknown(t *testing.T) {
-	if got := MascotAccent("ceo"); got != "⌐" {
-		t.Errorf("ceo accent should be ⌐, got %q", got)
+	if got := MascotAccent("cos"); got != "⌐" {
+		t.Errorf("cos accent should be ⌐, got %q", got)
 	}
 	if got := MascotAccent("does-not-exist"); got != "•" {
 		t.Errorf("unknown slug should fall back to •, got %q", got)
@@ -67,9 +67,9 @@ func TestMascotAccentFallsBackForUnknown(t *testing.T) {
 }
 
 func TestMascotEyesFallsBackForUnknown(t *testing.T) {
-	l, r := MascotEyes("ceo")
+	l, r := MascotEyes("cos")
 	if l != "■" || r != "■" {
-		t.Errorf("ceo eyes should be ■ ■, got %q %q", l, r)
+		t.Errorf("cos eyes should be ■ ■, got %q %q", l, r)
 	}
 	l, r = MascotEyes("ai")
 	if l != "◉" || r != "◉" {

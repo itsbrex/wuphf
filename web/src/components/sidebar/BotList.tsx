@@ -254,14 +254,14 @@ export function BotList() {
   // render it as the orchestrator with specialists listed beneath. The
   // CEO is always rendered first (even if missing — we render a slot so
   // the org chart stays stable), specialists keep the broker's order.
-  const ceo = useMemo(() => agents.find((a) => a.slug === "ceo"), [agents]);
+  const cos = useMemo(() => agents.find((a) => a.slug === "cos"), [agents]);
   const specialists = useMemo(
-    () => agents.filter((a) => a.slug !== "ceo"),
+    () => agents.filter((a) => a.slug !== "cos"),
     [agents],
   );
   const orderedBots = useMemo<typeof agents>(
-    () => (ceo ? [ceo, ...specialists] : specialists),
-    [ceo, specialists],
+    () => (cos ? [cos, ...specialists] : specialists),
+    [cos, specialists],
   );
   const firstBotSlug = orderedBots[0]?.slug;
 
@@ -292,13 +292,13 @@ export function BotList() {
             </div>
           ) : (
             <>
-              {ceo ? (
+              {cos ? (
                 <div className="sidebar-bot-group sidebar-bot-group--ceo">
                   <div className="sidebar-bot-rank-label">Orchestrator</div>
                   <SidebarBotRow
-                    agent={ceo}
-                    isDMActive={activeBotSlug === ceo.slug}
-                    isFirst={ceo.slug === firstBotSlug}
+                    agent={cos}
+                    isDMActive={activeBotSlug === cos.slug}
+                    isFirst={cos.slug === firstBotSlug}
                     showNudge={showNudge}
                     defaultHarness={defaultHarness}
                     onSelect={handleSelect}
@@ -308,7 +308,7 @@ export function BotList() {
               {specialists.length > 0 ? (
                 <div className="sidebar-bot-group sidebar-bot-group--specialists">
                   <div className="sidebar-bot-rank-label">
-                    {ceo ? "Reports to @ceo" : "Specialists"}
+                    {cos ? "Reports to @cos" : "Specialists"}
                   </div>
                   <div className="sidebar-bot-rail-tree">
                     {specialists.map((agent) => (

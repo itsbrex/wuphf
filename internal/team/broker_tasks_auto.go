@@ -43,14 +43,14 @@ func (b *Broker) requestAutoAssignmentLocked(task *teamTask, actor string) {
 	}
 	title := strings.TrimSpace(task.Title)
 	content := fmt.Sprintf(
-		"@ceo Task %s (%s) needs an owner. Pick the best specialist for it and start them on it.",
+		"@cos Task %s (%s) needs an owner. Pick the best specialist for it and start them on it.",
 		task.ID, title,
 	)
 	b.appendMessageLocked(channelMessage{
 		From:      actor,
 		Channel:   channel,
 		Content:   content,
-		Tagged:    []string{"ceo"},
+		Tagged:    []string{"cos"},
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
 	})
 }

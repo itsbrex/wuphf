@@ -31,7 +31,7 @@ func buildOperationStarterTemplate(blueprint operations.Blueprint, pack operatio
 	}
 	replacements := operationBootstrapTemplateReplacements(brandName, commandSlug, niche)
 	starter := blueprint.Starter
-	leadSlug := operationFirstNonEmpty(starter.LeadSlug, "ceo")
+	leadSlug := operationFirstNonEmpty(starter.LeadSlug, "cos")
 	return operationStarterTemplate{
 		ID:     id,
 		Kicker: "Starter plan",

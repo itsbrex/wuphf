@@ -29,7 +29,7 @@ import (
 // see the boundary in the right place.
 func TestHandleBotStreamEmitsReplayEndBoundary(t *testing.T) {
 	b := newTestBroker(t)
-	stream := b.BotStream("ceo")
+	stream := b.BotStream("cos")
 
 	// Pre-seed history. PushTask appends to both the global history and
 	// the per-task slot; we use a task ID so the test exercises the
@@ -43,7 +43,7 @@ func TestHandleBotStreamEmitsReplayEndBoundary(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+"/agent-stream/ceo?task=task-1", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+"/agent-stream/cos?task=task-1", nil)
 	if err != nil {
 		t.Fatalf("request: %v", err)
 	}

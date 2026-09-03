@@ -24,7 +24,7 @@ export function routineOwner(job: SchedulerJob): {
   if (job.target_type === "agent" && job.target_id) {
     return { slug: job.target_id, kind: "agent" };
   }
-  // The owning bot is the office bot that scheduled the job (e.g. "ceo").
+  // The owning bot is the office bot that scheduled the job (e.g. "cos").
   // This is NOT job.provider, which is the integration vendor ("composio" /
   // "one"). A workflow job carries both, so resolve the bot first and never
   // fall back to the vendor as if it were a bot.

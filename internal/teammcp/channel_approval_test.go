@@ -19,7 +19,7 @@ func TestRequireTeamChannelApprovalBypassesWhenUnsafe(t *testing.T) {
 	t.Setenv("WUPHF_UNSAFE", "1")
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	if err := requireTeamChannelApproval(ctx, "ceo", TeamChannelArgs{
+	if err := requireTeamChannelApproval(ctx, "cos", TeamChannelArgs{
 		Channel: "growth", Name: "Growth", Description: "growth experiments",
 	}); err != nil {
 		t.Fatalf("WUPHF_UNSAFE=1 must bypass the channel-approval gate, got err=%v", err)
@@ -63,7 +63,7 @@ func TestRequireTeamChannelApprovalProceedsOnApprove(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	if err := requireTeamChannelApproval(ctx, "ceo", TeamChannelArgs{
+	if err := requireTeamChannelApproval(ctx, "cos", TeamChannelArgs{
 		Channel: "growth", Name: "Growth", Description: "growth experiments",
 		Members: []string{"gtm-lead"},
 	}); err != nil {
@@ -118,7 +118,7 @@ func TestRequireTeamChannelApprovalBlocksOnReject(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	err := requireTeamChannelApproval(ctx, "ceo", TeamChannelArgs{Channel: "growth"})
+	err := requireTeamChannelApproval(ctx, "cos", TeamChannelArgs{Channel: "growth"})
 	if err == nil {
 		t.Fatal("a declined request must return an error so the channel is NOT created")
 	}
@@ -144,7 +144,7 @@ func TestHandleTeamChannelGatesOnlyCreate(t *testing.T) {
 	}
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("WUPHF_UNSAFE", "")
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	var channelWrites atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -170,7 +170,7 @@ func TestHandleTeamChannelGatesOnlyCreate(t *testing.T) {
 	defer cancel()
 
 	// create: gated, human declined -> no write to /channels.
-	res, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{Action: "create", Channel: "growth", MySlug: "ceo"})
+	res, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{Action: "create", Channel: "growth", MySlug: "cos"})
 	if err != nil {
 		t.Fatalf("handler returned a transport error: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestHandleTeamChannelGatesOnlyCreate(t *testing.T) {
 	}
 
 	// remove: not gated -> reaches the broker.
-	if _, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{Action: "remove", Channel: "growth", MySlug: "ceo"}); err != nil {
+	if _, _, err := handleTeamChannel(ctx, nil, TeamChannelArgs{Action: "remove", Channel: "growth", MySlug: "cos"}); err != nil {
 		t.Fatalf("remove returned a transport error: %v", err)
 	}
 	if n := channelWrites.Load(); n != 1 {

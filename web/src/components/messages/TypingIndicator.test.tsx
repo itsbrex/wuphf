@@ -39,12 +39,12 @@ describe("<TypingIndicator>", () => {
     });
     mockUseOfficeMembers.mockReturnValue({
       data: [
-        { slug: "ceo", name: "CEO", status: "active" },
+        { slug: "cos", name: "CEO", status: "active" },
         { slug: "pm", name: "PM", status: "active" },
       ],
     } as unknown as ReturnType<typeof useOfficeMembers>);
     mockUseChannelMembers.mockReturnValue({
-      data: [{ slug: "ceo", name: "CEO" }],
+      data: [{ slug: "cos", name: "CEO" }],
     } as unknown as ReturnType<typeof useChannelMembers>);
 
     render(<TypingIndicator />);
@@ -66,7 +66,7 @@ describe("<TypingIndicator>", () => {
     });
     mockUseOfficeMembers.mockReturnValue({
       data: [
-        { slug: "ceo", name: "CEO", status: "active" },
+        { slug: "cos", name: "CEO", status: "active" },
         { slug: "pm", name: "PM", status: "active" },
       ],
     } as unknown as ReturnType<typeof useOfficeMembers>);
@@ -142,7 +142,7 @@ describe("<TypingIndicator>", () => {
     mockUseOfficeMembers.mockReturnValue({
       data: [
         {
-          slug: "ceo",
+          slug: "cos",
           name: "CEO",
           status: "active",
           liveActivity: rawToolJSON,
@@ -150,7 +150,7 @@ describe("<TypingIndicator>", () => {
       ],
     } as unknown as ReturnType<typeof useOfficeMembers>);
     mockUseChannelMembers.mockReturnValue({
-      data: [{ slug: "ceo", name: "CEO" }],
+      data: [{ slug: "cos", name: "CEO" }],
     } as unknown as ReturnType<typeof useChannelMembers>);
 
     render(<TypingIndicator />);

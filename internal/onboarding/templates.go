@@ -34,7 +34,7 @@ func DefaultTemplates() []TaskTemplate {
 		{ID: "repo", Title: "Set up repo structure", Description: "Folders, README, CI scaffold. Worth document everything.", OwnerSlug: "executor"},
 		{ID: "spec", Title: "Write the product spec", Description: "What we're building, why, and what done looks like. Michael would skip this step.", OwnerSlug: "planner"},
 		{ID: "readme", Title: "Write the README", Description: "Installation, usage, one example. Short enough that someone actually reads it.", OwnerSlug: "planner"},
-		{ID: "audit", Title: "Audit the competition", Description: "What they do, what they miss, where we win. No memos. Just findings.", OwnerSlug: "ceo"},
+		{ID: "audit", Title: "Audit the competition", Description: "What they do, what they miss, where we win. No memos. Just findings.", OwnerSlug: "cos"},
 	}
 }
 

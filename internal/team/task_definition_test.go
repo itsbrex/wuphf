@@ -9,19 +9,19 @@ import (
 	"testing"
 )
 
-// newDefineTestBroker returns a broker with a general channel and a ceo+eng
+// newDefineTestBroker returns a broker with a general channel and a cos+eng
 // roster, so the CEO-managed scope gate engages (officeLeadSlugFrom resolves
-// "ceo" and "eng" is a registered specialist).
+// "cos" and "eng" is a registered specialist).
 func newDefineTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "broker-state.json"))
 	b.mu.Lock()
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -92,7 +92,7 @@ func TestTaskDefinitionWireRoundTrip(t *testing.T) {
 			AccessNeeded:    []string{"none"},
 			DefinedAt:       "2026-06-10T00:00:00Z",
 		},
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		CreatedAt: "2026-06-10T00:00:00Z",
 		UpdatedAt: "2026-06-10T00:00:00Z",
 	}
@@ -119,7 +119,7 @@ func TestTaskDefinitionWireRoundTrip(t *testing.T) {
 	// Additive contract: legacy state without the key loads with a nil
 	// Definition.
 	var legacy teamTask
-	if err := json.Unmarshal([]byte(`{"id":"task-old","title":"t","status":"open","created_by":"ceo","created_at":"x","updated_at":"x"}`), &legacy); err != nil {
+	if err := json.Unmarshal([]byte(`{"id":"task-old","title":"t","status":"open","created_by":"cos","created_at":"x","updated_at":"x"}`), &legacy); err != nil {
 		t.Fatalf("legacy unmarshal: %v", err)
 	}
 	if legacy.Definition != nil {
@@ -132,7 +132,7 @@ func TestMutateTaskDefine(t *testing.T) {
 	b := newDefineTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Launch the newsletter",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -140,7 +140,7 @@ func TestMutateTaskDefine(t *testing.T) {
 
 	// Missing goal → invalid.
 	_, err = b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "cos",
 		Definition: &TaskDefinition{},
 	})
 	var mErr *TaskMutationError
@@ -150,7 +150,7 @@ func TestMutateTaskDefine(t *testing.T) {
 
 	// Happy path: definition + verification in the same call.
 	res, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "send the first newsletter",
 			Deliverables:    []TaskDeliverable{{Name: "draft", Format: "markdown"}},
@@ -175,7 +175,7 @@ func TestMutateTaskDefine(t *testing.T) {
 	// Re-define updates the definition but must NOT overwrite an
 	// established verification gate.
 	res, err = b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "cos",
 		Definition:       &TaskDefinition{Goal: "send the first newsletter to partners only"},
 		VerificationKind: "command", VerificationSpec: "exit 1", VerificationRequired: true,
 	})
@@ -243,13 +243,13 @@ func TestExecutionPacketCarriesDefinition(t *testing.T) {
 	b := newDefineTestBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Launch the newsletter",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "team", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "first partner newsletter shipped",
 			Deliverables:    []TaskDeliverable{{Name: "draft", Format: "markdown in the wiki"}},
@@ -261,7 +261,7 @@ func TestExecutionPacketCarriesDefinition(t *testing.T) {
 	}
 
 	l := launcherForBrokerFixture(b)
-	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *b.TaskByID(created.Task.ID), "Task assigned to you.")
+	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *b.TaskByID(created.Task.ID), "Task assigned to you.")
 	for _, want := range []string{
 		"DEFINITION (the contract you execute against):",
 		"Goal: first partner newsletter shipped",
