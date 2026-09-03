@@ -137,7 +137,7 @@
   --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* Agent event bubble — state colors. Used by .sidebar-agent-pill states. */
+  /* Agent event bubble — state colors. Used by .sidebar-bot-pill states. */
   --bubble-shipping: #2a8f4c; /* shipping events — green */
   --bubble-plotting: #5a6bc8; /* plotting/thinking events — slate blue */
   --bubble-talking: #ecb22e; /* talking/responding events — WUPHF yellow */

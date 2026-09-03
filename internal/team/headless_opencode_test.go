@@ -167,7 +167,7 @@ func TestWriteHeadlessOpencodeMCPConfigLogsBaseConfigParseFailure(t *testing.T) 
 		t.Fatalf("writeHeadlessOpencodeMCPConfig: %v", err)
 	}
 
-	logBytes, err := os.ReadFile(filepath.Join(logDir, "headless-codex-ceo.log"))
+	logBytes, err := os.ReadFile(filepath.Join(logDir, "headless-codex-cos.log"))
 	if err != nil {
 		t.Fatalf("read bot log: %v", err)
 	}

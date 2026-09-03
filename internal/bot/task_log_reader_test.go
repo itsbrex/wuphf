@@ -21,7 +21,7 @@ func TestListRecentTasks_EmptyDir(t *testing.T) {
 func TestListRecentTasks_OrdersByMtimeDesc(t *testing.T) {
 	dir := t.TempDir()
 	oldLog := filepath.Join(dir, "eng-100", "output.log")
-	newLog := filepath.Join(dir, "ceo-200", "output.log")
+	newLog := filepath.Join(dir, "cos-200", "output.log")
 	mustWriteLog(t, oldLog, `{"tool_name":"grep_search"}`+"\n")
 	mustWriteLog(t, newLog, `{"tool_name":"send_message"}`+"\n")
 
@@ -42,8 +42,8 @@ func TestListRecentTasks_OrdersByMtimeDesc(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("expected 2 tasks, got %d", len(got))
 	}
-	if got[0].TaskID != "ceo-200" {
-		t.Fatalf("expected ceo-200 first (newest), got %s", got[0].TaskID)
+	if got[0].TaskID != "cos-200" {
+		t.Fatalf("expected cos-200 first (newest), got %s", got[0].TaskID)
 	}
 	if got[0].BotSlug != "cos" {
 		t.Fatalf("expected bot slug cos, got %s", got[0].BotSlug)

@@ -205,11 +205,11 @@ html[data-theme] body .sidebar-rail-popover .sidebar-item.active {
   background: var(--accent-bg);
   color: var(--text);
 }
-html[data-theme] body .sidebar-rail-popover .sidebar-agent-name {
+html[data-theme] body .sidebar-rail-popover .sidebar-bot-name {
   color: inherit;
 }
 .sidebar-rail-popover .sidebar-bot-task,
-.sidebar-rail-popover .sidebar-agent-activity {
+.sidebar-rail-popover .sidebar-bot-activity {
   color: var(--text-tertiary);
 }
 .sidebar-rail-popover .sidebar-agents,
@@ -1133,15 +1133,15 @@ html[data-theme="nex"]
    The CEO row sits at the top with an "Orchestrator" pill; specialists
    sit beneath under a "Reports to @cos" label with a left-rail tree
    stem on each row so the org chart is obvious at a glance. */
-.sidebar-agent-group {
+.sidebar-bot-group {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.sidebar-agent-group + .sidebar-agent-group {
+.sidebar-bot-group + .sidebar-bot-group {
   margin-top: 8px;
 }
-.sidebar-agent-rank-label {
+.sidebar-bot-rank-label {
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.6px;
@@ -1150,31 +1150,31 @@ html[data-theme="nex"]
   padding: 0 10px;
   margin-bottom: 2px;
 }
-.sidebar-agent-group--ceo .sidebar-agent {
+.sidebar-bot-group--ceo .sidebar-agent {
   background: color-mix(in srgb, var(--accent, #6cf) 8%, transparent);
   border: 1px solid color-mix(in srgb, var(--accent, #6cf) 24%, transparent);
 }
-.sidebar-agent-group--ceo .sidebar-agent.active {
+.sidebar-bot-group--ceo .sidebar-agent.active {
   background: color-mix(in srgb, var(--accent, #6cf) 18%, transparent);
 }
-.sidebar-agent-rail-tree {
+.sidebar-bot-rail-tree {
   display: flex;
   flex-direction: column;
   gap: 1px;
   padding-left: 6px;
 }
-.sidebar-agent-rail-tree-row {
+.sidebar-bot-rail-tree-row {
   position: relative;
   display: flex;
   align-items: stretch;
   gap: 6px;
 }
-.sidebar-agent-rail-tree-stem {
+.sidebar-bot-rail-tree-stem {
   flex: 0 0 12px;
   align-self: stretch;
   position: relative;
 }
-.sidebar-agent-rail-tree-stem::before {
+.sidebar-bot-rail-tree-stem::before {
   /* Vertical trunk that runs the full row height. */
   content: "";
   position: absolute;
@@ -1184,7 +1184,7 @@ html[data-theme="nex"]
   width: 1px;
   background: var(--border, rgba(255, 255, 255, 0.18));
 }
-.sidebar-agent-rail-tree-stem::after {
+.sidebar-bot-rail-tree-stem::after {
   /* Elbow into the row at vertical midpoint. */
   content: "";
   position: absolute;
@@ -1194,11 +1194,11 @@ html[data-theme="nex"]
   height: 1px;
   background: var(--border, rgba(255, 255, 255, 0.18));
 }
-.sidebar-agent-rail-tree-row:last-child .sidebar-agent-rail-tree-stem::before {
+.sidebar-bot-rail-tree-row:last-child .sidebar-bot-rail-tree-stem::before {
   /* Trunk stops at the elbow on the last specialist. */
   bottom: 50%;
 }
-.sidebar-agent-rail-tree-row .sidebar-agent-row {
+.sidebar-bot-rail-tree-row .sidebar-bot-row {
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -1249,7 +1249,7 @@ html[data-theme="nex"]
   color: var(--text);
   font-weight: 600;
 }
-.sidebar-agent-name {
+.sidebar-bot-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -1264,7 +1264,7 @@ html[data-theme="nex"]
   white-space: nowrap;
   max-width: 140px;
 }
-.sidebar-agent-wrap {
+.sidebar-bot-wrap {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1278,15 +1278,15 @@ html[data-theme="nex"]
 
 /* Tier 2 hover peek — chevron trigger.
    The trigger is a sibling of the row button (nested <button> would be
-   invalid HTML), absolutely positioned inside the .sidebar-agent-row
+   invalid HTML), absolutely positioned inside the .sidebar-bot-row
    wrapper. It sits between the pill end and the status-dot:
    - status-dot is at right ~10-12px (row padding 10px + 6px dot)
    - chevron sits at right 24px (10px row padding + 6px dot + 8px gap),
      leaving ~6px between the chevron and the status-dot. */
-.sidebar-agent-row {
+.sidebar-bot-row {
   position: relative;
 }
-.sidebar-agent-peek-trigger {
+.sidebar-bot-peek-trigger {
   position: absolute;
   top: 50%;
   right: 24px;
@@ -1306,21 +1306,21 @@ html[data-theme="nex"]
   transition: opacity 120ms ease-out;
   border-radius: var(--radius-sm);
 }
-.sidebar-agent-row:hover .sidebar-agent-peek-trigger,
-.sidebar-agent-row:focus-within .sidebar-agent-peek-trigger,
-.sidebar-agent-peek-trigger[aria-expanded="true"] {
+.sidebar-bot-row:hover .sidebar-bot-peek-trigger,
+.sidebar-bot-row:focus-within .sidebar-bot-peek-trigger,
+.sidebar-bot-peek-trigger[aria-expanded="true"] {
   opacity: 1;
   pointer-events: auto;
 }
-.sidebar-agent-peek-trigger:hover {
+.sidebar-bot-peek-trigger:hover {
   color: var(--text);
 }
-.sidebar-agent-peek-trigger:focus-visible {
+.sidebar-bot-peek-trigger:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-agent-peek-trigger {
+  .sidebar-bot-peek-trigger {
     transition: none;
   }
 }
@@ -1379,7 +1379,7 @@ html[data-theme="nex"]
 .sidebar-apps:hover::-webkit-scrollbar-thumb {
   background: var(--border-dark);
 }
-.sidebar-agent-avatar {
+.sidebar-bot-avatar {
   width: 24px;
   height: 24px;
   display: inline-flex;
@@ -2711,7 +2711,7 @@ html[data-theme="nex"]
    --text-tertiary). State drives chrome via `data-state`.
    See web/DESIGN.md and the agent-event-bubbles design doc.
    ─────────────────────────────────────────────────────────────── */
-.sidebar-agent-pill {
+.sidebar-bot-pill {
   /* block, not inline — text-overflow/max-width/overflow only apply to
      a box, otherwise long activity strings spill past the slot. */
   display: block;
@@ -2730,21 +2730,21 @@ html[data-theme="nex"]
   will-change: opacity, filter;
 }
 
-.sidebar-agent-pill[data-state="halo"] {
+.sidebar-bot-pill[data-state="halo"] {
   /* Halo glow uses filter (compositor-friendly) instead of box-shadow on
      the layout-affecting border edge. */
   filter: drop-shadow(0 0 var(--bubble-halo-radius) var(--bubble-talking));
 }
 
-.sidebar-agent-pill[data-state="holding"] {
+.sidebar-bot-pill[data-state="holding"] {
   opacity: 1;
 }
 
-.sidebar-agent-pill[data-state="dim"] {
+.sidebar-bot-pill[data-state="dim"] {
   opacity: 0.7;
 }
 
-.sidebar-agent-pill[data-state="idle"] {
+.sidebar-bot-pill[data-state="idle"] {
   /* Was 0.5, which double-dimmed: --text-tertiary is ALREADY the muted
      signal (rgba(255,255,255,0.58) inside the sidebar), so halving it
      again landed the agent's status line at 2.1-2.6:1 in every theme —
@@ -2755,7 +2755,7 @@ html[data-theme="nex"]
   font-style: italic;
 }
 
-.sidebar-agent-pill[data-state="stuck"] {
+.sidebar-bot-pill[data-state="stuck"] {
   /* Bordered chrome is structural — it carries the stuck signal under
      reduced-motion where halo and opacity transitions are suppressed. */
   border: 1px solid var(--bubble-stuck);
@@ -2766,12 +2766,12 @@ html[data-theme="nex"]
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .sidebar-agent-pill {
+  .sidebar-bot-pill {
     transition:
       opacity var(--bubble-idle-dim-duration) ease-out,
       filter var(--bubble-halo-duration) ease-out;
   }
-  .sidebar-agent-pill[data-state="halo"] {
+  .sidebar-bot-pill[data-state="halo"] {
     transition:
       opacity var(--bubble-pulse-fade-in) ease-out,
       filter var(--bubble-halo-duration) ease-out;
@@ -2779,10 +2779,10 @@ html[data-theme="nex"]
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-agent-pill {
+  .sidebar-bot-pill {
     transition: none;
   }
-  .sidebar-agent-pill[data-state="halo"] {
+  .sidebar-bot-pill[data-state="halo"] {
     /* No halo glow under reduced motion. Border on stuck still renders
        because it is structural, not motion. */
     filter: none;
@@ -2798,7 +2798,7 @@ html[data-theme="nex"]
    stacked zero-blur box-shadows, and a chunky pixel tail
    pointing up-left toward the agent avatar.
    ─────────────────────────────────────────────────────────────── */
-.sidebar-agent-nudge {
+.sidebar-bot-nudge {
   display: inline-block;
   position: relative;
   margin: 6px 16px 10px 40px;
@@ -2829,7 +2829,7 @@ html[data-theme="nex"]
    bubble top edge toward the avatar. Each block is yellow with
    black side borders; the upper block also paints its own top
    border so the staircase reads as a solid outlined arrow. */
-.sidebar-agent-nudge::before {
+.sidebar-bot-nudge::before {
   content: "";
   position: absolute;
   top: -4px;
@@ -2841,7 +2841,7 @@ html[data-theme="nex"]
     -2px 0 0 0 var(--neutral-950),
     2px 0 0 0 var(--neutral-950);
 }
-.sidebar-agent-nudge::after {
+.sidebar-bot-nudge::after {
   content: "";
   position: absolute;
   top: -8px;
@@ -2856,11 +2856,11 @@ html[data-theme="nex"]
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .sidebar-agent-nudge {
-    animation: sidebar-agent-nudge-bob 1.6s ease-in-out infinite;
+  .sidebar-bot-nudge {
+    animation: sidebar-bot-nudge-bob 1.6s ease-in-out infinite;
   }
 }
-@keyframes sidebar-agent-nudge-bob {
+@keyframes sidebar-bot-nudge-bob {
   0%,
   100% {
     transform: translateY(0);
@@ -2967,7 +2967,7 @@ html[data-theme="nex"]
    style; width/max-height are structural CSS.
    See web/DESIGN.md "Tier 2 hover peek" section.
    ─────────────────────────────────────────────────────────────── */
-.sidebar-agent-peek {
+.sidebar-bot-peek {
   position: fixed;
   width: 320px;
   max-height: 360px;
@@ -2984,13 +2984,13 @@ html[data-theme="nex"]
   transform: translateY(0);
 }
 
-.sidebar-agent-peek[data-stuck="true"] {
+.sidebar-bot-peek[data-stuck="true"] {
   border-color: var(--bubble-stuck);
 }
 
 /* Open animation — slide up from 6px below the anchor. */
 @media (prefers-reduced-motion: no-preference) {
-  .sidebar-agent-peek {
+  .sidebar-bot-peek {
     animation: peek-in 0.14s ease-out;
   }
 }
@@ -3005,21 +3005,21 @@ html[data-theme="nex"]
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sidebar-agent-peek {
+  .sidebar-bot-peek {
     animation: none;
     transition: none;
   }
 }
 
 /* Header strip */
-.sidebar-agent-peek-header {
+.sidebar-bot-peek-header {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 12px 6px;
   flex-shrink: 0;
 }
-.sidebar-agent-peek-avatar {
+.sidebar-bot-peek-avatar {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -3033,14 +3033,14 @@ html[data-theme="nex"]
   flex-shrink: 0;
   user-select: none;
 }
-.sidebar-agent-peek-identity {
+.sidebar-bot-peek-identity {
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: 0;
   flex: 1;
 }
-.sidebar-agent-peek-name {
+.sidebar-bot-peek-name {
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
@@ -3048,7 +3048,7 @@ html[data-theme="nex"]
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sidebar-agent-peek-role {
+.sidebar-bot-peek-role {
   font-size: 10px;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
@@ -3056,7 +3056,7 @@ html[data-theme="nex"]
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sidebar-agent-peek-presence {
+.sidebar-bot-peek-presence {
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -3065,17 +3065,17 @@ html[data-theme="nex"]
   font-family: var(--font-mono);
   white-space: nowrap;
 }
-.sidebar-agent-peek-presence[data-state="online"] {
+.sidebar-bot-peek-presence[data-state="online"] {
   color: var(--green-dark, var(--text-secondary));
 }
-.sidebar-agent-peek-presence-dot {
+.sidebar-bot-peek-presence-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: var(--green, #03a04c);
   flex-shrink: 0;
 }
-.sidebar-agent-peek-blocked-chip {
+.sidebar-bot-peek-blocked-chip {
   flex-shrink: 0;
   font-size: 9px;
   font-weight: 700;
@@ -3089,14 +3089,14 @@ html[data-theme="nex"]
 }
 
 /* State chip + relative time row */
-.sidebar-agent-peek-state-row {
+.sidebar-bot-peek-state-row {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 0 12px 8px;
   flex-shrink: 0;
 }
-.sidebar-agent-peek-state-chip {
+.sidebar-bot-peek-state-chip {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -3105,26 +3105,26 @@ html[data-theme="nex"]
   padding: 1px 5px;
   border-radius: 4px;
 }
-.sidebar-agent-peek-state-chip[data-kind="routine"] {
+.sidebar-bot-peek-state-chip[data-kind="routine"] {
   color: var(--bubble-plotting);
   background: rgba(90, 107, 200, 0.1);
 }
-.sidebar-agent-peek-state-chip[data-kind="milestone"] {
+.sidebar-bot-peek-state-chip[data-kind="milestone"] {
   color: var(--bubble-shipping);
   background: rgba(42, 143, 76, 0.1);
 }
-.sidebar-agent-peek-state-chip[data-kind="stuck"] {
+.sidebar-bot-peek-state-chip[data-kind="stuck"] {
   color: var(--bubble-stuck);
   background: rgba(200, 84, 42, 0.1);
 }
-.sidebar-agent-peek-time {
+.sidebar-bot-peek-time {
   font-size: 11px;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
 }
 
 /* Current thought block — detail text, 3-line clamp with bottom fade */
-.sidebar-agent-peek-detail {
+.sidebar-bot-peek-detail {
   font-size: 14px;
   color: var(--text-secondary);
   line-height: 1.45;
@@ -3142,7 +3142,7 @@ html[data-theme="nex"]
 
 /* Empty-state line — shown only when no SSE event has arrived for this
    agent yet. Sits where the state row + detail block would normally render. */
-.sidebar-agent-peek-empty {
+.sidebar-bot-peek-empty {
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-tertiary);
@@ -3151,7 +3151,7 @@ html[data-theme="nex"]
 }
 
 /* RECENT header + scrollable list */
-.sidebar-agent-peek-recent-section {
+.sidebar-bot-peek-recent-section {
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -3159,7 +3159,7 @@ html[data-theme="nex"]
   flex: 1 1 auto;
   overflow: hidden;
 }
-.sidebar-agent-peek-recent-header {
+.sidebar-bot-peek-recent-header {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -3169,35 +3169,35 @@ html[data-theme="nex"]
   flex-shrink: 0;
   font-family: var(--font-mono);
 }
-.sidebar-agent-peek-recent {
+.sidebar-bot-peek-recent {
   list-style: none;
   margin: 0;
   padding: 0 0 4px;
   overflow-y: auto;
   flex: 1 1 auto;
 }
-.sidebar-agent-peek-recent-item {
+.sidebar-bot-peek-recent-item {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 3px 12px;
 }
-.sidebar-agent-peek-dot {
+.sidebar-bot-peek-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.sidebar-agent-peek-dot[data-kind="routine"] {
+.sidebar-bot-peek-dot[data-kind="routine"] {
   background: var(--bubble-plotting);
 }
-.sidebar-agent-peek-dot[data-kind="milestone"] {
+.sidebar-bot-peek-dot[data-kind="milestone"] {
   background: var(--bubble-shipping);
 }
-.sidebar-agent-peek-dot[data-kind="stuck"] {
+.sidebar-bot-peek-dot[data-kind="stuck"] {
   background: var(--bubble-stuck);
 }
-.sidebar-agent-peek-recent-text {
+.sidebar-bot-peek-recent-text {
   font-size: 11px;
   color: var(--text-secondary);
   flex: 1;
@@ -3206,7 +3206,7 @@ html[data-theme="nex"]
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sidebar-agent-peek-recent-time {
+.sidebar-bot-peek-recent-time {
   font-size: 10px;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
@@ -3215,7 +3215,7 @@ html[data-theme="nex"]
 }
 
 /* Footer — plain text, not a button. Enter key drives the action. */
-.sidebar-agent-peek-footer {
+.sidebar-bot-peek-footer {
   border-top: 1px solid var(--border-light);
   padding: 6px 12px;
   font-size: 11px;

@@ -24,7 +24,7 @@ func TestActionGrantExactMatchOnly(t *testing.T) {
 		t.Fatalf("exact grant did not match")
 	}
 	// Case-insensitive on all three keys.
-	if !b.hasActiveActionGrant("CEO", "Gmail", "gmail_send_email", now) {
+	if !b.hasActiveActionGrant("COS", "Gmail", "gmail_send_email", now) {
 		t.Fatalf("grant match should be case-insensitive")
 	}
 	for _, c := range []struct{ bot, platform, action, label string }{
