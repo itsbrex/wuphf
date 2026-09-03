@@ -10,7 +10,7 @@
   </a>
 </p>
 
-### Build a microapp for every manual workflow.
+### Open source grok bot. Local VMs as computers for each bot. They build microapps to manage all your work.
 
 gawkbot lets anyone turn their manual workflows into microapps across 1200+
 integrations in minutes. Describe the job in one sentence — or demo it once on
