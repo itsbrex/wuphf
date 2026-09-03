@@ -171,6 +171,27 @@ html[data-theme^="nex"] ::selection {
 /* ═══════════════════════════════════════
    SIDEBAR
    ═══════════════════════════════════════ */
+
+/* Snapshot of the ACTIVE theme's text ramp, taken on <html> where --text
+   still holds the theme's own value. The sidebar block below remaps --text
+   to white-on-brand for its rail; anything nested under the sidebar that is
+   NOT the rail (dialogs, wizard overlays) restores from these.
+
+   Captured on <html> deliberately: a `--text-root: var(--text)` written
+   inside the .sidebar block would resolve against that element's ALREADY
+   overridden --text and hand back white. Only an ancestor that never
+   overrides --text can hold the true value.
+
+   This resolves per theme, so nex (light), nex-shell and nex-dark each get
+   their own ink back — no palette is duplicated here, and a retune of any
+   theme's --text flows through automatically. */
+html[data-theme^="nex"] {
+  --text-root: var(--text);
+  --text-secondary-root: var(--text-secondary);
+  --text-tertiary-root: var(--text-tertiary);
+  --text-disabled-root: var(--text-disabled);
+}
+
 html[data-theme^="nex"] .sidebar {
   background: var(--nex-sidebar);
   border-right: 1px solid rgba(0, 0, 0, 0.12);
@@ -188,23 +209,30 @@ html[data-theme^="nex"] .sidebar {
   --text-disabled: rgba(255, 255, 255, 0.4);
 }
 /* Modal/wizard overlays portal-ish into the sidebar DOM and inherit the
-   white-on-purple text vars — which makes their content invisible on
-   the modal's white card. Reset to the global light-theme palette inside
-   any dialog/overlay anchored under the sidebar. */
+   white-on-purple text vars — which makes their content invisible on the
+   modal's card. The reset below puts the theme's own ink back.
+
+   It restores from --text-*-root rather than re-declaring a palette,
+   because this file is the shared BASE for the dark themes too:
+   nex-shell.css and nex-dark.css both `@import url("./nex.css")`, and the
+   sidebar selectors here are prefix matches ([data-theme^="nex"]), so they
+   apply under nex-shell and nex-dark as well.
+
+   This block used to hardcode the LIGHT palette (--neutral-900 ink), on the
+   assumption named in the old comment: "invisible on the modal's white
+   card". Under nex-shell the card is not white, it is hsl(210 5% 10%) — so
+   the reset painted #28292a ink on a #131416 card, a contrast ratio of
+   1.2:1. Every label, the "Create agent" heading, and every input
+   placeholder in the New Agent wizard were unreadable (reported
+   2026-09-03). Restoring from the root tokens is correct in all three
+   themes and cannot drift when a palette is retuned. */
 html[data-theme^="nex"] .sidebar [role="dialog"],
 html[data-theme^="nex"] .sidebar .agent-wizard-overlay,
 html[data-theme^="nex"] .sidebar .channel-wizard-overlay {
-  --text: var(--neutral-900);
-  --text-secondary: var(--neutral-500);
-  /* Must mirror global.css's --text-tertiary: this block resets the
-     sidebar's white-on-purple remap back to the light palette, so it
-     cannot self-reference the token it is overriding. */
-  --text-tertiary: color-mix(
-    in srgb,
-    var(--neutral-500) 70%,
-    var(--neutral-400)
-  );
-  --text-disabled: var(--neutral-300);
+  --text: var(--text-root);
+  --text-secondary: var(--text-secondary-root);
+  --text-tertiary: var(--text-tertiary-root);
+  --text-disabled: var(--text-disabled-root);
 }
 html[data-theme^="nex"] .sidebar .sidebar-logo {
   color: #ffffff;

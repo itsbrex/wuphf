@@ -2534,8 +2534,8 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   text-align: left;
 }
 .request-card--blocking {
-  background: color-mix(in srgb, var(--warning, #d97706) 7%, var(--bg-card));
-  border-color: color-mix(in srgb, var(--warning, #d97706) 45%, var(--border));
+  background: color-mix(in srgb, var(--warning-400) 7%, var(--bg-card));
+  border-color: color-mix(in srgb, var(--warning-400) 45%, var(--border));
 }
 .request-card-head {
   display: flex;
@@ -2566,8 +2566,8 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   font-weight: 600;
   padding: 1px 6px;
   border-radius: var(--radius-sm, 4px);
-  background: color-mix(in srgb, var(--warning, #d97706) 18%, transparent);
-  color: var(--warning, #d97706);
+  background: color-mix(in srgb, var(--warning-400) 18%, transparent);
+  color: var(--warning-400);
 }
 .request-card-title {
   font-weight: 600;
@@ -2599,7 +2599,7 @@ html[data-theme] .interview-bar-actions .btn-primary:hover {
   padding: 8px 10px;
   font: inherit;
   color: var(--text);
-  background: var(--bg-input, var(--bg-card));
+  background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm, 4px);
 }
