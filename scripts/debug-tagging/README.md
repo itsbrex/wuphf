@@ -96,7 +96,7 @@ HIRE_SLUG=qa-spec KEEP=1 ./scripts/debug-tagging/run.sh
 # Inspect general's roster:
 curl -s -H "Authorization: Bearer $(cat /tmp/wuphf-broker-token-7899)" \
   http://127.0.0.1:7899/channels | jq '.channels[] | select(.slug=="general") | .members'
-# -> [ceo, pm, fe, be, ai, designer, cmo, cro, qa-spec]   <-- qa-spec now present
+# -> [cos, pm, fe, be, ai, designer, cmo, cro, qa-spec]   <-- qa-spec now present
 ```
 
 The rig also asserts this membership invariant inline (see `IN_GENERAL`

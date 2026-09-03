@@ -38,7 +38,7 @@ func TestEnsureDefaultOfficeMembersSkipsOnboardedEmptyOffice(t *testing.T) {
 }
 
 // The load-time normalization must not resurrect built-ins either: the Pam /
-// App Builder back-fill and the ceo channel pin only apply to rosters that
+// App Builder back-fill and the cos channel pin only apply to rosters that
 // have bots. An intentionally empty office survives a broker restart empty.
 func TestNormalizeLoadedStateKeepsEmptyOfficeEmpty(t *testing.T) {
 	tmpHome := t.TempDir()
@@ -77,8 +77,8 @@ func TestNormalizeLoadedStateKeepsEmptyOfficeEmpty(t *testing.T) {
 		t.Fatalf("expected the empty office to stay empty across normalization, got %d members", members)
 	}
 	for _, slug := range generalMembers {
-		if slug == "ceo" {
-			t.Fatal("expected no ceo ghost pinned into #team membership")
+		if slug == "cos" {
+			t.Fatal("expected no cos ghost pinned into #team membership")
 		}
 	}
 }

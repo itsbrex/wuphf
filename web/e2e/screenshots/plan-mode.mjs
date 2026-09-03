@@ -38,7 +38,7 @@ const CONFIG = {
   provider_endpoints: {},
   memory_backend: "markdown",
   action_provider: "auto",
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
   company_name: "Acme Co",
   config_path: "/Users/you/.wuphf/config.json",
 };

@@ -71,7 +71,7 @@ await installCommonMocks(context, {
           llm_provider: "claude-code",
           llm_provider_configured: true,
           memory_backend: "markdown",
-          team_lead_slug: "ceo",
+          team_lead_slug: "cos",
         }),
       }),
     );

@@ -134,7 +134,7 @@ func (b *Broker) botFileSeedContent(relPath string) string {
 // handleBotFileWrite saves a human edit to one bot instruction file.
 //
 //	POST /bot-files/write
-//	{ "path": "bots/ceo/SOUL.md", "content": "...",
+//	{ "path": "bots/cos/SOUL.md", "content": "...",
 //	  "commit_message": "human: tighten boundaries", "expected_sha": "abc123" }
 //
 // Responses mirror /wiki/write-human:

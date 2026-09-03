@@ -104,7 +104,7 @@ func (l *Launcher) runHeadlessCodexTurn(ctx context.Context, slug string, notifi
 	if isTaskWorktree {
 		cmd.Env = append(cmd.Env, "WUPHF_WORKTREE_PATH="+workspaceDir)
 	}
-	stdinText := buildHeadlessCodexPrompt(l.buildPrompt(slug)+mount.promptHint(), notification)
+	stdinText := buildHeadlessCodexPrompt(l.buildPrompt(slug)+mount.promptHint(), withAppAskPreface(notification))
 	cmd.Stdin = strings.NewReader(stdinText)
 	configureHeadlessProcess(cmd)
 	dumpHeadlessCodexInvocation(slug, workspaceDir, args, cmd.Env, stdinText)

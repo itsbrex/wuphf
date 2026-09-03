@@ -14,7 +14,7 @@ import { useAppStore } from "../../stores/app";
 
 const officeMembers: OfficeMember[] = [
   {
-    slug: "ceo",
+    slug: "cos",
     name: "Carmen",
     role: "CEO",
     emoji: "👑",
@@ -38,7 +38,7 @@ vi.mock("../../hooks/useMessages", () => ({
     data: [
       {
         id: "thread-1",
-        from: "ceo",
+        from: "cos",
         content: "Parent message",
         channel: "general",
       } as Message,
@@ -76,7 +76,7 @@ vi.mock("../../api/client", async () => {
     );
   return {
     ...actual,
-    getConfig: vi.fn().mockResolvedValue({ team_lead_slug: "ceo" }),
+    getConfig: vi.fn().mockResolvedValue({ team_lead_slug: "cos" }),
     postMessage: vi.fn().mockResolvedValue({ id: "reply-1" }),
   };
 });
@@ -131,7 +131,7 @@ describe("ThreadPanel autocomplete popovers", () => {
     expect(popover).not.toBeNull();
     // Should at least surface @all and a non-human member.
     expect(popover?.textContent).toContain("@all");
-    expect(popover?.textContent).toContain("@ceo");
+    expect(popover?.textContent).toContain("@cos");
   });
 
   it("filters @-mentions by partial match on the query", () => {
@@ -140,11 +140,11 @@ describe("ThreadPanel autocomplete popovers", () => {
     const textarea = screen.getByPlaceholderText(
       "Reply to thread…",
     ) as HTMLTextAreaElement;
-    fireEvent.change(textarea, { target: { value: "@ce" } });
+    fireEvent.change(textarea, { target: { value: "@co" } });
 
     const popover = document.querySelector(".autocomplete.open");
     expect(popover).not.toBeNull();
-    expect(popover?.textContent).toContain("@ceo");
+    expect(popover?.textContent).toContain("@cos");
     expect(popover?.textContent).not.toContain("@pm");
   });
 

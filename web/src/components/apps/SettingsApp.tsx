@@ -89,7 +89,7 @@ function TeamLeadPicker({
     return (
       <input
         style={styles.input}
-        placeholder="e.g. ceo"
+        placeholder="e.g. cos"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

@@ -32,7 +32,7 @@ func requireTeamChannelApproval(ctx context.Context, actor string, args TeamChan
 	slug := normalizeSlug(args.Channel)
 	actor = strings.TrimSpace(actor)
 	if actor == "" {
-		actor = "ceo"
+		actor = "cos"
 	}
 	name := strings.TrimSpace(args.Name)
 	if name == "" {

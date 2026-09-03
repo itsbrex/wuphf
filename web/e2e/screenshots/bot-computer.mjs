@@ -50,7 +50,7 @@ const CONFIG = () => ({
   provider_endpoints: {},
   memory_backend: "markdown",
   action_provider: "auto",
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
   company_name: "Northwind",
   config_path: "/Users/you/.wuphf/config.json",
   box_key_set: scenario.boxKeySet,
@@ -59,7 +59,7 @@ const CONFIG = () => ({
 const MEMBERS = () => ({
   members: [
     {
-      slug: "ceo",
+      slug: "cos",
       name: "CEO",
       role: "Office lead",
       status: "idle",
@@ -85,7 +85,7 @@ const MEMBERS = () => ({
 
 const CHANNELS = {
   channels: [
-    { slug: "general", name: "general", members: ["ceo", "growth"] },
+    { slug: "general", name: "general", members: ["cos", "growth"] },
     {
       slug: "growth__human",
       name: "Growth Lead",

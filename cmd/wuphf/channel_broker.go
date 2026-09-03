@@ -759,7 +759,7 @@ func postToChannel(text string, replyTo string, channel string) tea.Cmd {
 func channelMentionBots(members []channelui.Member) []tui.BotMention {
 	defaults := []tui.BotMention{
 		{Slug: "all", Name: "All bots"},
-		{Slug: "ceo", Name: "Chief of Staff"},
+		{Slug: "cos", Name: "Chief of Staff"},
 		{Slug: "pm", Name: "Product Manager"},
 		{Slug: "fe", Name: "Frontend Engineer"},
 		{Slug: "be", Name: "Backend Engineer"},

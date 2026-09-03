@@ -63,7 +63,7 @@ func (l *Launcher) officeMembersSnapshot() []officeMember {
 				Expertise:    append([]string(nil), cfg.Expertise...),
 				Personality:  cfg.Personality,
 				AllowedTools: append([]string(nil), cfg.AllowedTools...),
-				BuiltIn:      cfg.Slug == l.pack.LeadSlug || cfg.Slug == "ceo",
+				BuiltIn:      cfg.Slug == l.pack.LeadSlug || cfg.Slug == "cos",
 			}
 			applyOfficeMemberDefaults(&member)
 			members = append(members, member)
@@ -96,7 +96,7 @@ func (l *Launcher) officeMembersSnapshot() []officeMember {
 				Expertise:    append([]string(nil), cfg.Expertise...),
 				Personality:  cfg.Personality,
 				AllowedTools: append([]string(nil), cfg.AllowedTools...),
-				BuiltIn:      cfg.Slug == l.pack.LeadSlug || cfg.Slug == "ceo",
+				BuiltIn:      cfg.Slug == l.pack.LeadSlug || cfg.Slug == "cos",
 			}
 			applyOfficeMemberDefaults(&member)
 			members = append(members, member)

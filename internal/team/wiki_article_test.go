@@ -106,14 +106,14 @@ func TestCountWords(t *testing.T) {
 func TestUniqueAuthors(t *testing.T) {
 	t.Parallel()
 	refs := []CommitRef{
-		{Author: "ceo"},
+		{Author: "cos"},
 		{Author: "pm"},
-		{Author: "ceo"}, // dup
+		{Author: "cos"}, // dup
 		{Author: "cro"},
 		{Author: "pm"}, // dup
 	}
 	got := uniqueAuthors(refs)
-	want := []string{"ceo", "pm", "cro"}
+	want := []string{"cos", "pm", "cro"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("uniqueAuthors = %v, want %v", got, want)
 	}
@@ -141,7 +141,7 @@ func TestBuildArticle_Backlinks(t *testing.T) {
 	articles := []struct {
 		slug, path, content string
 	}{
-		{"ceo", "team/people/a.md", "# Article A\n\nReferences [[people/b]] here.\n"},
+		{"cos", "team/people/a.md", "# Article A\n\nReferences [[people/b]] here.\n"},
 		{"pm", "team/people/b.md", "# Article B\n\nThe target.\n"},
 		{"cro", "team/playbooks/c.md", "# Playbook C\n\nAlso sees [[people/b|B]].\n"},
 	}
@@ -193,8 +193,8 @@ func TestBuildArticle_Backlinks(t *testing.T) {
 	for _, b := range meta.Backlinks {
 		byPath[b.Path] = b.AuthorSlug
 	}
-	if byPath["team/people/a.md"] != "ceo" {
-		t.Errorf("A author = %q, want ceo", byPath["team/people/a.md"])
+	if byPath["team/people/a.md"] != "cos" {
+		t.Errorf("A author = %q, want cos", byPath["team/people/a.md"])
 	}
 	if byPath["team/playbooks/c.md"] != "cro" {
 		t.Errorf("C author = %q, want cro", byPath["team/playbooks/c.md"])
@@ -230,8 +230,8 @@ func TestLatestCommitAuthorsByPath(t *testing.T) {
 		t.Fatalf("Init: %v", err)
 	}
 
-	// a.md is created by ceo, then edited by cro — latest author is cro.
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/a.md", "# A\n\nv1\n", "create", "add a"); err != nil {
+	// a.md is created by cos, then edited by cro — latest author is cro.
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/a.md", "# A\n\nv1\n", "create", "add a"); err != nil {
 		t.Fatalf("Commit a v1: %v", err)
 	}
 	if _, _, err := repo.Commit(ctx, "cro", "team/people/a.md", "# A\n\nv2 edited\n", "replace", "edit a"); err != nil {
@@ -314,7 +314,7 @@ func TestBuildCatalog_ExcludesInbox(t *testing.T) {
 	}
 
 	// Curated brief — must appear in the catalog.
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 
@@ -363,7 +363,7 @@ func TestBuildArticle_ReadTracking(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n\nFounder.\n", "create", "add nazz"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 
@@ -400,7 +400,7 @@ func TestBuildCatalog_ReadTracking(t *testing.T) {
 		t.Fatalf("Init: %v", err)
 	}
 	articles := []struct{ slug, path, content string }{
-		{"ceo", "team/people/alice.md", "# Alice\n\nHello.\n"},
+		{"cos", "team/people/alice.md", "# Alice\n\nHello.\n"},
 		{"pm", "team/people/bob.md", "# Bob\n\nHi.\n"},
 	}
 	for _, a := range articles {
@@ -458,7 +458,7 @@ func TestBuildCatalog_SortLastRead(t *testing.T) {
 	}
 	for _, slug := range []string{"alice", "bob"} {
 		path := "team/people/" + slug + ".md"
-		if _, _, err := repo.Commit(ctx, "ceo", path, "# "+slug+"\n", "create", "add "+path); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", path, "# "+slug+"\n", "create", "add "+path); err != nil {
 			t.Fatalf("Commit: %v", err)
 		}
 	}
@@ -546,12 +546,12 @@ func TestBuildCatalog_PruneScore(t *testing.T) {
 
 	// Three small articles to round out the catalog and force a top-decile
 	// threshold.
-	if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
 		t.Fatalf("Commit verbose: %v", err)
 	}
 	for _, slug := range []string{"alice", "bob", "carol"} {
 		path := "team/people/" + slug + ".md"
-		if _, _, err := repo.Commit(ctx, "ceo", path, "# "+slug+"\n\nshort.\n", "create", "add "+slug); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", path, "# "+slug+"\n\nshort.\n", "create", "add "+slug); err != nil {
 			t.Fatalf("Commit %s: %v", slug, err)
 		}
 	}
@@ -590,7 +590,7 @@ func TestBuildCatalog_PruneScore(t *testing.T) {
 		if err := repo.Init(ctx); err != nil {
 			t.Fatalf("Init: %v", err)
 		}
-		if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
 			t.Fatalf("Commit: %v", err)
 		}
 		writeReadEvent(t, root, "team/playbooks/old-discovery.md", "web", time.Now().Add(-45*24*time.Hour))
@@ -628,7 +628,7 @@ func TestBuildCatalog_PruneScore(t *testing.T) {
 		if err := repo.Init(ctx); err != nil {
 			t.Fatalf("Init: %v", err)
 		}
-		if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
 			t.Fatalf("Commit: %v", err)
 		}
 		writeReadEvent(t, root, "team/playbooks/old-discovery.md", "slack-agent", time.Now().Add(-10*24*time.Hour))
@@ -676,14 +676,14 @@ func TestBuildCatalog_PruneScore(t *testing.T) {
 		if err := repo.Init(ctx); err != nil {
 			t.Fatalf("Init: %v", err)
 		}
-		if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/old-discovery.md", verboseBody, "create", "add verbose"); err != nil {
 			t.Fatalf("Commit: %v", err)
 		}
 		// Two small articles, both unread → prune_score = 0 (tie). Verify
 		// they sort by path ascending after the verbose article.
 		for _, slug := range []string{"bob", "alice"} {
 			path := "team/people/" + slug + ".md"
-			if _, _, err := repo.Commit(ctx, "ceo", path, "# "+slug+"\n\nshort.\n", "create", "add "+slug); err != nil {
+			if _, _, err := repo.Commit(ctx, "cos", path, "# "+slug+"\n\nshort.\n", "create", "add "+slug); err != nil {
 				t.Fatalf("Commit %s: %v", slug, err)
 			}
 		}
@@ -725,7 +725,7 @@ func TestBuildArticle_NilReadLog(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/solo.md", "# Solo\n\nAlone.\n", "create", "add solo"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/solo.md", "# Solo\n\nAlone.\n", "create", "add solo"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	meta, err := repo.BuildArticle(ctx, "team/people/solo.md", "web", nil)
@@ -752,7 +752,7 @@ func TestBuildArticle_NoBacklinks(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/solo.md", "# Solo\n\nAlone.\n", "create", "add solo"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/solo.md", "# Solo\n\nAlone.\n", "create", "add solo"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 	meta, err := repo.BuildArticle(ctx, "team/people/solo.md", "", nil)

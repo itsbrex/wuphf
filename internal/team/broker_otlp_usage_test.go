@@ -140,7 +140,7 @@ func TestRecordBotUsageAttachesToCurrentTurnMessagesOnly(t *testing.T) {
 	b.messages = []channelMessage{
 		{
 			ID:        "msg-1",
-			From:      "ceo",
+			From:      "cos",
 			Content:   "older turn",
 			Timestamp: now.Add(-2 * time.Minute).Format(time.RFC3339),
 			Usage:     &messageUsage{TotalTokens: 111},
@@ -153,7 +153,7 @@ func TestRecordBotUsageAttachesToCurrentTurnMessagesOnly(t *testing.T) {
 		},
 		{
 			ID:        "msg-3",
-			From:      "ceo",
+			From:      "cos",
 			Content:   "current turn kickoff",
 			Timestamp: now.Add(-10 * time.Second).Format(time.RFC3339),
 		},
@@ -165,14 +165,14 @@ func TestRecordBotUsageAttachesToCurrentTurnMessagesOnly(t *testing.T) {
 		},
 		{
 			ID:        "msg-5",
-			From:      "ceo",
+			From:      "cos",
 			Content:   "current turn answer",
 			Timestamp: now.Format(time.RFC3339),
 		},
 	}
 	b.mu.Unlock()
 
-	b.RecordBotUsage("ceo", "claude-sonnet-4-6", provider.ClaudeUsage{
+	b.RecordBotUsage("cos", "claude-sonnet-4-6", provider.ClaudeUsage{
 		InputTokens:         800,
 		OutputTokens:        200,
 		CacheReadTokens:     50,

@@ -70,8 +70,8 @@ func TestShouldBackfillTaskOwnerNormalisesBothSides(t *testing.T) {
 		// using normalizeChannelSlug, which preserves "__". Swap in the actor
 		// normaliser here and a task homed in a DM stops matching its own
 		// channel event.
-		dm := DMSlugFor("ceo")
-		if !shouldBackfillTaskOwner("channel_updated", dm, task("ceo", dm)) {
+		dm := DMSlugFor("cos")
+		if !shouldBackfillTaskOwner("channel_updated", dm, task("cos", dm)) {
 			t.Errorf("a task homed in DM %q did not match its own channel_updated event", dm)
 		}
 	})

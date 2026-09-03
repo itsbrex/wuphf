@@ -24,7 +24,7 @@ func TestSpawnVisibleAgents_OneOnOneMode(t *testing.T) {
 	deps := paneLifecycleDeps{
 		cwd:         "/repo",
 		isOneOnOne:  func() bool { return true },
-		oneOnOneBot: func() string { return "ceo" },
+		oneOnOneBot: func() string { return "cos" },
 		claudeCommand: func(slug, prompt string) (string, error) {
 			return fmt.Sprintf("claude --slug=%s", slug), nil
 		},
@@ -38,8 +38,8 @@ func TestSpawnVisibleAgents_OneOnOneMode(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SpawnVisibleBots err = %v", err)
 	}
-	if len(got) != 1 || got[0] != "ceo" {
-		t.Fatalf("returned slugs = %v, want [ceo]", got)
+	if len(got) != 1 || got[0] != "cos" {
+		t.Fatalf("returned slugs = %v, want [cos]", got)
 	}
 
 	// Sequence pinning: 1 split-window, 1 select-layout, 2 select-pane (titles),
@@ -70,7 +70,7 @@ func TestSpawnVisibleAgents_FirstSplitFailureAborts(t *testing.T) {
 	deps := paneLifecycleDeps{
 		cwd:                  "/repo",
 		isOneOnOne:           func() bool { return false },
-		visibleOfficeMembers: func() []officeMember { return []officeMember{{Slug: "ceo"}, {Slug: "fe"}} },
+		visibleOfficeMembers: func() []officeMember { return []officeMember{{Slug: "cos"}, {Slug: "fe"}} },
 		claudeCommand:        func(slug, prompt string) (string, error) { return "claude", nil },
 		buildPrompt:          func(slug string) string { return "" },
 		botName:              func(slug string) string { return slug },
@@ -108,7 +108,7 @@ func TestSpawnVisibleAgents_AdditionalSplitFailureRecordsAndContinues(t *testing
 	deps := paneLifecycleDeps{
 		cwd:                  "/repo",
 		isOneOnOne:           func() bool { return false },
-		visibleOfficeMembers: func() []officeMember { return []officeMember{{Slug: "ceo"}, {Slug: "fe"}, {Slug: "be"}} },
+		visibleOfficeMembers: func() []officeMember { return []officeMember{{Slug: "cos"}, {Slug: "fe"}, {Slug: "be"}} },
 		claudeCommand:        func(slug, prompt string) (string, error) { return "claude --" + slug, nil },
 		buildPrompt:          func(slug string) string { return "" },
 		botName:              func(slug string) string { return slug },
@@ -122,7 +122,7 @@ func TestSpawnVisibleAgents_AdditionalSplitFailureRecordsAndContinues(t *testing
 	if err != nil {
 		t.Fatalf("SpawnVisibleBots err = %v, want nil (later split failures don't abort)", err)
 	}
-	// Only the two successfully-spawned slugs (ceo, be) end up in the
+	// Only the two successfully-spawned slugs (cos, be) end up in the
 	// returned list — the failed spawn (fe) is recorded via
 	// recordFailure and skipped from the title-set + visibleSlugs
 	// loop. Pre-fix every member appeared regardless, which titled
@@ -284,7 +284,7 @@ func TestTrySpawnWebAgentPanes_HappyPathFlipsFlag(t *testing.T) {
 		cwd:                   "/repo",
 		postSystemMessage:     func(channel, body, kind string) {},
 		usesPaneRuntime:       func() bool { return true },
-		visibleOfficeMembers:  func() []officeMember { return []officeMember{{Slug: "ceo"}} },
+		visibleOfficeMembers:  func() []officeMember { return []officeMember{{Slug: "cos"}} },
 		overflowOfficeMembers: func() []officeMember { return nil },
 		botPaneTargets:        func() map[string]notificationTarget { return nil },
 		isOneOnOne:            func() bool { return false },

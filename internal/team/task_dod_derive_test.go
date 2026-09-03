@@ -130,7 +130,7 @@ func TestDoDVerification_AutoSetAtCreateAndDefine(t *testing.T) {
 		Action: "create", Channel: "general", Title: "Build the launch report",
 		Details:   "Definition of done: a file out/report.md exists. Don't tell me it's done unless that check passes.",
 		Owner:     "eng",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -159,7 +159,7 @@ func TestDoDVerification_AutoSetAtCreateAndDefine(t *testing.T) {
 		Action: "create", Channel: "general", Title: "Build the second report",
 		Details:          "Definition of done: a file out/second.md exists.",
 		Owner:            "eng",
-		CreatedBy:        "ceo",
+		CreatedBy:        "cos",
 		VerificationKind: "command", VerificationSpec: "exit 0", VerificationRequired: true,
 	})
 	if err != nil {
@@ -173,7 +173,7 @@ func TestDoDVerification_AutoSetAtCreateAndDefine(t *testing.T) {
 	// verification derives the check and stamps the log.
 	plain, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Assemble the summary",
-		Details: "Assemble the weekly summary.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Assemble the weekly summary.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create plain: %v", err)
@@ -182,7 +182,7 @@ func TestDoDVerification_AutoSetAtCreateAndDefine(t *testing.T) {
 		t.Fatalf("plain details must not derive a check; got %+v", v)
 	}
 	if _, err := b.MutateTask(TaskPostRequest{
-		Action: "define", ID: plain.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: plain.Task.ID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Ship the weekly summary",
 			SuccessCriteria: []string{"a file out/summary.md exists"},

@@ -51,7 +51,7 @@ func TestBrokerStatePersistsAcrossReload_ChannelAndMember(t *testing.T) {
 		return resp
 	}
 
-	// Create a custom channel. Explicitly empty Members; "ceo" is prepended
+	// Create a custom channel. Explicitly empty Members; "cos" is prepended
 	// by createChannelLocked anyway.
 	//
 	// This used to POST /channels. Named-channel CREATE is retired at that
@@ -65,7 +65,7 @@ func TestBrokerStatePersistsAcrossReload_ChannelAndMember(t *testing.T) {
 		Slug:        "persistence-test",
 		Name:        "Persistence Test",
 		Description: "Created by TestBrokerStatePersistsAcrossReload",
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 	})
 	b.mu.Unlock()
 	if cerr != nil {

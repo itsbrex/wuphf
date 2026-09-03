@@ -333,7 +333,7 @@ func TestBrokerEntity_BriefsList(t *testing.T) {
 
 	// Seed a brief via fact + explicit synth.
 	payload, _ := json.Marshal(map[string]any{
-		"entity_kind": "people", "entity_slug": "ceo", "fact": "Founder.", "recorded_by": "pm",
+		"entity_kind": "people", "entity_slug": "cos", "fact": "Founder.", "recorded_by": "pm",
 	})
 	req, _ := authReq(http.MethodPost, srv.URL+"/entity/fact", bytes.NewReader(payload), b.Token())
 	res, err := http.DefaultClient.Do(req)
@@ -342,7 +342,7 @@ func TestBrokerEntity_BriefsList(t *testing.T) {
 	}
 	res.Body.Close()
 
-	synthP, _ := json.Marshal(map[string]any{"entity_kind": "people", "entity_slug": "ceo", "actor_slug": "human"})
+	synthP, _ := json.Marshal(map[string]any{"entity_kind": "people", "entity_slug": "cos", "actor_slug": "human"})
 	req, _ = authReq(http.MethodPost, srv.URL+"/entity/brief/synthesize", bytes.NewReader(synthP), b.Token())
 	res, err = http.DefaultClient.Do(req)
 	if err != nil {
@@ -374,7 +374,7 @@ func TestBrokerEntity_BriefsList(t *testing.T) {
 	}
 	found := false
 	for _, br := range resp.Briefs {
-		if br.Kind == EntityKindPeople && br.Slug == "ceo" {
+		if br.Kind == EntityKindPeople && br.Slug == "cos" {
 			found = true
 			if br.FactCount < 1 {
 				t.Errorf("fact_count=%d", br.FactCount)
@@ -385,7 +385,7 @@ func TestBrokerEntity_BriefsList(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Fatalf("briefs list did not contain people/ceo: %+v", resp.Briefs)
+		t.Fatalf("briefs list did not contain people/cos: %+v", resp.Briefs)
 	}
 }
 

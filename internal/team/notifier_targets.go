@@ -363,7 +363,7 @@ func (l *Launcher) notificationTargetsForMessage(msg channelMessage) (immediate 
 	//
 	// Resolved relative to the SENDER, not to the human. The human-relative
 	// lookup could not name a recipient in a bot-to-bot DM at all
-	// ("ceo__designer" has no human side), so those messages reached nobody —
+	// ("cos__designer" has no human side), so those messages reached nobody —
 	// which is what blocked the consult relay. Sender-relative also makes the
 	// old "don't echo a bot's own message back" guard structural: the
 	// participant across from the sender is never the sender.

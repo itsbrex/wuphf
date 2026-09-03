@@ -331,7 +331,7 @@ func proceduralAccentForSlug(slug string) string {
 // isProceduralSlug reports true when the slug has no hand-designed mascot.
 func isProceduralSlug(slug string) bool {
 	switch slug {
-	case "ceo", "pm", "fe", "be", "ai", "designer", "cmo", "cro":
+	case "cos", "pm", "fe", "be", "ai", "designer", "cmo", "cro":
 		return false
 	}
 	return true

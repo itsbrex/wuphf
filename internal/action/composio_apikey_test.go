@@ -39,7 +39,7 @@ func TestToolkitAuthInfo_DetectsAPIKey(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	info := client.toolkitAuthInfo(context.Background(), "instantly")
 	if info.Managed {
@@ -106,7 +106,7 @@ func TestToolkitAuthInfo_MixedModes(t *testing.T) {
 			})
 			server := httptest.NewServer(mux)
 			defer server.Close()
-			client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+			client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 			info := client.toolkitAuthInfo(context.Background(), "multi")
 			if info.Managed != tc.wantManaged {
@@ -133,7 +133,7 @@ func TestCompleteAPIKeyConnection_RejectsMissingRequired(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	_, err := client.CompleteAPIKeyConnection(context.Background(), "instantly", map[string]string{"generic_api_key": "   "})
 	if err == nil {
@@ -154,7 +154,7 @@ func TestToolkitAuthInfo_ManagedOAuthFallsBack(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	if info := client.toolkitAuthInfo(context.Background(), "gmail"); !info.Managed {
 		t.Fatalf("OAuth toolkit must be managed, got %+v", info)
@@ -166,7 +166,7 @@ func TestToolkitAuthInfo_ManagedOAuthFallsBack(t *testing.T) {
 func TestToolkitAuthInfo_UnknownFallsBackToManaged(t *testing.T) {
 	server := httptest.NewServer(http.NotFoundHandler())
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	if info := client.toolkitAuthInfo(context.Background(), "mystery"); !info.Managed {
 		t.Fatalf("unknown toolkit must fall back to managed, got %+v", info)
@@ -187,7 +187,7 @@ func TestStartIntegrationConnection_NeedsFieldsForAPIKey(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	res, err := client.StartIntegrationConnection(context.Background(), IntegrationConnectRequest{Platform: "Instantly"})
 	if err != nil {
@@ -232,7 +232,7 @@ func TestCompleteAPIKeyConnection_SendsCustomAuthAndKey(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	res, err := client.CompleteAPIKeyConnection(context.Background(), "Instantly", map[string]string{"generic_api_key": "ik_secret"})
 	if err != nil {
@@ -259,7 +259,7 @@ func TestCompleteAPIKeyConnection_SendsCustomAuthAndKey(t *testing.T) {
 
 	// Connected account request shape: the user's key in connection.state.val.
 	conn, _ := accountBody["connection"].(map[string]any)
-	if conn["user_id"] != "ceo@example.com" {
+	if conn["user_id"] != "cos@example.com" {
 		t.Fatalf("connected account must carry the user id, got %v", accountBody)
 	}
 	state, _ := conn["state"].(map[string]any)
@@ -313,7 +313,7 @@ func TestCompleteAPIKeyConnection_RejectsBadKey(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	_, err := client.CompleteAPIKeyConnection(context.Background(), "Instantly", map[string]string{"generic_api_key": "bogus"})
 	if err == nil {
@@ -334,7 +334,7 @@ func TestCompleteAPIKeyConnection_RejectsBadKeyOnAuthError(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	_, err := client.CompleteAPIKeyConnection(context.Background(), "Instantly", map[string]string{"generic_api_key": "bogus"})
 	if err == nil {
@@ -356,7 +356,7 @@ func TestCompleteAPIKeyConnection_UnverifiedFallsBackToConnected(t *testing.T) {
 	})
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := &ComposioREST{APIKey: "cmp_test", UserID: "ceo@example.com", BaseURL: server.URL, Client: server.Client()}
+	client := &ComposioREST{APIKey: "cmp_test", UserID: "cos@example.com", BaseURL: server.URL, Client: server.Client()}
 
 	res, err := client.CompleteAPIKeyConnection(context.Background(), "Instantly", map[string]string{"generic_api_key": "ik_secret"})
 	if err != nil {

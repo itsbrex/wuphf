@@ -144,7 +144,7 @@ func (b *Broker) postTaskDeliveredLocked(task *teamTask) {
 		Kind:         taskDeliveredMessageKind,
 		Title:        title,
 		Content:      content,
-		Tagged:       dedupeReassignTags([]string{"ceo", owner}),
+		Tagged:       dedupeReassignTags([]string{"cos", owner}),
 		Timestamp:    now,
 		ReplyTo:      strings.TrimSpace(task.ThreadID),
 		SourceTaskID: task.ID,

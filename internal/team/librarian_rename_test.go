@@ -12,7 +12,7 @@ func TestLibrarianNameReconciledOnLoad(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", Role: "lead"},
+		{Slug: "cos", Name: "CEO", Role: "lead"},
 		{Slug: LibrarianSlug, Name: "Pam", Role: "Librarian"}, // the stale saved name
 		{Slug: "designer", Name: "Designer", Role: "Design"},
 	}

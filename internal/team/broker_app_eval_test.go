@@ -370,7 +370,7 @@ func TestSweepStalledAppBuildsReopensUnfinalized(t *testing.T) {
 			Title: "Build app: X", Details: "Build a real tool.",
 			status: "in_progress", StalledSince: "2026-06-26T00:00:00Z"},
 		// A non-App-Builder stalled task must be ignored by the sweep.
-		teamTask{ID: "OFFICE-21", Owner: "ceo", Channel: "task-other",
+		teamTask{ID: "OFFICE-21", Owner: "cos", Channel: "task-other",
 			status: "in_progress", StalledSince: "2026-06-26T00:00:00Z"},
 	)
 

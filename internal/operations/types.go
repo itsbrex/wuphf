@@ -44,7 +44,7 @@ type Blueprint struct {
 
 	// DefaultReviewer is the bot slug that approves promotions by default.
 	// The sentinel value "human-only" disables bot approval entirely and
-	// forces a human click in the web UI. Falls back to "ceo" if empty.
+	// forces a human click in the web UI. Falls back to "cos" if empty.
 	DefaultReviewer string `json:"default_reviewer,omitempty" yaml:"default_reviewer,omitempty"`
 
 	// ReviewerPaths maps glob patterns (relative to the wiki root) to bot

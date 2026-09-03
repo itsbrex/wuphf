@@ -18,8 +18,8 @@ func newStallTestBroker(t *testing.T) *Broker {
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	b.mu.Lock()
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
-		{Slug: "task-office-1", Name: "task-office-1", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}},
+		{Slug: "task-office-1", Name: "task-office-1", Members: []string{"human", "cos", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -34,7 +34,7 @@ func seedRunningTask(b *Broker, id, channel, owner, updatedAt string) {
 		Title:          "stall fixture " + id,
 		Owner:          owner,
 		status:         "in_progress",
-		CreatedBy:      "ceo",
+		CreatedBy:      "cos",
 		LifecycleState: LifecycleStateRunning,
 		CreatedAt:      updatedAt,
 		UpdatedAt:      updatedAt,

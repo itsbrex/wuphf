@@ -18,7 +18,7 @@ import (
 
 func cyclicMessages() []BrokerMessage {
 	return []BrokerMessage{
-		{ID: "a", From: "ceo", ReplyTo: "b", Timestamp: "2026-04-29T10:00:00Z"},
+		{ID: "a", From: "cos", ReplyTo: "b", Timestamp: "2026-04-29T10:00:00Z"},
 		{ID: "b", From: "pm", ReplyTo: "a", Timestamp: "2026-04-29T10:01:00Z"},
 	}
 }
@@ -77,7 +77,7 @@ func TestCountThreadRepliesTerminatesOnCycle(t *testing.T) {
 func TestThreadParticipantsTerminatesOnCycle(t *testing.T) {
 	children := map[string][]BrokerMessage{
 		"a": {{ID: "b", From: "pm", ReplyTo: "a"}},
-		"b": {{ID: "a", From: "ceo", ReplyTo: "b"}},
+		"b": {{ID: "a", From: "cos", ReplyTo: "b"}},
 	}
 	mustReturnWithin(t, time.Second, func() {
 		_ = ThreadParticipants(children, "a")

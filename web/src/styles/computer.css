@@ -429,9 +429,9 @@
 
 /* ── Sidebar: "on its computer" glyph ──
    Borrows the peek chevron's slot (right: 24px, see layout.css
-   .sidebar-agent-peek-trigger) so the status-dot budget is untouched.
+   .sidebar-bot-peek-trigger) so the status-dot budget is untouched.
    The chevron owns that slot on hover/focus, so the glyph steps aside then. */
-.sidebar-agent-computer {
+.sidebar-bot-computer {
   position: absolute;
   top: 50%;
   right: 24px;
@@ -445,8 +445,8 @@
   pointer-events: none;
   transition: opacity 120ms ease-out;
 }
-.sidebar-agent-row:hover .sidebar-agent-computer,
-.sidebar-agent-row:focus-within .sidebar-agent-computer {
+.sidebar-bot-row:hover .sidebar-bot-computer,
+.sidebar-bot-row:focus-within .sidebar-bot-computer {
   opacity: 0;
 }
 

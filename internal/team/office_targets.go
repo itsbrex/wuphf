@@ -109,8 +109,8 @@ func officeLeadSlugFrom(members []officeMember) string {
 	sorted := append([]officeMember(nil), members...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
 	for _, member := range sorted {
-		if member.Slug == "ceo" {
-			return "ceo"
+		if member.Slug == "cos" {
+			return "cos"
 		}
 	}
 	for _, member := range sorted {
@@ -152,7 +152,7 @@ func (o *officeTargeter) ActiveSessionMembers() []officeMember {
 			Expertise:    append([]string(nil), cfg.Expertise...),
 			Personality:  cfg.Personality,
 			AllowedTools: append([]string(nil), cfg.AllowedTools...),
-			BuiltIn:      cfg.Slug == o.pack.LeadSlug || cfg.Slug == "ceo",
+			BuiltIn:      cfg.Slug == o.pack.LeadSlug || cfg.Slug == "cos",
 		}
 		applyOfficeMemberDefaults(&member)
 		filtered = append(filtered, member)

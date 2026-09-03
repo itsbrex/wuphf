@@ -16,7 +16,7 @@ func TestParseAgentPaneIndices_SkipsZeroAndChannelPanes(t *testing.T) {
 	// specialists. The "channel" string in the title also marks panes to
 	// skip — the launcher relies on this distinction when listing bot
 	// panes for capture/dispatch.
-	out := "0 channel\n1 ceo\n2 fe\n3 channel-misc"
+	out := "0 channel\n1 cos\n2 fe\n3 channel-misc"
 	got := parseBotPaneIndices(out)
 	want := []int{1, 2}
 	if len(got) != len(want) {
@@ -38,7 +38,7 @@ func TestParseAgentPaneIndices_ToleratesEmptyAndMalformed(t *testing.T) {
 		{"\n\n", 0},
 		{"abc def\n", 0},      // non-numeric index
 		{"42", 1},             // single index, no title
-		{" 7 ceo \n8 fe ", 2}, // whitespace and trailing newline
+		{" 7 cos \n8 fe ", 2}, // whitespace and trailing newline
 	}
 	for _, tc := range cases {
 		got := parseBotPaneIndices(tc.in)

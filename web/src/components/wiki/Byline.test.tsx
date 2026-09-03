@@ -7,7 +7,7 @@ describe("<Byline>", () => {
   it("renders avatar, author, and timestamp pulse", () => {
     // Arrange
     const props = {
-      authorSlug: "ceo",
+      authorSlug: "cos",
       authorName: "CEO",
       lastEditedTs: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
       startedDate: "2026-01-14",

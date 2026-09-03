@@ -112,7 +112,7 @@ func brokerPostActionOutcomeMessage(ctx context.Context, channel, actor, content
 	ch := resolveChannel(channel)
 	from := strings.TrimSpace(actor)
 	if from == "" {
-		from = "ceo"
+		from = "cos"
 	}
 	var resp struct {
 		ID string `json:"id"`

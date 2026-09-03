@@ -29,7 +29,7 @@ func inferBotDomain(slug string) string {
 		return "marketing"
 	case "cro", "sales", "revenue":
 		return "sales"
-	case "pm", "product", "ceo":
+	case "pm", "product", "cos":
 		return "product"
 	default:
 		return "general"

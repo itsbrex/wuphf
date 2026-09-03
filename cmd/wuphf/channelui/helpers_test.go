@@ -7,7 +7,7 @@ import (
 )
 
 func TestContainsStringMatchesTrimmedTarget(t *testing.T) {
-	items := []string{" fe ", "be", "ceo"}
+	items := []string{" fe ", "be", "cos"}
 	if !ContainsString(items, "fe") {
 		t.Fatalf("expected trimmed match for fe")
 	}
@@ -117,16 +117,16 @@ func TestTruncateTextRespectsRuneBudget(t *testing.T) {
 // enriched, so broker-only members surfaced with blank UI identities.
 func TestMergeOfficeMembersEnrichesBrokerOnlyAppendees(t *testing.T) {
 	office := []OfficeMember{
-		{Slug: "ceo", Name: "Chief Executive", Role: "strategy"},
+		{Slug: "cos", Name: "Chief Executive", Role: "strategy"},
 		{Slug: "fe", Name: "Frontend Engineer", Role: "frontend"},
 		{Slug: "guest", Name: "Visiting Investor", Role: "advisor"},
 	}
 	broker := []Member{
-		{Slug: "ceo"},   // in-order: should pick up office Name/Role
+		{Slug: "cos"},   // in-order: should pick up office Name/Role
 		{Slug: "guest"}, // broker-only: should pick up office Name/Role
 		{Slug: "stranger", Name: "Surprise Engineer"}, // broker-only, no office entry: should keep its own name + RoleLabel fallback
 	}
-	channel := &ChannelInfo{Slug: "general", Members: []string{"ceo"}}
+	channel := &ChannelInfo{Slug: "general", Members: []string{"cos"}}
 
 	merged := MergeOfficeMembers(office, broker, channel)
 
@@ -135,7 +135,7 @@ func TestMergeOfficeMembersEnrichesBrokerOnlyAppendees(t *testing.T) {
 		byslug[m.Slug] = m
 	}
 
-	if got := byslug["ceo"]; got.Name != "Chief Executive" || got.Role != "strategy" {
+	if got := byslug["cos"]; got.Name != "Chief Executive" || got.Role != "strategy" {
 		t.Errorf("in-order member not enriched: %+v", got)
 	}
 	guest, ok := byslug["guest"]

@@ -59,7 +59,7 @@ func TestWebUIProxyBotHeaderForwarding(t *testing.T) {
 	}
 
 	// The proxy never relays an arbitrary bot slug, even same-origin.
-	if got := call("ceo", "same-origin"); got != "" {
+	if got := call("cos", "same-origin"); got != "" {
 		t.Fatalf("non-app-builder slug must be dropped, got %q", got)
 	}
 

@@ -18,7 +18,7 @@ func TestHandleActionsPostRecordsAction(t *testing.T) {
 		"kind":    "external_action_executed",
 		"source":  "one",
 		"channel": "team",
-		"actor":   "ceo",
+		"actor":   "cos",
 		"summary": "Sent a Gmail draft via One",
 	})
 	req, _ := http.NewRequest(http.MethodPost, "http://"+b.Addr()+"/actions", bytes.NewReader(body))

@@ -100,18 +100,18 @@ func TestSlackSendPostsAsSpawnedBot(t *testing.T) {
 	}
 
 	// An ordinary office sender still posts via the main bot.
-	out2, ok := tr.FormatOutbound(channelMessage{Channel: "slack-general", From: "ceo", Content: "status?"})
+	out2, ok := tr.FormatOutbound(channelMessage{Channel: "slack-general", From: "cos", Content: "status?"})
 	if !ok {
-		t.Fatal("FormatOutbound (ceo) should map")
+		t.Fatal("FormatOutbound (cos) should map")
 	}
 	if out2.Participant.Key != "" {
-		t.Fatalf("ceo outbound should carry no spawned participant, got %+v", out2.Participant)
+		t.Fatalf("cos outbound should carry no spawned participant, got %+v", out2.Participant)
 	}
 	if err := tr.Send(context.Background(), out2); err != nil {
-		t.Fatalf("Send (ceo): %v", err)
+		t.Fatalf("Send (cos): %v", err)
 	}
 	if posts := mainAPI.snapshotPosts(); len(posts) != 1 {
-		t.Fatalf("main bot posts = %+v, want exactly the ceo message", posts)
+		t.Fatalf("main bot posts = %+v, want exactly the cos message", posts)
 	}
 }
 
@@ -135,7 +135,7 @@ func TestSpawnedAgentClient_FromEnv(t *testing.T) {
 		t.Fatal("postClientFor must fall back to the main client on a token miss")
 	}
 	// Not a spawned bot at all → zero participant → main client.
-	if p := tr.spawnedSenderParticipant("ceo"); p.Key != "" {
-		t.Fatalf("ceo should not resolve as spawned, got %+v", p)
+	if p := tr.spawnedSenderParticipant("cos"); p.Key != "" {
+		t.Fatalf("cos should not resolve as spawned, got %+v", p)
 	}
 }

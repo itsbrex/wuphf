@@ -34,8 +34,8 @@ func postTestMessage(t *testing.T, b *Broker, content string) {
 func TestHandlePostMessagePersistsToDiskBeforeReturning(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "team", Members: []string{"ceo"}}}
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"cos"}}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO"}}
 	b.rebuildMemberIndexLocked()
 	b.mu.Unlock()
 
@@ -60,8 +60,8 @@ func TestHandlePostMessagePersistsToDiskBeforeReturning(t *testing.T) {
 func TestHandlePostMessageConcurrentPostsConvergeOnDisk(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "team", Members: []string{"ceo"}}}
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}}
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"cos"}}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO"}}
 	b.rebuildMemberIndexLocked()
 	b.mu.Unlock()
 

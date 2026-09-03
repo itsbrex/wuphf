@@ -197,7 +197,7 @@ func TestSlackFormatOutboundLinksRegisteredBotMentions(t *testing.T) {
 	}
 
 	out, ok := tr.FormatOutbound(channelMessage{
-		From:    "ceo",
+		From:    "cos",
 		Channel: "slack-general",
 		Content: "@claude-bot please review the draft; @claude-bot-2 and @pm stay put. <!channel>",
 		Tagged:  []string{"claude-bot", "pm"},
@@ -220,7 +220,7 @@ func TestSlackFormatOutboundLinksRegisteredBotMentions(t *testing.T) {
 }
 
 // WUPHF presents as ONE coordinating bot in Slack. Internal bots carry no
-// sender attribution (Slack already shows the bot as speaker); "@ceo" renders
+// sender attribution (Slack already shows the bot as speaker); "@cos" renders
 // as the bot's own name (there is no public CEO); "@human"/"@you" render as
 // Human; and a foreign bot is PINGED only when ADDRESSED (leading-mention
 // position) — references render as the plain name so bots don't respond to
@@ -235,10 +235,10 @@ func TestSlackRenderOfficeTagsForRealSlackReaders(t *testing.T) {
 
 	// A REFERENCE message: no leading mention → no pings, no attribution.
 	out, ok := tr.FormatOutbound(channelMessage{
-		From:    "ceo",
+		From:    "cos",
 		Channel: "slack-general",
-		Content: "Approved @ceo's request. @claude-bot take it from here, cc @human and @you.",
-		Tagged:  []string{"ceo", "claude-bot"},
+		Content: "Approved @cos's request. @claude-bot take it from here, cc @human and @you.",
+		Tagged:  []string{"cos", "claude-bot"},
 	})
 	if !ok {
 		t.Fatal("FormatOutbound should map slack-general")
@@ -246,7 +246,7 @@ func TestSlackRenderOfficeTagsForRealSlackReaders(t *testing.T) {
 	if strings.Contains(out.Text, "*") || strings.HasPrefix(out.Text, "CEO") {
 		t.Fatalf("internal bot must carry NO sender attribution, got %q", out.Text)
 	}
-	if strings.Contains(out.Text, "@ceo") || strings.Contains(out.Text, "@human") || strings.Contains(out.Text, "@you") {
+	if strings.Contains(out.Text, "@cos") || strings.Contains(out.Text, "@human") || strings.Contains(out.Text, "@you") {
 		t.Fatalf("office-internal tags must not survive as fake @tags, got %q", out.Text)
 	}
 	if !strings.Contains(out.Text, "Approved wuphf's request") {
@@ -264,7 +264,7 @@ func TestSlackRenderOfficeTagsForRealSlackReaders(t *testing.T) {
 
 	// An ADDRESSED message: leading mention → real ping (response expected).
 	out2, _ := tr.FormatOutbound(channelMessage{
-		From:    "ceo",
+		From:    "cos",
 		Channel: "slack-general",
 		Content: "@claude-bot please review the draft and reply here.",
 		Tagged:  []string{"claude-bot"},
@@ -314,7 +314,7 @@ func TestSlackInboundHumanMentionOfBotWakesLead(t *testing.T) {
 	if !isHumanMessageSender(m.From) {
 		t.Fatalf("the slack human must classify as a human sender: %q", m.From)
 	}
-	if !strings.Contains(m.Content, "@ceo what is the status?") {
+	if !strings.Contains(m.Content, "@cos what is the status?") {
 		t.Fatalf("bot mention must translate to the lead, got %q", m.Content)
 	}
 	if !strings.Contains(m.Content, "loop in @claude-bot") {
@@ -323,7 +323,7 @@ func TestSlackInboundHumanMentionOfBotWakesLead(t *testing.T) {
 	if !strings.Contains(m.Content, "and Naj later") {
 		t.Fatalf("other-user mention must become a display name, got %q", m.Content)
 	}
-	if !containsString(m.Tagged, "ceo") {
+	if !containsString(m.Tagged, "cos") {
 		t.Fatalf("the lead must be tagged so it wakes, got %v", m.Tagged)
 	}
 }

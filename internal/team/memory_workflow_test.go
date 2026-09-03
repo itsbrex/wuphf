@@ -14,7 +14,7 @@ func TestMemoryWorkflowJSONRoundTrip(t *testing.T) {
 		ID:        "task-1",
 		Title:     "Research prior context for onboarding",
 		status:    "in_progress",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		CreatedAt: "2026-04-30T10:00:00Z",
 		UpdatedAt: "2026-04-30T10:00:00Z",
 		MemoryWorkflow: &MemoryWorkflow{
@@ -332,18 +332,18 @@ func TestMemoryWorkflowCompletionGateAndOverride(t *testing.T) {
 	}
 	syncTaskMemoryWorkflow(task, "2026-04-30T10:00:00Z")
 
-	err := applyMemoryWorkflowCompletionGate(task, "ceo", "", false, "2026-04-30T10:04:00Z")
+	err := applyMemoryWorkflowCompletionGate(task, "cos", "", false, "2026-04-30T10:04:00Z")
 	if err == nil || !strings.Contains(err.Error(), "memory workflow incomplete") {
 		t.Fatalf("expected incomplete workflow error, got %v", err)
 	}
 
-	if err := applyMemoryWorkflowCompletionGate(task, "ceo", "Human accepted missing memory evidence", true, "2026-04-30T10:05:00Z"); err != nil {
+	if err := applyMemoryWorkflowCompletionGate(task, "cos", "Human accepted missing memory evidence", true, "2026-04-30T10:05:00Z"); err != nil {
 		t.Fatalf("override should allow completion: %v", err)
 	}
 	if task.MemoryWorkflow.Status != MemoryWorkflowStatusOverridden || task.MemoryWorkflow.Override == nil {
 		t.Fatalf("expected override state, got %+v", task.MemoryWorkflow)
 	}
-	if task.MemoryWorkflow.Override.Actor != "ceo" || task.MemoryWorkflow.Override.Reason == "" || task.MemoryWorkflow.Override.Timestamp != "2026-04-30T10:05:00Z" {
+	if task.MemoryWorkflow.Override.Actor != "cos" || task.MemoryWorkflow.Override.Reason == "" || task.MemoryWorkflow.Override.Timestamp != "2026-04-30T10:05:00Z" {
 		t.Fatalf("override metadata missing: %+v", task.MemoryWorkflow.Override)
 	}
 }

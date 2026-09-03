@@ -268,7 +268,7 @@ func TestSkillScannerScopePathValidation(t *testing.T) {
 	b.mu.Unlock()
 
 	articleRel := "team/doc..v2.md"
-	if _, _, err := repo.Commit(context.Background(), "ceo", articleRel, "# Doc\n\nbody\n", "create", "seed scoped article"); err != nil {
+	if _, _, err := repo.Commit(context.Background(), "cos", articleRel, "# Doc\n\nbody\n", "create", "seed scoped article"); err != nil {
 		t.Fatalf("seed article: %v", err)
 	}
 
@@ -325,7 +325,7 @@ func TestStageACompilerSetsSourceArticle(t *testing.T) {
 	// matching the bot-authored shape keeps the test scenario realistic.
 	articleRel := "team/playbooks/customer-refund.md"
 	body := "---\nname: customer-refund\ndescription: Issue a refund.\n---\n# Customer Refund\n\nbody\n"
-	if _, _, err := repo.Commit(context.Background(), "ceo", articleRel, body, "create", "seed playbook"); err != nil {
+	if _, _, err := repo.Commit(context.Background(), "cos", articleRel, body, "create", "seed playbook"); err != nil {
 		t.Fatalf("seed playbook: %v", err)
 	}
 
@@ -390,7 +390,7 @@ func TestStageACompilerClampsFrontmatterStatus(t *testing.T) {
 
 	articleRel := "team/playbooks/status-spoof.md"
 	body := "---\nname: status-spoof\ndescription: Attempts lifecycle spoofing.\n---\n# Status Spoof\n\nbody\n"
-	if _, _, err := repo.Commit(context.Background(), "ceo", articleRel, body, "create", "seed playbook"); err != nil {
+	if _, _, err := repo.Commit(context.Background(), "cos", articleRel, body, "create", "seed playbook"); err != nil {
 		t.Fatalf("seed playbook: %v", err)
 	}
 

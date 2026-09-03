@@ -61,7 +61,7 @@ func TestAppsDetectionEvalReport(t *testing.T) {
 		{
 			name: "NOISE one-off chatty task (pure orchestration plumbing)",
 			manifests: []TurnManifest{
-				manifestFor("N1", "ceo", "Bash", "Read", "Edit", "mcp__wuphf-office__team_task"),
+				manifestFor("N1", "cos", "Bash", "Read", "Edit", "mcp__wuphf-office__team_task"),
 			},
 			want: false, // no domain shape -> no judge, no proposal
 		},

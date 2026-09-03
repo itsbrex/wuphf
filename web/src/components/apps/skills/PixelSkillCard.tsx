@@ -81,7 +81,7 @@ function buildDetailRows(skill: Skill): DetailRow[] {
   const rows: DetailRow[] = [];
   const status = skill.status ?? "active";
   // Title-case for parity with all the other label/value pairs on the back
-  // face (e.g. "@ceo", "May 7, 2026"). Lowercase looked like a stray token.
+  // face (e.g. "@cos", "May 7, 2026"). Lowercase looked like a stray token.
   rows.push({
     label: "Status",
     value: status.charAt(0).toUpperCase() + status.slice(1),
@@ -119,7 +119,7 @@ export function PixelSkillCard({
   const type = STATUS_TO_TYPE[status];
   const owners = (skill.owner_agents ?? []).filter((s) => s.trim().length > 0);
   // Portrait identity: prefer the first owning bot so a skill scoped to
-  // @ceo always shows the CEO portrait. Fall back to the skill name so
+  // @cos always shows the CEO portrait. Fall back to the skill name so
   // lead-routable skills get their own deterministic character.
   const portraitSlug = owners[0] || skill.name || "skill";
   // Use useId for the name id so the component is self-contained — relying
@@ -188,7 +188,7 @@ export function PixelSkillCard({
           </div>
 
           {/* Stat strip uses a <dl> with visually-hidden labels so screen
-              readers announce "Status: Active, Owners: @ceo" instead of
+              readers announce "Status: Active, Owners: @cos" instead of
               raw values floating without context. Visual layout is
               unchanged — labels are only present in the AT tree. */}
           <dl className="pixel-skill-card__stats">

@@ -49,7 +49,7 @@ func ensureOperationsFallbackFS(t *testing.T) {
 
 // TestOnboardingCompleteSeedsFromPickedBlueprint verifies that when the
 // wizard POSTs a curated blueprint id, the broker seeds the exact member
-// list from that blueprint's starter.bots — not ceo/planner/executor/
+// list from that blueprint's starter.bots — not cos/planner/executor/
 // reviewer from DefaultManifest.
 func TestOnboardingCompleteSeedsFromPickedBlueprint(t *testing.T) {
 	ensureOperationsFallbackFS(t)
@@ -59,7 +59,7 @@ func TestOnboardingCompleteSeedsFromPickedBlueprint(t *testing.T) {
 	}
 
 	want := map[string]bool{
-		"ceo": true, "planner": true, "builder": true,
+		"cos": true, "planner": true, "builder": true,
 		"growth": true, "reviewer": true,
 	}
 	got := map[string]bool{}
@@ -74,7 +74,7 @@ func TestOnboardingCompleteSeedsFromPickedBlueprint(t *testing.T) {
 			t.Errorf("expected niche-crm slug %q in roster; got %v", slug, got)
 		}
 	}
-	// DefaultManifest is ceo/planner/executor/reviewer. ceo overlaps with the
+	// DefaultManifest is cos/planner/executor/reviewer. cos overlaps with the
 	// blueprint's legitimate lead, so executor is the distinguishing leak
 	// signal.
 	for slug := range got {
@@ -92,8 +92,8 @@ func TestOnboardingCompleteSeedsFromPickedBlueprint(t *testing.T) {
 		}
 	}
 	b.mu.Unlock()
-	if lead != "ceo" {
-		t.Errorf("expected BuiltIn lead to be ceo (blueprint's lead_slug), got %q", lead)
+	if lead != "cos" {
+		t.Errorf("expected BuiltIn lead to be cos (blueprint's lead_slug), got %q", lead)
 	}
 }
 
@@ -102,7 +102,7 @@ func TestOnboardingDraftPhaseCreatesFirstIssueFromTaskPrompt(t *testing.T) {
 
 	b := newTestBroker(t)
 	b.mu.Lock()
-	ensureTestMemberAccess(b, "team", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "cos", "CEO")
 	b.mu.Unlock()
 
 	state := &onboarding.State{
@@ -157,12 +157,12 @@ func TestOnboardingDraftPhaseCreatesFirstIssueFromTaskPrompt(t *testing.T) {
 }
 
 // TestOnboardingCompleteHonorsBotFilter verifies the wizard's per-bot
-// toggle state: bots=[ceo, builder] should seed only those two,
+// toggle state: bots=[cos, builder] should seed only those two,
 // dropping the blueprint's other specialists.
 func TestOnboardingCompleteHonorsBotFilter(t *testing.T) {
 	ensureOperationsFallbackFS(t)
 	b := newTestBroker(t)
-	if err := b.onboardingCompleteFn("Stand up niche CRM", false, "niche-crm", []string{"ceo", "builder"}, ""); err != nil {
+	if err := b.onboardingCompleteFn("Stand up niche CRM", false, "niche-crm", []string{"cos", "builder"}, ""); err != nil {
 		t.Fatalf("onboardingCompleteFn: %v", err)
 	}
 
@@ -177,7 +177,7 @@ func TestOnboardingCompleteHonorsBotFilter(t *testing.T) {
 	hasBuilder := false
 	for _, s := range slugs {
 		switch s {
-		case "ceo":
+		case "cos":
 			hasCEO = true
 		case "builder":
 			hasBuilder = true
@@ -186,7 +186,7 @@ func TestOnboardingCompleteHonorsBotFilter(t *testing.T) {
 		}
 	}
 	if !hasCEO {
-		t.Errorf("expected ceo (selected) in roster; got %v", slugs)
+		t.Errorf("expected cos (selected) in roster; got %v", slugs)
 	}
 	if !hasBuilder {
 		t.Errorf("expected builder (selected) in roster; got %v", slugs)
@@ -230,8 +230,8 @@ func TestOnboardingCompleteBotsEmptySeedsLeadOnly(t *testing.T) {
 	}
 	b.mu.Unlock()
 
-	if len(slugs) != 1 || slugs[0] != "ceo" {
-		t.Fatalf("expected the lead alone [ceo], got %v", slugs)
+	if len(slugs) != 1 || slugs[0] != "cos" {
+		t.Fatalf("expected the lead alone [cos], got %v", slugs)
 	}
 	if apology != "" {
 		t.Errorf("the lead-only office is the intended default, but onboarding apologized for it: %q", apology)
@@ -256,9 +256,9 @@ func TestOnboardingCompleteFromScratchSynthesizes(t *testing.T) {
 	b.mu.Unlock()
 
 	// The synthesized team must not be the DefaultManifest roster exactly.
-	// Sanity: DefaultManifest is ceo/planner/executor/reviewer. A synthesized
+	// Sanity: DefaultManifest is cos/planner/executor/reviewer. A synthesized
 	// team should differ in composition.
-	if len(slugs) == 4 && slugs[0] == "ceo" && slugs[1] == "planner" && slugs[2] == "executor" && slugs[3] == "reviewer" {
+	if len(slugs) == 4 && slugs[0] == "cos" && slugs[1] == "planner" && slugs[2] == "executor" && slugs[3] == "reviewer" {
 		t.Errorf("from-scratch produced DefaultManifest roster, not a synthesized team; got %v", slugs)
 	}
 	if len(slugs) == 0 {
@@ -269,7 +269,7 @@ func TestOnboardingCompleteFromScratchSynthesizes(t *testing.T) {
 func TestOnboardingCompleteFromScratchHonorsSelectedFoundingBots(t *testing.T) {
 	ensureOperationsFallbackFS(t)
 	b := newTestBroker(t)
-	if err := b.onboardingCompleteFn("Build an automated customer-support operation", false, "", []string{"ceo", "founding-engineer"}, ""); err != nil {
+	if err := b.onboardingCompleteFn("Build an automated customer-support operation", false, "", []string{"cos", "founding-engineer"}, ""); err != nil {
 		t.Fatalf("onboardingCompleteFn: %v", err)
 	}
 
@@ -284,7 +284,7 @@ func TestOnboardingCompleteFromScratchHonorsSelectedFoundingBots(t *testing.T) {
 	// to be appended here as "always-present built-ins"; that back-fill is
 	// deleted, so a selection is now honoured literally and this fails if
 	// anything the user did not pick shows up.
-	want := []string{"ceo", "founding-engineer"}
+	want := []string{"cos", "founding-engineer"}
 	if len(slugs) != len(want) {
 		t.Fatalf("from-scratch selected roster got %v, want %v", slugs, want)
 	}
@@ -324,7 +324,7 @@ func TestBlankSlateMembersStaleScratchSelectionDoesNotCollapseToOperator(t *test
 	}
 
 	members := blankSlateOfficeMembersFromBlueprint(blueprint, []string{
-		"ceo",
+		"cos",
 		"gtm-lead",
 		"founding-engineer",
 		"pm",
@@ -417,7 +417,7 @@ func TestOnboardingCompleteSkipTaskPersistsTeam(t *testing.T) {
 	}
 	reloaded.mu.Unlock()
 
-	want := map[string]bool{"ceo": true, "planner": true, "builder": true, "growth": true, "reviewer": true}
+	want := map[string]bool{"cos": true, "planner": true, "builder": true, "growth": true, "reviewer": true}
 	for slug := range want {
 		found := false
 		for _, got := range slugs {
@@ -430,8 +430,8 @@ func TestOnboardingCompleteSkipTaskPersistsTeam(t *testing.T) {
 			t.Errorf("expected niche-crm slug %q to persist across restart; got %v", slug, slugs)
 		}
 	}
-	// DefaultManifest is ceo/planner/executor/reviewer; executor is the
-	// distinguishing leak signal now that ceo is a legitimate blueprint lead.
+	// DefaultManifest is cos/planner/executor/reviewer; executor is the
+	// distinguishing leak signal now that cos is a legitimate blueprint lead.
 	for _, slug := range slugs {
 		if slug == "executor" {
 			t.Errorf("DefaultManifest slug %q leaked into persisted roster %v", slug, slugs)
@@ -530,7 +530,7 @@ func TestSeedFromBlueprintNilBotsKeepsFullRoster(t *testing.T) {
 	}
 	b.mu.Unlock()
 
-	for _, slug := range []string{"ceo", "planner", "builder", "growth", "reviewer"} {
+	for _, slug := range []string{"cos", "planner", "builder", "growth", "reviewer"} {
 		if !seen[slug] {
 			t.Errorf("nil bots filter should keep all blueprint bots; missing %q (roster: %v)", slug, seen)
 		}
@@ -588,7 +588,7 @@ func TestBlankSlateOfficeChannelsFromBlueprint_RendersCommandSlug(t *testing.T) 
 // launcher relies on: after the wizard picks a blueprint and the broker
 // rewrites b.members wholesale, a single "office_reseeded" event must fire so
 // the launcher knows to respawn the interactive claude panes. Without this
-// signal the panes are still bound to the default team (ceo/planner/
+// signal the panes are still bound to the default team (cos/planner/
 // executor/reviewer) and messages sent to the new roster never reach a live
 // claude process — the symptom the user reported during the ui test.
 func TestOnboardingCompleteEmitsOfficeReseededEvent(t *testing.T) {

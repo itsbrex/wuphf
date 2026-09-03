@@ -70,7 +70,7 @@ func officeThreadedMessages(messages []channelui.BrokerMessage, expanded map[str
 }
 
 var threadParticipantDisplaySlug = map[string]string{
-	"ceo":               "ceo",
+	"cos":               "cos",
 	"product manager":   "pm",
 	"frontend engineer": "fe",
 	"backend engineer":  "be",

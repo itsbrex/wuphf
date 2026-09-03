@@ -69,7 +69,7 @@ func TestSlackLiveEgressProbe(t *testing.T) {
 		packer.NewDefaultEgressPolicy(1),
 		packer.EgressScanner{},
 		req,
-		packer.GatherOptions{ReturnPact: "Reply in this thread with the totals and tag @ceo."},
+		packer.GatherOptions{ReturnPact: "Reply in this thread with the totals and tag @cos."},
 		packer.DeliveryAudience{LeastTrustedPresent: packer.BotUntrusted},
 	)
 	if err != nil {

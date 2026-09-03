@@ -1284,7 +1284,7 @@ func (b *Broker) MutateTask(body TaskPostRequest) (TaskResponse, error) {
 			// fields here follow the same silently-skip pattern). Replace
 			// semantics: the caller sends the full set; dedupePaths normalizes.
 			actorSlug := strings.ToLower(strings.TrimSpace(actor))
-			if isHumanMessageSender(actorSlug) || actorSlug == "ceo" || isLibrarianSlug(actorSlug) {
+			if isHumanMessageSender(actorSlug) || actorSlug == "cos" || isLibrarianSlug(actorSlug) {
 				task.WikiRefs = dedupePaths(body.WikiRefs)
 			}
 		}

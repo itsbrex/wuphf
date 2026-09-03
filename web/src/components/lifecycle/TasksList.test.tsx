@@ -298,7 +298,7 @@ describe("<TasksList>", () => {
         request: {
           kind: "decision",
           question: "Add Prospector to the team?",
-          from: "ceo",
+          from: "cos",
           blocking: true,
         },
       },
@@ -348,7 +348,7 @@ describe("<TasksList>", () => {
         request: {
           kind: "decision",
           question: "Approve the Q3 budget?",
-          from: "ceo",
+          from: "cos",
           blocking: true,
         },
       },

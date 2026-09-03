@@ -21,7 +21,7 @@ func newTestBrokerWithTelegramChannel(t *testing.T, chatID string) *Broker {
 	b.channels = append(b.channels, teamChannel{
 		Slug:    "telegram-general",
 		Name:    "telegram-general",
-		Members: []string{"ceo", "pm"},
+		Members: []string{"cos", "pm"},
 		Surface: &channelSurface{
 			Provider:    "telegram",
 			RemoteID:    chatID,
@@ -143,7 +143,7 @@ func TestTelegramExternalQueueIncludesOutbound(t *testing.T) {
 	b := newTestBrokerWithTelegramChannel(t, "-100999")
 
 	// Post a regular message to the surface channel
-	_, err := b.PostMessage("ceo", "telegram-general", "outbound test", nil, "")
+	_, err := b.PostMessage("cos", "telegram-general", "outbound test", nil, "")
 	if err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}
@@ -166,12 +166,12 @@ func TestTelegramExternalQueueIncludesOutbound(t *testing.T) {
 func TestFormatTelegramOutbound(t *testing.T) {
 	// Regular bot message with title
 	msg := channelMessage{
-		From:    "ceo",
+		From:    "cos",
 		Title:   "Update",
 		Content: "All good",
 	}
 	got := formatTelegramOutbound(msg)
-	want := "<b>@ceo</b>: [Update] All good"
+	want := "<b>@cos</b>: [Update] All good"
 	if got != want {
 		t.Fatalf("formatTelegramOutbound = %q, want %q", got, want)
 	}
@@ -209,17 +209,17 @@ func TestFormatTelegramOutbound(t *testing.T) {
 	}
 
 	// Skill invocation
-	skillMsg := channelMessage{From: "ceo", Kind: "skill_invocation", Content: "Invoked deploy"}
+	skillMsg := channelMessage{From: "cos", Kind: "skill_invocation", Content: "Invoked deploy"}
 	gotSkill := formatTelegramOutbound(skillMsg)
-	wantSkill := "⚡ <b>@ceo</b> invoked a skill"
+	wantSkill := "⚡ <b>@cos</b> invoked a skill"
 	if gotSkill != wantSkill {
 		t.Fatalf("formatTelegramOutbound skill = %q, want %q", gotSkill, wantSkill)
 	}
 
 	// Interview/decision message
-	decisionMsg := channelMessage{From: "ceo", Kind: "interview", Content: "Should we ship v2?", Title: "Release Decision"}
+	decisionMsg := channelMessage{From: "cos", Kind: "interview", Content: "Should we ship v2?", Title: "Release Decision"}
 	gotDecision := formatTelegramOutbound(decisionMsg)
-	wantDecision := "📋 <b>Decision needed</b> from @ceo\n\nShould we ship v2?\n\n<i>Release Decision</i>"
+	wantDecision := "📋 <b>Decision needed</b> from @cos\n\nShould we ship v2?\n\n<i>Release Decision</i>"
 	if gotDecision != wantDecision {
 		t.Fatalf("formatTelegramOutbound decision = %q, want %q", gotDecision, wantDecision)
 	}
@@ -236,14 +236,14 @@ func TestFormatTelegramOutbound(t *testing.T) {
 func TestTelegramResolveUser(t *testing.T) {
 	transport := &TelegramTransport{
 		UserMap: map[string]string{
-			"jdoe": "ceo",
+			"jdoe": "cos",
 		},
 	}
 
 	// With mapped username
 	got := transport.resolveUser(&telegramUser{Username: "jdoe", FirstName: "John"})
-	if got != "ceo" {
-		t.Fatalf("expected ceo, got %q", got)
+	if got != "cos" {
+		t.Fatalf("expected cos, got %q", got)
 	}
 
 	// Unmapped username falls back to display name
@@ -290,7 +290,7 @@ func TestTelegramSendToTelegramMocked(t *testing.T) {
 		_ = origBase
 	}()
 
-	msg := channelMessage{From: "ceo", Content: "test message"}
+	msg := channelMessage{From: "cos", Content: "test message"}
 
 	// Direct HTTP test: simulate what sendMessage does
 	payload, _ := json.Marshal(map[string]string{
@@ -306,7 +306,7 @@ func TestTelegramSendToTelegramMocked(t *testing.T) {
 	if gotBody["chat_id"] != "-100" {
 		t.Fatalf("expected chat_id=-100, got %q", gotBody["chat_id"])
 	}
-	if gotBody["text"] != "<b>@ceo</b>: test message" {
+	if gotBody["text"] != "<b>@cos</b>: test message" {
 		t.Fatalf("expected formatted text, got %q", gotBody["text"])
 	}
 }
@@ -328,7 +328,7 @@ func TestTelegramStartFailsWithoutChannels(t *testing.T) {
 	b := newTestBroker(t)
 	// Clear all channels so there are no telegram surfaces
 	b.mu.Lock()
-	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"cos"}}}
 	b.mu.Unlock()
 	tr := NewTelegramTransport(b, "fake-token")
 

@@ -37,7 +37,7 @@ func altRuneKey(r rune) tea.KeyMsg {
 }
 
 func TestHighlightMentionsLeavesUnknownSlugsPlain(t *testing.T) {
-	got := channelui.HighlightMentions("@not-a-real-agent", map[string]string{"ceo": "#E8A838"})
+	got := channelui.HighlightMentions("@not-a-real-agent", map[string]string{"cos": "#E8A838"})
 	if got != "@not-a-real-agent" {
 		t.Fatalf("expected unknown mention to stay plain, got %q", got)
 	}
@@ -124,7 +124,7 @@ func TestClampScrollCapsToBufferHeight(t *testing.T) {
 
 func TestFlattenThreadMessagesNestsRepliesUnderParent(t *testing.T) {
 	messages := []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root"},
+		{ID: "msg-1", From: "cos", Content: "Root"},
 		{ID: "msg-2", From: "fe", Content: "Reply", ReplyTo: "msg-1"},
 		{ID: "msg-3", From: "pm", Content: "Second root"},
 		{ID: "msg-4", From: "be", Content: "Nested", ReplyTo: "msg-2"},
@@ -137,8 +137,8 @@ func TestFlattenThreadMessagesNestsRepliesUnderParent(t *testing.T) {
 	if got[0].Message.ID != "msg-1" || got[0].Depth != 0 {
 		t.Fatalf("expected first root msg-1 depth 0, got %#v", got[0])
 	}
-	if got[1].Message.ID != "msg-2" || got[1].Depth != 1 || got[1].ParentLabel != "@ceo" {
-		t.Fatalf("expected msg-2 nested under @ceo, got %#v", got[1])
+	if got[1].Message.ID != "msg-2" || got[1].Depth != 1 || got[1].ParentLabel != "@cos" {
+		t.Fatalf("expected msg-2 nested under @cos, got %#v", got[1])
 	}
 	if got[2].Message.ID != "msg-4" || got[2].Depth != 2 || got[2].ParentLabel != "@fe" {
 		t.Fatalf("expected msg-4 nested under @fe, got %#v", got[2])
@@ -154,12 +154,12 @@ func TestChannelViewShowsThreadReplyLabel(t *testing.T) {
 	m.height = 30
 	m.expandedThreads["msg-1"] = true
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Should we target founders first?", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Should we target founders first?", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "cmo", Content: "Yes, wedge is stronger there.", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 	}
 
 	view := stripANSI(m.View())
-	if !strings.Contains(view, "thread reply to @ceo") {
+	if !strings.Contains(view, "thread reply to @cos") {
 		t.Fatalf("expected threaded reply label in view, got %q", view)
 	}
 	if !strings.Contains(view, "↳ ✶ CMO") {
@@ -173,7 +173,7 @@ func TestThreadsStartCollapsedByDefault(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "fe", Content: "Reply one", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 		{ID: "msg-3", From: "be", Content: "Reply two", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:02:00Z"},
 	}
@@ -189,7 +189,7 @@ func TestThreadsStartCollapsedByDefault(t *testing.T) {
 
 func TestCountRepliesCountsNestedDescendants(t *testing.T) {
 	messages := []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root"},
+		{ID: "msg-1", From: "cos", Content: "Root"},
 		{ID: "msg-2", From: "fe", Content: "Reply", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 		{ID: "msg-3", From: "be", Content: "Nested", ReplyTo: "msg-2", Timestamp: "2026-03-24T10:02:00Z"},
 	}
@@ -206,7 +206,7 @@ func TestCountRepliesCountsNestedDescendants(t *testing.T) {
 func TestRenderThreadPanelShowsNestedReplies(t *testing.T) {
 	t.Skip("skipped: test needs update after thread/policies/calendar refactors")
 	messages := []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "fe", Content: "First reply", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 		{ID: "msg-3", From: "be", Content: "Nested reply", ReplyTo: "msg-2", Timestamp: "2026-03-24T10:02:00Z"},
 	}
@@ -236,7 +236,7 @@ func TestChannelViewUsesOneOnOneChrome(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.sessionMode = team.SessionModeOneOnOne
-	m.oneOnOneBot = "ceo"
+	m.oneOnOneBot = "cos"
 	m.sidebarCollapsed = true
 	m.refreshSlashCommands()
 
@@ -264,12 +264,12 @@ func TestOneOnOneViewShowsExecutionTimeline(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.sessionMode = team.SessionModeOneOnOne
-	m.oneOnOneBot = "ceo"
+	m.oneOnOneBot = "cos"
 	m.sidebarCollapsed = true
 	m.refreshSlashCommands()
 	m.actions = []channelui.Action{
-		{ID: "action-1", Kind: "external_action_planned", Source: "composio", Actor: "ceo", Summary: "Dry-run Gmail send ready.", RelatedID: "GMAIL_SEND_EMAIL", CreatedAt: "2026-04-02T10:00:00Z"},
-		{ID: "action-2", Kind: "external_action_executed", Source: "composio", Actor: "ceo", Summary: "Sent the test email.", RelatedID: "GMAIL_SEND_EMAIL", CreatedAt: "2026-04-02T10:01:00Z"},
+		{ID: "action-1", Kind: "external_action_planned", Source: "composio", Actor: "cos", Summary: "Dry-run Gmail send ready.", RelatedID: "GMAIL_SEND_EMAIL", CreatedAt: "2026-04-02T10:00:00Z"},
+		{ID: "action-2", Kind: "external_action_executed", Source: "composio", Actor: "cos", Summary: "Sent the test email.", RelatedID: "GMAIL_SEND_EMAIL", CreatedAt: "2026-04-02T10:01:00Z"},
 	}
 
 	view := stripANSI(m.View())
@@ -286,12 +286,12 @@ func TestOneOnOneStatusBarShowsRuntimeSummary(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.sessionMode = team.SessionModeOneOnOne
-	m.oneOnOneBot = "ceo"
+	m.oneOnOneBot = "cos"
 	m.sidebarCollapsed = true
 	m.refreshSlashCommands()
 	m.brokerConnected = true
 	m.members = []channelui.Member{{
-		Slug:         "ceo",
+		Slug:         "cos",
 		Name:         "Chief of Staff",
 		LiveActivity: "go test ./cmd/wuphf",
 	}}
@@ -299,7 +299,7 @@ func TestOneOnOneStatusBarShowsRuntimeSummary(t *testing.T) {
 		ID:      "task-1",
 		Channel: "general",
 		Title:   "launch review",
-		Owner:   "ceo",
+		Owner:   "cos",
 		Status:  "in_progress",
 	}}
 
@@ -312,7 +312,7 @@ func TestOneOnOneStatusBarShowsRuntimeSummary(t *testing.T) {
 func TestOneOnOneModeBlocksOfficeCommands(t *testing.T) {
 	m := newChannelModel(false)
 	m.sessionMode = team.SessionModeOneOnOne
-	m.oneOnOneBot = "ceo"
+	m.oneOnOneBot = "cos"
 	m.refreshSlashCommands()
 
 	next, _ := m.runCommand("/channels", "")
@@ -325,8 +325,8 @@ func TestOneOnOneModeBlocksOfficeCommands(t *testing.T) {
 func TestSwitchCommandOpensChannelPicker(t *testing.T) {
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"ceo", "fe"}},
+		{Slug: "general", Name: "general", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"cos", "fe"}},
 	}
 
 	next, cmd := m.runCommand("/switch", "")
@@ -355,7 +355,7 @@ func TestSwitchCommandIncludesWorkspaceDestinations(t *testing.T) {
 		values[option.Value] = true
 	}
 
-	for _, want := range []string{"app:messages", "app:tasks", "app:requests", "app:policies", "app:calendar", "session:1o1:ceo"} {
+	for _, want := range []string{"app:messages", "app:tasks", "app:requests", "app:policies", "app:calendar", "session:1o1:cos"} {
 		if !values[want] {
 			t.Fatalf("expected switcher option %q, got %+v", want, options)
 		}
@@ -366,14 +366,14 @@ func TestSwitchAliasSelectsChannel(t *testing.T) {
 	m := newChannelModel(false)
 	m.activeChannel = "general"
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"ceo", "fe"}},
+		{Slug: "general", Name: "general", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"cos", "fe"}},
 	}
 	m.picker = tui.NewPicker("Switch Channel", m.buildChannelPickerOptions())
 	m.picker.SetActive(true)
 	m.pickerMode = channelPickerChannels
 	m.messages = []channelui.BrokerMessage{{ID: "msg-1", Content: "hello"}}
-	m.members = []channelui.Member{{Slug: "ceo"}}
+	m.members = []channelui.Member{{Slug: "cos"}}
 	m.replyToID = "msg-1"
 	m.threadPanelOpen = true
 	m.threadPanelID = "thread-1"
@@ -403,8 +403,8 @@ func TestSwitchAliasSelectsChannel(t *testing.T) {
 func TestBuildSwitchChannelPickerOptionsOnlyIncludesSwitchTargets(t *testing.T) {
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"ceo", "fe"}},
+		{Slug: "general", Name: "general", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"cos", "fe"}},
 	}
 
 	options := m.buildSwitchChannelPickerOptions()
@@ -482,8 +482,8 @@ func TestTypingSwitchShortcutOpensChannelPicker(t *testing.T) {
 	t.Setenv("WUPHF_API_KEY", "test-key")
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"ceo", "fe"}},
+		{Slug: "general", Name: "general", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"cos", "fe"}},
 	}
 	m.input = []rune("/switch")
 	m.inputPos = len(m.input)
@@ -510,9 +510,9 @@ func TestPickerTypingDoesNotAppendToComposer(t *testing.T) {
 	t.Setenv("WUPHF_API_KEY", "test-key")
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"ceo", "fe"}},
-		{Slug: "ops", Name: "ops", Members: []string{"ceo"}},
+		{Slug: "general", Name: "general", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Release work", Members: []string{"cos", "fe"}},
+		{Slug: "ops", Name: "ops", Members: []string{"cos"}},
 	}
 	m.input = []rune("/switch")
 	m.inputPos = len(m.input)
@@ -611,7 +611,7 @@ func TestOneOnOneBotSelectionRequiresConfirmation(t *testing.T) {
 	m.picker.SetActive(true)
 	m.pickerMode = channelPickerOneOnOneBot
 
-	next, cmd := m.Update(tui.PickerSelectMsg{Value: "ceo"})
+	next, cmd := m.Update(tui.PickerSelectMsg{Value: "cos"})
 	if cmd != nil {
 		t.Fatalf("expected no immediate command when picking direct bot, got %v", cmd)
 	}
@@ -619,7 +619,7 @@ func TestOneOnOneBotSelectionRequiresConfirmation(t *testing.T) {
 	if got.confirm == nil {
 		t.Fatal("expected confirmation card to open")
 	}
-	if got.confirm.Action != channelui.ChannelConfirmActionSwitchMode || got.confirm.Bot != "ceo" {
+	if got.confirm.Action != channelui.ChannelConfirmActionSwitchMode || got.confirm.Bot != "cos" {
 		t.Fatalf("unexpected confirmation: %+v", got.confirm)
 	}
 }
@@ -668,12 +668,12 @@ func TestInitialHumanFacingHistoryDoesNotForceMessagesApp(t *testing.T) {
 func TestChannelMsgDedupesOverlappingMessages(t *testing.T) {
 	m := newChannelModel(false)
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "first"},
+		{ID: "msg-1", From: "cos", Content: "first"},
 	}
 	m.lastID = "msg-1"
 
 	next, _ := m.Update(channelMsg{messages: []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "first"},
+		{ID: "msg-1", From: "cos", Content: "first"},
 		{ID: "msg-2", From: "pm", Content: "second"},
 	}})
 
@@ -689,7 +689,7 @@ func TestChannelMsgDedupesOverlappingMessages(t *testing.T) {
 func TestChannelCreateDoneSwitchesToNewChannel(t *testing.T) {
 	m := newChannelModel(false)
 	m.activeChannel = "general"
-	m.messages = []channelui.BrokerMessage{{ID: "msg-1", From: "ceo", Content: "hello"}}
+	m.messages = []channelui.BrokerMessage{{ID: "msg-1", From: "cos", Content: "hello"}}
 	m.lastID = "msg-1"
 
 	next, _ := m.Update(channelPostDoneMsg{action: "create", slug: "launch", notice: "Created #launch."})
@@ -761,8 +761,8 @@ func TestDisplayDecisionSummaryUsesHumanDirectiveLabel(t *testing.T) {
 func TestCalendarRecentActionsIncludeBridgeChannel(t *testing.T) {
 	lines := channelui.BuildCalendarLines([]channelui.Action{
 		{ID: "action-1", Kind: "human_directive", Channel: "general", Summary: "Human directed the team:", Actor: "you"},
-		{ID: "action-2", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "ceo"},
-		{ID: "action-3", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "ceo"},
+		{ID: "action-2", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "cos"},
+		{ID: "action-3", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "cos"},
 	}, nil, nil, nil, "general", nil, channelui.CalendarRangeWeek, "", 90)
 	view := stripANSI(joinRenderedLines(lines))
 	if !strings.Contains(view, "bridge_channel") {
@@ -775,11 +775,11 @@ func TestCalendarRecentActionsIncludeBridgeChannel(t *testing.T) {
 
 func TestCalendarRecentActionsPinsBridgeWhenCapWouldDropIt(t *testing.T) {
 	lines := channelui.BuildCalendarLines([]channelui.Action{
-		{ID: "action-1", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "ceo"},
+		{ID: "action-1", Kind: "bridge_channel", Channel: "launch", Summary: "Use the sharper product narrative.", Actor: "cos"},
 		{ID: "action-2", Kind: "human_directive", Channel: "general", Summary: "Human directed the team.", Actor: "you"},
 		{ID: "action-3", Kind: "request_answered", Channel: "general", Summary: "Approved the launch direction.", Actor: "you"},
-		{ID: "action-4", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "ceo"},
-		{ID: "action-5", Kind: "signal_recorded", Channel: "general", Summary: "Recorded a human directive signal.", Actor: "ceo"},
+		{ID: "action-4", Kind: "task_created", Channel: "general", Summary: "Tighten v1 scope", Actor: "cos"},
+		{ID: "action-5", Kind: "signal_recorded", Channel: "general", Summary: "Recorded a human directive signal.", Actor: "cos"},
 	}, nil, nil, nil, "general", nil, channelui.CalendarRangeWeek, "", 90)
 
 	view := stripANSI(joinRenderedLines(lines))
@@ -909,7 +909,7 @@ func TestBuildRequestLinesShowsBlockingAndTimingMetadata(t *testing.T) {
 		{
 			ID:       "req-1",
 			Kind:     "approval",
-			From:     "ceo",
+			From:     "cos",
 			Question: "Approve the launch copy?",
 			Blocking: true,
 			Required: true,
@@ -936,7 +936,7 @@ func TestBuildCalendarLinesShowsNextRunMetadata(t *testing.T) {
 			NextRun:         time.Now().Add(10 * time.Minute).Format(time.RFC3339),
 			LastRun:         time.Now().Add(-5 * time.Minute).Format(time.RFC3339),
 		},
-	}, nil, nil, "general", []channelui.Member{{Slug: "ceo", Name: "Chief of Staff"}}, channelui.CalendarRangeWeek, "", 80)
+	}, nil, nil, "general", []channelui.Member{{Slug: "cos", Name: "Chief of Staff"}}, channelui.CalendarRangeWeek, "", 80)
 
 	rendered := stripANSI(joinRenderedLines(lines))
 	if !strings.Contains(rendered, "every 15 min") || (!strings.Contains(rendered, "today") && !strings.Contains(rendered, "tomorrow")) {
@@ -956,12 +956,12 @@ func TestBuildCalendarLinesPinsTeammateCalendarsBeforeAgenda(t *testing.T) {
 			Owner:     "fe",
 			Channel:   "general",
 			DueAt:     time.Now().Add(30 * time.Minute).Format(time.RFC3339),
-			CreatedBy: "ceo",
+			CreatedBy: "cos",
 			UpdatedAt: time.Now().Format(time.RFC3339),
 			CreatedAt: time.Now().Format(time.RFC3339),
 		},
 	}, nil, "general", []channelui.Member{
-		{Slug: "ceo", Name: "Chief of Staff"},
+		{Slug: "cos", Name: "Chief of Staff"},
 		{Slug: "fe", Name: "Frontend Engineer"},
 	}, channelui.CalendarRangeWeek, "", 80)
 
@@ -1032,8 +1032,8 @@ func TestCtrlOQuickJumpSelectsApp(t *testing.T) {
 func TestBuildChannelPickerOptionsUsesChannelDescriptions(t *testing.T) {
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Description: "Company-wide coordination", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Launch planning and release work", Members: []string{"ceo", "pm", "fe"}},
+		{Slug: "general", Name: "general", Description: "Company-wide coordination", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Launch planning and release work", Members: []string{"cos", "pm", "fe"}},
 	}
 
 	options := m.buildChannelPickerOptions()
@@ -1051,8 +1051,8 @@ func TestBuildChannelPickerOptionsUsesChannelDescriptions(t *testing.T) {
 func TestBuildSwitchChannelPickerOptionsExcludeRemoveActions(t *testing.T) {
 	m := newChannelModel(false)
 	m.channels = []channelui.ChannelInfo{
-		{Slug: "general", Name: "general", Description: "Company-wide coordination", Members: []string{"ceo", "pm"}},
-		{Slug: "launch", Name: "launch", Description: "Launch planning", Members: []string{"ceo", "fe"}},
+		{Slug: "general", Name: "general", Description: "Company-wide coordination", Members: []string{"cos", "pm"}},
+		{Slug: "launch", Name: "launch", Description: "Launch planning", Members: []string{"cos", "fe"}},
 	}
 
 	options := m.buildSwitchChannelPickerOptions()
@@ -1273,7 +1273,7 @@ func TestChannelViewShowsRuntimeStripForOfficeMessages(t *testing.T) {
 	}}
 	m.requests = []channelui.Interview{{
 		ID:       "req-1",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship now?",
 		Blocking: true,
 	}}
@@ -1321,7 +1321,7 @@ func TestReplyCommandEntersReplyMode(t *testing.T) {
 	t.Skip("skipped: pre-existing failure, needs CI environment fix")
 	m := newChannelModel(false)
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root topic"},
+		{ID: "msg-1", From: "cos", Content: "Root topic"},
 	}
 	m.input = []rune("/reply msg-1")
 	m.inputPos = len(m.input)
@@ -1341,7 +1341,7 @@ func TestExpandCommandExpandsThread(t *testing.T) {
 	t.Skip("skipped: pre-existing failure, needs CI environment fix")
 	m := newChannelModel(false)
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root topic"},
+		{ID: "msg-1", From: "cos", Content: "Root topic"},
 		{ID: "msg-2", From: "fe", Content: "Reply", ReplyTo: "msg-1"},
 	}
 	m.input = []rune("/expand msg-1")
@@ -1836,7 +1836,7 @@ func TestRequestsCommandSwitchesToRequestsView(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Title:    "Approval needed",
 		Question: "Should we proceed?",
@@ -1874,7 +1874,7 @@ func TestTaskSlashCommandOpensPicker(t *testing.T) {
 		Channel:   "general",
 		Title:     "Ship the dashboard",
 		Status:    "open",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	}}
 	m.input = []rune("/task")
 	m.inputPos = len(m.input)
@@ -1895,7 +1895,7 @@ func TestRequestSlashCommandOpensPicker(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Title:    "Approval needed",
 		Question: "Should we proceed?",
@@ -1921,7 +1921,7 @@ func TestTaskRowOpensActionPicker(t *testing.T) {
 		Channel:   "general",
 		Title:     "Ship the dashboard",
 		Status:    "open",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	}}
 	if cmd := m.openTaskActionPicker(m.tasks[0]); cmd != nil {
 		t.Fatalf("expected no command from opening task picker, got %v", cmd)
@@ -1936,7 +1936,7 @@ func TestRequestRowOpensActionPicker(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Title:    "Approval needed",
 		Question: "Should we proceed?",
@@ -1972,7 +1972,7 @@ func TestRequestSlashCommandFocusesRequest(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Title:    "Approval needed",
 		Question: "Should we proceed?",
@@ -2012,7 +2012,7 @@ func TestRequestsViewRendersOpenRequests(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship the launch plan?",
 		Context:  "We need a yes/no from the human.",
 		Status:   "pending",
@@ -2030,9 +2030,9 @@ func TestCalendarViewRendersSchedulerAndActions(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.activeApp = channelui.OfficeAppCalendar
-	m.actions = []channelui.Action{{ID: "action-1", Kind: "task_created", Actor: "ceo", Summary: "Opened a follow-up task", CreatedAt: "2026-03-24T10:00:00Z"}}
+	m.actions = []channelui.Action{{ID: "action-1", Kind: "task_created", Actor: "cos", Summary: "Opened a follow-up task", CreatedAt: "2026-03-24T10:00:00Z"}}
 	m.scheduler = []channelui.SchedulerJob{{Slug: "nex-insights", Label: "Nex insights", IntervalMinutes: 15, NextRun: "2026-03-24T10:15:00Z", Status: "sleeping"}}
-	m.members = []channelui.Member{{Slug: "ceo", Name: "Chief of Staff"}}
+	m.members = []channelui.Member{{Slug: "cos", Name: "Chief of Staff"}}
 
 	view := stripANSI(m.View())
 	if !strings.Contains(view, "Calendar") || !strings.Contains(view, "Nex insights") || !strings.Contains(view, "Opened a follow-up task") {
@@ -2119,7 +2119,7 @@ func TestCalendarMouseClickOpensTask(t *testing.T) {
 		Owner:     "fe",
 		ThreadID:  "msg-1",
 		DueAt:     time.Now().Add(30 * time.Minute).Format(time.RFC3339),
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		UpdatedAt: time.Now().Format(time.RFC3339),
 		CreatedAt: time.Now().Format(time.RFC3339),
 	}}
@@ -2155,7 +2155,7 @@ func TestChannelMsgKeepsScrollWhenReadingHistory(t *testing.T) {
 	m := newChannelModel(false)
 	m.scroll = 3
 
-	next, _ := m.Update(channelMsg{messages: []channelui.BrokerMessage{{ID: "msg-1", From: "ceo", Content: "new"}}})
+	next, _ := m.Update(channelMsg{messages: []channelui.BrokerMessage{{ID: "msg-1", From: "cos", Content: "new"}}})
 	got := next.(channelModel)
 
 	if got.scroll != 4 {
@@ -2173,7 +2173,7 @@ func TestMouseClickJumpLatestClearsUnread(t *testing.T) {
 	m.scroll = 3
 	m.unreadCount = 2
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Root", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "fe", Content: "Reply", Timestamp: "2026-03-24T10:01:00Z"},
 		{ID: "msg-3", From: "be", Content: "Reply", Timestamp: "2026-03-24T10:02:00Z"},
 		{ID: "msg-4", From: "pm", Content: "Reply", Timestamp: "2026-03-24T10:03:00Z"},
@@ -2204,7 +2204,7 @@ func TestOfficeViewportWindowMatchesFullRenderAndMouseHitTesting(t *testing.T) {
 		Owner:         "fe",
 		ExecutionMode: "local_worktree",
 		WorktreePath:  "/tmp/worktree",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		CreatedAt:     time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
 		UpdatedAt:     time.Now().Format(time.RFC3339),
 	}}
@@ -2215,13 +2215,13 @@ func TestOfficeViewportWindowMatchesFullRenderAndMouseHitTesting(t *testing.T) {
 		CreatedAt: time.Now().Add(-90 * time.Minute).Format(time.RFC3339),
 	}}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "A very long root message that should wrap across multiple rows to make sure the viewport helper actually has to window the history instead of rendering everything at once.", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "A very long root message that should wrap across multiple rows to make sure the viewport helper actually has to window the history instead of rendering everything at once.", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "fe", Content: "Reply one with enough content to wrap and keep the total line count above the viewport height.", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 		{ID: "msg-3", From: "be", Content: "Second root message with more wrapped text so the suffix collector has to stop before the entire history is materialized.", Timestamp: "2026-03-24T10:02:00Z"},
 		{ID: "msg-4", From: "pm", Content: "Reply two that stays in the same thread and should remain visible in the tail window.", ReplyTo: "msg-3", Timestamp: "2026-03-24T10:03:00Z"},
 		{ID: "msg-5", From: "cmo", Content: "Another root message that keeps the history long enough for the windowing path to matter.", Timestamp: "2026-03-24T10:04:00Z"},
 		{ID: "msg-6", From: "designer", Content: "More filler content to push the viewport down and exercise the suffix collector.", Timestamp: "2026-03-24T10:05:00Z"},
-		{ID: "msg-7", From: "ceo", Content: "Should we keep the thread collapsed so the summary row is clickable?", Timestamp: "2026-03-24T10:06:00Z"},
+		{ID: "msg-7", From: "cos", Content: "Should we keep the thread collapsed so the summary row is clickable?", Timestamp: "2026-03-24T10:06:00Z"},
 		{ID: "msg-8", From: "fe", Content: "Yes, the collapse summary is what we want to click.", ReplyTo: "msg-7", Timestamp: "2026-03-24T10:07:00Z"},
 	}
 	m.expandedThreads["msg-7"] = false
@@ -2286,7 +2286,7 @@ func TestOfficeViewportVirtualizationCachesVisibleBlocks(t *testing.T) {
 	for i := 0; i < 120; i++ {
 		m.messages = append(m.messages, channelui.BrokerMessage{
 			ID:        fmt.Sprintf("msg-%03d", i),
-			From:      "ceo",
+			From:      "cos",
 			Content:   fmt.Sprintf("Longer history row %03d should not force the viewport to render the full transcript before showing the tail.", i),
 			Timestamp: time.Date(2026, 4, 7, 10, i%60, 0, 0, time.UTC).Format(time.RFC3339),
 		})
@@ -2333,7 +2333,7 @@ func TestRecoveryMouseClickInsertsPromptAndReturnsToMessages(t *testing.T) {
 		UpdatedAt: time.Now().Format(time.RFC3339),
 	}}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
+		{ID: "msg-1", From: "cos", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
 		{ID: "msg-2", From: "pm", Content: "Reply in thread", ReplyTo: "msg-1", Timestamp: time.Now().Add(-2 * time.Minute).Format(time.RFC3339)},
 	}
 
@@ -2416,7 +2416,7 @@ func TestMouseClickCollapsedThreadOpensThreadPanel(t *testing.T) {
 	m.width = 120
 	m.height = 32
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-1", From: "cos", Content: "Root topic", Timestamp: "2026-03-24T10:00:00Z"},
 		{ID: "msg-2", From: "fe", Content: "Reply one", ReplyTo: "msg-1", Timestamp: "2026-03-24T10:01:00Z"},
 	}
 
@@ -2481,7 +2481,7 @@ func TestPendingRequestEnterOpensReviewConfirmation(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship it?",
 		Options: []channelui.InterviewOption{
 			{ID: "approve", Label: "Approve"},
@@ -2509,7 +2509,7 @@ func TestPendingRequestRequiresTextBeforeReview(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship it?",
 		Options: []channelui.InterviewOption{
 			{ID: "approve_with_note", Label: "Approve with note", RequiresText: true, TextHint: "Type constraints first."},
@@ -2534,7 +2534,7 @@ func TestPendingRequestTypedAnswerOpensReviewConfirmation(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship it?",
 	}
 	m.selectedOption = 0
@@ -2584,7 +2584,7 @@ func TestChannelViewShowsMessageIDInMeta(t *testing.T) {
 	m.width = 120
 	m.height = 30
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-12", From: "ceo", Content: "We should choose a sharper wedge.", Timestamp: "2026-03-24T10:00:00Z"},
+		{ID: "msg-12", From: "cos", Content: "We should choose a sharper wedge.", Timestamp: "2026-03-24T10:00:00Z"},
 	}
 
 	view := stripANSI(m.View())
@@ -2610,7 +2610,7 @@ func TestChannelViewShowsPerMessageTokenUsage(t *testing.T) {
 	m.messages = []channelui.BrokerMessage{
 		{
 			ID:        "msg-token-1",
-			From:      "ceo",
+			From:      "cos",
 			Content:   "We should choose a sharper wedge.",
 			Timestamp: "2026-03-24T10:00:00Z",
 			Usage:     &channelui.BrokerMessageUsage{TotalTokens: 1234},
@@ -2631,7 +2631,7 @@ func TestChannelViewShowsUsageTotals(t *testing.T) {
 		Session: channelui.UsageTotals{TotalTokens: 3200, CostUsd: 0.41},
 		Total:   channelui.UsageTotals{TotalTokens: 12500, CostUsd: 1.23},
 		Bots: map[string]channelui.UsageTotals{
-			"ceo": {TotalTokens: 5000, CostUsd: 0.62},
+			"cos": {TotalTokens: 5000, CostUsd: 0.62},
 			"fe":  {TotalTokens: 7500, CostUsd: 0.61},
 		},
 	}
@@ -2650,7 +2650,7 @@ func TestChannelViewShowsUsageTotals(t *testing.T) {
 
 func TestRenderInterviewCardShowsCustomAnswerAsFinalOption(t *testing.T) {
 	card := channelui.RenderInterviewCard(channelui.Interview{
-		From:     "ceo",
+		From:     "cos",
 		Question: "What should we optimize for?",
 		Options: []channelui.InterviewOption{
 			{ID: "speed", Label: "Ship fast", Description: "Bias toward launch speed."},
@@ -2676,7 +2676,7 @@ func TestInterviewPhaseTracksChooseDraftAndReview(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Ship it?",
 		Options: []channelui.InterviewOption{
 			{ID: "approve_with_note", Label: "Approve with note", RequiresText: true},
@@ -2711,7 +2711,7 @@ func TestEscCancelsPendingInterviewWithoutAnswering(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "interview-1",
 		Kind:     "interview",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Which segment should we prioritize?",
 	}
 	m.input = []rune("draft answer")
@@ -2743,7 +2743,7 @@ func TestNewInterviewShowsCard(t *testing.T) {
 	m.height = 30
 	m.pending = &channelui.Interview{
 		ID:       "interview-1",
-		From:     "ceo",
+		From:     "cos",
 		Question: "Old question",
 	}
 
@@ -2770,7 +2770,7 @@ func TestBlockingRequestSwitchesBackToMessages(t *testing.T) {
 		requests: []channelui.Interview{{
 			ID:       "request-1",
 			Kind:     "approval",
-			From:     "ceo",
+			From:     "cos",
 			Channel:  "general",
 			Question: "Ship it?",
 			Blocking: true,
@@ -2779,7 +2779,7 @@ func TestBlockingRequestSwitchesBackToMessages(t *testing.T) {
 		pending: &channelui.Interview{
 			ID:       "request-1",
 			Kind:     "approval",
-			From:     "ceo",
+			From:     "cos",
 			Channel:  "general",
 			Question: "Ship it?",
 			Blocking: true,
@@ -2803,7 +2803,7 @@ func TestBlockingRequestEscCancelsRequest(t *testing.T) {
 	m.pending = &channelui.Interview{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Question: "Ship it?",
 		Blocking: true,
@@ -2834,7 +2834,7 @@ func TestBlockingRequestDismissCommandCancelsRequest(t *testing.T) {
 	m.requests = []channelui.Interview{{
 		ID:       "request-1",
 		Kind:     "approval",
-		From:     "ceo",
+		From:     "cos",
 		Channel:  "general",
 		Question: "Ship it?",
 		Blocking: true,

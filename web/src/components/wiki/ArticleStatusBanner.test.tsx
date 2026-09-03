@@ -8,7 +8,7 @@ describe("<ArticleStatusBanner>", () => {
     render(
       <ArticleStatusBanner
         message="CEO is editing this article."
-        liveBot="ceo"
+        liveBot="cos"
         revisions={47}
         contributors={6}
         wordCount={2347}

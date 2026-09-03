@@ -53,7 +53,7 @@ func (b *Broker) ensureDMConversationLocked(slug string) *teamChannel {
 	}
 	botSlug := DMTargetBot(slug)
 	if botSlug == "" {
-		// No human side. A bot-to-bot pair ("ceo__designer") is a real
+		// No human side. A bot-to-bot pair ("cos__designer") is a real
 		// conversation — it is how one bot consults another — but
 		// DMTargetBot is human-relative and returns "" for it, so without
 		// this branch the pair DM is never created and the first send 404s

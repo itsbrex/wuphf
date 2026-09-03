@@ -35,14 +35,14 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	var ceo *officeMember
+	var cos *officeMember
 	for i := range b.members {
-		if b.members[i].Slug == "ceo" {
-			ceo = &b.members[i]
+		if b.members[i].Slug == "cos" {
+			cos = &b.members[i]
 			break
 		}
 	}
-	if ceo == nil {
+	if cos == nil {
 		slugs := make([]string, 0, len(b.members))
 		for i := range b.members {
 			slugs = append(slugs, b.members[i].Slug)
@@ -64,7 +64,7 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 		if general != nil {
 			t.Fatalf("#general is retired but onboarding seeded it")
 		}
-		if b.findChannelLocked(channel.DirectSlug("human", "ceo")) == nil {
+		if b.findChannelLocked(channel.DirectSlug("human", "cos")) == nil {
 			slugs := make([]string, 0, len(b.channels))
 			for i := range b.channels {
 				slugs = append(slugs, b.channels[i].Slug)
@@ -83,7 +83,7 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 
 	inGeneral := false
 	for _, member := range general.Members {
-		if member == "ceo" {
+		if member == "cos" {
 			inGeneral = true
 			break
 		}
@@ -103,7 +103,7 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 			continue
 		}
 		for _, slug := range msg.Tagged {
-			if slug == "ceo" {
+			if slug == "cos" {
 				tagged = true
 			}
 		}
@@ -119,25 +119,25 @@ func TestOnboardingCompleteNoPackSeedsCEOAndGeneralChannel(t *testing.T) {
 
 // officeLeadSlugFromMembers used to scan for the first BuiltIn member in
 // slug order. The Librarian and the App Builder are BuiltIn service bots in
-// every office and "app-builder" sorts ahead of "ceo", so the App Builder won
+// every office and "app-builder" sorts ahead of "cos", so the App Builder won
 // every roster — the onboarding kickoff was tagged to it, and the starter
 // channels listed it as their lead. Pin the CEO preference that its sibling
 // officeLeadSlugFrom (office_targets.go) has always had.
 func TestOfficeLeadSlugFromMembersPrefersCEOOverServiceBuiltIns(t *testing.T) {
 	now := "2026-08-22T00:00:00Z"
 	leadOnly := []officeMember{
-		{Slug: "ceo", Name: "CEO", Role: "lead", BuiltIn: true, CreatedAt: now},
+		{Slug: "cos", Name: "CEO", Role: "lead", BuiltIn: true, CreatedAt: now},
 		{Slug: LibrarianSlug, Name: "Librarian", BuiltIn: true, CreatedAt: now},
 		{Slug: appBuilderSlug, Name: "App Builder", BuiltIn: true, CreatedAt: now},
 	}
-	if got := officeLeadSlugFromMembers(leadOnly); got != "ceo" {
-		t.Errorf("lead-only roster: got lead %q, want ceo", got)
+	if got := officeLeadSlugFromMembers(leadOnly); got != "cos" {
+		t.Errorf("lead-only roster: got lead %q, want cos", got)
 	}
 
 	// Order-independence: the answer must not depend on the caller's snapshot.
 	reversed := []officeMember{leadOnly[2], leadOnly[1], leadOnly[0]}
-	if got := officeLeadSlugFromMembers(reversed); got != "ceo" {
-		t.Errorf("reversed roster: got lead %q, want ceo", got)
+	if got := officeLeadSlugFromMembers(reversed); got != "cos" {
+		t.Errorf("reversed roster: got lead %q, want cos", got)
 	}
 
 	// A full roster reaches the same answer.
@@ -145,8 +145,8 @@ func TestOfficeLeadSlugFromMembersPrefersCEOOverServiceBuiltIns(t *testing.T) {
 		officeMember{Slug: "designer", Name: "Designer", CreatedAt: now},
 		officeMember{Slug: "gtm-lead", Name: "GTM Lead", CreatedAt: now},
 	)
-	if got := officeLeadSlugFromMembers(full); got != "ceo" {
-		t.Errorf("full roster: got lead %q, want ceo", got)
+	if got := officeLeadSlugFromMembers(full); got != "cos" {
+		t.Errorf("full roster: got lead %q, want cos", got)
 	}
 
 	// With no CEO the BuiltIn fallback still answers, as it always did.

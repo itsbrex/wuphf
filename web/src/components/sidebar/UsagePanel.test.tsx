@@ -16,7 +16,7 @@ const USAGE = {
   },
   session: { total_tokens: 1_250_000 },
   bots: {
-    ceo: {
+    cos: {
       input_tokens: 1_000_000,
       output_tokens: 250_000,
       cache_read_tokens: 0,

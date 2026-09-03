@@ -26,13 +26,13 @@ func newFollowUpTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 		{Slug: "fe", Name: "Frontend"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng", "fe"}},
-		{Slug: "task-done-1", Name: "Ship the landing page", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "general", Name: "general", Members: []string{"human", "cos", "eng", "fe"}},
+		{Slug: "task-done-1", Name: "Ship the landing page", Members: []string{"human", "cos", "eng"}},
 	}
 	b.tasks = []teamTask{
 		{
@@ -86,7 +86,7 @@ func TestTaskFollowUp_GeneralAndArchivedAndAgentPostsExcluded(t *testing.T) {
 		t.Errorf("done task in #general must not be follow-up marked; got %+v", task.HumanNotePending)
 	}
 	// Bot posts never mark; archived tasks never mark.
-	if _, err := b.PostMessage("ceo", "task-done-1", "Nice work on this one.", nil, ""); err != nil {
+	if _, err := b.PostMessage("cos", "task-done-1", "Nice work on this one.", nil, ""); err != nil {
 		t.Fatalf("bot post: %v", err)
 	}
 	if task := b.TaskByID("task-done-1"); task.HumanNotePending != nil {
@@ -142,9 +142,9 @@ func TestTaskFollowUp_TargetsRouteToOwner(t *testing.T) {
 	t.Parallel()
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -171,7 +171,7 @@ func TestTaskFollowUp_TargetsRouteToOwner(t *testing.T) {
 	immediate, _ = l.taskNotificationTargets(officeActionLog{
 		Kind: taskFollowUpActionKind, Actor: "human", Channel: "task-done-1", RelatedID: "task-done-1",
 	}, task)
-	if len(immediate) != 1 || immediate[0].Slug != "ceo" {
+	if len(immediate) != 1 || immediate[0].Slug != "cos" {
 		t.Fatalf("ownerless follow-up must fall back to the lead; got %+v", immediate)
 	}
 }

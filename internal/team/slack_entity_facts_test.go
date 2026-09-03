@@ -45,7 +45,7 @@ func newEntitySyncFixture(t *testing.T) (*SlackTransport, *Broker, *Repo, *fakeS
 	b.entityGraph = NewEntityGraph(worker)
 	b.mu.Lock()
 	b.members = append(b.members,
-		officeMember{Slug: "ceo", Name: "CEO", Role: "Coordinator", Provider: provider.ProviderBinding{Kind: "codex"}},
+		officeMember{Slug: "cos", Name: "CEO", Role: "Coordinator", Provider: provider.ProviderBinding{Kind: "codex"}},
 		officeMember{Slug: "hermes", Name: "Hermes", Provider: provider.ProviderBinding{
 			Kind:  "slack",
 			Slack: &provider.SlackProviderBinding{UserID: "U3HERMES"},
@@ -94,10 +94,10 @@ func TestSlackEntityFactSyncBuildsPeopleArticles(t *testing.T) {
 	}
 
 	// Team bot: role + runtime.
-	ceo := readEntityArticle(t, repo, "ceo")
+	cos := readEntityArticle(t, repo, "cos")
 	for _, want := range []string{"team bot", "Coordinator", "codex runtime"} {
-		if !strings.Contains(ceo, want) {
-			t.Errorf("ceo article missing %q:\n%s", want, ceo)
+		if !strings.Contains(cos, want) {
+			t.Errorf("cos article missing %q:\n%s", want, cos)
 		}
 	}
 

@@ -126,17 +126,17 @@ func TestNewBrokerSeedsDefaultOfficeRosterOnFreshState(t *testing.T) {
 	// This used to demand two or more members, back when the default roster
 	// was the lead plus an App Builder, a Librarian, and a planner/executor/
 	// reviewer trio. Those five are retired as defaults, so the size assertion
-	// is now owned by broker_default_roster_test.go ("exactly [ceo]"). What
+	// is now owned by broker_default_roster_test.go ("exactly [cos]"). What
 	// this test still owns is the pair of properties below: the lead exists,
 	// and nobody on the roster is stranded without a way to be reached.
 	if len(members) == 0 {
 		t.Fatalf("expected a default office roster on fresh state, got 0 members")
 	}
 	b.mu.Lock()
-	ceo := b.findMemberLocked("ceo")
+	cos := b.findMemberLocked("cos")
 	b.mu.Unlock()
-	if ceo == nil {
-		t.Fatalf("expected ceo to be present in default office roster, got %+v", members)
+	if cos == nil {
+		t.Fatalf("expected cos to be present in default office roster, got %+v", members)
 	}
 	// This used to assert that #general existed and held the whole roster.
 	// With #general retired the equivalent property is that every bot on
@@ -247,7 +247,7 @@ func TestChannelMembersRejectUnknownOfficeMember(t *testing.T) {
 
 // TestChannelMembersRejectDisableOrRemoveOfLead verifies that /channel-members
 // refuses to disable or remove a BuiltIn member (lead bot) from any
-// channel. Before this guard was generalized, only the hardcoded "ceo"
+// channel. Before this guard was generalized, only the hardcoded "cos"
 // slug was protected — blueprint teams whose lead is something else (e.g.
 // niche-crm uses "operator") could silently lose their lead from #general.
 func TestChannelMembersRejectDisableOrRemoveOfLead(t *testing.T) {
@@ -402,7 +402,7 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 		Name:        "launch",
 		Description: "Launch planning and launch-readiness work.",
 		Members:     []string{"pm", "fe"},
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 		Surface:     &channelSurface{Provider: "slack", RemoteID: "C0LAUNCH", RemoteTitle: "launch"},
 	})
 	b.mu.Unlock()
@@ -436,7 +436,7 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 	if launch.Description != "Launch planning and launch-readiness work." {
 		t.Fatalf("unexpected launch description: %q", launch.Description)
 	}
-	if !containsString(launch.Members, "ceo") || !containsString(launch.Members, "pm") || !containsString(launch.Members, "fe") {
+	if !containsString(launch.Members, "cos") || !containsString(launch.Members, "pm") || !containsString(launch.Members, "fe") {
 		t.Fatalf("expected create payload members plus CEO in new channel, got %+v", launch.Members)
 	}
 
@@ -451,11 +451,11 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 		t.Fatalf("expected 403 for non-member channel messages, got %d", resp.StatusCode)
 	}
 
-	req, _ = http.NewRequest(http.MethodGet, base+"/messages?channel=launch&my_slug=ceo", nil)
+	req, _ = http.NewRequest(http.MethodGet, base+"/messages?channel=launch&my_slug=cos", nil)
 	req.Header.Set("Authorization", "Bearer "+b.Token())
 	resp, err = http.DefaultClient.Do(req)
 	if err != nil {
-		t.Fatalf("get messages as ceo failed: %v", err)
+		t.Fatalf("get messages as cos failed: %v", err)
 	}
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
@@ -467,7 +467,7 @@ func TestChannelDescriptionsAreVisibleButContentStaysRestricted(t *testing.T) {
 // shape: canAccessChannelLocked treats a small set of slugs ("system", "nex",
 // "you", "human") as universally trusted senders. A user-created channel
 // sharing one of those slugs would let every trusted-sender slug read + post
-// in it without an explicit Members entry. "ceo", the Librarian and the App
+// in it without an explicit Members entry. "cos", the Librarian and the App
 // Builder are reserved for a second reason — a channel that shadows a bot
 // slug breaks DM slug resolution and @-mention routing.
 //
@@ -482,11 +482,11 @@ func TestChannelCreateRejectsReservedSlugs(t *testing.T) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	for _, reserved := range []string{"system", "nex", "you", "human", "ceo", LibrarianSlug, appBuilderSlug} {
+	for _, reserved := range []string{"system", "nex", "you", "human", "cos", LibrarianSlug, appBuilderSlug} {
 		ch, cerr := b.createChannelLocked(channelCreateInput{
 			Slug:      reserved,
 			Name:      reserved,
-			CreatedBy: "ceo",
+			CreatedBy: "cos",
 		})
 		if cerr == nil {
 			t.Fatalf("create %q: expected a refusal, got channel %+v", reserved, ch)
@@ -501,7 +501,7 @@ func TestChannelCreateRejectsReservedSlugs(t *testing.T) {
 	ch, cerr := b.createChannelLocked(channelCreateInput{
 		Slug:      "feature-launch",
 		Name:      "Feature Launch",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if cerr != nil {
 		t.Fatalf("create feature-launch: unexpected refusal %d (%s)", cerr.Code, cerr.Msg)
@@ -527,7 +527,7 @@ func TestChannelCreateRejectsEmptySlug(t *testing.T) {
 		ch, cerr := b.createChannelLocked(channelCreateInput{
 			Slug:      raw,
 			Name:      "anything",
-			CreatedBy: "ceo",
+			CreatedBy: "cos",
 		})
 		if cerr == nil {
 			t.Fatalf("create empty slug %q: expected a refusal, got channel %+v", raw, ch)
@@ -566,7 +566,7 @@ func TestChannelUpdateMutatesDescriptionAndMembers(t *testing.T) {
 		Name:        "yt-research",
 		Description: "Old description",
 		Members:     []string{"research-lead"},
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 	})
 	if cerr == nil {
 		if ch := b.findChannelLocked("yt-research"); ch != nil {
@@ -584,7 +584,7 @@ func TestChannelUpdateMutatesDescriptionAndMembers(t *testing.T) {
 		"name":        "yt-research",
 		"description": "Search demand, topic scoring, and proof packets.",
 		"members":     []string{"research-lead", "scriptwriter", "growth-ops"},
-		"created_by":  "ceo",
+		"created_by":  "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(updateBody))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -608,7 +608,7 @@ func TestChannelUpdateMutatesDescriptionAndMembers(t *testing.T) {
 	if payload.Channel.Description != "Search demand, topic scoring, and proof packets." {
 		t.Fatalf("unexpected description after update: %q", payload.Channel.Description)
 	}
-	if !containsString(payload.Channel.Members, "ceo") || !containsString(payload.Channel.Members, "scriptwriter") || !containsString(payload.Channel.Members, "growth-ops") {
+	if !containsString(payload.Channel.Members, "cos") || !containsString(payload.Channel.Members, "scriptwriter") || !containsString(payload.Channel.Members, "growth-ops") {
 		t.Fatalf("expected updated member roster plus CEO, got %+v", payload.Channel.Members)
 	}
 	if containsString(payload.Channel.Disabled, "scriptwriter") {
@@ -623,7 +623,7 @@ func createOfficeMemberForTest(t *testing.T, base, token, slug, name, role strin
 		"slug":       slug,
 		"name":       name,
 		"role":       role,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/office-members", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+token)
@@ -645,7 +645,7 @@ func TestNormalizeLoadedStateRepopulatesGeneralFromOfficeRoster(t *testing.T) {
 	defer b.mu.Unlock()
 
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", Role: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", Role: "CEO", BuiltIn: true},
 		{Slug: "pm", Name: "Product Manager", Role: "Product Manager"},
 		{Slug: "fe", Name: "Frontend Engineer", Role: "Frontend Engineer"},
 	}
@@ -653,7 +653,7 @@ func TestNormalizeLoadedStateRepopulatesGeneralFromOfficeRoster(t *testing.T) {
 		Slug:        "general",
 		Name:        "general",
 		Description: "Company-wide room",
-		Members:     []string{"ceo"},
+		Members:     []string{"cos"},
 	}}
 
 	b.normalizeLoadedStateLocked()
@@ -662,7 +662,7 @@ func TestNormalizeLoadedStateRepopulatesGeneralFromOfficeRoster(t *testing.T) {
 	if ch == nil {
 		t.Fatal("expected general channel after normalization")
 	}
-	if !containsString(ch.Members, "ceo") || !containsString(ch.Members, "pm") || !containsString(ch.Members, "fe") {
+	if !containsString(ch.Members, "cos") || !containsString(ch.Members, "pm") || !containsString(ch.Members, "fe") {
 		t.Fatalf("expected general channel to be repopulated from office roster, got %+v", ch.Members)
 	}
 }
@@ -685,7 +685,7 @@ func TestEnsureDefaultOfficeMembersSeedsWhenEmpty(t *testing.T) {
 
 // REGRESSION: if a blueprint has seeded members (e.g. operator/planner/builder/
 // growth/reviewer for niche-crm), ensureDefaultOfficeMembersLocked must NOT
-// append ceo/planner/executor/reviewer on top.
+// append cos/planner/executor/reviewer on top.
 func TestEnsureDefaultOfficeMembersNoOpWhenNonEmpty(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
@@ -710,7 +710,7 @@ func TestEnsureDefaultOfficeMembersNoOpWhenNonEmpty(t *testing.T) {
 		}
 	}
 	for _, m := range got {
-		if m == "ceo" || m == "planner" || m == "executor" || m == "reviewer" {
+		if m == "cos" || m == "planner" || m == "executor" || m == "reviewer" {
 			t.Fatalf("default slug %q appended into blueprint roster; roster=%v", m, got)
 		}
 	}
@@ -720,7 +720,7 @@ func TestEnsureDefaultOfficeMembersNoOpWhenNonEmpty(t *testing.T) {
 // a fresh broker, confirm the team survives unchanged. This is the load-path
 // leak the design doc calls out — prior append-behavior in
 // ensureDefaultOfficeMembersLocked (called from Broker.Load() at broker.go:2260)
-// silently re-added ceo/planner/executor/reviewer.
+// silently re-added cos/planner/executor/reviewer.
 func TestLoadDoesNotAppendDefaultsAfterBlueprintSeed(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
@@ -769,7 +769,7 @@ func TestLoadDoesNotAppendDefaultsAfterBlueprintSeed(t *testing.T) {
 	}
 	for _, s := range slugs {
 		switch s {
-		case "ceo", "executor", LibrarianSlug, appBuilderSlug:
+		case "cos", "executor", LibrarianSlug, appBuilderSlug:
 			t.Fatalf("slug %q was appended to the reloaded roster: a back-fill is live again (%v)", s, slugs)
 		}
 	}

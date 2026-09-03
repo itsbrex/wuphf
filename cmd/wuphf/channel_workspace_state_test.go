@@ -14,9 +14,9 @@ func TestBuildOfficeIntroLinesUsesWorkspaceState(t *testing.T) {
 	t.Setenv("WUPHF_MEMORY_BACKEND", "none")
 	m := newChannelModel(false)
 	m.brokerConnected = true
-	m.members = []channelui.Member{{Slug: "ceo", Name: "CEO"}, {Slug: "pm", Name: "Product Manager"}}
+	m.members = []channelui.Member{{Slug: "cos", Name: "CEO"}, {Slug: "pm", Name: "Product Manager"}}
 	m.tasks = []channelui.Task{{ID: "task-1", Title: "Ship launch", Status: "in_progress", Owner: "pm"}}
-	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve launch copy", Question: "Approve launch copy?", From: "ceo"}}
+	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve launch copy", Question: "Approve launch copy?", From: "cos"}}
 
 	lines := m.buildOfficeIntroLines(96)
 	plain := stripANSI(joinRenderedLines(lines))
@@ -68,9 +68,9 @@ func TestCurrentHeaderMetaUsesWorkspaceStateForOfficeMessages(t *testing.T) {
 	m.activeApp = channelui.OfficeAppMessages
 	m.activeChannel = "launch"
 	m.brokerConnected = true
-	m.members = []channelui.Member{{Slug: "ceo", Name: "CEO"}, {Slug: "pm", Name: "Product Manager"}}
+	m.members = []channelui.Member{{Slug: "cos", Name: "CEO"}, {Slug: "pm", Name: "Product Manager"}}
 	m.tasks = []channelui.Task{{ID: "task-1", Title: "Ship launch", Status: "in_progress", Owner: "pm"}}
-	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve launch copy", Question: "Approve launch copy?", From: "ceo", Blocking: true}}
+	m.requests = []channelui.Interview{{ID: "req-1", Kind: "approval", Status: "pending", Title: "Approve launch copy", Question: "Approve launch copy?", From: "cos", Blocking: true}}
 
 	meta := stripANSI(m.currentHeaderMeta())
 	if !strings.Contains(meta, "2 teammates") {

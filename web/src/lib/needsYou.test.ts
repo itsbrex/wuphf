@@ -95,7 +95,7 @@ describe("isNoticeRequest", () => {
       kind: "request",
       requestId: "req-1",
       title: "task-9 delivered",
-      request: { kind, question: "", from: "ceo", blocking },
+      request: { kind, question: "", from: "cos", blocking },
     } as InboxItemRequest;
   }
 

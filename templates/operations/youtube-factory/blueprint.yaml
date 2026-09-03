@@ -42,7 +42,7 @@ example_artifacts:
     title: "Long-form video script"
   - kind: report
     title: "Per-video performance review"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/research/**": research-lead
   "team/scripts/**": scriptwriter
@@ -54,11 +54,11 @@ employee_blueprints:
   - workflow-automation-builder
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} launch."
   kickoff_prompt: "Build the {{brand_name}} business end to end. Use the specialist lanes already created and come back with the launch plan, the first publishable backlog, script briefs, the production SOP, packaging rules, integration smoke-test plan, and the monetization ladder."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "👔"
       name: CEO
       role: Owns strategy, delegation, and commercial priorities

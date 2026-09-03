@@ -40,7 +40,7 @@ const specialist: OfficeMember = {
 };
 
 const lead: OfficeMember = {
-  slug: "ceo",
+  slug: "cos",
   name: "CEO",
   role: "lead",
   built_in: true,

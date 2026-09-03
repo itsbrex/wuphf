@@ -21,12 +21,12 @@ func TestIsDeterministicPhase2CEODM_GatesCEODMDuringPhase2(t *testing.T) {
 		onboard bool
 		want    bool
 	}{
-		{"CEO DM mid-phase-blueprint", "ceo__human", onboarding.PhaseBlueprint, false, true},
-		{"CEO DM mid-phase-team", "ceo__human", onboarding.PhaseTeam, false, true},
-		{"CEO DM mid-phase-greet", "human__ceo", onboarding.PhaseGreet, false, true},
+		{"CEO DM mid-phase-blueprint", "cos__human", onboarding.PhaseBlueprint, false, true},
+		{"CEO DM mid-phase-team", "cos__human", onboarding.PhaseTeam, false, true},
+		{"CEO DM mid-phase-greet", "human__cos", onboarding.PhaseGreet, false, true},
 		{"reserved CEO DM slug", onboarding.CEOOnboardingDMSlug, onboarding.PhaseBlueprint, false, true},
-		{"CEO DM after onboarding complete", "ceo__human", onboarding.PhaseComplete, true, false},
-		{"CEO DM in LLM-backed draft phase", "ceo__human", onboarding.PhaseDraft, false, false},
+		{"CEO DM after onboarding complete", "cos__human", onboarding.PhaseComplete, true, false},
+		{"CEO DM in LLM-backed draft phase", "cos__human", onboarding.PhaseDraft, false, false},
 		{"non-CEO DM during Phase 2", "engineer__human", onboarding.PhaseTeam, false, false},
 		{"non-DM channel during Phase 2", "team", onboarding.PhaseTeam, false, false},
 		{"empty channel during Phase 2", "", onboarding.PhaseTeam, false, false},

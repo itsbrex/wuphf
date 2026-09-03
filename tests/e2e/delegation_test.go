@@ -80,7 +80,7 @@ func newTestBotServiceWithStart(t *testing.T, resolver bot.StreamFnResolver, sta
 func TestFullDelegationFlow(t *testing.T) {
 	teamLeadResponse := "I'll have @fe build the UI and @be build the API."
 	responses := map[string]string{
-		"ceo": teamLeadResponse,
+		"cos": teamLeadResponse,
 		"fe":  "UI built successfully.",
 		"be":  "API endpoints created.",
 	}
@@ -88,26 +88,26 @@ func TestFullDelegationFlow(t *testing.T) {
 	svc, pack := newTestBotService(t, fakeResolver(responses))
 	delegator := orchestration.NewDelegator(3)
 
-	// Steer team-lead (ceo) with a directive.
-	if err := svc.Steer("ceo", "Build a landing page with API"); err != nil {
-		t.Fatalf("steer ceo: %v", err)
+	// Steer team-lead (cos) with a directive.
+	if err := svc.Steer("cos", "Build a landing page with API"); err != nil {
+		t.Fatalf("steer cos: %v", err)
 	}
 
 	// Tick the CEO bot through its full cycle: idle → build_context → stream_llm → done.
-	ceoBot, ok := svc.Get("ceo")
+	ceoBot, ok := svc.Get("cos")
 	if !ok {
-		t.Fatal("ceo bot not found")
+		t.Fatal("cos bot not found")
 	}
 
 	// We also need a follow-up so the loop has user content to process.
-	if err := svc.FollowUp("ceo", "Build a landing page with API"); err != nil {
-		t.Fatalf("follow-up ceo: %v", err)
+	if err := svc.FollowUp("cos", "Build a landing page with API"); err != nil {
+		t.Fatalf("follow-up cos: %v", err)
 	}
 
 	// Tick until done or error (max 10 ticks to avoid infinite loop).
 	for i := 0; i < 10; i++ {
 		if err := ceoBot.Loop.Tick(); err != nil {
-			t.Fatalf("ceo tick %d: %v", i, err)
+			t.Fatalf("cos tick %d: %v", i, err)
 		}
 		state := ceoBot.Loop.GetState()
 		if state.Phase == bot.PhaseDone || state.Phase == bot.PhaseError {
@@ -117,7 +117,7 @@ func TestFullDelegationFlow(t *testing.T) {
 
 	ceoState := ceoBot.Loop.GetState()
 	if ceoState.Phase != bot.PhaseDone {
-		t.Fatalf("expected ceo phase done, got %s (error: %s)", ceoState.Phase, ceoState.Error)
+		t.Fatalf("expected cos phase done, got %s (error: %s)", ceoState.Phase, ceoState.Error)
 	}
 
 	// Extract delegations from the team-lead response.
@@ -182,13 +182,13 @@ func TestProviderErrorSurfaces(t *testing.T) {
 	svc, _ := newTestBotServiceWithStart(t, fakeErrorResolver("provider failed"), false)
 
 	// Give the bot something to process.
-	if err := svc.FollowUp("ceo", "do something"); err != nil {
+	if err := svc.FollowUp("cos", "do something"); err != nil {
 		t.Fatalf("follow-up: %v", err)
 	}
 
-	ma, ok := svc.Get("ceo")
+	ma, ok := svc.Get("cos")
 	if !ok {
-		t.Fatal("ceo bot not found")
+		t.Fatal("cos bot not found")
 	}
 	ma.Loop.Start()
 
@@ -219,19 +219,19 @@ func TestTeamLeadFirstRouting(t *testing.T) {
 	router := orchestration.NewMessageRouter()
 
 	bots := []orchestration.BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy", "delegation"}},
+		{Slug: "cos", Expertise: []string{"strategy", "delegation"}},
 		{Slug: "fe", Expertise: []string{"frontend", "React", "CSS"}},
 		{Slug: "be", Expertise: []string{"backend", "APIs", "databases"}},
 	}
 	for _, a := range bots {
 		router.RegisterBot(a.Slug, a.Expertise)
 	}
-	router.SetTeamLeadSlug("ceo")
+	router.SetTeamLeadSlug("cos")
 
 	// A generic directive should route to team-lead first.
 	result := router.Route("Build a new dashboard for analytics", bots)
-	if result.Primary != "ceo" {
-		t.Fatalf("expected primary=ceo, got %s", result.Primary)
+	if result.Primary != "cos" {
+		t.Fatalf("expected primary=cos, got %s", result.Primary)
 	}
 	if !result.TeamLeadAware {
 		t.Error("expected TeamLeadAware=true for team-lead routing")

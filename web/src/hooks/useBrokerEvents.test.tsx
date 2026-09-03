@@ -191,17 +191,17 @@ describe("useBrokerEvents unread counts", () => {
   });
 
   it("suppresses unread for /dm/<bot> when the bot slug sorts after `human`", () => {
-    navigateRouter("/dm/ceo");
+    navigateRouter("/dm/cos");
     renderHarness();
     const [source] = FakeEventSource.created;
 
     act(() => {
       source.emit("message", {
-        message: { id: "msg-1", channel: "ceo__human" },
+        message: { id: "msg-1", channel: "cos__human" },
       });
     });
 
-    expect(useAppStore.getState().unreadByChannel.ceo__human ?? 0).toBe(0);
+    expect(useAppStore.getState().unreadByChannel.cos__human ?? 0).toBe(0);
   });
 
   it("ignores message events without a channel", () => {

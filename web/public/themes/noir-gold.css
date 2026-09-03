@@ -200,8 +200,8 @@ html[data-theme="noir-gold"] .sidebar .sidebar-channels + .sidebar-section,
 html[data-theme="noir-gold"] .sidebar .sidebar-apps + .sidebar-section {
   border-top-color: var(--border);
 }
-html[data-theme="noir-gold"] .sidebar .sidebar-agent-task,
-html[data-theme="noir-gold"] .sidebar .sidebar-agent-activity {
+html[data-theme="noir-gold"] .sidebar .sidebar-bot-task,
+html[data-theme="noir-gold"] .sidebar .sidebar-bot-activity {
   color: rgba(245, 233, 200, 0.42);
 }
 
@@ -725,8 +725,8 @@ html[data-theme="noir-gold"] {
 /* ─── Sidebar agent task / activity (the "token burn" line under each
        team member) — was barely visible on noir at 42% cream opacity.
        Bump to a clean readable gold so the user can actually see it. */
-html[data-theme="noir-gold"] .sidebar .sidebar-agent-task,
-html[data-theme="noir-gold"] .sidebar .sidebar-agent-activity {
+html[data-theme="noir-gold"] .sidebar .sidebar-bot-task,
+html[data-theme="noir-gold"] .sidebar .sidebar-bot-activity {
   color: var(--gold-300);
   opacity: 1;
 }

@@ -35,7 +35,7 @@ func TestBackupMirrorRunsAfterFirstArticle(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/nazz.md", "# Nazz\n", "create", "seed"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/nazz.md", "# Nazz\n", "create", "seed"); err != nil {
 		t.Fatalf("commit: %v", err)
 	}
 	if err := repo.BackupMirror(ctx); err != nil {

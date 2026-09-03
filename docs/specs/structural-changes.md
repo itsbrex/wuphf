@@ -84,7 +84,7 @@
   seeded as a default member of every task channel (`createPerTaskChannelLocked`, guarded so legacy
   workspaces no-op), and granted cross-channel access (reserved-slug bypass). **Wiki authority moved
   CEO→Librarian:** the promotion reviewer resolves to `librarian` when present (`librarianAwareReviewer`
-  wraps the blueprint resolver — base "ceo" fallback → librarian; pinned reviewer respected; no
+  wraps the blueprint resolver — base "cos" fallback → librarian; pinned reviewer respected; no
   librarian member → unchanged); `team_notebook_review` opened to CEO+Librarian (NOT the lead's
   structural tools); CEO prompt delegates the wiki to @librarian, the Librarian gets a WIKI OWNERSHIP
   prompt block, specialists queue promotions for @librarian's review. The headless `pam` enrich helper
@@ -151,7 +151,7 @@
   **Phase 3 (a+b+c) ✅, teammcp regressions ✅, Phase 3 revision ✅, Parallel instances ✅**.
   Backend is fully task-scoped: **every real top-level task mints its own `task-<id>`
   channel** (2a-iii dropped the keyword heuristic on 2026-06-03 — only System / incident /
-  sub-tasks stay shared; verified live + the human and @ceo always retain channel access
+  sub-tasks stay shared; verified live + the human and @cos always retain channel access
   so the primary user is never locked out). #general is owned by the archived "Backup &
   Migration" system task; ~141 `general` refs untouched. **Frontend is pure task-scoped
   too** (sidebar = Tasks by stage, landing → /tasks, DM + per-bot-subspace removed from
@@ -277,13 +277,13 @@
 - Messaging: `POST/GET /messages` (`broker_messages.go:57,590`), polling (no SSE for
   messages). Web: `MessageFeed.tsx`, `Composer.tsx`, `ChannelList.tsx`.
 - Routing: `/channels/$channelSlug` (`router.ts:16`); index `/` redirects to
-  `/agents/ceo` (`router.ts:140`), NOT #general (already demoted).
+  `/agents/cos` (`router.ts:140`), NOT #general (already demoted).
 
 **C. Bots (CEO, Pam→Librarian, owners, summoning)**
 - `officeMember` struct (slug, name, role, expertise, provider binding, Watching).
   Spawned into tmux panes (`pane_lifecycle_spawn.go`). Prompts built in
   `prompt_builder.go` (CEO/lead branch ~140-270; specialist ~271-371).
-- CEO: slug `"ceo"`, reserved channel access (all channels), owns delegation +
+- CEO: slug `"cos"`, reserved channel access (all channels), owns delegation +
   **wiki promotion/review today** (prompt rules 8/8b/8c, `prompt_builder.go:217-219`:
   `team_notebook_review` + `notebook_promote`, "the broker auto-writes; you curate").
 - Pam (`pam.go`, slug `"pam"`, "the Archivist"): NOT a roster member; headless
@@ -311,7 +311,7 @@
 
 **E. Web shell / home / routines**
 - Entry `main.tsx`→`RootRoute.tsx`: not-onboarded→PrePickScreen→OnboardingChat;
-  onboarded→Shell. Index `/` redirects to `/agents/ceo` (`router.ts:140`).
+  onboarded→Shell. Index `/` redirects to `/agents/cos` (`router.ts:140`).
 - Routes registry `routeRegistry.ts:40-75` (ROUTE_PATHS): channel, dm, app,
   `issues`, `issues/new`, `issues/$issueId`, `agents/$slug`, wiki, notebooks,
   reviews, inbox, etc. Derivation `useCurrentRoute.ts`.
@@ -346,7 +346,7 @@
   interview; on approval the Librarian materializes + links it.
 - **D4 — Home = new-task composer:** post-onboarding landing becomes the new-task
   composer (provider/effort/owner-bot selectors + Start now / Backlog / Routine).
-  Index `/` → `/` (composer), not `/agents/ceo`. Onboarding flow preserved.
+  Index `/` → `/` (composer), not `/agents/cos`. Onboarding flow preserved.
 - **D5 — Default bots per task:** owner bot (selected) + CEO + Librarian always
   members of every task channel. Owner can summon more.
 - **D6 — Librarian = renamed/promoted Pam:** becomes a first-class bot that owns
@@ -558,7 +558,7 @@
       channel-agnostic), prompt builders hardcode `#general`, `canAccessChannelLocked`
       ordering (channel must exist before access check), ~15 tests assume tasks live in
       "general". Plan: new non-system tasks get a dedicated `task-<id>` channel
-      (createChannelLocked, members owner+ceo, reverse-linked via teamChannel.TaskID);
+      (createChannelLocked, members owner+cos, reverse-linked via teamChannel.TaskID);
       make task reuse keyed on title/intent not channel; migrate prompts off `#general`.
   - **2a-ii design (traced 2026-06-02):** Today `preferredTaskChannelLocked`
     (broker_tasks_worktrees.go:250) does the OPPOSITE of channel-per-task — for a
@@ -566,7 +566,7 @@
     by the same creator (channels hold many tasks). `findReusableTaskLocked`
     (broker_tasks_lifecycle.go:570) hard-filters reuse by channel (line 578). Flip:
     (1) business-objective tasks (gate: `taskLooksLikeLiveBusinessObjective`) MINT their
-    own `task-<id>` channel (members owner+ceo, reverse-link teamChannel.TaskID); remove
+    own `task-<id>` channel (members owner+cos, reverse-link teamChannel.TaskID); remove
     the group-into-shared-channel behavior. (2) Non-business/system tasks stay in
     `general` (Backup & Migration) — keeps system plumbing quiet. (3) `findReusableTaskLocked`
     drops the channel hard-filter → reuse by title+owner+thread+scoped-identity
@@ -584,7 +584,7 @@
         default), `+ New` → /tasks/new, `All tasks` → board. Tools section keeps AppList
         with **Bots** added as a first-class tool.
       - **Landing** (`router.ts` indexRoute + `RootRoute.tsx` onboarding redirect):
-        `/agents/ceo` → `/tasks` (interim home; composer is Phase 3).
+        `/agents/cos` → `/tasks` (interim home; composer is Phase 3).
       - **Bots tool** (`AgentsTool.tsx`, new): `/agents` roster grid of cards +
         `/agents/$agentSlug` detail (reuses `AgentProfilePanel`). `+ New agent` → wizard.
       - **DM + subspace removed from the navigable product:** deleted `dmRoute`,
@@ -723,7 +723,7 @@
     lifecycle-cleanliness fix:
     1. **Librarian into existing rosters** (`normalizeLoadedStateLocked` in
        `broker_defaults.go`): append `ensureLibrarianMember` on every load +
-       `member.BuiltIn = ceo || isLibrarianSlug`. `ensureDefaultOfficeMembersLocked`
+       `member.BuiltIn = cos || isLibrarianSlug`. `ensureDefaultOfficeMembersLocked`
        only seeded an EMPTY roster, so upgraders never got Pam.
     2. **Fold every orphaned channel + DM into an archived owning Task**
        (new `broker_migration_channels.go`, `MigrateLegacyChannelsOnce` called from

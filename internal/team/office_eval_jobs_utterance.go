@@ -55,7 +55,7 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	createTask := func(title, owner string) (*teamTask, error) {
 		status, raw, err := client.postJSON("/tasks", map[string]any{
 			"action": "create", "channel": "general", "title": title,
-			"details": "Utterance-routing probe work.", "owner": owner, "created_by": "ceo",
+			"details": "Utterance-routing probe work.", "owner": owner, "created_by": "cos",
 		})
 		if err != nil {
 			return nil, fmt.Errorf("create %q: %w", title, err)
@@ -296,7 +296,7 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 
 	// Task B belongs to a DIFFERENT bot (the lead). Its dispatch must
 	// flow while eng's interview is pending — the v3 office froze here.
-	taskB, err := createTask("Ship the pipeline baseline (utterance d)", "ceo")
+	taskB, err := createTask("Ship the pipeline baseline (utterance d)", "cos")
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	case <-time.After(utteranceWakeTimeout):
 	}
 	r.add(job, "a pending interview for bot A does not stop a turn for bot B",
-		otherWake[0] == "ceo",
+		otherWake[0] == "cos",
 		fmt.Sprintf("dispatched=%q while interview %s pending", otherWake[0], ivdParsed.ID), "")
 
 	// The ASKING bot's lane is parked while its interview is pending…
@@ -369,7 +369,7 @@ func evalJobUtteranceRouting(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const gatedChannel = "renewals"
 	fx.broker.mu.Lock()
 	fx.broker.channels = append(fx.broker.channels, teamChannel{
-		Slug: gatedChannel, Name: gatedChannel, Members: []string{"human", "ceo", "eng"},
+		Slug: gatedChannel, Name: gatedChannel, Members: []string{"human", "cos", "eng"},
 	})
 	fx.broker.mu.Unlock()
 	if _, _, err := client.postJSON("/requests", map[string]any{

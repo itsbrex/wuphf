@@ -118,10 +118,10 @@ func (b *Broker) createSlackChannel(channelID, name string) (*teamChannel, error
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	// Every adopted office member joins (ceo is prepended by createChannelLocked).
+	// Every adopted office member joins (cos is prepended by createChannelLocked).
 	members := make([]string, 0, len(b.members))
 	for _, m := range b.members {
-		if m.Slug != "" && m.Slug != "ceo" {
+		if m.Slug != "" && m.Slug != "cos" {
 			members = append(members, m.Slug)
 		}
 	}

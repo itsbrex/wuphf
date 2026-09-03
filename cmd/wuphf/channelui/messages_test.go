@@ -4,7 +4,7 @@ import "testing"
 
 func TestCountRepliesFollowsNestedThread(t *testing.T) {
 	messages := []BrokerMessage{
-		{ID: "root", From: "ceo"},
+		{ID: "root", From: "cos"},
 		{ID: "r1", From: "fe", ReplyTo: "root", Timestamp: "2026-04-29T10:00:00Z"},
 		{ID: "r2", From: "be", ReplyTo: "r1", Timestamp: "2026-04-29T10:05:00Z"},
 		{ID: "r3", From: "pm", ReplyTo: "root", Timestamp: "2026-04-29T10:10:00Z"},

@@ -66,8 +66,8 @@ func TestNoteChatTurnStallTasklessVsTask(t *testing.T) {
 		}
 	}
 
-	// Taskless chat reply (ceo has no active task): one honest note.
-	l.noteChatTurnStall("ceo", headlessCodexTurn{Channel: "team"}, "the reply timed out after 4m0s")
+	// Taskless chat reply (cos has no active task): one honest note.
+	l.noteChatTurnStall("cos", headlessCodexTurn{Channel: "team"}, "the reply timed out after 4m0s")
 	var note string
 	for _, m := range b.AllMessages() {
 		if m.From == "system" && strings.Contains(m.Content, "couldn't finish replying") {
@@ -78,7 +78,7 @@ func TestNoteChatTurnStallTasklessVsTask(t *testing.T) {
 	if note == "" {
 		t.Fatal("taskless chat reply must post a stall note")
 	}
-	if !strings.Contains(note, "@ceo") || !strings.Contains(note, "timed out") {
+	if !strings.Contains(note, "@cos") || !strings.Contains(note, "timed out") {
 		t.Fatalf("note must name the bot and the reason: %q", note)
 	}
 }
@@ -106,7 +106,7 @@ func TestNoteChatTurnNoReplyGating(t *testing.T) {
 	}
 
 	// Not human-prompted: bot-to-bot turns may legitimately stay silent.
-	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "team"}, start)
+	l.noteChatTurnNoReply("cos", headlessCodexTurn{Channel: "team"}, start)
 	// Task-attached (even if human-prompted): the task path owns surfacing.
 	l.noteChatTurnNoReply("eng", headlessCodexTurn{TaskID: "task-x", Channel: "team", FromHuman: true}, start)
 	if got := noReplyNotes(); got != 0 {
@@ -114,7 +114,7 @@ func TestNoteChatTurnNoReplyGating(t *testing.T) {
 	}
 
 	// Human-prompted, taskless, silent: one honest note.
-	l.noteChatTurnNoReply("ceo", headlessCodexTurn{Channel: "team", FromHuman: true}, start)
+	l.noteChatTurnNoReply("cos", headlessCodexTurn{Channel: "team", FromHuman: true}, start)
 	if got := noReplyNotes(); got != 1 {
 		t.Fatalf("expected exactly one no-reply note, got %d", got)
 	}
@@ -124,7 +124,7 @@ func TestNoteChatTurnNoReplyGating(t *testing.T) {
 			note = m.Content
 		}
 	}
-	if !strings.Contains(note, "@ceo") {
+	if !strings.Contains(note, "@cos") {
 		t.Fatalf("note must name the bot: %q", note)
 	}
 
@@ -159,7 +159,7 @@ func TestHeadlessQueueHumanChatSilentSuccessPostsNote(t *testing.T) {
 	b := newBrokerWithTeamRoom(filepath.Join(t.TempDir(), "state.json"))
 	l.installBroker(b)
 
-	l.enqueueHeadlessCodexTurnRecord("ceo", headlessCodexTurn{
+	l.enqueueHeadlessCodexTurnRecord("cos", headlessCodexTurn{
 		Prompt:     "are you there?",
 		Channel:    "team",
 		FromHuman:  true,
@@ -178,7 +178,7 @@ func TestHeadlessQueueHumanChatSilentSuccessPostsNote(t *testing.T) {
 		}
 		b.mu.Unlock()
 		if content != "" {
-			if !strings.Contains(content, "@ceo") {
+			if !strings.Contains(content, "@cos") {
 				t.Fatalf("silent-success note must name the bot: %q", content)
 			}
 			return

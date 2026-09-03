@@ -114,7 +114,7 @@ func validateBotFilePath(relPath string) error {
 	}
 	clean := filepath.ToSlash(filepath.Clean(relPath))
 	// Require the input to already be canonical. Cleaning collapses inputs like
-	// "bots/ceo/SOUL.md/." or a trailing slash to a valid in-tree path, but the
+	// "bots/cos/SOUL.md/." or a trailing slash to a valid in-tree path, but the
 	// write/read callers use the RAW relPath for the filesystem op — so a
 	// non-canonical input that only passes after Clean could create unintended
 	// directories or fail mid-write. Reject the divergence outright.

@@ -52,8 +52,8 @@ func TestSaveLocked_ConcurrentBrokersSamePathDoNotRace(t *testing.T) {
 			_, _, err := b.EnsurePlannedTask(plannedTaskInput{
 				Channel:       "team",
 				Title:         fmt.Sprintf("race repro %d", i),
-				Owner:         "ceo",
-				CreatedBy:     "ceo",
+				Owner:         "cos",
+				CreatedBy:     "cos",
 				TaskType:      "feature",
 				ExecutionMode: "local_worktree",
 			})

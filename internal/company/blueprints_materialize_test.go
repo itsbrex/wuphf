@@ -33,7 +33,7 @@ func TestMemberSpecFromEmployeeBlueprint_DomainExpertise(t *testing.T) {
 		Type:      "specialist",
 		Expertise: []string{"financial-reporting"},
 	}
-	member := memberSpecFromEmployeeBlueprint(blueprint, starter, "ceo")
+	member := memberSpecFromEmployeeBlueprint(blueprint, starter, "cos")
 	// Blueprint skills should appear in expertise
 	hasBookkeeping := false
 	hasReconciliation := false
@@ -78,7 +78,7 @@ func TestMemberSpecFromEmployeeBlueprint_DomainTools(t *testing.T) {
 		Name: "Workflow Builder",
 		Type: "specialist",
 	}
-	member := memberSpecFromEmployeeBlueprint(blueprint, starter, "ceo")
+	member := memberSpecFromEmployeeBlueprint(blueprint, starter, "cos")
 	if len(member.AllowedTools) == 0 {
 		t.Fatal("expected employee blueprint tools to flow into AllowedTools")
 	}

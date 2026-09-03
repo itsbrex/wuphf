@@ -53,6 +53,9 @@ func loadBrokerStateFile(path string) (brokerState, error) {
 	if err != nil {
 		return state, err
 	}
+	// A state file from before the lead bot was renamed "ceo" -> "cos"
+	// loads with every slug moved (lead_slug_migration.go).
+	data = migrateLegacyLeadSlugBytes(data)
 	if err := json.Unmarshal(data, &state); err != nil {
 		return state, err
 	}

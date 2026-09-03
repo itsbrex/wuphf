@@ -73,17 +73,17 @@ func TestRoutingTermsNormalizeExtraTerms(t *testing.T) {
 
 func TestNewDirectiveGoesToTeamLead(t *testing.T) {
 	mr := NewMessageRouter()
-	mr.SetTeamLeadSlug("ceo")
+	mr.SetTeamLeadSlug("cos")
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy"}},
+		{Slug: "cos", Expertise: []string{"strategy"}},
 		{Slug: "researcher", Expertise: []string{"market-research", "competitive-analysis"}},
 		{Slug: "coder", Expertise: []string{"general", "planning"}},
 	}
 
 	// Even when a specialist matches, new directives should go to team-lead.
 	result := mr.Route("Can you research our market?", bots)
-	if result.Primary != "ceo" {
-		t.Errorf("expected primary='ceo' (team-lead), got '%s'", result.Primary)
+	if result.Primary != "cos" {
+		t.Errorf("expected primary='cos' (team-lead), got '%s'", result.Primary)
 	}
 	if result.IsFollowUp {
 		t.Error("should not be a follow-up")
@@ -95,17 +95,17 @@ func TestNewDirectiveGoesToTeamLead(t *testing.T) {
 
 func TestRouteSuggestsCollaboratorsForProductLaunchWork(t *testing.T) {
 	mr := NewMessageRouter()
-	mr.SetTeamLeadSlug("ceo")
+	mr.SetTeamLeadSlug("cos")
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy", "delegation"}},
+		{Slug: "cos", Expertise: []string{"strategy", "delegation"}},
 		{Slug: "growth-ops", Expertise: []string{"pipeline optimization", "customer onboarding"}, RoleTerms: []string{"go-to-market", "growth operations"}},
 		{Slug: "automation-builder", Expertise: []string{"workflow automation", "integrations"}, RoleTerms: []string{"automation", "workflow orchestration"}},
 		{Slug: "bookkeeper", Expertise: []string{"invoicing", "billing"}, RoleTerms: []string{"accounts receivable", "reconciliation"}},
 	}
 
 	result := mr.Route("Set up a go to market workflow that automates customer onboarding and workflow orchestration.", bots)
-	if result.Primary != "ceo" {
-		t.Fatalf("expected primary='ceo', got %q", result.Primary)
+	if result.Primary != "cos" {
+		t.Fatalf("expected primary='cos', got %q", result.Primary)
 	}
 	want := map[string]bool{"growth-ops": false, "automation-builder": false}
 	for _, slug := range result.Collaborators {
@@ -122,17 +122,17 @@ func TestRouteSuggestsCollaboratorsForProductLaunchWork(t *testing.T) {
 
 func TestRouteUsesRoleTermsAndExpertiseMetadata(t *testing.T) {
 	mr := NewMessageRouter()
-	mr.SetTeamLeadSlug("ceo")
+	mr.SetTeamLeadSlug("cos")
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy", "delegation"}},
+		{Slug: "cos", Expertise: []string{"strategy", "delegation"}},
 		{Slug: "ops-planner", Expertise: []string{"customer success", "invoicing"}, RoleTerms: []string{"customer handoff", "billing operations"}},
 		{Slug: "rev-ops", Expertise: []string{"pipeline management"}, RoleTerms: []string{"go-to-market", "lead routing"}},
 		{Slug: "support", Expertise: []string{"ticket triage"}, RoleTerms: []string{"customer support"}},
 	}
 
 	result := mr.Route("Need a go to market customer handoff and billing operations plan.", bots)
-	if result.Primary != "ceo" {
-		t.Fatalf("expected primary='ceo', got %q", result.Primary)
+	if result.Primary != "cos" {
+		t.Fatalf("expected primary='cos', got %q", result.Primary)
 	}
 	if len(result.Collaborators) == 0 {
 		t.Fatal("expected collaborators from role/expertise metadata")
@@ -152,7 +152,7 @@ func TestRouteUsesRoleTermsAndExpertiseMetadata(t *testing.T) {
 
 func TestFollowUpGoesToLastActive(t *testing.T) {
 	mr := NewMessageRouter()
-	mr.SetTeamLeadSlug("ceo")
+	mr.SetTeamLeadSlug("cos")
 	mr.mu.Lock()
 	mr.recentThreads["fe"] = &threadContext{
 		botSlug:      "fe",
@@ -161,7 +161,7 @@ func TestFollowUpGoesToLastActive(t *testing.T) {
 	mr.mu.Unlock()
 
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy"}},
+		{Slug: "cos", Expertise: []string{"strategy"}},
 		{Slug: "fe", Expertise: []string{"frontend"}},
 	}
 	result := mr.Route("Also add a dark mode toggle", bots)
@@ -175,9 +175,9 @@ func TestFollowUpGoesToLastActive(t *testing.T) {
 
 func TestExplicitMentionRoutes(t *testing.T) {
 	mr := NewMessageRouter()
-	mr.SetTeamLeadSlug("ceo")
+	mr.SetTeamLeadSlug("cos")
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy"}},
+		{Slug: "cos", Expertise: []string{"strategy"}},
 		{Slug: "fe", Expertise: []string{"frontend"}},
 		{Slug: "be", Expertise: []string{"backend"}},
 	}
@@ -242,18 +242,18 @@ func TestMessageRouter_FollowUpExpires(t *testing.T) {
 
 func TestRouteUsesConfiguredTeamLead(t *testing.T) {
 	router := NewMessageRouter()
-	router.SetTeamLeadSlug("ceo")
-	router.RegisterBot("ceo", []string{"strategy", "delegation"})
+	router.SetTeamLeadSlug("cos")
+	router.RegisterBot("cos", []string{"strategy", "delegation"})
 	router.RegisterBot("pm", []string{"roadmap", "requirements"})
 
 	bots := []BotInfo{
-		{Slug: "ceo", Expertise: []string{"strategy"}},
+		{Slug: "cos", Expertise: []string{"strategy"}},
 		{Slug: "pm", Expertise: []string{"roadmap"}},
 	}
 
 	result := router.Route("do something random", bots)
-	if result.Primary != "ceo" {
-		t.Errorf("expected primary='ceo', got '%s'", result.Primary)
+	if result.Primary != "cos" {
+		t.Errorf("expected primary='cos', got '%s'", result.Primary)
 	}
 }
 

@@ -10,7 +10,7 @@ package channelui
 // strip and top-to-bottom rendering in the sidebar fallback. Adding a
 // new built-in role is a one-line edit here.
 var canonicalRosterSlugs = []string{
-	"ceo",
+	"cos",
 	"pm",
 	"fe",
 	"be",

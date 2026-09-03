@@ -19,11 +19,11 @@ the controls. Never `--no-verify`.
 remove 'Office' entity from here. this should not be a text but the UI should
 do the work"
 
-**Observed:** In DM `#ceo__human`, asking "can you spin up a prospecting bot"
+**Observed:** In DM `#cos__human`, asking "can you spin up a prospecting bot"
 produces a prose system message:
 
 > **Office** 23:58
-> ❓ @ceo asks you (blocking) (request request-3): Add Prospector (@prospector,
+> ❓ @cos asks you (blocking) (request request-3): Add Prospector (@prospector,
 > Lead Generation & Prospecting Specialist) to the team? Answer it in the
 > Inbox, or reply in this thread.
 
@@ -34,7 +34,7 @@ Three defects in one:
 2. It is authored by a fake **"Office"** entity. Source is
    `From: "system"` in `postRequestRaisedChatMessageLocked`
    (`internal/team/broker_requests_interviews.go:1240`). The real asker is
-   `@ceo`.
+   `@cos`.
 3. It points to **"the Inbox"**, which is no longer a nav destination — Inbox
    was consolidated into Tasks (see
    `project_consolidate_inbox_into_tasks_2026_06_14`). Dead pointer.
@@ -175,7 +175,7 @@ user-created app name in office state — data, correctly untouched.
 **Reported:** "chief of staff took at least 1 min to answer my first question.
 should have taken less than 2 secs. why the lag?"
 
-**Observed:** After the founder's first message in `#ceo__human`, Chief of Staff
+**Observed:** After the founder's first message in `#cos__human`, Chief of Staff
 sat in `is typing · Working…` for ~1 minute before producing anything. Status
 bar showed `running mcp__wuphf-office…`.
 

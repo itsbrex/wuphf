@@ -25,7 +25,7 @@ const ISSUE_TASK = {
   title: "Spec human issue comments and review flow",
   details:
     "Create a project-sized issue spec for human comments, review gates, and agent task breakdown.",
-  owner: "ceo",
+  owner: "cos",
   status: "open",
   task_type: "issue",
   pipeline_id: "issue",

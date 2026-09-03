@@ -83,15 +83,15 @@ func (r *OfficeEvalReport) add(job, check string, pass bool, detail, knownGap st
 	})
 }
 
-// launcherForBrokerFixture builds a bare ceo+eng launcher bound to the
+// launcherForBrokerFixture builds a bare cos+eng launcher bound to the
 // given broker — enough for packet construction in evals and tests without
 // pane/tmux state.
 func launcherForBrokerFixture(b *Broker) *Launcher {
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "Chief of Staff"},
+				{Slug: "cos", Name: "Chief of Staff"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -130,11 +130,11 @@ func newOfficeEvalFixture(dir string) (*officeEvalFixture, error) {
 	// TODO: wire planning through the eval scenarios as first-class coverage.
 	b.disablePlanFirstDefault = true
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "Chief of Staff"},
+		{Slug: "cos", Name: "Chief of Staff"},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "general", Name: "general", Members: []string{"human", "cos", "eng"}},
 	}
 	b.mu.Unlock()
 	b.ensureTeamLearningLog()
@@ -243,7 +243,7 @@ func RunOfficeEvals(dir string) (*OfficeEvalReport, error) {
 // that owner and lands in a done status with dependents' bookkeeping intact.
 func evalJobLifecycleBasic(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "lifecycle-basic"
-	task, _, err := fx.broker.EnsureTask("general", "Ship the welcome email", "Send the welcome email to the new signup list.", "eng", "ceo", "")
+	task, _, err := fx.broker.EnsureTask("general", "Ship the welcome email", "Send the welcome email to the new signup list.", "eng", "cos", "")
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func evalJobLifecycleBasic(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	inReview := fx.broker.TaskByID(task.ID)
 	r.add(job, "owner completion routes through review", inReview != nil && strings.EqualFold(strings.TrimSpace(inReview.status), "review"),
 		fmt.Sprintf("status=%q lifecycle=%s", strings.TrimSpace(inReview.status), inReview.LifecycleState), "")
-	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "approve", ID: task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "approve", ID: task.ID, Channel: "general", CreatedBy: "cos"}); err != nil {
 		r.add(job, "reviewer can approve the task", false, err.Error(), "")
 		return nil
 	}
@@ -269,7 +269,7 @@ func evalJobLifecycleBasic(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	// stamped on the task; once the check passes, completion proceeds.
 	gated, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Ship the export with a passing check",
-		Details: "gated work", Owner: "eng", CreatedBy: "ceo",
+		Details: "gated work", Owner: "eng", CreatedBy: "cos",
 		VerificationKind: "command", VerificationSpec: "test -f proof.txt", VerificationRequired: true,
 	})
 	if err != nil {
@@ -317,7 +317,7 @@ func evalJobIntakeDefinition(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "intake-definition"
 	created, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Launch the partner newsletter",
-		Details: "Get the first partner newsletter out the door.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Get the first partner newsletter out the door.", Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		return err
@@ -335,14 +335,14 @@ func evalJobIntakeDefinition(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		AccessNeeded: []string{"mailing-list account"},
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: created.Task.ID, Channel: "general", CreatedBy: "cos",
 		Definition:       def,
 		VerificationKind: "artifact", VerificationSpec: "newsletter.md", VerificationRequired: true,
 	}); err != nil {
-		r.add(job, "ceo can define the task", false, err.Error(), "")
+		r.add(job, "cos can define the task", false, err.Error(), "")
 		return nil
 	}
-	r.add(job, "ceo can define the task", true, "", "")
+	r.add(job, "cos can define the task", true, "", "")
 
 	stored := fx.broker.TaskByID(created.Task.ID)
 	persisted := stored != nil && stored.Definition != nil &&
@@ -378,7 +378,7 @@ func evalJobIntakeDefinition(fx *officeEvalFixture, r *OfficeEvalReport) error {
 
 	// (b) the execution packet leads with the contract: goal, deliverable
 	// format, success criteria, and access all reach the owner.
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *stored, "Task assigned to you.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *stored, "Task assigned to you.")
 	carried := strings.Contains(packet, def.Goal) &&
 		strings.Contains(packet, "markdown in the wiki") &&
 		strings.Contains(packet, "Draft approved by the human before sending") &&
@@ -407,11 +407,11 @@ func evalJobSpecFidelity(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "spec-fidelity"
 	marker := "ACCEPTANCE-CRITERION-OMEGA: the export must round-trip JSON numbers above 2^53 as strings."
 	details := strings.Repeat("Background paragraph about the data-export feature and its edge cases. ", 40) + marker // ~2.9k chars, marker at the tail
-	task, _, err := fx.broker.EnsureTask("general", "Build the data export", details, "eng", "ceo", "")
+	task, _, err := fx.broker.EnsureTask("general", "Build the data export", details, "eng", "cos", "")
 	if err != nil {
 		return err
 	}
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(task.ID), "Task assigned to you.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *fx.broker.TaskByID(task.ID), "Task assigned to you.")
 	r.add(job, "execution packet carries the full spec tail", strings.Contains(packet, marker),
 		fmt.Sprintf("details=%d chars, packet=%d chars", len(details), len(packet)), "")
 	return nil
@@ -426,7 +426,7 @@ func evalJobThreadContext(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		return err
 	}
 	for i := 1; i <= 9; i++ {
-		from := "ceo"
+		from := "cos"
 		if i%2 == 0 {
 			from = "you"
 		}
@@ -468,21 +468,21 @@ func evalJobKnowledgeInjection(fx *officeEvalFixture, r *OfficeEvalReport) error
 		return fmt.Errorf("seed learning: %w", err)
 	}
 
-	task, _, err := fx.broker.EnsureTask("general", "Draft the Acme renewal email", "Write the renewal email for Acme's Q3 renewal.", "eng", "ceo", "")
+	task, _, err := fx.broker.EnsureTask("general", "Draft the Acme renewal email", "Write the renewal email for Acme's Q3 renewal.", "eng", "cos", "")
 	if err != nil {
 		return err
 	}
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(task.ID), "Task assigned to you.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *fx.broker.TaskByID(task.ID), "Task assigned to you.")
 	r.add(job, "warm: task-relevant learning reaches the work packet", strings.Contains(packet, insight),
 		"the team knows the playbook; the packet for the exact matching task must carry it (U2.2 regression guard)", "")
 
 	// Cold control: an unrelated task must NOT receive that learning, or
 	// the warm check is measuring spray, not relevance.
-	unrelated, _, err := fx.broker.EnsureTask("general", "Fix the CI flake in wiki tests", "The wiki lint test is flaky under -race.", "eng", "ceo", "")
+	unrelated, _, err := fx.broker.EnsureTask("general", "Fix the CI flake in wiki tests", "The wiki lint test is flaky under -race.", "eng", "cos", "")
 	if err != nil {
 		return err
 	}
-	coldPacket := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(unrelated.ID), "Task assigned to you.")
+	coldPacket := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *fx.broker.TaskByID(unrelated.ID), "Task assigned to you.")
 	r.add(job, "cold control: unrelated task does not receive the learning", !strings.Contains(coldPacket, insight), "", "")
 	return nil
 }
@@ -493,22 +493,22 @@ func evalJobKnowledgeInjection(fx *officeEvalFixture, r *OfficeEvalReport) error
 func evalJobDependencyHandoff(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "dependency-handoff"
 	outcome := "FINDING: competitor prices at $49/seat; recommend launching at $39 with annual discount."
-	a, _, err := fx.broker.EnsureTask("general", "Research competitor pricing", "Compare competitor pricing tiers.\n"+outcome, "ceo", "ceo", "")
+	a, _, err := fx.broker.EnsureTask("general", "Research competitor pricing", "Compare competitor pricing tiers.\n"+outcome, "cos", "cos", "")
 	if err != nil {
 		return err
 	}
-	b, _, err := fx.broker.EnsureTask("general", "Write the pricing page", "Use the research outcome to draft the page.", "eng", "ceo", "", a.ID)
+	b, _, err := fx.broker.EnsureTask("general", "Write the pricing page", "Use the research outcome to draft the page.", "eng", "cos", "", a.ID)
 	if err != nil {
 		return err
 	}
-	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "complete", ID: a.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "complete", ID: a.ID, Channel: "general", CreatedBy: "cos"}); err != nil {
 		return err
 	}
 	unblocked := fx.broker.TaskByID(b.ID)
 	r.add(job, "dependent unblocks when upstream completes", unblocked != nil && !unblocked.blocked,
 		fmt.Sprintf("blocked=%v state=%s", unblocked != nil && unblocked.blocked, unblocked.LifecycleState), "")
 
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *unblocked, "Task unblocked.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *unblocked, "Task unblocked.")
 	r.add(job, "dependent's packet carries the upstream outcome", strings.Contains(packet, outcome),
 		"B depends on A; A finished with a concrete finding; B's packet must contain it (U3.2 regression guard)", "")
 	return nil
@@ -520,7 +520,7 @@ func evalJobDependencyHandoff(fx *officeEvalFixture, r *OfficeEvalReport) error 
 // manifest on the turn, and the settled turn's ledger entry carries it.
 func evalJobTurnJournal(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "turn-journal"
-	task, _, err := fx.broker.EnsureTask("general", "Stabilize the flaky auth test", "Find and fix the flaky auth test.", "eng", "ceo", "")
+	task, _, err := fx.broker.EnsureTask("general", "Stabilize the flaky auth test", "Find and fix the flaky auth test.", "eng", "cos", "")
 	if err != nil {
 		return err
 	}
@@ -529,7 +529,7 @@ func evalJobTurnJournal(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		Said:    "Reproduced the flake: auth_test.go races on the shared fixture. Next: isolate the fixture per test.",
 		Actions: []string{"task_updated: noted reproduction steps"},
 	})
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(task.ID), "Continue.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *fx.broker.TaskByID(task.ID), "Continue.")
 	r.add(job, "next turn's packet carries the task journal",
 		strings.Contains(packet, "TASK JOURNAL") && strings.Contains(packet, "isolate the fixture"),
 		"turn N+1 must start from what turn N tried, not from amnesia (U2.3/U3.3 regression guard)", "")
@@ -575,7 +575,7 @@ func evalJobTurnJournal(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	current := fx.broker.TaskByID(task.ID)
 	fx.launcher.sendTaskUpdate(
 		notificationTarget{Slug: "eng"},
-		officeActionLog{Kind: "task_updated", Actor: "ceo", Channel: current.Channel, RelatedID: task.ID},
+		officeActionLog{Kind: "task_updated", Actor: "cos", Channel: current.Channel, RelatedID: task.ID},
 		*current,
 		"Continue work.",
 	)
@@ -610,7 +610,7 @@ func evalJobCompoundingLoop(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	const job = "compounding-loop"
 	created, err := fx.broker.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "general", Title: "Migrate the billing webhooks to the signed-endpoint format",
-		Details: "Switch billing webhooks to signed endpoints and confirm delivery.", Owner: "eng", CreatedBy: "ceo",
+		Details: "Switch billing webhooks to signed endpoints and confirm delivery.", Owner: "eng", CreatedBy: "cos",
 		VerificationKind: "command", VerificationSpec: "exit 0", VerificationRequired: true,
 	})
 	if err != nil {
@@ -619,18 +619,18 @@ func evalJobCompoundingLoop(fx *officeEvalFixture, r *OfficeEvalReport) error {
 	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "complete", ID: created.Task.ID, Channel: "general", CreatedBy: "eng"}); err != nil {
 		return err
 	}
-	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, Channel: "general", CreatedBy: "ceo"}); err != nil {
+	if _, err := fx.broker.MutateTask(TaskPostRequest{Action: "approve", ID: created.Task.ID, Channel: "general", CreatedBy: "cos"}); err != nil {
 		return err
 	}
 	// The mutation queues distillation async; run it synchronously here for
 	// a deterministic eval (idempotency makes the double-run safe).
 	fx.broker.distillCompletedTask(created.Task.ID)
 
-	next, _, err := fx.broker.EnsureTask("general", "Add retry handling to the billing webhooks delivery", "Harden billing webhooks delivery with retries.", "eng", "ceo", "")
+	next, _, err := fx.broker.EnsureTask("general", "Add retry handling to the billing webhooks delivery", "Harden billing webhooks delivery with retries.", "eng", "cos", "")
 	if err != nil {
 		return err
 	}
-	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *fx.broker.TaskByID(next.ID), "Task assigned to you.")
+	packet := fx.launcher.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *fx.broker.TaskByID(next.ID), "Task assigned to you.")
 	r.add(job, "verified outcome compounds into the next similar task's packet",
 		strings.Contains(packet, "Verified outcome") && strings.Contains(packet, "billing webhooks"),
 		"done(verified) → auto-learning → injected into the next matching task with zero human steps (the moat loop, U4.1+U2.2)", "")

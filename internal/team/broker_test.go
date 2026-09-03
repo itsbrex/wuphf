@@ -175,7 +175,7 @@ func initUsableGitWorktree(t *testing.T, path string) {
 func TestBrokerPersistsAndReloadsState(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.messages = []channelMessage{{ID: "msg-1", From: "ceo", Content: "Persist me", Timestamp: "2026-03-24T10:00:00Z"}}
+	b.messages = []channelMessage{{ID: "msg-1", From: "cos", Content: "Persist me", Timestamp: "2026-03-24T10:00:00Z"}}
 	b.counter = 1
 	if err := b.saveLocked(); err != nil {
 		b.mu.Unlock()
@@ -222,11 +222,11 @@ func TestBrokerLoadsLastGoodSnapshotWhenPrimaryStateIsClobbered(t *testing.T) {
 	clobbered.tasks = nil
 	clobbered.actions = nil
 	clobbered.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", "builder"}},
-		{Slug: "delivery", Name: "delivery", Members: []string{"ceo", "builder"}},
+		{Slug: "team", Name: "team", Members: []string{"cos", "builder"}},
+		{Slug: "delivery", Name: "delivery", Members: []string{"cos", "builder"}},
 	}
 	clobbered.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "builder", Name: "Builder"},
 	}
 	clobbered.counter = 0
@@ -318,7 +318,7 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 		Name:        "Launch",
 		Description: "Launch planning and messaging.",
 		Members:     []string{"pm", "cmo"},
-		CreatedBy:   "ceo",
+		CreatedBy:   "cos",
 	})
 	b.mu.Unlock()
 	if cerr != nil {
@@ -326,7 +326,7 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 	}
 
 	bridgeBody, _ := json.Marshal(map[string]any{
-		"actor":          "ceo",
+		"actor":          "cos",
 		"source_channel": "team",
 		"target_channel": "launch",
 		"summary":        "Use the stronger product narrative from #team in this launch channel before drafting the landing page.",
@@ -366,9 +366,9 @@ func TestBrokerBridgeEndpointRecordsVisibleBridge(t *testing.T) {
 func TestHeadlessQueue_EmptyBeforePush(t *testing.T) {
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -383,12 +383,12 @@ func TestHeadlessQueue_EmptyBeforePush(t *testing.T) {
 	}
 
 	l.headless.mu.Lock()
-	ceoLen := len(l.headless.queues[headlessLane{slug: "ceo"}])
+	ceoLen := len(l.headless.queues[headlessLane{slug: "cos"}])
 	engLen := len(l.headless.queues[headlessLane{slug: "eng"}])
 	l.headless.mu.Unlock()
 
 	if ceoLen != 0 || engLen != 0 {
-		t.Fatalf("expected empty queues before any push, got ceo=%d eng=%d", ceoLen, engLen)
+		t.Fatalf("expected empty queues before any push, got cos=%d eng=%d", ceoLen, engLen)
 	}
 }
 
@@ -405,9 +405,9 @@ func TestHeadlessQueue_PopulatedAfterEnqueue(t *testing.T) {
 
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -427,7 +427,7 @@ func TestHeadlessQueue_PopulatedAfterEnqueue(t *testing.T) {
 
 	l.headless.mu.Lock()
 	engLen := len(l.headless.queues[headlessLane{slug: "eng"}])
-	ceoLen := len(l.headless.queues[headlessLane{slug: "ceo"}])
+	ceoLen := len(l.headless.queues[headlessLane{slug: "cos"}])
 	engWorkerStarted := l.headless.workers[headlessLane{slug: "eng"}]
 	l.headless.mu.Unlock()
 
@@ -435,7 +435,7 @@ func TestHeadlessQueue_PopulatedAfterEnqueue(t *testing.T) {
 	// that is valid. What matters is that the queue was populated (worker started)
 	// and that CEO was NOT added to the queue (not triggered by a specialist enqueue).
 	if ceoLen != 0 {
-		t.Fatalf("expected ceo queue empty after enqueuing for eng, got %d", ceoLen)
+		t.Fatalf("expected cos queue empty after enqueuing for eng, got %d", ceoLen)
 	}
 	if !engWorkerStarted {
 		t.Fatalf("expected eng worker to be flagged as started after enqueue")
@@ -450,9 +450,9 @@ func TestHeadlessQueue_PopulatedAfterEnqueue(t *testing.T) {
 func TestHeadlessQueue_NoTimerDrivenWakeup(t *testing.T) {
 	l := &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "eng", Name: "Engineer"},
 			},
 		},
@@ -487,4 +487,4 @@ func TestHeadlessQueue_NoTimerDrivenWakeup(t *testing.T) {
 // ensureDefaultOfficeMembersLocked must seed the full default manifest ONLY
 // when there are no existing members. Its prior behavior (append-any-missing-
 // default) was the source of the load-path leak: blueprint-seeded teams saw
-// ceo/planner/executor/reviewer re-appended on every broker Load.
+// cos/planner/executor/reviewer re-appended on every broker Load.

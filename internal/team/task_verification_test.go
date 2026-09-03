@@ -83,8 +83,8 @@ func newVerificationTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}, {Slug: "qa", Name: "QA"}}
-	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng", "qa"}}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}, {Slug: "qa", Name: "QA"}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng", "qa"}}}
 	b.mu.Unlock()
 	return b
 }
@@ -93,7 +93,7 @@ func createVerifiedTask(t *testing.T, b *Broker, spec string) string {
 	t.Helper()
 	resp, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Gated work " + spec,
-		Details: "work with a definition of done", Owner: "eng", CreatedBy: "ceo",
+		Details: "work with a definition of done", Owner: "eng", CreatedBy: "cos",
 		VerificationKind: "command", VerificationSpec: spec, VerificationRequired: true,
 	})
 	if err != nil {
@@ -142,7 +142,7 @@ func TestVerificationGateAllowsPassingComplete(t *testing.T) {
 	}
 	// Structured-review tasks route to review on complete; approve is the
 	// done transition and runs the gate again.
-	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "team", CreatedBy: "ceo"}); err != nil {
+	if _, err := b.MutateTask(TaskPostRequest{Action: "approve", ID: id, Channel: "team", CreatedBy: "cos"}); err != nil {
 		t.Fatalf("approve on passing check: %v", err)
 	}
 	if got := strings.TrimSpace(b.TaskByID(id).Status()); !strings.EqualFold(got, "done") {
@@ -156,7 +156,7 @@ func TestVerificationFailureRendersInExecutionPacket(t *testing.T) {
 	_, _ = b.MutateTask(TaskPostRequest{Action: "complete", ID: id, Channel: "team", CreatedBy: "eng"})
 
 	l := launcherForBrokerFixture(b)
-	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *b.TaskByID(id), "Back to you.")
+	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *b.TaskByID(id), "Back to you.")
 	if !strings.Contains(packet, "Machine check") {
 		t.Fatalf("packet must carry the verification spec; got:\n%s", packet)
 	}
@@ -216,7 +216,7 @@ func TestVerificationGateDefersToParkedGateOnDrafting(t *testing.T) {
 	b := newVerificationTestBroker(t)
 	resp, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Gated parked work",
-		Details: "work with a definition of done", Owner: "eng", CreatedBy: "ceo",
+		Details: "work with a definition of done", Owner: "eng", CreatedBy: "cos",
 		VerificationKind: "command", VerificationSpec: "exit 1", VerificationRequired: true,
 	})
 	if err != nil {
@@ -253,7 +253,7 @@ func TestVerificationGateAuthPreflightBlocksForbiddenActorSideEffects(t *testing
 
 	resp, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "URL-gated work",
-		Details: "work with a URL definition of done", Owner: "eng", CreatedBy: "ceo",
+		Details: "work with a URL definition of done", Owner: "eng", CreatedBy: "cos",
 		VerificationKind: "url", VerificationSpec: srv.URL + "/ok", VerificationRequired: true,
 	})
 	if err != nil {

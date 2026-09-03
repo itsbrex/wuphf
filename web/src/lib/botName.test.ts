@@ -4,7 +4,7 @@ import { formatBotName } from "./botName";
 
 describe("formatAgentName", () => {
   it("uppercases 2-3 character slugs (role abbreviations)", () => {
-    expect(formatBotName("ceo")).toBe("CEO");
+    expect(formatBotName("cos")).toBe("COS");
     expect(formatBotName("pm")).toBe("PM");
     expect(formatBotName("cro")).toBe("CRO");
     expect(formatBotName("seo")).toBe("SEO");

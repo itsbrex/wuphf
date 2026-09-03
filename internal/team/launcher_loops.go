@@ -141,7 +141,7 @@ func (l *Launcher) fetchAndRecordOneRelayEvents(provider *action.OneCLI) {
 			Title:      title,
 			Content:    content,
 			Channel:    "general",
-			Owner:      "ceo",
+			Owner:      "cos",
 			Confidence: "medium",
 			Urgency:    "medium",
 		})

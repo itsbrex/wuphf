@@ -46,7 +46,7 @@ example_artifacts:
     title: "Lead follow-up cadence"
   - kind: dashboard
     title: "Weekly delivery scorecard"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/delivery/**": builder
   "team/clients/**": client-success
@@ -55,11 +55,11 @@ employee_blueprints:
   - workflow-automation-builder
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} local operations package."
   kickoff_prompt: "Stand up the {{brand_name}} local business operation end to end. Use the starter lanes, turn the objective into a repeatable service system, create the first client-ready artifacts, and keep customer-facing changes behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

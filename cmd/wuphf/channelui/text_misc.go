@@ -29,7 +29,7 @@ func PluralizeWord(count int, singular, plural string) string {
 
 // ExtractTagsFromText returns the slugs after each "@…" mention in
 // text, stripping trailing punctuation (".,!?;:"). Whitespace-split,
-// so "Hi @ceo, can you?" yields []{"ceo"}. Punctuation-only mentions
+// so "Hi @cos, can you?" yields []{"cos"}. Punctuation-only mentions
 // like "@," collapse to an empty slug after trimming and are skipped.
 func ExtractTagsFromText(text string) []string {
 	var tags []string

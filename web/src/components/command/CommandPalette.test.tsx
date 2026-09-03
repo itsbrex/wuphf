@@ -29,7 +29,7 @@ vi.mock("../../hooks/useMembers", () => ({
   useOfficeMembers: () => ({
     data: [
       {
-        slug: "ceo",
+        slug: "cos",
         name: "CEO",
         role: "Chief Executive Officer",
         emoji: "👔",
@@ -117,7 +117,7 @@ describe("CommandPalette render", () => {
     // use a 1-char query that also won't match any items to get the true empty state.
     renderPalette();
     // Type a character that won't match any item label/desc/alias.
-    // Bots: "ceo", "eng"; Channels: "general", "engineering"; Actions: known labels.
+    // Bots: "cos", "eng"; Channels: "general", "engineering"; Actions: known labels.
     // "z" alone: Actions that contain "z"? None expected. Bots/channels: none with "z".
     typeInInput("z");
     // Single char won't trigger "search everywhere", so if no other items match, empty state shows.
@@ -158,7 +158,7 @@ describe("Search filtering", () => {
   it("filters bots by name", () => {
     renderPalette();
     typeInInput("CEO");
-    expect(screen.getByTestId("cmd-item-ag:ceo")).toBeInTheDocument();
+    expect(screen.getByTestId("cmd-item-ag:cos")).toBeInTheDocument();
   });
 
   it("filters bots by slug", () => {
@@ -180,7 +180,7 @@ describe("Search filtering", () => {
       screen.getByTestId("cmd-item-action:open-settings"),
     ).toBeInTheDocument();
     expect(screen.getByTestId("cmd-item-ch:general")).toBeInTheDocument();
-    expect(screen.getByTestId("cmd-item-ag:ceo")).toBeInTheDocument();
+    expect(screen.getByTestId("cmd-item-ag:cos")).toBeInTheDocument();
   });
 });
 
@@ -295,7 +295,7 @@ describe("Command categories", () => {
 
   it("shows bot items from office members", () => {
     renderPalette();
-    expect(screen.getByTestId("cmd-item-ag:ceo")).toBeInTheDocument();
+    expect(screen.getByTestId("cmd-item-ag:cos")).toBeInTheDocument();
     expect(screen.getByTestId("cmd-item-ag:eng")).toBeInTheDocument();
   });
 

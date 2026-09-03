@@ -111,7 +111,7 @@ func TestHandleSlackAgentsSpawn_Validation(t *testing.T) {
 		t.Fatalf("reserved slug should 400, got %d", w.Code)
 	}
 	// Existing native member → conflict.
-	if w := spawnPost(t, b, `{"slug":"ceo"}`); w.Code != http.StatusConflict {
+	if w := spawnPost(t, b, `{"slug":"cos"}`); w.Code != http.StatusConflict {
 		t.Fatalf("existing member slug should 409, got %d", w.Code)
 	}
 	// Registered foreign bot → conflict (it is an office member too).

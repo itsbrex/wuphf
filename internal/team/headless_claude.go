@@ -116,7 +116,7 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 	memoryCtx, memoryCancel := context.WithTimeout(ctx, 2*time.Second)
 	brief := fetchScopedMemoryBrief(memoryCtx, slug, notification, l.broker)
 	memoryCancel()
-	stdinPayload := composeHeadlessStdinPayload(notification, brief)
+	stdinPayload := composeHeadlessStdinPayload(withAppAskPreface(notification), brief)
 	cmd.Stdin = strings.NewReader(stdinPayload)
 
 	stdout, err := cmd.StdoutPipe()
@@ -417,6 +417,28 @@ var appBuildRequestRe = regexp.MustCompile(`(?i)\b(?:build|create|make|ship)\b[^
 
 func looksLikeAppBuildRequest(text string) bool {
 	return appBuildRequestRe.MatchString(text)
+}
+
+// appAskPreface is prepended to the human's message when it asks for an
+// app. The system prompt already carries the playbook, but a Codex bot
+// still spent ten minutes reading the office source tree and never created
+// the task (2026-09-03). This is the order of operations, in the message
+// itself, where neither harness can skim past it.
+const appAskPreface = "APP ASK — do these in order and nothing else first:\n" +
+	"1. team_task action=create, title \"Build app: <short name>\", owner = you. Do this BEFORE reading any files.\n" +
+	"2. The reply contains \"App workspace ready\" with an ABSOLUTE project path and an app id. cd to that path. Do not explore the office source tree, do not copy templates, do not build in /tmp.\n" +
+	"3. Implement in src/ there, then `bun install && bun run verify`.\n" +
+	"4. register_app(app_id=<that id>, html_path=<abs path to dist/index.html>, source_path=<abs project root>).\n" +
+	"5. Tell the human it is live under Apps and complete the task.\n" +
+	"Budget: about 20 tool calls. Narrate briefly between steps.\n\n"
+
+// withAppAskPreface returns the notification with appAskPreface in front
+// when it reads as an app ask, unchanged otherwise.
+func withAppAskPreface(notification string) string {
+	if !looksLikeAppBuildRequest(notification) {
+		return notification
+	}
+	return appAskPreface + notification
 }
 
 // claudeUsageToTokenUsage adapts the provider-level ClaudeUsage record

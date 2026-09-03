@@ -234,7 +234,7 @@ describe("<InterviewBar> notice framing (N8)", () => {
   it("keeps INTERVIEW framing with 'asks' for real interview kinds", () => {
     const interview: BotRequest = {
       id: "request-real-interview",
-      from: "ceo",
+      from: "cos",
       channel: "task-office-2",
       kind: "interview",
       status: "pending",
@@ -248,7 +248,7 @@ describe("<InterviewBar> notice framing (N8)", () => {
 
     expect(screen.getByText("INTERVIEW")).toBeInTheDocument();
     expect(screen.queryByText("NOTICE")).not.toBeInTheDocument();
-    expect(screen.getByText("@ceo asks")).toBeInTheDocument();
+    expect(screen.getByText("@cos asks")).toBeInTheDocument();
   });
 
   it("still lets the human acknowledge a notice", () => {

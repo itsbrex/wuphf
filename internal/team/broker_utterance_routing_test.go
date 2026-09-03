@@ -27,12 +27,12 @@ func newUtteranceTestBroker(t *testing.T) *Broker {
 	t.Helper()
 	b := newTestBroker(t)
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO", BuiltIn: true},
+		{Slug: "cos", Name: "CEO", BuiltIn: true},
 		{Slug: "eng", Name: "Engineer"},
 	}
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
-		{Slug: "task-acme", Name: "Acme renewal", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}},
+		{Slug: "task-acme", Name: "Acme renewal", Members: []string{"human", "cos", "eng"}},
 	}
 	return b
 }
@@ -153,7 +153,7 @@ func TestInterviewAnnouncementCarriesCardPayload(t *testing.T) {
 	t.Parallel()
 	b := newUtteranceTestBroker(t)
 	if _, err := b.CreateRequest(humanInterview{
-		Kind: "approval", From: "ceo", Channel: "team", Blocking: true, Required: true,
+		Kind: "approval", From: "cos", Channel: "team", Blocking: true, Required: true,
 		Title: "Add Prospector?", Question: "Add Prospector to the team?",
 	}); err != nil {
 		t.Fatalf("create request: %v", err)
@@ -189,8 +189,8 @@ func TestInterviewAnnouncementCarriesCardPayload(t *testing.T) {
 	}
 	// The card is attributed to the bot that asked, even though the message
 	// itself is sent by "system" so it cannot wake other bots.
-	if got.From != "ceo" {
-		t.Errorf("payload from = %q, want ceo (the asker, not the wire sender)", got.From)
+	if got.From != "cos" {
+		t.Errorf("payload from = %q, want cos (the asker, not the wire sender)", got.From)
 	}
 	if got.Question != "Add Prospector to the team?" {
 		t.Errorf("payload question = %q", got.Question)
@@ -289,7 +289,7 @@ func TestBotAwaitingInterviewAnswerScopesToAsker(t *testing.T) {
 	if !b.BotAwaitingInterviewAnswer("eng") {
 		t.Fatalf("asking bot must be parked while its interview is pending")
 	}
-	if b.BotAwaitingInterviewAnswer("ceo") {
+	if b.BotAwaitingInterviewAnswer("cos") {
 		t.Fatalf("other bots must NOT be parked — the v3 office-wide wedge")
 	}
 	b.mu.Lock()

@@ -348,7 +348,7 @@ function taskStatusBadgeClass(raw: string): string {
 }
 
 function PermissionsSection({ agent }: { agent: OfficeMember }) {
-  const isLead = agent.built_in === true || agent.slug === "ceo";
+  const isLead = agent.built_in === true || agent.slug === "cos";
 
   return (
     <div className="bot-profile-section">

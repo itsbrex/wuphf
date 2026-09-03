@@ -62,7 +62,7 @@ interface TourMockupSidebarProps {
  * the CEO is the orchestrator and specialists report to it.
  */
 const MOCK_AGENTS: MockBot[] = [
-  { slug: "ceo", name: "Chief of Staff", role: "Orchestrator", isCeo: true },
+  { slug: "cos", name: "Chief of Staff", role: "Orchestrator", isCeo: true },
   { slug: "analyst", name: "Analyst", role: "Watches the funnel" },
   { slug: "revops", name: "RevOps", role: "Keeps the CRM clean" },
 ];

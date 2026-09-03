@@ -178,7 +178,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 		// In 1:1 / DM mode the CEO (and the Librarian, the wiki curator) link
 		// wiki articles to tasks, so the context-packer can hand those refs to
 		// first-party bots. Same gate as the office and DM branches below.
-		if slug == "" || slug == "ceo" || slug == team.LibrarianSlug {
+		if slug == "" || slug == "cos" || slug == team.LibrarianSlug {
 			registerWikiLinkTool(server)
 		}
 
@@ -197,7 +197,7 @@ func configureServerTools(server *mcp.Server, slug string, channel string, oneOn
 	// recognised as being in one, so it kept team_channel and team_bridge —
 	// precisely the tools that let it post its way out of the DM.
 	isDM := team.IsDMSlug(channel)
-	isLead := slug == "" || slug == "ceo"
+	isLead := slug == "" || slug == "cos"
 	// The Librarian curates the wiki: it gets the promotion-review tool (like the
 	// lead) WITHOUT the lead's structural powers (team_plan/channel/member).
 	isLibrarian := slug == team.LibrarianSlug

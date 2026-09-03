@@ -153,11 +153,11 @@ export function StepFirstIssue({
         <div className="onboarding-handoff-card" aria-hidden="true">
           <div className="onboarding-handoff-head">
             <span className="onboarding-handoff-avatar">
-              <PixelAvatar slug="ceo" size={24} />
+              <PixelAvatar slug="cos" size={24} />
             </span>
             <span className="onboarding-handoff-who">
               <span className="onboarding-handoff-name">Chief of Staff</span>
-              <span className="onboarding-handoff-handle">@ceo</span>
+              <span className="onboarding-handoff-handle">@cos</span>
             </span>
             <span className="onboarding-handoff-route">Direct message</span>
           </div>

@@ -117,7 +117,7 @@ func TestCreateClaudeCodeStreamFnRetriesUnknownSession(t *testing.T) {
 	restore := stubClaudeRuntime(t, recordFile, "resume-retry", cwd)
 	defer restore()
 
-	fn := CreateClaudeCodeStreamFn("ceo")
+	fn := CreateClaudeCodeStreamFn("cos")
 
 	first := collectStreamChunks(fn([]bot.Message{{Role: "user", Content: "first turn"}}, nil))
 	if joinedChunkText(first) != "fresh run one" {
@@ -161,7 +161,7 @@ func TestCreateClaudeCodeStreamFnPersistsSessionAcrossFactoryRecreation(t *testi
 	resetStore := stubClaudeSessionStore(t, filepath.Join(t.TempDir(), "claude-sessions.json"))
 	defer resetStore()
 
-	fn := CreateClaudeCodeStreamFn("ceo")
+	fn := CreateClaudeCodeStreamFn("cos")
 	first := collectStreamChunks(fn([]bot.Message{{Role: "user", Content: "first turn"}}, nil))
 	if joinedChunkText(first) != "first persisted run" {
 		t.Fatalf("unexpected first response: %q", joinedChunkText(first))
@@ -171,7 +171,7 @@ func TestCreateClaudeCodeStreamFnPersistsSessionAcrossFactoryRecreation(t *testi
 	claudeSessionStoreInstance = nil
 	claudeSessionStoreMu.Unlock()
 
-	fn = CreateClaudeCodeStreamFn("ceo")
+	fn = CreateClaudeCodeStreamFn("cos")
 	second := collectStreamChunks(fn([]bot.Message{{Role: "user", Content: "second turn"}}, nil))
 	if joinedChunkText(second) != "resumed after restart" {
 		t.Fatalf("unexpected second response: %q", joinedChunkText(second))
@@ -196,7 +196,7 @@ func TestCreateClaudeCodeStreamFnShowsLoginError(t *testing.T) {
 	restore := stubClaudeRuntime(t, recordFile, "login-required", cwd)
 	defer restore()
 
-	fn := CreateClaudeCodeStreamFn("ceo")
+	fn := CreateClaudeCodeStreamFn("cos")
 	chunks := collectStreamChunks(fn([]bot.Message{{Role: "user", Content: "hello"}}, nil))
 	if !hasErrorChunkContaining(chunks, "Claude CLI requires login") {
 		t.Fatalf("expected login guidance error, got %#v", chunks)

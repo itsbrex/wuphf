@@ -283,7 +283,7 @@ func TestParseOpenAISSEStream_QwenToolsTagFallback(t *testing.T) {
 // the user verbatim.
 func TestParseOpenAISSEStream_QwenImEndFallback(t *testing.T) {
 	body := sseBody(
-		`{"choices":[{"delta":{"content":"{\"name\": \"team_broadcast\", \"arguments\": {\"channel\": \"ceo__human\", \"content\": \"hi team\"}}<|im_end|>"}}]}`,
+		`{"choices":[{"delta":{"content":"{\"name\": \"team_broadcast\", \"arguments\": {\"channel\": \"cos__human\", \"content\": \"hi team\"}}<|im_end|>"}}]}`,
 		`{"choices":[{"delta":{},"finish_reason":"stop"}]}`,
 	)
 	ch := make(chan bot.StreamChunk, 8)
@@ -299,8 +299,8 @@ func TestParseOpenAISSEStream_QwenImEndFallback(t *testing.T) {
 				t.Errorf("ToolName = %q, want team_broadcast", c.ToolName)
 			}
 			ch, _ := c.ToolParams["channel"].(string)
-			if ch != "ceo__human" {
-				t.Errorf("ToolParams[channel] = %v, want ceo__human", c.ToolParams["channel"])
+			if ch != "cos__human" {
+				t.Errorf("ToolParams[channel] = %v, want cos__human", c.ToolParams["channel"])
 			}
 		}
 	}

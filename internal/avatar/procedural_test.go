@@ -86,7 +86,7 @@ func TestProceduralPaletteHasIndependentChannels(t *testing.T) {
 }
 
 func TestKnownSlugsUseHandDesignedSprites(t *testing.T) {
-	for _, slug := range []string{"ceo", "pm", "fe", "be", "ai", "designer", "cmo", "cro"} {
+	for _, slug := range []string{"cos", "pm", "fe", "be", "ai", "designer", "cmo", "cro"} {
 		if isProceduralSlug(slug) {
 			t.Errorf("slug %q should not be procedural", slug)
 		}

@@ -76,11 +76,11 @@ const STATE_RECOVERED = {
 
 // Chat history shared between frames: the user submitted example.com, the
 // broker emitted the scanning chip, then the scan failed.
-const dmSlug = "dm:ceo:onboarding";
+const dmSlug = "dm:cos:onboarding";
 const FAILED_SCAN_MESSAGES = [
   {
     id: "msg-1",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "text",
     content: "Got a website I can scan for context?",
@@ -96,7 +96,7 @@ const FAILED_SCAN_MESSAGES = [
   },
   {
     id: "msg-3",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "ceo_scan_chip",
     content: "Scanning example.com…",
@@ -105,7 +105,7 @@ const FAILED_SCAN_MESSAGES = [
   },
   {
     id: "msg-4",
-    from: "ceo",
+    from: "cos",
     channel: dmSlug,
     kind: "ceo_scan_chip",
     content: "Couldn't read that URL",

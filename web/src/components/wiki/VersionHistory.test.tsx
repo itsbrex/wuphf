@@ -15,7 +15,7 @@ const COMMITS: api.WikiHistoryCommit[] = [
   },
   {
     sha: "aaaaaa1111111",
-    author_slug: "ceo",
+    author_slug: "cos",
     msg: "Initial brief",
     date: "2026-01-16T00:00:00Z",
   },
@@ -55,7 +55,7 @@ describe("<VersionHistory>", () => {
     expect(screen.getByText("Initial brief")).toBeInTheDocument();
     // Author slugs surface as formatted names.
     expect(screen.getByText("PM")).toBeInTheDocument();
-    expect(screen.getByText("CEO")).toBeInTheDocument();
+    expect(screen.getByText("COS")).toBeInTheDocument();
     // Short SHA (first 7 chars).
     expect(screen.getByText("ffffff9")).toBeInTheDocument();
 

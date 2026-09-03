@@ -48,17 +48,17 @@ func TestSaveAndLoadManifestRoundTrips(t *testing.T) {
 
 	manifest := Manifest{
 		Name: "Test Office",
-		Lead: "ceo",
+		Lead: "cos",
 		Members: []MemberSpec{
-			{Slug: "ceo", Name: "CEO", Role: "CEO", System: true},
+			{Slug: "cos", Name: "CEO", Role: "CEO", System: true},
 			{Slug: "ops", Name: "Ops", Role: "Operations"},
 		},
 		// Two ORDINARY channels. This test is about the save/load roundtrip,
 		// and #general is filtered out on load now that it is retired -- using
 		// it here would make the roundtrip look lossy when it is not.
 		Channels: []ChannelSpec{
-			{Slug: "pipeline", Name: "pipeline", Members: []string{"ceo", "ops"}},
-			{Slug: "deals", Name: "deals", Members: []string{"ceo", "ops"}},
+			{Slug: "pipeline", Name: "pipeline", Members: []string{"cos", "ops"}},
+			{Slug: "deals", Name: "deals", Members: []string{"cos", "ops"}},
 		},
 		BlueprintRefs: []BlueprintRef{
 			{Kind: "operation", ID: " niche-crm ", Source: " template "},
@@ -114,7 +114,7 @@ func TestSaveAndLoadManifestRoundTrips(t *testing.T) {
 		if ch.Description == "" {
 			t.Fatalf("expected channel description for %s", ch.Slug)
 		}
-		if !containsSlug(ch.Members, "ceo") {
+		if !containsSlug(ch.Members, "cos") {
 			t.Fatalf("expected CEO to be present in channel %s", ch.Slug)
 		}
 	}
@@ -151,20 +151,20 @@ func TestManifestSurfaceSpecRoundTrips(t *testing.T) {
 
 	manifest := Manifest{
 		Name: "Surface Test",
-		Lead: "ceo",
+		Lead: "cos",
 		Members: []MemberSpec{
-			{Slug: "ceo", Name: "CEO", Role: "CEO", System: true},
+			{Slug: "cos", Name: "CEO", Role: "CEO", System: true},
 		},
 		Channels: []ChannelSpec{
 			{
 				Slug:    "general",
 				Name:    "general",
-				Members: []string{"ceo"},
+				Members: []string{"cos"},
 			},
 			{
 				Slug:    "tg-ops",
 				Name:    "Telegram Ops",
-				Members: []string{"ceo"},
+				Members: []string{"cos"},
 				Surface: &ChannelSurfaceSpec{
 					Provider:    "telegram",
 					RemoteID:    "-100123",
@@ -243,7 +243,7 @@ func TestMaterializeManifestBuildsRuntimeOfficeFromBlueprintRefs(t *testing.T) {
 			{Kind: "operation", ID: "youtube-factory", Source: "test"},
 		},
 		Members: []MemberSpec{{
-			Slug:     "ceo",
+			Slug:     "cos",
 			Name:     "Stale CEO",
 			Provider: provider.ProviderBinding{Kind: provider.KindClaudeCode},
 		}},

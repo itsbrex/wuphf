@@ -181,7 +181,7 @@ func (b *Broker) handleEvents(w http.ResponseWriter, r *http.Request) {
 // arguments. Without this, the stream only shows raw pane-captured stdout —
 // useless for bots whose work happens entirely through MCP tool calls.
 //
-// Body: {"slug":"ceo","phase":"call|result|error","tool":"team_broadcast","args":"...","result":"...","error":"..."}
+// Body: {"slug":"cos","phase":"call|result|error","tool":"team_broadcast","args":"...","result":"...","error":"..."}
 // Phase is informational; all fields but slug are optional.
 func (b *Broker) handleBotToolEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

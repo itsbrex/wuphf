@@ -33,7 +33,7 @@ export function SlideIntro({ active }: OfficeTourSlideProps) {
         {COPY.lead ? (
           <p className="office-tour-slide-lead">
             <span className="office-tour-slide-lead-avatar" aria-hidden="true">
-              <PixelAvatar slug="ceo" size={24} />
+              <PixelAvatar slug="cos" size={24} />
             </span>
             <span className="office-tour-slide-lead-text">{COPY.lead}</span>
           </p>

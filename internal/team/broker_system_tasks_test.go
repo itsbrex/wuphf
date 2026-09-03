@@ -72,7 +72,7 @@ func TestBackupMigrationTaskExcludedFromDefaultListTasks(t *testing.T) {
 	// Default list — system task must be absent (it's archived).
 	res, err := b.ListTasks(TaskListRequest{
 		Channel:     "general",
-		ViewerSlug:  "ceo",
+		ViewerSlug:  "cos",
 		IncludeDone: false,
 	})
 	if err != nil {
@@ -87,7 +87,7 @@ func TestBackupMigrationTaskExcludedFromDefaultListTasks(t *testing.T) {
 	// With include_done=true — system task must be present.
 	resWithDone, err := b.ListTasks(TaskListRequest{
 		Channel:     "general",
-		ViewerSlug:  "ceo",
+		ViewerSlug:  "cos",
 		IncludeDone: true,
 	})
 	if err != nil {

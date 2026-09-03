@@ -284,11 +284,11 @@ func TestBuildCatalog_Categories(t *testing.T) {
 	// A playbook filed into People via categories — folder is playbooks but the
 	// catalog entry must carry the real category so cross-folder nav works.
 	withCats := "---\ncategories: [people, revenue-operations]\n---\n# Hiring Loop\n"
-	if _, _, err := repo.Commit(ctx, "ceo", "team/playbooks/hiring-loop.md", withCats, "create", "add"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/playbooks/hiring-loop.md", withCats, "create", "add"); err != nil {
 		t.Fatalf("commit: %v", err)
 	}
 	bare := "# Bare\n\nNo frontmatter.\n"
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/zoe.md", bare, "create", "add"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/zoe.md", bare, "create", "add"); err != nil {
 		t.Fatalf("commit bare: %v", err)
 	}
 

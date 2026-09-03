@@ -37,7 +37,7 @@ func defaultOfficeMembers() []officeMember {
 	}
 	members := make([]officeMember, 0, len(manifest.Members)+1)
 	for _, cfg := range manifest.Members {
-		builtIn := cfg.System || cfg.Slug == manifest.Lead || cfg.Slug == "ceo"
+		builtIn := cfg.System || cfg.Slug == manifest.Lead || cfg.Slug == "cos"
 		members = append(members, memberFromSpec(cfg, "wuphf", now, builtIn))
 	}
 	return members
@@ -164,6 +164,8 @@ func normalizeChannelSlug(slug string) string {
 		// before normalising, like the existing guards do.
 		return "general"
 	}
+	// Old callers still say "ceo__human"; the lead bot is "cos" now.
+	slug = migrateLegacyLeadSlug(slug)
 	return slug
 }
 
@@ -171,6 +173,9 @@ func normalizeActorSlug(slug string) string {
 	slug = strings.ToLower(strings.TrimSpace(slug))
 	slug = strings.ReplaceAll(slug, " ", "-")
 	slug = strings.ReplaceAll(slug, "_", "-")
+	if slug == legacyLeadSlug {
+		return LeadSlug
+	}
 	return slug
 }
 
@@ -295,7 +300,7 @@ func (b *Broker) ensureBotDMsLocked() {
 
 // ensureDefaultOfficeMembersLocked seeds the DefaultManifest roster ONLY when
 // no members exist. Prior implementation appended any missing default slug to
-// a non-empty roster, which caused ceo/planner/executor/reviewer to leak back
+// a non-empty roster, which caused cos/planner/executor/reviewer to leak back
 // into blueprint-seeded teams (e.g. niche-crm) on every Broker.Load(). The
 // function is called from broker init and post-load normalization as a true
 // recovery hook: if state was corrupted or never seeded, fall back to defaults.
@@ -355,7 +360,7 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		// disk becomes an ordinary, removable member: with the bots retired
 		// as defaults, pinning them undeletable would strand users with two
 		// bots the product no longer defines.
-		member.BuiltIn = member.Slug == "ceo"
+		member.BuiltIn = member.Slug == "cos"
 		// A built-in's display name is owned by the code, not by the saved
 		// roster. Renaming the Librarian to "Pam the librarian" changed the
 		// constant, but every office already on disk kept the old name — the
@@ -367,7 +372,7 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		}
 		// Same treatment for the lead: "Chief of Staff" became "Chief of Staff", and
 		// without this the rename would only ever reach brand-new workspaces.
-		if member.Slug == "ceo" {
+		if member.Slug == "cos" {
 			member.Name = company.ChiefOfStaffName()
 			member.Role = company.ChiefOfStaffRole()
 		}
@@ -415,10 +420,10 @@ func (b *Broker) normalizeLoadedStateLocked() {
 		//  1. The filter below drops any slug that is not a roster member.
 		//     "human" is not a bot, so it was stripped from every DM --
 		//     the one participant who is always a party to it.
-		//  2. The CEO pin below prepended "ceo" to EVERY channel, DMs
+		//  2. The CEO pin below prepended "cos" to EVERY channel, DMs
 		//     included. Measured before this fix:
-		//         app-builder__human members = [ceo app-builder]
-		//         canAccess(ceo, app-builder__human) = true
+		//         app-builder__human members = [cos app-builder]
+		//         canAccess(cos, app-builder__human) = true
 		//     The blanket read the CEO/Librarian/App-Builder bypasses were
 		//     deliberately removed for (see broker_channel_access.go) was
 		//     handed straight back through the seed. The access check was
@@ -434,17 +439,17 @@ func (b *Broker) normalizeLoadedStateLocked() {
 				filteredMembers = append(filteredMembers, slug)
 			}
 		}
-		// The CEO pin only applies when a ceo member actually exists — since
+		// The CEO pin only applies when a cos member actually exists — since
 		// the packs/CEO removal an office may have no CEO at all, and pinning
 		// the slug into channel membership renders a ghost participant.
 		channelSeed := filteredMembers
-		if !isDM && b.findMemberLocked("ceo") != nil {
-			channelSeed = append([]string{"ceo"}, filteredMembers...)
+		if !isDM && b.findMemberLocked("cos") != nil {
+			channelSeed = append([]string{"cos"}, filteredMembers...)
 		}
 		b.channels[i].Members = uniqueSlugs(channelSeed)
 		filteredDisabled := make([]string, 0, len(b.channels[i].Disabled))
 		for _, slug := range uniqueSlugs(b.channels[i].Disabled) {
-			if slug == "ceo" {
+			if slug == "cos" {
 				continue
 			}
 			if b.findMemberLocked(slug) != nil && containsString(b.channels[i].Members, slug) {
@@ -501,7 +506,7 @@ func (b *Broker) normalizeLoadedStateLocked() {
 			continue
 		}
 		owner := ownerByChannel[b.channels[i].Slug]
-		if owner == "" || owner == "ceo" || isHumanMessageSender(owner) ||
+		if owner == "" || owner == "cos" || isHumanMessageSender(owner) ||
 			b.findMemberLocked(owner) == nil ||
 			containsString(b.channels[i].Members, owner) {
 			continue

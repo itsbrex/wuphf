@@ -273,7 +273,7 @@ export function useActiveChannelSlug(): string | null {
   // request silently failed to render there. The lead's DM is the one
   // conversation every office is guaranteed to have, and it is where the
   // home composer routes work by default.
-  if (route.kind === "home") return directChannelSlug("ceo");
+  if (route.kind === "home") return directChannelSlug("cos");
   if (route.kind === "task-detail") {
     const owner = (tasks ?? []).find((task) => task.id === route.taskId);
     const channel = owner?.channel?.trim();

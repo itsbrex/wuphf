@@ -22,7 +22,7 @@ import (
 //	gawkbot log --limit 50   — override the default list size
 func runLogCmd(args []string) {
 	fs := flag.NewFlagSet("log", flag.ExitOnError)
-	botFilter := fs.String("agent", "", "Filter the list by bot slug (e.g. eng, ceo)")
+	botFilter := fs.String("agent", "", "Filter the list by bot slug (e.g. eng, cos)")
 	limit := fs.Int("limit", 20, "Maximum number of tasks to list")
 	jsonOut := fs.Bool("json", false, "Emit raw JSON instead of the pretty table")
 	fs.Usage = func() {

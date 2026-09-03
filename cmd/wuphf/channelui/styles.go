@@ -32,7 +32,7 @@ const (
 // BotColorMap maps bot slugs to their brand colors.
 var BotColorMap = map[string]string{
 	"all":      "#FFFFFF",
-	"ceo":      "#EAB308",
+	"cos":      "#EAB308",
 	"pm":       "#22C55E",
 	"fe":       "#3B82F6",
 	"be":       "#8B5CF6",
@@ -177,7 +177,7 @@ func ThreadIndicatorStyle() lipgloss.Style {
 
 func BotAvatar(slug string) string {
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "◆"
 	case "pm":
 		return "▣"
@@ -204,7 +204,7 @@ func BotAvatar(slug string) string {
 
 func MascotAccent(slug string) string {
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "⌐"
 	case "pm":
 		return "□"
@@ -231,7 +231,7 @@ func MascotAccent(slug string) string {
 
 func MascotEyes(slug string) (string, string) {
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "■", "■"
 	case "ai", "nex":
 		return "◉", "◉"
@@ -288,7 +288,7 @@ func MascotTop(activity string, frame int) string {
 
 func MascotProp(slug string) string {
 	switch slug {
-	case "ceo":
+	case "cos":
 		return "$"
 	case "pm":
 		return "]"

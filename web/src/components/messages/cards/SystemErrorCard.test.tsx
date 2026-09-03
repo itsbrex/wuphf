@@ -18,13 +18,13 @@ describe("parseSystemAuthErrorPayload", () => {
       provider: "claude-code",
       sign_in_command: "claude auth login",
       detail: "Not logged in",
-      reporter: "ceo",
+      reporter: "cos",
     });
     expect(out).toEqual({
       provider: "claude-code",
       sign_in_command: "claude auth login",
       detail: "Not logged in",
-      reporter: "ceo",
+      reporter: "cos",
     });
   });
 

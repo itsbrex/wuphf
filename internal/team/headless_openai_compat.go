@@ -131,7 +131,7 @@ func (l *Launcher) runHeadlessOpenAICompatTurn(ctx context.Context, slug string,
 	// local server's inference slot until the model finishes generating.
 	// Per-task model wins over the bot binding (model lives on the task);
 	// the binding then wins over env/config/default — this is what makes
-	// bots like ceo run kimi-k2.6 while planner runs deepseek-v4-pro on the
+	// bots like cos run kimi-k2.6 while planner runs deepseek-v4-pro on the
 	// same install-wide ollama endpoint.
 	modelOverride := l.taskModelForKind(ctx, slug, kind)
 	if modelOverride == "" {

@@ -243,7 +243,7 @@ func TestTaskAndRequestViewsRejectNonMembers(t *testing.T) {
 		"slug":        "deals",
 		"name":        "deals",
 		"description": "Deal strategy and pipeline work.",
-		"created_by":  "ceo",
+		"created_by":  "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/channels", bytes.NewReader(createBody))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -318,7 +318,7 @@ func TestBrokerTaskLifecycle(t *testing.T) {
 		"action":     "create",
 		"title":      "Own the landing page",
 		"details":    "Frontend only",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "fe",
 		"thread_id":  "msg-1",
 	})
@@ -484,8 +484,8 @@ func TestBrokerTaskReassignNotifies(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected channel message in %q; saw %v", taskChannel, keys(seen))
 	}
-	if !containsAll(chMsg.Tagged, []string{"ceo", "ops", "engineering"}) {
-		t.Fatalf("expected channel message tagged ceo+ops+engineering, got %v", chMsg.Tagged)
+	if !containsAll(chMsg.Tagged, []string{"cos", "ops", "engineering"}) {
+		t.Fatalf("expected channel message tagged cos+ops+engineering, got %v", chMsg.Tagged)
 	}
 	if !strings.Contains(chMsg.Content, "@engineering") || !strings.Contains(chMsg.Content, "@ops") {
 		t.Fatalf("expected channel content to name both owners, got %q", chMsg.Content)
@@ -669,7 +669,7 @@ func TestBrokerOfficeFeatureTaskForGTMCompletesWithoutReviewAndUnblocksDependent
 		"action":         "create",
 		"title":          "Define the YouTube business thesis",
 		"details":        "Pick the niche and monetization ladder.",
-		"created_by":     "ceo",
+		"created_by":     "cos",
 		"owner":          "gtm",
 		"thread_id":      "msg-1",
 		"task_type":      "feature",
@@ -683,7 +683,7 @@ func TestBrokerOfficeFeatureTaskForGTMCompletesWithoutReviewAndUnblocksDependent
 		"action":         "create",
 		"title":          "Create the launch package",
 		"details":        "Build the 30-video slate.",
-		"created_by":     "ceo",
+		"created_by":     "cos",
 		"owner":          "gtm",
 		"thread_id":      "msg-1",
 		"task_type":      "launch",
@@ -758,7 +758,7 @@ func TestBrokerTaskCreateReusesExistingOpenTask(t *testing.T) {
 		"action":     "create",
 		"title":      "Own the landing page",
 		"details":    "Initial FE pass",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "fe",
 		"thread_id":  "msg-1",
 	})
@@ -766,7 +766,7 @@ func TestBrokerTaskCreateReusesExistingOpenTask(t *testing.T) {
 		"action":     "create",
 		"title":      "Own the landing page",
 		"details":    "Updated details",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "fe",
 		"thread_id":  "msg-1",
 	})
@@ -797,7 +797,7 @@ func TestBrokerEnsurePlannedTaskKeepsScopedDuplicateTitlesDistinct(t *testing.T)
 		Title:            "Publish faceless AI ops episode",
 		Details:          "Episode 1 pipeline task",
 		Owner:            "eng",
-		CreatedBy:        "ceo",
+		CreatedBy:        "cos",
 		TaskType:         "feature",
 		PipelineID:       "youtube-factory",
 		SourceDecisionID: "decision-episode-1",
@@ -811,7 +811,7 @@ func TestBrokerEnsurePlannedTaskKeepsScopedDuplicateTitlesDistinct(t *testing.T)
 		Title:            "Publish faceless AI ops episode",
 		Details:          "Episode 2 pipeline task",
 		Owner:            "eng",
-		CreatedBy:        "ceo",
+		CreatedBy:        "cos",
 		TaskType:         "feature",
 		PipelineID:       "youtube-factory",
 		SourceDecisionID: "decision-episode-2",
@@ -833,7 +833,7 @@ func TestBrokerEnsurePlannedTaskKeepsScopedDuplicateTitlesDistinct(t *testing.T)
 		Title:            "Publish faceless AI ops episode",
 		Details:          "Episode 2 retry",
 		Owner:            "eng",
-		CreatedBy:        "ceo",
+		CreatedBy:        "cos",
 		TaskType:         "feature",
 		PipelineID:       "youtube-factory",
 		SourceDecisionID: "decision-episode-2",
@@ -901,7 +901,7 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 		"channel":    createdFrom,
 		"title":      "Build the operating system",
 		"details":    "Engineering lane",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "eng",
 		"thread_id":  "msg-1",
 	})
@@ -910,7 +910,7 @@ func TestBrokerTaskCreateKeepsDistinctTasksInSameThread(t *testing.T) {
 		"channel":    createdFrom,
 		"title":      "Lock the channel thesis",
 		"details":    "GTM lane",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "gtm",
 		"thread_id":  "msg-1",
 	})
@@ -1001,7 +1001,7 @@ func TestBrokerSubtaskStaysInTheOfficeChannel(t *testing.T) {
 		"action":     "create",
 		"title":      "Ship the Q3 launch",
 		"details":    "Top-level launch objective",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "eng",
 	})
 	if parent.Channel != "general" {
@@ -1013,7 +1013,7 @@ func TestBrokerSubtaskStaysInTheOfficeChannel(t *testing.T) {
 		"action":          "create",
 		"title":           "Draft the launch announcement copy",
 		"details":         "Sub-issue of the launch",
-		"created_by":      "ceo",
+		"created_by":      "cos",
 		"owner":           "eng",
 		"channel":         parent.Channel,
 		"parent_issue_id": parent.ID,
@@ -1101,7 +1101,7 @@ func TestBrokerSecondTopLevelTaskStaysInTheOfficeChannel(t *testing.T) {
 		"channel":    createdFrom,
 		"title":      "Daily Digest from email",
 		"details":    "Top-level issue one",
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if first.Channel != createdFrom {
 		t.Fatalf("first issue must stay in the channel it was created from, got %q", first.Channel)
@@ -1112,7 +1112,7 @@ func TestBrokerSecondTopLevelTaskStaysInTheOfficeChannel(t *testing.T) {
 		"action":     "create",
 		"title":      "Outbound email reply bot",
 		"details":    "Top-level issue two",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"channel":    first.Channel,
 	})
 	if strings.TrimSpace(second.ParentIssueID) != "" {
@@ -1148,7 +1148,7 @@ func TestBrokerTaskPlanAssignsWorktreeForLocalWorktreeTask(t *testing.T) {
 	base := fmt.Sprintf("http://%s", b.Addr())
 	body, _ := json.Marshal(map[string]any{
 		"channel":    "general",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
 			{
 				"title":          "Build intake dry-run review bundle",
@@ -1302,7 +1302,7 @@ func TestBrokerTaskCreateAddsAssignedOwnerToChannelMembers(t *testing.T) {
 		"channel":    "youtube-factory",
 		"title":      "Restore remotion dependency path",
 		"details":    "Unblock the real render lane.",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "builder",
 		"task_type":  "feature",
 	})
@@ -1342,7 +1342,7 @@ func TestBrokerResumeTaskUnblocksAndSchedulesOwnerLane(t *testing.T) {
 		Title:         "Retry kickoff send",
 		Details:       "429 RESOURCE_EXHAUSTED. Retry after 2026-04-15T22:00:29.610Z.",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 	})
@@ -1390,7 +1390,7 @@ func TestBrokerResumeTaskStripsRateLimitMarker(t *testing.T) {
 		Title:         "Retry kickoff send",
 		Details:       preBlockContext + "\n" + rateLimitLine,
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 	})
@@ -1436,7 +1436,7 @@ func TestBrokerResumeTaskPreservesDetailsWithoutMarker(t *testing.T) {
 		Title:     "Dependent kickoff",
 		Details:   detailsNoMarker,
 		Owner:     "builder",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "follow_up",
 	})
 	if err != nil {
@@ -1480,14 +1480,14 @@ func TestBrokerUnblockDependentsStripsRateLimitMarker(t *testing.T) {
 	b.tasks = []teamTask{
 		{
 			ID: "task-parent", Channel: "client-loop", Title: "Prereq",
-			Owner: "builder", status: "done", CreatedBy: "ceo",
+			Owner: "builder", status: "done", CreatedBy: "cos",
 			TaskType: "feature", ExecutionMode: "local_worktree",
 			reviewState: "approved", CreatedAt: now, UpdatedAt: now,
 		},
 		{
 			ID: "task-child", Channel: "client-loop", Title: "Dependent kickoff",
 			Owner: "builder", status: "blocked", blocked: true,
-			CreatedBy: "ceo", TaskType: "feature", ExecutionMode: "live_external",
+			CreatedBy: "cos", TaskType: "feature", ExecutionMode: "live_external",
 			DependsOn: []string{"task-parent"},
 			Details:   "Original goal: ship dependent kickoff.\n429 RESOURCE_EXHAUSTED. Retry after 2026-04-15T22:00:29.610Z.",
 			CreatedAt: now, UpdatedAt: now,
@@ -1526,7 +1526,7 @@ func TestBrokerResumeKeepsTaskBlockedByRealDependency(t *testing.T) {
 		Channel:       "client-loop",
 		Title:         "Send kickoff email",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 	})
@@ -1537,7 +1537,7 @@ func TestBrokerResumeKeepsTaskBlockedByRealDependency(t *testing.T) {
 		Channel:       "client-loop",
 		Title:         "Send second kickoff email",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 		DependsOn:     []string{active.ID},
@@ -1576,7 +1576,7 @@ func TestBrokerResumeKeepsTaskBlockedByRealDependency(t *testing.T) {
 // synthetic serialization is gone.)
 func TestBrokerUnblockDependentsActivatesAllNonDependentLanes(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "youtube-factory", "ceo", "CEO")
+	ensureTestMemberAccess(b, "youtube-factory", "cos", "CEO")
 	ensureTestMemberAccess(b, "youtube-factory", "executor", "Executor")
 
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -1587,7 +1587,7 @@ func TestBrokerUnblockDependentsActivatesAllNonDependentLanes(t *testing.T) {
 			Title:         "Finish prerequisite slice",
 			Owner:         "executor",
 			status:        "done",
-			CreatedBy:     "ceo",
+			CreatedBy:     "cos",
 			TaskType:      "feature",
 			ExecutionMode: "local_worktree",
 			reviewState:   "approved",
@@ -1601,7 +1601,7 @@ func TestBrokerUnblockDependentsActivatesAllNonDependentLanes(t *testing.T) {
 			Owner:         "executor",
 			status:        "blocked",
 			blocked:       true,
-			CreatedBy:     "ceo",
+			CreatedBy:     "cos",
 			TaskType:      "feature",
 			ExecutionMode: "live_external",
 			DependsOn:     []string{"task-setup"},
@@ -1615,7 +1615,7 @@ func TestBrokerUnblockDependentsActivatesAllNonDependentLanes(t *testing.T) {
 			Owner:         "executor",
 			status:        "blocked",
 			blocked:       true,
-			CreatedBy:     "ceo",
+			CreatedBy:     "cos",
 			TaskType:      "feature",
 			ExecutionMode: "live_external",
 			DependsOn:     []string{"task-setup"},
@@ -1629,7 +1629,7 @@ func TestBrokerUnblockDependentsActivatesAllNonDependentLanes(t *testing.T) {
 			Owner:         "executor",
 			status:        "blocked",
 			blocked:       true,
-			CreatedBy:     "ceo",
+			CreatedBy:     "cos",
 			TaskType:      "feature",
 			ExecutionMode: "live_external",
 			DependsOn:     []string{"task-setup"},
@@ -1667,7 +1667,7 @@ func TestBrokerTaskPlanRejectsTheaterTaskInLiveDeliveryLane(t *testing.T) {
 	base := fmt.Sprintf("http://%s", b.Addr())
 	body, _ := json.Marshal(map[string]any{
 		"channel":    "client-delivery",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
 			{
 				"title":          "Generate consulting review packet artifact from the updated blueprint",
@@ -1707,7 +1707,7 @@ func TestBrokerTaskCreateRejectsLiveBusinessTheater(t *testing.T) {
 		"channel":        "general",
 		"title":          "Create one new Notion proof packet for the client handoff",
 		"details":        "Use live external execution and keep the review bundle in sync.",
-		"created_by":     "ceo",
+		"created_by":     "cos",
 		"owner":          "builder",
 		"task_type":      "launch",
 		"execution_mode": "live_external",
@@ -1743,7 +1743,7 @@ func TestBrokerTaskCompleteRejectsLiveBusinessTheater(t *testing.T) {
 		Details:       "Use live external execution and keep the review bundle in sync.",
 		Owner:         "builder",
 		status:        "in_progress",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "launch",
 		ExecutionMode: "live_external",
 		CreatedAt:     "2026-04-15T00:00:00Z",
@@ -1757,7 +1757,7 @@ func TestBrokerTaskCompleteRejectsLiveBusinessTheater(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         "task-1",
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -1796,7 +1796,7 @@ func TestBrokerTaskUpdateRollsBackBrokerSideEffectsOnSaveFailure(t *testing.T) {
 			Title:     "Implement reusable importer",
 			Owner:     "builder",
 			status:    "in_progress",
-			CreatedBy: "ceo",
+			CreatedBy: "cos",
 			TaskType:  "feature",
 			CreatedAt: "2026-04-15T00:00:00Z",
 			UpdatedAt: "2026-04-15T00:00:00Z",
@@ -1806,7 +1806,7 @@ func TestBrokerTaskUpdateRollsBackBrokerSideEffectsOnSaveFailure(t *testing.T) {
 			Channel:   "general",
 			Title:     "Follow-up importer docs",
 			status:    "open",
-			CreatedBy: "ceo",
+			CreatedBy: "cos",
 			TaskType:  "feature",
 			DependsOn: []string{"task-1"},
 			blocked:   true,
@@ -1822,7 +1822,7 @@ func TestBrokerTaskUpdateRollsBackBrokerSideEffectsOnSaveFailure(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         "task-1",
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/tasks", b.Addr()), bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -1887,7 +1887,7 @@ func TestBrokerStoresLedgerAndReviewLifecycle(t *testing.T) {
 		Title:            "Build signup conversion fix",
 		Details:          "Own the CTA and onboarding flow.",
 		Owner:            "fe",
-		CreatedBy:        "ceo",
+		CreatedBy:        "cos",
 		ThreadID:         "msg-1",
 		TaskType:         "feature",
 		SourceSignalID:   signals[0].ID,
@@ -1956,7 +1956,7 @@ func TestBrokerReleaseTaskCleansWorktree(t *testing.T) {
 		Channel:   "general",
 		Title:     "Build signup conversion fix",
 		Owner:     "fe",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "feature",
 	})
 	if err != nil || reused {
@@ -1968,7 +1968,7 @@ func TestBrokerReleaseTaskCleansWorktree(t *testing.T) {
 		"action":     "release",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -2015,7 +2015,7 @@ func TestBrokerApproveRetainsLocalWorktree(t *testing.T) {
 		Channel:   "general",
 		Title:     "Build signup conversion fix",
 		Owner:     "fe",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "feature",
 	})
 	if err != nil || reused {
@@ -2027,7 +2027,7 @@ func TestBrokerApproveRetainsLocalWorktree(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(completeBody))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -2042,7 +2042,7 @@ func TestBrokerApproveRetainsLocalWorktree(t *testing.T) {
 		"action":     "approve",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	req, _ = http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(approveBody))
 	req.Header.Set("Authorization", "Bearer "+b.Token())
@@ -2090,8 +2090,8 @@ func ensureTestMemberAccess(b *Broker, channel, slug, name string) {
 		if !containsString(b.channels[i].Members, slug) {
 			b.channels[i].Members = append(b.channels[i].Members, slug)
 		}
-		if !containsString(b.channels[i].Members, "ceo") {
-			b.channels[i].Members = append(b.channels[i].Members, "ceo")
+		if !containsString(b.channels[i].Members, "cos") {
+			b.channels[i].Members = append(b.channels[i].Members, "cos")
 		}
 		return
 	}
@@ -2099,13 +2099,13 @@ func ensureTestMemberAccess(b *Broker, channel, slug, name string) {
 		Slug: normalizeChannelSlug(channel),
 		Name: normalizeChannelSlug(channel),
 		// Mirror production: createChannel seeds every non-DM channel with
-		// the CEO (broker_office_channels.go, `final := append([]string{"ceo"},
+		// the CEO (broker_office_channels.go, `final := append([]string{"cos"},
 		// …)`). Fixtures used to omit it and still work because the CEO held a
 		// blanket channel-access bypass; membership is authoritative for every
 		// bot now, so a fixture without the CEO is a fixture that does not
 		// look like a real workspace. DMs are the deliberate exception and are
 		// built explicitly elsewhere — never through this helper.
-		Members: []string{slug, "ceo"},
+		Members: []string{slug, "cos"},
 	})
 }
 
@@ -2132,7 +2132,7 @@ func TestBrokerHandlePostTaskRejectsFalseReadOnlyBlockForWritableWorktree(t *tes
 		Channel:       "general",
 		Title:         "Implement the first runnable generator slice",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -2145,7 +2145,7 @@ func TestBrokerHandlePostTaskRejectsFalseReadOnlyBlockForWritableWorktree(t *tes
 		"action":     "block",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 		"details":    "This turn is running in a read-only filesystem sandbox. Need a writable workspace.",
 	})
 	req, _ := http.NewRequest(http.MethodPost, base+"/tasks", bytes.NewReader(body))
@@ -2195,7 +2195,7 @@ func TestBrokerHandlePostTaskCapabilityGapCreatesSelfHealingTask(t *testing.T) {
 		Channel:       "general",
 		Title:         "Post client launch update to Slack",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "office",
 	})
@@ -2246,8 +2246,8 @@ func TestBrokerHandlePostTaskCapabilityGapCreatesSelfHealingTask(t *testing.T) {
 	}
 	// Self-heal records render as Issues in the FE; PipelineID stays
 	// "incident" so isSelfHealingTask still recognises them.
-	if healing.Owner != "ceo" || healing.TaskType != "issue" || healing.PipelineID != "incident" || healing.ExecutionMode != "office" {
-		t.Fatalf("expected office issue/incident owned by ceo, got %+v", healing)
+	if healing.Owner != "cos" || healing.TaskType != "issue" || healing.PipelineID != "incident" || healing.ExecutionMode != "office" {
+		t.Fatalf("expected office issue/incident owned by cos, got %+v", healing)
 	}
 	// The self-heal title should follow the new "[@<bot>] <verb>: <parent>"
 	// shape with the parent title carried through.
@@ -2274,7 +2274,7 @@ func TestBrokerHandlePostTaskNonCapabilityBlockDoesNotCreateSelfHealingTask(t *t
 		Channel:   "general",
 		Title:     "Wait for customer approval",
 		Owner:     "eng",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "follow_up",
 	})
 	if err != nil {
@@ -2285,7 +2285,7 @@ func TestBrokerHandlePostTaskNonCapabilityBlockDoesNotCreateSelfHealingTask(t *t
 		"action":     "block",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 		"details":    "Waiting on customer approval before sending the update.",
 	})
 	req, _ := http.NewRequest(http.MethodPost, "http://"+b.Addr()+"/tasks", bytes.NewReader(body))
@@ -2320,7 +2320,7 @@ func TestBrokerHandlePostTaskResumeUnblocksAfterCapabilityRepair(t *testing.T) {
 		Channel:   "general",
 		Title:     "Send the launch update",
 		Owner:     "eng",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		TaskType:  "follow_up",
 	})
 	if err != nil {
@@ -2334,7 +2334,7 @@ func TestBrokerHandlePostTaskResumeUnblocksAfterCapabilityRepair(t *testing.T) {
 		"action":     "resume",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 		"details":    "Capability repaired: Slack integration is available; retry the original update.",
 	})
 	req, _ := http.NewRequest(http.MethodPost, "http://"+b.Addr()+"/tasks", bytes.NewReader(body))
@@ -2383,7 +2383,7 @@ func TestBrokerBlockTaskRejectsFalseReadOnlyBlockForWritableWorktree(t *testing.
 		Channel:       "general",
 		Title:         "Implement the first runnable generator slice",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -2439,7 +2439,7 @@ func TestBrokerEnsurePlannedTaskRunsWorktreeOwnerLanesConcurrently(t *testing.T)
 		Title:         "Build the homepage MVP",
 		Details:       "Ship the first runnable site slice.",
 		Owner:         "executor",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -2451,7 +2451,7 @@ func TestBrokerEnsurePlannedTaskRunsWorktreeOwnerLanesConcurrently(t *testing.T)
 		Title:         "Define the upload path",
 		Details:       "Wire the next implementation slice after the homepage.",
 		Owner:         "executor",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -2489,7 +2489,7 @@ func TestBrokerEnsurePlannedTaskRunsNonDependentLiveExternalConcurrently(t *test
 		Channel:       "general",
 		Title:         "Send the launch announcement",
 		Owner:         "executor",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 	})
@@ -2500,7 +2500,7 @@ func TestBrokerEnsurePlannedTaskRunsNonDependentLiveExternalConcurrently(t *test
 		Channel:       "general",
 		Title:         "Send the follow-up announcement",
 		Owner:         "executor",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "live_external",
 	})
@@ -2547,8 +2547,8 @@ func TestBrokerTaskPlanKeepsTaskInTheSubmittedChannel(t *testing.T) {
 	b.channels = append(b.channels, teamChannel{
 		Slug:      "client-loop",
 		Name:      "client-loop",
-		Members:   []string{"ceo", "builder"},
-		CreatedBy: "ceo",
+		Members:   []string{"cos", "builder"},
+		CreatedBy: "cos",
 		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	})
 	if err := b.StartOnPort(0); err != nil {
@@ -2559,7 +2559,7 @@ func TestBrokerTaskPlanKeepsTaskInTheSubmittedChannel(t *testing.T) {
 	base := fmt.Sprintf("http://%s", b.Addr())
 	body, _ := json.Marshal(map[string]any{
 		"channel":    submittedTo,
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
 			{
 				"title":          "Create the client-facing operating brief",
@@ -2649,7 +2649,7 @@ func TestBrokerTaskPlanReusesExistingActiveLane(t *testing.T) {
 		Title:         "Create live client workspace in Google Drive",
 		Details:       "First pass.",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "follow_up",
 		ExecutionMode: "office",
 	})
@@ -2660,10 +2660,10 @@ func TestBrokerTaskPlanReusesExistingActiveLane(t *testing.T) {
 	base := fmt.Sprintf("http://%s", b.Addr())
 	body, _ := json.Marshal(map[string]any{
 		"channel": "general",
-		// created_by=ceo always passes the access check; reuse is now
+		// created_by=cos always passes the access check; reuse is now
 		// channel-agnostic so the existing task in client-loop is found
 		// regardless of the requested channel.
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
 			{
 				"title":          "Create live client workspace in Google Drive",
@@ -2752,7 +2752,7 @@ func TestTaskStaysInTheChannelItWasCreatedFrom(t *testing.T) {
 		Title:         "Launch the client-facing sales campaign",
 		Details:       "Deliver the customer-ready marketing materials.",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "issue",
 		ExecutionMode: "office",
 	})
@@ -2788,7 +2788,7 @@ func TestTaskStaysInTheChannelItWasCreatedFrom(t *testing.T) {
 		Channel:       createdFrom,
 		Title:         "Internal tooling housekeeping",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "issue",
 		ExecutionMode: "office",
 	})
@@ -2804,12 +2804,12 @@ func TestTaskStaysInTheChannelItWasCreatedFrom(t *testing.T) {
 	// every bot, the CEO included, so a create into a project channel it is not
 	// in is denied.
 	ensureTestMemberAccess(b, "youtube-factory", "builder", "Builder")
-	ensureTestMemberAccess(b, "youtube-factory", "ceo", "CEO")
+	ensureTestMemberAccess(b, "youtube-factory", "cos", "CEO")
 	task3, _, err := b.EnsurePlannedTask(plannedTaskInput{
 		Channel:       "youtube-factory",
 		Title:         "Publish the YouTube channel launch video",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "issue",
 		ExecutionMode: "office",
 	})
@@ -2883,7 +2883,7 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 	// The creating actor has to be a member too: membership is authoritative for
 	// every bot, the CEO included, so a create into a project channel it is not
 	// in is denied.
-	ensureTestMemberAccess(b, "client-loop", "ceo", "CEO")
+	ensureTestMemberAccess(b, "client-loop", "cos", "CEO")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -2894,7 +2894,7 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 		Channel:       "client-loop",
 		Title:         "Launch the client revenue pipeline",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "issue",
 		ExecutionMode: "office",
 	})
@@ -2910,7 +2910,7 @@ func TestReuseIsChannelAgnostic(t *testing.T) {
 		Channel:       "general",
 		Title:         "Launch the client revenue pipeline",
 		Owner:         "builder",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "issue",
 		ExecutionMode: "office",
 	})
@@ -2979,7 +2979,7 @@ func TestBrokerBlockTaskAllowsReadOnlyBlockWhenWriteProbeFails(t *testing.T) {
 		Channel:       "general",
 		Title:         "Implement the first runnable generator slice",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -3018,7 +3018,7 @@ func TestBrokerCompleteClosesReviewTaskAndUnblocksDependents(t *testing.T) {
 		Channel:       "general",
 		Title:         "Audit the repo and design the automation architecture",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "research",
 		ExecutionMode: "local_worktree",
 	})
@@ -3029,7 +3029,7 @@ func TestBrokerCompleteClosesReviewTaskAndUnblocksDependents(t *testing.T) {
 		Channel:       "general",
 		Title:         "Implement the v0 automated content factory",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 		DependsOn:     []string{architecture.ID},
@@ -3075,7 +3075,7 @@ func TestBrokerCompleteClosesReviewTaskAndUnblocksDependents(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         architecture.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if reviewReady.Status() != "review" || reviewReady.ReviewState() != "ready_for_review" {
 		t.Fatalf("expected first complete to move task into review, got %+v", reviewReady)
@@ -3085,7 +3085,7 @@ func TestBrokerCompleteClosesReviewTaskAndUnblocksDependents(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         architecture.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if closed.Status() != "done" || closed.ReviewState() != "approved" {
 		t.Fatalf("expected second complete to close review task, got %+v", closed)
@@ -3161,7 +3161,7 @@ func TestBrokerCreateTaskReusesCompletedDependencyWorktree(t *testing.T) {
 		"action":         "create",
 		"title":          "Ship the dry-run approval packet generator",
 		"details":        "Initial consulting delivery slice",
-		"created_by":     "ceo",
+		"created_by":     "cos",
 		"owner":          "builder",
 		"thread_id":      "msg-1",
 		"execution_mode": "local_worktree",
@@ -3175,7 +3175,7 @@ func TestBrokerCreateTaskReusesCompletedDependencyWorktree(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         first.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if reviewReady.Status() != "review" || reviewReady.ReviewState() != "ready_for_review" {
 		t.Fatalf("expected first complete to move task into review, got %+v", reviewReady)
@@ -3185,7 +3185,7 @@ func TestBrokerCreateTaskReusesCompletedDependencyWorktree(t *testing.T) {
 		"action":     "approve",
 		"channel":    "general",
 		"id":         first.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if approved.Status() != "done" || approved.ReviewState() != "approved" {
 		t.Fatalf("expected approve to close task, got %+v", approved)
@@ -3195,7 +3195,7 @@ func TestBrokerCreateTaskReusesCompletedDependencyWorktree(t *testing.T) {
 		"action":         "create",
 		"title":          "Render the approval packet into a reviewable dry-run bundle",
 		"details":        "Reuse the existing generator worktree",
-		"created_by":     "ceo",
+		"created_by":     "cos",
 		"owner":          "builder",
 		"thread_id":      "msg-2",
 		"execution_mode": "local_worktree",
@@ -3366,7 +3366,7 @@ func TestBrokerCompleteAlreadyDoneTaskStaysApproved(t *testing.T) {
 		Channel:       "general",
 		Title:         "Ship publish-pack output",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
 	})
@@ -3408,7 +3408,7 @@ func TestBrokerCompleteAlreadyDoneTaskStaysApproved(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if reviewReady.Status() != "review" || reviewReady.ReviewState() != "ready_for_review" {
 		t.Fatalf("expected first complete to move task into review, got %+v", reviewReady)
@@ -3418,7 +3418,7 @@ func TestBrokerCompleteAlreadyDoneTaskStaysApproved(t *testing.T) {
 		"action":     "approve",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if approved.Status() != "done" || approved.ReviewState() != "approved" {
 		t.Fatalf("expected approve to close task, got %+v", approved)
@@ -3428,7 +3428,7 @@ func TestBrokerCompleteAlreadyDoneTaskStaysApproved(t *testing.T) {
 		"action":     "complete",
 		"channel":    "general",
 		"id":         task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if repeatedComplete.Status() != "done" || repeatedComplete.ReviewState() != "approved" {
 		t.Fatalf("expected repeated complete to stay done/approved, got %+v", repeatedComplete)
@@ -3461,7 +3461,7 @@ func TestInFlightTasksReturnsOnlyNonTerminalOwned(t *testing.T) {
 		{ID: "t4", Title: "Canceled task", Owner: "be", status: "canceled"},
 		{ID: "t5", Title: "Cancelled task", Owner: "be", status: "cancelled"},
 		{ID: "t6", Title: "Pending with owner", Owner: "pm", status: "pending"},
-		{ID: "t7", Title: "Open with owner", Owner: "ceo", status: "open"},
+		{ID: "t7", Title: "Open with owner", Owner: "cos", status: "open"},
 	}
 	b.mu.Unlock()
 
@@ -3549,8 +3549,8 @@ func TestBrokerMemoryWorkflowCompletionGateAndOverride(t *testing.T) {
 	createResp, raw := postTask(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 	})
 	if createResp.StatusCode != http.StatusOK {
@@ -3569,7 +3569,7 @@ func TestBrokerMemoryWorkflowCompletionGateAndOverride(t *testing.T) {
 	completeResp, raw := postTask(map[string]any{
 		"action":     "complete",
 		"id":         created.Task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if completeResp.StatusCode != http.StatusConflict {
 		t.Fatalf("expected completion conflict, got status=%d body=%s", completeResp.StatusCode, raw)
@@ -3581,7 +3581,7 @@ func TestBrokerMemoryWorkflowCompletionGateAndOverride(t *testing.T) {
 	overrideResp, raw := postTask(map[string]any{
 		"action":                          "complete",
 		"id":                              created.Task.ID,
-		"created_by":                      "ceo",
+		"created_by":                      "cos",
 		"memory_workflow_override":        true,
 		"memory_workflow_override_reason": "Human reviewed and accepted missing memory evidence.",
 	})
@@ -3601,7 +3601,7 @@ func TestBrokerMemoryWorkflowCompletionGateAndOverride(t *testing.T) {
 	if wf == nil || wf.Status != MemoryWorkflowStatusOverridden || wf.Override == nil {
 		t.Fatalf("expected recorded override, got %+v", wf)
 	}
-	if wf.Override.Actor != "ceo" || wf.Override.Reason == "" || wf.Override.Timestamp == "" {
+	if wf.Override.Actor != "cos" || wf.Override.Reason == "" || wf.Override.Timestamp == "" {
 		t.Fatalf("override metadata missing: %+v", wf.Override)
 	}
 }
@@ -3631,8 +3631,8 @@ func TestBrokerMemoryWorkflowCompletionGateRerunsForExistingDoneTask(t *testing.
 	createResp, raw := postTask(map[string]any{
 		"action":     "create",
 		"title":      "Compare pricing pages",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "feature",
 	})
 	if createResp.StatusCode != http.StatusOK {
@@ -3647,7 +3647,7 @@ func TestBrokerMemoryWorkflowCompletionGateRerunsForExistingDoneTask(t *testing.
 	completeResp, raw := postTask(map[string]any{
 		"action":     "complete",
 		"id":         created.Task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if completeResp.StatusCode != http.StatusOK {
 		t.Fatalf("complete status=%d body=%s", completeResp.StatusCode, raw)
@@ -3656,7 +3656,7 @@ func TestBrokerMemoryWorkflowCompletionGateRerunsForExistingDoneTask(t *testing.
 	updateResp, raw := postTask(map[string]any{
 		"action":     "reassign",
 		"id":         created.Task.ID,
-		"created_by": "ceo",
+		"created_by": "cos",
 		"owner":      "pm",
 		"task_type":  "process_research",
 	})
@@ -3677,11 +3677,11 @@ func TestBrokerTaskPlanInitializesMemoryWorkflow(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{
 		"channel":    "general",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
 			{
 				"title":     "Map support process memory",
-				"assignee":  "ceo",
+				"assignee":  "cos",
 				"task_type": "process-research",
 			},
 		},
@@ -3743,20 +3743,20 @@ func TestBrokerReusedTaskPreservesAndRecomputesMemoryWorkflow(t *testing.T) {
 	created := postTask(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 		"thread_id":  "thread-1",
 	})
-	if _, found, changed, err := b.RecordTaskMemoryCapture(created.ID, "ceo", MemoryWorkflowArtifact{Backend: "markdown", Source: "notebook", Path: "agents/ceo/notebook/onboarding.md"}); err != nil || !found || !changed {
+	if _, found, changed, err := b.RecordTaskMemoryCapture(created.ID, "cos", MemoryWorkflowArtifact{Backend: "markdown", Source: "notebook", Path: "agents/cos/notebook/onboarding.md"}); err != nil || !found || !changed {
 		t.Fatalf("record capture found=%v changed=%v err=%v", found, changed, err)
 	}
 
 	reused := postTask(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "feature",
 		"thread_id":  "thread-1",
 	})
@@ -3787,8 +3787,8 @@ func TestBrokerTaskMemoryWorkflowReportsIdempotentNoOp(t *testing.T) {
 	createBody, _ := json.Marshal(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/tasks", b.Addr()), bytes.NewReader(createBody))
@@ -3889,8 +3889,8 @@ func TestBrokerTaskMemoryWorkflowRecordsBatchedArtifacts(t *testing.T) {
 	createBody, _ := json.Marshal(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/tasks", b.Addr()), bytes.NewReader(createBody))
@@ -3968,8 +3968,8 @@ func TestBrokerTaskMemoryWorkflowPrevalidatesBatchedArtifacts(t *testing.T) {
 	createBody, _ := json.Marshal(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for onboarding",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/tasks", b.Addr()), bytes.NewReader(createBody))
@@ -4039,8 +4039,8 @@ func TestBrokerTaskMemoryWorkflowAcceptsContextToolEventShape(t *testing.T) {
 	createBody, _ := json.Marshal(map[string]any{
 		"action":     "create",
 		"title":      "Research prior context for renewal process",
-		"created_by": "ceo",
-		"owner":      "ceo",
+		"created_by": "cos",
+		"owner":      "cos",
 		"task_type":  "research",
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/tasks", b.Addr()), bytes.NewReader(createBody))

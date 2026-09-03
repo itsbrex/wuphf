@@ -10,10 +10,10 @@ import "testing"
 
 func TestIsDMSlugRecognisesBotToBotPair(t *testing.T) {
 	t.Parallel()
-	// The bug: "ceo__designer" has no human side, so the old
+	// The bug: "cos__designer" has no human side, so the old
 	// canonicalDMTargetBot-based test returned false and the consult relay
 	// had no DM to route through.
-	if !IsDMSlug("ceo__designer") {
+	if !IsDMSlug("cos__designer") {
 		t.Fatal("bot-to-bot pair slug must be recognised as a DM")
 	}
 }
@@ -61,7 +61,7 @@ func TestDMTargetBotStaysHumanRelative(t *testing.T) {
 	if got := DMTargetBot("dm-human-eng"); got != "eng" {
 		t.Errorf("DMTargetBot(dm-human-eng) = %q, want eng", got)
 	}
-	if got := DMTargetBot("ceo__designer"); got != "" {
+	if got := DMTargetBot("cos__designer"); got != "" {
 		t.Errorf("DMTargetBot on a bot-to-bot DM must stay empty; got %q", got)
 	}
 }
@@ -74,16 +74,16 @@ func TestDMOtherParticipantResolvesRelativeToViewer(t *testing.T) {
 		viewer string
 		want   string
 	}{
-		{"bot pair, ceo viewing", "ceo__designer", "ceo", "designer"},
-		{"bot pair, designer viewing", "ceo__designer", "designer", "ceo"},
+		{"bot pair, cos viewing", "cos__designer", "cos", "designer"},
+		{"bot pair, designer viewing", "cos__designer", "designer", "cos"},
 		{"human pair, human viewing", "human__eng", "human", "eng"},
 		{"human pair, bot viewing", "human__eng", "eng", "human"},
 		{"human alias 'you' viewing", "human__eng", "you", "eng"},
 		{"legacy slug, human viewing", "dm-human-eng", "human", "eng"},
 		{"legacy slug, bot viewing", "dm-human-eng", "eng", "human"},
-		{"viewer is not a participant", "ceo__designer", "pm", ""},
-		{"empty viewer cannot be resolved", "ceo__designer", "", ""},
-		{"not a DM", "general", "ceo", ""},
+		{"viewer is not a participant", "cos__designer", "pm", ""},
+		{"empty viewer cannot be resolved", "cos__designer", "", ""},
+		{"not a DM", "general", "cos", ""},
 		{"group DM has no readable pair", "a__b__c", "a", ""},
 	}
 	for _, tc := range cases {
@@ -101,8 +101,8 @@ func TestDMOtherParticipantNeverReturnsTheViewer(t *testing.T) {
 	t.Parallel()
 	// This is what makes the notifier's "don't echo a bot's own message
 	// back to it" guard structural rather than a separate check.
-	for _, viewer := range []string{"ceo", "designer", "human"} {
-		for _, slug := range []string{"ceo__designer", "human__eng"} {
+	for _, viewer := range []string{"cos", "designer", "human"} {
+		for _, slug := range []string{"cos__designer", "human__eng"} {
 			if got := DMOtherParticipant(slug, viewer); got != "" && got == viewer {
 				t.Errorf("DMOtherParticipant(%q, %q) returned the viewer", slug, viewer)
 			}
@@ -115,7 +115,7 @@ func TestDMPartnerRefusesToGuessInAnBotToBotDM(t *testing.T) {
 	b := &Broker{}
 	b.channels = []teamChannel{
 		{Slug: "human__eng", Type: "dm", Members: []string{"human", "eng"}},
-		{Slug: "ceo__designer", Type: "dm", Members: []string{"ceo", "designer"}},
+		{Slug: "cos__designer", Type: "dm", Members: []string{"cos", "designer"}},
 	}
 
 	if got := b.DMPartner("human__eng"); got != "eng" {
@@ -124,7 +124,7 @@ func TestDMPartnerRefusesToGuessInAnBotToBotDM(t *testing.T) {
 	// Both members are real bots. The old "first non-human member wins" loop
 	// handed the surface bridge a coin flip between them; with no viewer to
 	// resolve against, "cannot route" is the only honest answer.
-	if got := b.DMPartner("ceo__designer"); got != "" {
+	if got := b.DMPartner("cos__designer"); got != "" {
 		t.Errorf("DMPartner on a bot-to-bot DM must not guess a side; got %q", got)
 	}
 }

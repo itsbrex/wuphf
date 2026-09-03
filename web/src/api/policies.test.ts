@@ -62,20 +62,20 @@ describe("policies client", () => {
         rule: "Keep responses concise",
         active: true,
         created_at: "2026-06-02T00:00:00Z",
-        agents: ["ceo"],
+        agents: ["cos"],
       };
       postMock.mockResolvedValue(policy);
 
       const result = await createPolicy({
         rule: "Keep responses concise",
         source: "human_directed",
-        agents: ["ceo"],
+        agents: ["cos"],
       });
 
       expect(postMock).toHaveBeenCalledWith("/policies", {
         source: "human_directed",
         rule: "Keep responses concise",
-        agents: ["ceo"],
+        agents: ["cos"],
       });
       expect(result).toEqual(policy);
     });
@@ -111,14 +111,14 @@ describe("policies client", () => {
         rule: "r",
         active: true,
         created_at: "2026-06-01T00:00:00Z",
-        agents: ["ceo"],
+        agents: ["cos"],
       };
       postMock.mockResolvedValue(updated);
 
-      const result = await assignPolicyBot("p1", "ceo");
+      const result = await assignPolicyBot("p1", "cos");
 
       expect(postMock).toHaveBeenCalledWith("/policies/p1/assign", {
-        agent: "ceo",
+        agent: "cos",
       });
       expect(result).toEqual(updated);
     });
@@ -136,10 +136,10 @@ describe("policies client", () => {
       };
       postMock.mockResolvedValue(updated);
 
-      const result = await unassignPolicyBot("p1", "ceo");
+      const result = await unassignPolicyBot("p1", "cos");
 
       expect(postMock).toHaveBeenCalledWith("/policies/p1/unassign", {
-        agent: "ceo",
+        agent: "cos",
       });
       expect(result).toEqual(updated);
     });
@@ -155,22 +155,22 @@ describe("policies client", () => {
     };
 
     it("returns true for a global policy (no bots field)", () => {
-      expect(policyAppliesToBot(base, "ceo")).toBe(true);
+      expect(policyAppliesToBot(base, "cos")).toBe(true);
     });
 
     it("returns true for a global policy with empty bots array", () => {
-      expect(policyAppliesToBot({ ...base, agents: [] }, "ceo")).toBe(true);
+      expect(policyAppliesToBot({ ...base, agents: [] }, "cos")).toBe(true);
     });
 
     it("returns true when bot is in the bots list", () => {
       expect(
-        policyAppliesToBot({ ...base, agents: ["ceo", "librarian"] }, "ceo"),
+        policyAppliesToBot({ ...base, agents: ["cos", "librarian"] }, "cos"),
       ).toBe(true);
     });
 
     it("returns false when bot is NOT in the bots list", () => {
       expect(
-        policyAppliesToBot({ ...base, agents: ["librarian"] }, "ceo"),
+        policyAppliesToBot({ ...base, agents: ["librarian"] }, "cos"),
       ).toBe(false);
     });
   });

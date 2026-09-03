@@ -30,7 +30,7 @@ func ensureBrokerMembers(t *testing.T, ctx context.Context, slugs ...string) {
 			"slug":       slug,
 			"name":       name,
 			"role":       name,
-			"created_by": "ceo",
+			"created_by": "cos",
 		}, nil)
 		if err != nil && !strings.Contains(err.Error(), "member already exists") {
 			t.Fatalf("ensure broker member %s: %v", slug, err)
@@ -158,7 +158,7 @@ func TestSuppressBroadcastReasonAllowsOwnedTaskReply(t *testing.T) {
 		"Shipping the signup work now.",
 		"msg-1",
 		[]brokerMessage{
-			{ID: "msg-1", From: "ceo", Content: "Frontend, take the signup flow."},
+			{ID: "msg-1", From: "cos", Content: "Frontend, take the signup flow."},
 		},
 		[]brokerTaskSummary{
 			{ID: "task-1", Owner: "fe", Status: "in_progress", ThreadID: "msg-1", Title: "Own signup flow"},
@@ -176,7 +176,7 @@ func TestSuppressBroadcastReasonBlocksAfterUntargetedCEOReply(t *testing.T) {
 		"msg-1",
 		[]brokerMessage{
 			{ID: "msg-1", From: "you", Content: "What should we do here?"},
-			{ID: "msg-2", From: "ceo", Content: "PM owns this. Let's keep scope tight.", ReplyTo: "msg-1"},
+			{ID: "msg-2", From: "cos", Content: "PM owns this. Let's keep scope tight.", ReplyTo: "msg-1"},
 		},
 		nil,
 	)
@@ -316,7 +316,7 @@ func TestHandleTeamMemberCreateTriggersReconfigure(t *testing.T) {
 		Slug:   "growthops",
 		Name:   "Growth Ops",
 		Role:   "Growth Ops",
-		MySlug: "ceo",
+		MySlug: "cos",
 	}); err != nil {
 		t.Fatalf("handleTeamMember: %v", err)
 	}
@@ -379,7 +379,7 @@ func TestHandleTeamChannelCreateIsRefusedAndDoesNotReconfigure(t *testing.T) {
 		Name:        "launch",
 		Description: "Launch execution channel",
 		Members:     []string{"pm", "fe"},
-		MySlug:      "ceo",
+		MySlug:      "cos",
 	})
 	if err != nil {
 		t.Fatalf("handleTeamChannel: %v", err)
@@ -419,7 +419,7 @@ func TestHandleTeamChannelCreateRequiresExplicitSlug(t *testing.T) {
 		Name:        "launch",
 		Description: "Launch execution channel",
 		Members:     []string{"pm", "fe"},
-		MySlug:      "ceo",
+		MySlug:      "cos",
 	})
 	if err != nil {
 		t.Fatalf("handleTeamChannel returned unexpected error: %v", err)
@@ -446,7 +446,7 @@ func TestHandleTeamChannelCreateRequiresExplicitSlug(t *testing.T) {
 func TestHandleHumanMessageUsesDirectSessionLabelInOneOnOneMode(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("WUPHF_ONE_ON_ONE", "1")
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	b := newTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
@@ -551,7 +551,7 @@ func TestHandleTeamMemoryWriteHintsPromotionForDurableNote(t *testing.T) {
 func TestHandleTeamPollOneOnOneHighlightsLatestHumanRequest(t *testing.T) {
 	t.Setenv("HOME", t.TempDir())
 	t.Setenv("WUPHF_ONE_ON_ONE", "1")
-	t.Setenv("WUPHF_AGENT_SLUG", "ceo")
+	t.Setenv("WUPHF_AGENT_SLUG", "cos")
 
 	b := newTestBroker(t)
 	if err := b.StartOnPort(0); err != nil {
@@ -565,10 +565,10 @@ func TestHandleTeamPollOneOnOneHighlightsLatestHumanRequest(t *testing.T) {
 	// The CEO's own DM, which is where a one-on-one conversation actually
 	// lives now. These used to seed "general" and rely on resolveChannel
 	// defaulting there; that default is retired.
-	ceoDM := team.DMSlugFor("ceo")
+	ceoDM := team.DMSlugFor("cos")
 	for _, msg := range []map[string]any{
 		{"channel": ceoDM, "from": "you", "content": "Old unrelated ask."},
-		{"channel": ceoDM, "from": "ceo", "content": "Acknowledged."},
+		{"channel": ceoDM, "from": "cos", "content": "Acknowledged."},
 		{"channel": ceoDM, "from": "you", "content": "Newest request wins."},
 	} {
 		if err := brokerPostJSON(context.Background(), "/messages", msg, nil); err != nil {
@@ -576,7 +576,7 @@ func TestHandleTeamPollOneOnOneHighlightsLatestHumanRequest(t *testing.T) {
 		}
 	}
 
-	result, _, err := handleTeamPoll(context.Background(), nil, TeamPollArgs{MySlug: "ceo"})
+	result, _, err := handleTeamPoll(context.Background(), nil, TeamPollArgs{MySlug: "cos"})
 	if err != nil {
 		t.Fatalf("handleTeamPoll: %v", err)
 	}
@@ -612,7 +612,7 @@ func TestHandleTeamPollScopesMessagesForNonCEO(t *testing.T) {
 	for _, msg := range []map[string]any{
 		{"channel": "general", "from": "you", "content": "Human wants a quick update."},
 		{"channel": "general", "from": "pm", "content": "Unrelated PM planning note."},
-		{"channel": "general", "from": "ceo", "content": "Frontend, tighten the CTA copy.", "tagged": []string{"fe"}},
+		{"channel": "general", "from": "cos", "content": "Frontend, tighten the CTA copy.", "tagged": []string{"fe"}},
 		{"channel": "general", "from": "fe", "content": "I am on the CTA copy now."},
 	} {
 		if err := brokerPostJSON(ctx, "/messages", msg, nil); err != nil {
@@ -692,7 +692,7 @@ func TestHandleTeamTaskStatusReportsWorktreeIsolation(t *testing.T) {
 		"channel":         "general",
 		"title":           "Implement worktree task",
 		"owner":           "fe",
-		"created_by":      "ceo",
+		"created_by":      "cos",
 		"execution_mode":  "local_worktree",
 		"worktree_path":   "/tmp/wuphf-task-42",
 		"worktree_branch": "task/42",
@@ -793,7 +793,7 @@ func TestHandleTeamTaskReturnsWorktreeGuidance(t *testing.T) {
 		"channel":         "general",
 		"title":           "Implement worktree task",
 		"owner":           "fe",
-		"created_by":      "ceo",
+		"created_by":      "cos",
 		"execution_mode":  "local_worktree",
 		"worktree_path":   "/tmp/wuphf-task-99",
 		"worktree_branch": "task/99",
@@ -860,13 +860,13 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 
 	// Slice 7: specialists can't create Issues directly — only CEO
 	// (or human). Test the "default owner to caller" semantic with
-	// MySlug="ceo" since ceo is the lead and allowed to create.
+	// MySlug="cos" since cos is the lead and allowed to create.
 	result, _, err := handleTeamTask(ctx, nil, TeamTaskArgs{
 		Action:  "create",
 		Channel: "general",
 		Title:   "Investigate webhook retries",
 		Details: "The bot detected this as follow-up implementation work.",
-		MySlug:  "ceo",
+		MySlug:  "cos",
 	})
 	if err != nil {
 		t.Fatalf("handleTeamTask: %v", err)
@@ -875,12 +875,12 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 	// Creation is the authorization: an owner-set Issue (the default
 	// task_type via RULE ZERO override) lands running / in_progress
 	// immediately — no Approve & Start ceremony.
-	// Slice 7: MySlug must be ceo (only lead can create); owner
-	// defaults to the caller, so the assertion reads "@ceo".
+	// Slice 7: MySlug must be cos (only lead can create); owner
+	// defaults to the caller, so the assertion reads "@cos".
 	// Task IDs follow the workspace prefix (Linear-style, default OFFICE).
 	// We assert the message shape without pinning the exact prefix so the
 	// test survives prefix-from-company-name resolution.
-	if !strings.Contains(text, "Task ") || !strings.Contains(text, "is now in_progress @ceo") {
+	if !strings.Contains(text, "Task ") || !strings.Contains(text, "is now in_progress @cos") {
 		t.Fatalf("expected self-owned running (in_progress) task result, got %q", text)
 	}
 
@@ -902,7 +902,7 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 	if task.Title != "Investigate webhook retries" {
 		t.Fatalf("expected created task present across channels, got %+v", tasks.Tasks)
 	}
-	if task.Owner != "ceo" || task.CreatedBy != "ceo" || task.Status != "in_progress" {
+	if task.Owner != "cos" || task.CreatedBy != "cos" || task.Status != "in_progress" {
 		t.Fatalf("expected caller-owned running (status=in_progress) task, got %+v", task)
 	}
 
@@ -911,13 +911,13 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 		Channel: "general",
 		Title:   "Whitespace owner fallback",
 		Owner:   "   ",
-		MySlug:  "ceo",
+		MySlug:  "cos",
 	})
 	if err != nil {
 		t.Fatalf("handleTeamTask whitespace owner: %v", err)
 	}
 	text = textFromResult(t, result)
-	if !strings.Contains(text, "is now in_progress @ceo") {
+	if !strings.Contains(text, "is now in_progress @cos") {
 		t.Fatalf("expected whitespace-owner task to be caller-owned (running), got %q", text)
 	}
 
@@ -930,7 +930,7 @@ func TestHandleTeamTaskCreateDefaultsOwnerToCaller(t *testing.T) {
 			continue
 		}
 		foundWhitespace = true
-		if task.Owner != "ceo" || task.CreatedBy != "ceo" || task.Status != "in_progress" {
+		if task.Owner != "cos" || task.CreatedBy != "cos" || task.Status != "in_progress" {
 			t.Fatalf("expected trimmed-empty owner to default to caller (running), got %+v", task)
 		}
 	}
@@ -963,7 +963,7 @@ func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 		"channel":         "general",
 		"title":           "Ship release candidate",
 		"owner":           "fe",
-		"created_by":      "ceo",
+		"created_by":      "cos",
 		"execution_mode":  "local_worktree",
 		"worktree_path":   "/tmp/wuphf-task-77",
 		"worktree_branch": "task/77",
@@ -985,7 +985,7 @@ func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": taskChannel,
-		"from":    "ceo",
+		"from":    "cos",
 		"content": "Need your approval before shipping.",
 	}, nil); err != nil {
 		t.Fatalf("post message: %v", err)
@@ -994,7 +994,7 @@ func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 	if err := brokerPostJSON(ctx, "/requests", map[string]any{
 		"kind":     "approval",
 		"channel":  taskChannel,
-		"from":     "ceo",
+		"from":     "cos",
 		"title":    "Approve release",
 		"question": "Should we ship the release candidate?",
 		"blocking": true,
@@ -1021,7 +1021,7 @@ func TestHandleTeamRuntimeStateIncludesRecoveryAndCapabilities(t *testing.T) {
 		// you" notice is gone with the start-approval ceremony: created
 		// tasks land running, so no awaiting-start request is raised.
 		"Pending human requests: 1",
-		"Current focus: Approve release from @ceo.",
+		"Current focus: Approve release from @cos.",
 		"working_directory ",
 		"Runtime capabilities:",
 		// With no explicit memory-backend, we fall through to the markdown
@@ -1073,7 +1073,7 @@ func TestHandleTeamRequestDefaultsApprovalOptions(t *testing.T) {
 		Kind:     "approval",
 		Channel:  "general",
 		Question: "Ship this?",
-		MySlug:   "ceo",
+		MySlug:   "cos",
 	}); err != nil {
 		t.Fatalf("handleTeamRequest: %v", err)
 	}
@@ -1120,7 +1120,7 @@ func TestHandleTeamPollUsesBotScopedTranscript(t *testing.T) {
 	for _, msg := range []map[string]any{
 		{"channel": "general", "from": "you", "content": "Frontend, should we ship this?", "tagged": []string{"fe"}},
 		{"channel": "general", "from": "pm", "content": "Unrelated roadmap chatter."},
-		{"channel": "general", "from": "ceo", "content": "Keep scope tight and focus on signup."},
+		{"channel": "general", "from": "cos", "content": "Keep scope tight and focus on signup."},
 		{"channel": "general", "from": "fe", "content": "I can take the signup work."},
 	} {
 		if err := brokerPostJSON(ctx, "/messages", msg, nil); err != nil {
@@ -1170,7 +1170,7 @@ func TestHandleTeamBroadcastDefaultsToLatestTaggedChannelAndThread(t *testing.T)
 	team.SeedBridgedRoomForTest(b, "launch", "fe", "pm")
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": "launch",
-		"from":    "ceo",
+		"from":    "cos",
 		"content": "Frontend, tighten the launch CTA in this thread.",
 		"tagged":  []string{"fe"},
 	}, nil); err != nil {
@@ -1231,7 +1231,7 @@ func TestHandleTeamPollDefaultsToLatestTaggedChannel(t *testing.T) {
 	team.SeedBridgedRoomForTest(b, "launch", "fe", "pm")
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": "launch",
-		"from":    "ceo",
+		"from":    "cos",
 		"content": "Frontend, review the launch thread.",
 		"tagged":  []string{"fe"},
 	}, nil); err != nil {
@@ -1286,7 +1286,7 @@ func TestHandleTeamTaskUsesTaskChannelWhenIDGiven(t *testing.T) {
 		"channel":    "launch",
 		"title":      "Review launch CTA",
 		"owner":      "fe",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"thread_id":  "msg-launch",
 	}, &created); err != nil {
 		t.Fatalf("create task: %v", err)
@@ -1365,10 +1365,10 @@ func TestHandleTeamInboxAndOutboxExposeOwnedTranscriptSlices(t *testing.T) {
 
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel": "general",
-		"from":    "ceo",
+		"from":    "cos",
 		"content": "Frontend, take the signup thread.",
 	}, nil); err != nil {
-		t.Fatalf("post ceo message: %v", err)
+		t.Fatalf("post cos message: %v", err)
 	}
 	if err := brokerPostJSON(ctx, "/messages", map[string]any{
 		"channel":  "general",
@@ -1459,7 +1459,7 @@ func TestDetectUntaggedMentions(t *testing.T) {
 	}
 
 	// Multiple @-mentions, one tagged → only untagged one flagged
-	got = detectUntaggedMentions("@ceo @marketing please coordinate", []string{"ceo"})
+	got = detectUntaggedMentions("@cos @marketing please coordinate", []string{"cos"})
 	if len(got) != 1 || got[0] != "marketing" {
 		t.Fatalf("expected only marketing untagged, got %v", got)
 	}
@@ -1488,7 +1488,7 @@ func TestHandleTeamPlanCreatesDependentBlockedTasks(t *testing.T) {
 
 	result, _, err := handleTeamPlan(context.Background(), nil, TeamPlanArgs{
 		Channel: "general",
-		MySlug:  "ceo",
+		MySlug:  "cos",
 		Tasks: []struct {
 			Title         string   `json:"title" jsonschema:"Task title"`
 			Assignee      string   `json:"assignee" jsonschema:"Bot slug to own this task"`
@@ -1545,7 +1545,7 @@ func TestHandleTeamPlanPreservesTaskMetadata(t *testing.T) {
 
 	_, _, err := handleTeamPlan(context.Background(), nil, TeamPlanArgs{
 		Channel: "general",
-		MySlug:  "ceo",
+		MySlug:  "cos",
 		Tasks: []struct {
 			Title         string   `json:"title" jsonschema:"Task title"`
 			Assignee      string   `json:"assignee" jsonschema:"Bot slug to own this task"`
@@ -1601,7 +1601,7 @@ func TestHandleTeamTaskCreatePreservesTaskMetadata(t *testing.T) {
 		Owner:         "eng",
 		TaskType:      "feature",
 		ExecutionMode: "local_worktree",
-		MySlug:        "ceo",
+		MySlug:        "cos",
 	})
 	if err != nil {
 		t.Fatalf("handleTeamTask: %v", err)

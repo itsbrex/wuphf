@@ -9,7 +9,7 @@ import (
 
 func TestFlattenThreadRepliesNestedDepth(t *testing.T) {
 	messages := []channelui.BrokerMessage{
-		{ID: "root", From: "ceo", Content: "Should we ship?"},
+		{ID: "root", From: "cos", Content: "Should we ship?"},
 		{ID: "r1", From: "fe", Content: "Yes", ReplyTo: "root"},
 		{ID: "r1a", From: "be", Content: "Agree", ReplyTo: "r1"},
 		{ID: "r2", From: "pm", Content: "Wait", ReplyTo: "root"},
@@ -50,7 +50,7 @@ func TestRenderThreadReplyContainsAuthorAndBody(t *testing.T) {
 			Timestamp: "2026-04-29T10:00:00Z",
 		},
 		Depth:       1,
-		ParentLabel: "@ceo",
+		ParentLabel: "@cos",
 	}
 	lines := channelui.RenderThreadReply(reply, 60)
 	plain := stripANSI(strings.Join(lines, "\n"))
@@ -63,15 +63,15 @@ func TestRenderThreadReplyContainsAuthorAndBody(t *testing.T) {
 	if !strings.Contains(plain, "↳") {
 		t.Fatalf("expected nested reply marker, got %q", plain)
 	}
-	if !strings.Contains(plain, "reply to @ceo") {
+	if !strings.Contains(plain, "reply to @cos") {
 		t.Fatalf("expected parent label, got %q", plain)
 	}
 }
 
 func TestRenderThreadRepliesMultipleProducesLines(t *testing.T) {
 	replies := []channelui.ThreadedMessage{
-		{Message: channelui.BrokerMessage{ID: "r1", From: "fe", Content: "A"}, Depth: 0, ParentLabel: "@ceo"},
-		{Message: channelui.BrokerMessage{ID: "r2", From: "be", Content: "B"}, Depth: 0, ParentLabel: "@ceo"},
+		{Message: channelui.BrokerMessage{ID: "r1", From: "fe", Content: "A"}, Depth: 0, ParentLabel: "@cos"},
+		{Message: channelui.BrokerMessage{ID: "r2", From: "be", Content: "B"}, Depth: 0, ParentLabel: "@cos"},
 	}
 	lines := channelui.RenderThreadReplies(replies, 60)
 	if len(lines) == 0 {
@@ -92,7 +92,7 @@ func TestRenderThreadRepliesEmptyReturnsNil(t *testing.T) {
 func TestRenderThreadMessageHasAvatarAndBody(t *testing.T) {
 	msg := channelui.BrokerMessage{
 		ID:        "m1",
-		From:      "ceo",
+		From:      "cos",
 		Content:   "Approve the launch",
 		Timestamp: "2026-04-29T10:00:00Z",
 	}
@@ -133,7 +133,7 @@ func TestRenderThreadPanelMissingParentShowsNotice(t *testing.T) {
 
 func TestRenderThreadPanelRendersParentAndReplies(t *testing.T) {
 	messages := []channelui.BrokerMessage{
-		{ID: "root", From: "ceo", Content: "Approve?", Timestamp: "2026-04-29T10:00:00Z"},
+		{ID: "root", From: "cos", Content: "Approve?", Timestamp: "2026-04-29T10:00:00Z"},
 		{ID: "r1", From: "fe", Content: "Approved", ReplyTo: "root", Timestamp: "2026-04-29T10:01:00Z"},
 	}
 	got := renderThreadPanel(messages, "root", 60, 20, nil, 0, 0, "", true, false)

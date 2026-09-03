@@ -12,10 +12,10 @@ describe("routineOwner", () => {
       kind: "composio_workflow",
       target_type: "workflow",
       target_id: "daily-email-digest",
-      agent: "ceo",
+      agent: "cos",
       provider: "composio",
     };
-    expect(routineOwner(job)).toEqual({ slug: "ceo", kind: "agent" });
+    expect(routineOwner(job)).toEqual({ slug: "cos", kind: "agent" });
   });
 
   it("never treats the vendor as a bot when no bot is set", () => {

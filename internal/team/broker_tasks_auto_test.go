@@ -20,7 +20,7 @@ func TestIsAutoOwner(t *testing.T) {
 			t.Errorf("isAutoOwner(%q) = false, want true", s)
 		}
 	}
-	for _, s := range []string{"", "ceo", "builder", "automation"} {
+	for _, s := range []string{"", "cos", "builder", "automation"} {
 		if isAutoOwner(s) {
 			t.Errorf("isAutoOwner(%q) = true, want false", s)
 		}
@@ -31,7 +31,7 @@ func TestIsAutoOwner(t *testing.T) {
 //   - Backlog (park) + specialist → parked in the backlog stage, not
 //     dispatched, with per-task provider/model/effort persisted.
 //   - Backlog (park) + Auto → owner "auto", parked, not dispatched.
-//   - Start now + Auto → owner "auto", not dispatched, and a @ceo triage
+//   - Start now + Auto → owner "auto", not dispatched, and a @cos triage
 //     message posted in the task's channel.
 func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 	withWuphfHomeDir(t)
@@ -104,7 +104,7 @@ func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 		t.Fatalf("auto-parked task must not be in_progress, got %q", at.Status())
 	}
 
-	// Start now + Auto: not dispatched, and a @ceo triage message lands in the
+	// Start now + Auto: not dispatched, and a @cos triage message lands in the
 	// task's channel.
 	st := plan(t, map[string]any{"title": "Start auto task", "assignee": "auto"})
 	if !isAutoOwner(st.Owner) {
@@ -116,14 +116,14 @@ func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 	b.mu.Lock()
 	found := false
 	for _, m := range b.messages {
-		if normalizeChannelSlug(m.Channel) == normalizeChannelSlug(st.Channel) && containsSlug(m.Tagged, "ceo") {
+		if normalizeChannelSlug(m.Channel) == normalizeChannelSlug(st.Channel) && containsSlug(m.Tagged, "cos") {
 			found = true
 			break
 		}
 	}
 	b.mu.Unlock()
 	if !found {
-		t.Fatalf("expected a @ceo triage message in channel %q for auto task %s", st.Channel, st.ID)
+		t.Fatalf("expected a @cos triage message in channel %q for auto task %s", st.Channel, st.ID)
 	}
 }
 
@@ -131,7 +131,7 @@ func TestBrokerTaskPlanParkAndAuto(t *testing.T) {
 // an ownerless ("auto") start-now task, at the live layer:
 //
 //	POST /task-plan (assignee=auto)
-//	  → requestAutoAssignmentLocked posts a human-authored @ceo message
+//	  → requestAutoAssignmentLocked posts a human-authored @cos message
 //	  → the broker publishes it on the message stream notifyBotsLoop reads
 //	  → deliverMessageNotification dispatches a headless turn to the CEO.
 //
@@ -144,7 +144,7 @@ func TestOwnerlessTaskCreate_TriageMessageWakesCEO(t *testing.T) {
 		t.Fatalf("seed provider config: %v", err)
 	}
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "team", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "cos", "CEO")
 	ensureTestMemberAccess(b, "team", "builder", "Builder")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("failed to start broker: %v", err)
@@ -156,9 +156,9 @@ func TestOwnerlessTaskCreate_TriageMessageWakesCEO(t *testing.T) {
 	l.provider = "codex" // headless dispatch for every bot
 	l.notifyLastDelivered = make(map[notifyDedupKey]time.Time)
 	l.pack = &bot.PackDefinition{
-		LeadSlug: "ceo",
+		LeadSlug: "cos",
 		Bots: []bot.BotConfig{
-			{Slug: "ceo", Name: "CEO"},
+			{Slug: "cos", Name: "CEO"},
 			{Slug: "builder", Name: "Builder"},
 		},
 	}
@@ -203,12 +203,12 @@ waitTriage:
 	for {
 		select {
 		case m := <-msgs:
-			if containsSlug(m.Tagged, "ceo") {
+			if containsSlug(m.Tagged, "cos") {
 				triage = m
 				break waitTriage
 			}
 		case <-deadline:
-			t.Fatalf("no @ceo triage message published for the ownerless task")
+			t.Fatalf("no @cos triage message published for the ownerless task")
 		}
 	}
 	if triage.From == "system" {
@@ -222,7 +222,7 @@ waitTriage:
 	for {
 		select {
 		case slug := <-processed:
-			if slug == "ceo" {
+			if slug == "cos" {
 				return // CEO woke — full trace verified
 			}
 		case <-dispatchDeadline:

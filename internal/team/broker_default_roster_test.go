@@ -33,11 +33,11 @@ func TestFreshOfficeSeedsOnlyTheChiefOfStaff(t *testing.T) {
 		for _, m := range b.members {
 			slugs = append(slugs, m.Slug)
 		}
-		t.Fatalf("fresh roster = %v, want exactly [ceo]", slugs)
+		t.Fatalf("fresh roster = %v, want exactly [cos]", slugs)
 	}
 	m := b.members[0]
-	if m.Slug != "ceo" {
-		t.Fatalf("sole member slug = %q, want \"ceo\"", m.Slug)
+	if m.Slug != "cos" {
+		t.Fatalf("sole member slug = %q, want \"cos\"", m.Slug)
 	}
 	if m.Name != "Chief of Staff" {
 		t.Errorf("lead name = %q, want \"Chief of Staff\"", m.Name)
@@ -52,8 +52,8 @@ func TestFreshOfficeSeedsOnlyTheChiefOfStaff(t *testing.T) {
 			dms = append(dms, c.Slug)
 		}
 	}
-	if len(dms) != 1 || dms[0] != "ceo__human" {
-		t.Errorf("DMs = %v, want exactly [ceo__human]", dms)
+	if len(dms) != 1 || dms[0] != "cos__human" {
+		t.Errorf("DMs = %v, want exactly [cos__human]", dms)
 	}
 }
 
@@ -95,7 +95,7 @@ func TestLegacyWorkspaceKeepsItsBotsButDropsTheOfficeName(t *testing.T) {
 
 	legacy := map[string]any{
 		"members": []map[string]any{
-			{"slug": "ceo", "name": "CEO", "role": "CEO", "built_in": true},
+			{"slug": "cos", "name": "CEO", "role": "CEO", "built_in": true},
 			{"slug": "librarian", "name": "Pam the librarian", "role": "Librarian", "built_in": true},
 			{"slug": "app-builder", "name": "App Builder", "role": "App Builder", "built_in": true},
 			{"slug": "planner", "name": "Planner", "role": "Planner"},
@@ -128,7 +128,7 @@ func TestLegacyWorkspaceKeepsItsBotsButDropsTheOfficeName(t *testing.T) {
 	for _, m := range b.members {
 		got[m.Slug] = m
 	}
-	for _, slug := range []string{"ceo", "librarian", "app-builder", "planner"} {
+	for _, slug := range []string{"cos", "librarian", "app-builder", "planner"} {
 		if _, ok := got[slug]; !ok {
 			t.Fatalf("legacy member %q was dropped on load: existing workspaces must keep their bots", slug)
 		}
@@ -142,11 +142,11 @@ func TestLegacyWorkspaceKeepsItsBotsButDropsTheOfficeName(t *testing.T) {
 	if got["app-builder"].BuiltIn {
 		t.Error("legacy app-builder still BuiltIn: users could not delete a bot the product no longer defines")
 	}
-	if !got["ceo"].BuiltIn {
+	if !got["cos"].BuiltIn {
 		t.Error("the lead lost BuiltIn on load")
 	}
-	if got["ceo"].Name != "Chief of Staff" {
-		t.Errorf("lead name = %q, want the reconciled \"Chief of Staff\"", got["ceo"].Name)
+	if got["cos"].Name != "Chief of Staff" {
+		t.Errorf("lead name = %q, want the reconciled \"Chief of Staff\"", got["cos"].Name)
 	}
 	if b.findChannelLocked("human__librarian") == nil {
 		t.Error("legacy librarian DM was dropped on load")

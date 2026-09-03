@@ -30,7 +30,7 @@ const CONFIG = {
   provider_endpoints: {},
   memory_backend: "markdown",
   action_provider: "composio",
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
   composio_key_set: true,
   telegram_token_set: true,
   openclaw_token_set: false,

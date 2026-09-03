@@ -26,7 +26,7 @@ import { BotWizard, useBotWizard } from "./BotWizard";
 
 /** Short descriptors for the always-present default bots. */
 const DEFAULT_AGENT_HINT: Record<string, string> = {
-  ceo: "Orchestrator — present on every task",
+  cos: "Orchestrator — present on every task",
   librarian: "Librarian — writes and organizes the wiki",
 };
 
@@ -92,9 +92,9 @@ export function BotsTool() {
   // produced a new array every render, so the memo never actually cached.
   const ordered = useMemo<OfficeMember[]>(() => {
     const agents = members.filter((m) => m.slug && m.slug !== "human");
-    const ceo = agents.find((a) => a.slug === "ceo");
-    const rest = agents.filter((a) => a.slug !== "ceo");
-    return ceo ? [ceo, ...rest] : rest;
+    const cos = agents.find((a) => a.slug === "cos");
+    const rest = agents.filter((a) => a.slug !== "cos");
+    return cos ? [cos, ...rest] : rest;
   }, [members]);
 
   return (

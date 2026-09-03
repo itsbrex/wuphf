@@ -83,28 +83,28 @@ describe("team-lead resolution for /ask", () => {
     expect(
       resolveLeadSlug("", [
         { slug: "pm", built_in: false },
-        { slug: "ceo", built_in: true },
+        { slug: "cos", built_in: true },
       ]),
-    ).toBe("ceo");
+    ).toBe("cos");
   });
 
-  it('falls back to "ceo" when nothing is known', () => {
-    expect(resolveLeadSlug(undefined, [])).toBe("ceo");
+  it('falls back to "cos" when nothing is known', () => {
+    expect(resolveLeadSlug(undefined, [])).toBe("cos");
   });
 
   it("lowercases configured slugs", () => {
-    expect(resolveLeadSlug("CEO", [])).toBe("ceo");
+    expect(resolveLeadSlug("COS", [])).toBe("cos");
   });
 });
 
 describe("askPrefix", () => {
   it("emits @slug with a trailing space", () => {
-    expect(askPrefix("ceo")).toBe("@ceo ");
+    expect(askPrefix("cos")).toBe("@cos ");
   });
 
-  it("defaults to @ceo", () => {
-    expect(askPrefix(undefined)).toBe("@ceo ");
-    expect(askPrefix("")).toBe("@ceo ");
+  it("defaults to @cos", () => {
+    expect(askPrefix(undefined)).toBe("@cos ");
+    expect(askPrefix("")).toBe("@cos ");
   });
 });
 
@@ -140,7 +140,7 @@ describe("unknown slash commands", () => {
     const showNotice = vi.spyOn(Toast, "showNotice").mockReturnValue();
 
     const consumed = handleSlashCommand("/object list", {
-      leadSlug: "ceo",
+      leadSlug: "cos",
       clearMessages: vi.fn(),
       sendAsMessage,
       channel: "general",

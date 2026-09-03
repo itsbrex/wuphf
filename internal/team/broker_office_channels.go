@@ -862,7 +862,7 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, "unknown members: "+missing, http.StatusNotFound)
 					return
 				}
-				ch.Members = uniqueSlugs(append([]string{"ceo"}, members...))
+				ch.Members = uniqueSlugs(append([]string{"cos"}, members...))
 				if len(ch.Disabled) > 0 {
 					// Drop any disabled entry whose slug is in the updated
 					// roster. The semantic pinned by
@@ -1001,9 +1001,9 @@ func (b *Broker) handleChannelMembers(w http.ResponseWriter, r *http.Request) {
 		// Lead bots (BuiltIn) cannot be disabled or removed from any
 		// channel. The blueprint's lead is the tag target for the onboarding
 		// kickoff and the default owner for channel membership; the UI locks
-		// these interactions too. Keeps the "ceo" literal as a legacy guard
+		// these interactions too. Keeps the "cos" literal as a legacy guard
 		// for team states that predate the BuiltIn field.
-		if (memberRecord.BuiltIn || member == "ceo") && (action == "remove" || action == "disable") {
+		if (memberRecord.BuiltIn || member == "cos") && (action == "remove" || action == "disable") {
 			b.mu.Unlock()
 			http.Error(w, "cannot remove or disable lead bot", http.StatusBadRequest)
 			return

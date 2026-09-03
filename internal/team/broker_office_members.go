@@ -566,7 +566,7 @@ func (b *Broker) removeOfficeMember(r *http.Request, slug string) (officeMemberM
 		b.mu.Unlock()
 		return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusNotFound, "member not found")
 	}
-	if member.BuiltIn || slug == "ceo" {
+	if member.BuiltIn || slug == "cos" {
 		b.mu.Unlock()
 		return officeMemberMutationResult{}, newOfficeMemberMutationError(http.StatusBadRequest, "cannot remove built-in member")
 	}

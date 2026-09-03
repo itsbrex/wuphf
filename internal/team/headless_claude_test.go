@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/nex-crm/wuphf/internal/bot"
@@ -12,13 +13,13 @@ import (
 )
 
 // minimalLauncher builds a Launcher with a predictable two-member pack so
-// officeLeadSlug() always returns "ceo".
+// officeLeadSlug() always returns "cos".
 func minimalLauncher(opusCEO bool) *Launcher {
 	return &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "eng", Name: "Engineer"},
 				{Slug: "pm", Name: "Product Manager"},
 			},
@@ -42,7 +43,7 @@ func TestHeadlessClaudeMaxTurns_AppBuilderGetsBuildHeadroom(t *testing.T) {
 	if got := l.headlessClaudeMaxTurns(appBuilderSlug, ""); got != "60" {
 		t.Fatalf("app-builder max turns = %s, want 60 (build headroom)", got)
 	}
-	if got := l.headlessClaudeMaxTurns("ceo", ""); got != "30" {
+	if got := l.headlessClaudeMaxTurns("cos", ""); got != "30" {
 		t.Fatalf("lead max turns = %s, want 30", got)
 	}
 	if got := l.headlessClaudeMaxTurns("pm", ""); got != "15" {
@@ -56,7 +57,7 @@ func TestHeadlessClaudeMaxTurns_AppBuilderGetsBuildHeadroom(t *testing.T) {
 // the lead, uses the Sonnet model when opusCEO is false.
 func TestHeadlessClaudeModel_SonnetByDefault(t *testing.T) {
 	l := minimalLauncher(false)
-	for _, slug := range []string{"ceo", "eng", "pm"} {
+	for _, slug := range []string{"cos", "eng", "pm"} {
 		t.Run(slug, func(t *testing.T) {
 			if got := l.headlessClaudeModel(context.Background(), slug); got != "claude-sonnet-4-6" {
 				t.Fatalf("slug=%q opusCEO=false: want claude-sonnet-4-6, got %q", slug, got)
@@ -73,7 +74,7 @@ func TestHeadlessClaudeModel_OpusForLeadOnly(t *testing.T) {
 		slug string
 		want string
 	}{
-		{"ceo", "claude-opus-4-8"},
+		{"cos", "claude-opus-4-8"},
 		{"eng", "claude-sonnet-4-6"},
 		{"pm", "claude-sonnet-4-6"},
 	}
@@ -87,7 +88,7 @@ func TestHeadlessClaudeModel_OpusForLeadOnly(t *testing.T) {
 }
 
 // TestHeadlessClaudeModel_CustomLeadSlug verifies model selection when the
-// pack defines a non-"ceo" lead slug. No broker is constructed, so
+// pack defines a non-"cos" lead slug. No broker is constructed, so
 // officeMembersSnapshot() falls through to the pack definition.
 func TestHeadlessClaudeModel_CustomLeadSlug(t *testing.T) {
 	l := &Launcher{
@@ -361,5 +362,22 @@ func TestHeadlessClaudeMaxTurns_AppAskGetsHeadroom(t *testing.T) {
 		if got := l.headlessClaudeMaxTurns("pm", ask); got != want {
 			t.Fatalf("max turns for %q = %s, want %s", ask, got, want)
 		}
+	}
+}
+
+// TestWithAppAskPreface: an app ask gets the order-of-operations preface in
+// the message itself; anything else passes through untouched.
+func TestWithAppAskPreface(t *testing.T) {
+	ask := "Build me a Unit Converter app: km to miles."
+	got := withAppAskPreface(ask)
+	if !strings.HasPrefix(got, "APP ASK") || !strings.HasSuffix(got, ask) {
+		t.Fatalf("app ask not prefaced: %q", got)
+	}
+	if !strings.Contains(got, "team_task action=create") || !strings.Contains(got, "register_app(") {
+		t.Fatalf("preface missing the task-first / publish steps: %q", got)
+	}
+	plain := "what pressure for espresso?"
+	if withAppAskPreface(plain) != plain {
+		t.Fatalf("non-app message must pass through unchanged")
 	}
 }

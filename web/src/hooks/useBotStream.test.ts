@@ -151,20 +151,20 @@ describe("appendStreamLine", () => {
 
   it("merges task into the URL with & when sseURL already added ?token=", () => {
     // Regression: an earlier version produced
-    // `…/bot-stream/ceo?task=task-1?token=ABC`, so the query parser
+    // `…/bot-stream/cos?task=task-1?token=ABC`, so the query parser
     // folded the token into the task value and auth silently broke
     // for every task-scoped subscription. Guard the contract: if the
     // base URL already contains '?', the task param uses '&'.
-    const url = botStreamURL("ceo", "task-1");
-    expect(url).toBe("http://broker/agent-stream/ceo?token=ABC&task=task-1");
+    const url = botStreamURL("cos", "task-1");
+    expect(url).toBe("http://broker/agent-stream/cos?token=ABC&task=task-1");
   });
 
   it("returns the bare base URL when no taskId is provided", () => {
-    expect(botStreamURL("ceo", null)).toBe(
-      "http://broker/agent-stream/ceo?token=ABC",
+    expect(botStreamURL("cos", null)).toBe(
+      "http://broker/agent-stream/cos?token=ABC",
     );
-    expect(botStreamURL("ceo", "  ")).toBe(
-      "http://broker/agent-stream/ceo?token=ABC",
+    expect(botStreamURL("cos", "  ")).toBe(
+      "http://broker/agent-stream/cos?token=ABC",
     );
   });
 
@@ -230,7 +230,7 @@ describe("useBotStream phase + idle behavior", () => {
     // the user opened the viewer for a bot that just went idle. With
     // the replay-end boundary in place, the hook must hold the connection
     // open until phase flips to "live".
-    const { result } = renderHook(() => useBotStream("ceo"));
+    const { result } = renderHook(() => useBotStream("cos"));
     const [source] = MockEventSource.instances;
     expect(source).toBeDefined();
     if (!source) return;
@@ -273,7 +273,7 @@ describe("useBotStream phase + idle behavior", () => {
     // chunks, mcp_tool_event audit lines, pane-capture noise). Only the
     // typed HeadlessEvent envelope is allowed to drive auto-close — a
     // foreign JSON object that happens to carry status:"idle" must not.
-    renderHook(() => useBotStream("ceo"));
+    renderHook(() => useBotStream("cos"));
     const [source] = MockEventSource.instances;
     expect(source).toBeDefined();
     if (!source) return;

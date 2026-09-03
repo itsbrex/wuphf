@@ -295,7 +295,7 @@ func (b *Broker) preferredTaskChannelLocked(requestedChannel, createdBy, owner, 
 	// another agent. The old fallback was the CREATOR's own DM, which parked
 	// the owner's entire working thread inside the human's private
 	// conversation with the creator (observed: the Chief of Staff's task for
-	// the Designer living in #ceo__human). The creator⇄owner pair DM is the
+	// the Designer living in #cos__human). The creator⇄owner pair DM is the
 	// right room — both can post, and the consult markers keep it observable.
 	if pair := b.botPairDMForLocked(createdBy, owner); pair != "" {
 		return pair
@@ -392,10 +392,10 @@ func (b *Broker) createPerTaskChannelLocked(taskID, title, owner, actor string) 
 	// createChannelLocked validates every entry against findMemberLocked
 	// and returns an error for unknown slugs.
 	members := make([]string, 0, 2)
-	if o := normalizeActorSlug(owner); o != "" && o != "ceo" && b.findMemberLocked(o) != nil {
+	if o := normalizeActorSlug(owner); o != "" && o != "cos" && b.findMemberLocked(o) != nil {
 		members = append(members, o)
 	}
-	// Actor may be "human", "you", "system", "ceo", or a specialist
+	// Actor may be "human", "you", "system", "cos", or a specialist
 	// slug.  Trusted senders are not in the members list so skip them;
 	// createChannelLocked will return an error for unknown slugs.
 	actorNorm := normalizeActorSlug(actor)
@@ -406,7 +406,7 @@ func (b *Broker) createPerTaskChannelLocked(taskID, title, owner, actor string) 
 			break
 		}
 	}
-	if !isAlreadyMember && actorNorm != "" && actorNorm != "ceo" &&
+	if !isAlreadyMember && actorNorm != "" && actorNorm != "cos" &&
 		!isHumanMessageSender(actorNorm) && actorNorm != "system" &&
 		actorNorm != "nex" && b.findMemberLocked(actorNorm) != nil {
 		members = append(members, actorNorm)

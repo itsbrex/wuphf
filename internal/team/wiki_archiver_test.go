@@ -221,7 +221,7 @@ func TestCommitArchiveRejectsUnsafeArchivePath(t *testing.T) {
 	ctx := context.Background()
 	rel := "team/company/safe.md"
 	content := "# Safe\n\n" + strings.Repeat("word ", 60) + "\n"
-	if _, _, err := repo.Commit(ctx, "ceo", rel, content, "create", "add safe"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", rel, content, "create", "add safe"); err != nil {
 		t.Fatalf("Commit: %v", err)
 	}
 
@@ -255,10 +255,10 @@ func TestCommitArchiveSkipsChangedCandidate(t *testing.T) {
 	rel := "team/company/race.md"
 	original := "# Race\n\n" + strings.Repeat("old ", 60) + "\n"
 	updated := "# Race\n\n" + strings.Repeat("new ", 60) + "\n"
-	if _, _, err := repo.Commit(ctx, "ceo", rel, original, "create", "add race"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", rel, original, "create", "add race"); err != nil {
 		t.Fatalf("Commit original: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", rel, updated, "replace", "update race"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", rel, updated, "replace", "update race"); err != nil {
 		t.Fatalf("Commit update: %v", err)
 	}
 
@@ -321,7 +321,7 @@ func TestBuildCatalog_ExcludesArchived(t *testing.T) {
 	normal := "# Real Article\n\nSome content here.\n"
 	tombstone := "---\narchived: true\narchived_at: 2026-01-01T00:00:00Z\narchive_path: .archive/team/people/old.md\n---\n\n*Archived.*\n"
 
-	if _, _, err := repo.Commit(ctx, "ceo", "team/people/real.md", normal, "create", "add real"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/people/real.md", normal, "create", "add real"); err != nil {
 		t.Fatalf("Commit real: %v", err)
 	}
 	if _, _, err := repo.Commit(ctx, "archivist", "team/people/old.md", tombstone, "create", "add tombstone"); err != nil {

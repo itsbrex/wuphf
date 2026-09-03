@@ -286,7 +286,7 @@ func SeedBridgedRoomForTest(b *Broker, slug string, members ...string) {
 		Name:        slug,
 		Type:        "channel",
 		Description: "Bridged room provided by the test fixture only",
-		Members:     uniqueSlugs(append([]string{"human", "ceo"}, members...)),
+		Members:     uniqueSlugs(append([]string{"human", "cos"}, members...)),
 		Surface:     &channelSurface{Provider: "slack", RemoteID: "C" + strings.ToUpper(slug), RemoteTitle: slug},
 	})
 	b.rebuildChannelIndexLocked()

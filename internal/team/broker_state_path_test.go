@@ -112,7 +112,7 @@ func TestNewBroker_SkipStateLoadGateRespected(t *testing.T) {
 	seed.mu.Lock()
 	seed.messages = []channelMessage{{
 		ID:        "seed-msg",
-		From:      "ceo",
+		From:      "cos",
 		Content:   "canary from the seed broker",
 		Timestamp: "2026-04-25T00:00:00Z",
 	}}
@@ -170,7 +170,7 @@ func TestNewBrokerAt_PathSnapshottedAtConstruction(t *testing.T) {
 	b.mu.Lock()
 	b.messages = []channelMessage{{
 		ID:        "bound-msg",
-		From:      "ceo",
+		From:      "cos",
 		Content:   "belongs to the bound path",
 		Timestamp: "2026-04-25T00:00:00Z",
 	}}
@@ -233,7 +233,7 @@ func TestBrokerStop_ClosesStopChannelAndPreservesState(t *testing.T) {
 	b.mu.Lock()
 	b.messages = []channelMessage{{
 		ID:        "pre-stop",
-		From:      "ceo",
+		From:      "cos",
 		Content:   "written before Stop",
 		Timestamp: "2026-04-25T00:00:00Z",
 	}}

@@ -10,7 +10,7 @@ import (
 
 func TestAppendTaskLedgerEntryCapsAndPersists(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("team", "Long-running build", "many turns", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Long-running build", "many turns", "eng", "cos", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestAppendTaskLedgerEntryCapsAndPersists(t *testing.T) {
 
 func TestRecordTaskLedgerEntryAssemblesFromBrokerFacts(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("team", "Instrumented work", "watch the journal", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Instrumented work", "watch the journal", "eng", "cos", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestRecordTaskLedgerEntryAssemblesFromBrokerFacts(t *testing.T) {
 		t.Fatalf("entry must carry the task mutations; got %v", e.Actions)
 	}
 
-	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "ceo"}, *got, "Next attempt.")
+	packet := l.notifyCtx().BuildTaskExecutionPacket("eng", officeActionLog{Actor: "cos"}, *got, "Next attempt.")
 	if !strings.Contains(packet, "TASK JOURNAL") || !strings.Contains(packet, "flag approach") {
 		t.Fatalf("packet must carry the journal; got:\n%s", packet)
 	}
@@ -75,7 +75,7 @@ func TestRecordTaskLedgerEntrySkipsTasklessTurns(t *testing.T) {
 // ledger entry verbatim and survives the JSON wire (additive field).
 func TestRecordTaskLedgerEntryCarriesContextUsed(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("team", "Context audit work", "track what was injected", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Context audit work", "track what was injected", "eng", "cos", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestRecordTaskLedgerEntryCarriesContextUsed(t *testing.T) {
 // settled turn appears as a kind="turn" event carrying its context manifest.
 func TestIssueActivityCarriesTurnEvents(t *testing.T) {
 	b := newVerificationTestBroker(t)
-	task, _, err := b.EnsureTask("team", "Activity rail work", "surface the turns", "eng", "ceo", "")
+	task, _, err := b.EnsureTask("team", "Activity rail work", "surface the turns", "eng", "cos", "")
 	if err != nil {
 		t.Fatal(err)
 	}

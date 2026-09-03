@@ -53,8 +53,8 @@ func TestBotFileWriteThenRead(t *testing.T) {
 	defer teardown()
 	b := brokerForTest(t, worker)
 
-	path := "agents/ceo/SOUL.md"
-	if rec := postBotFile(t, b, path, "# SOUL — @ceo\nbe excellent", ""); rec.Code != http.StatusOK {
+	path := "agents/cos/SOUL.md"
+	if rec := postBotFile(t, b, path, "# SOUL — @cos\nbe excellent", ""); rec.Code != http.StatusOK {
 		t.Fatalf("create write: want 200, got %d (%s)", rec.Code, rec.Body.String())
 	}
 
@@ -129,18 +129,18 @@ func TestBotFileWrite409OnStaleSHA(t *testing.T) {
 	worker, _, _, teardown := newStartedWorker(t)
 	defer teardown()
 	b := brokerForTest(t, worker)
-	path := "agents/ceo/OPERATIONS.md"
+	path := "agents/cos/OPERATIONS.md"
 
-	if rec := postBotFile(t, b, path, "# OPERATIONS — @ceo\nv1", ""); rec.Code != http.StatusOK {
+	if rec := postBotFile(t, b, path, "# OPERATIONS — @cos\nv1", ""); rec.Code != http.StatusOK {
 		t.Fatalf("create: %d (%s)", rec.Code, rec.Body.String())
 	}
 	_, first := getBotFile(t, b, path)
 	// Land a second edit so HEAD moves past `first.SHA`.
-	if rec := postBotFile(t, b, path, "# OPERATIONS — @ceo\nv2", first.SHA); rec.Code != http.StatusOK {
+	if rec := postBotFile(t, b, path, "# OPERATIONS — @cos\nv2", first.SHA); rec.Code != http.StatusOK {
 		t.Fatalf("second edit: %d (%s)", rec.Code, rec.Body.String())
 	}
 	// A save still using the stale first.SHA must 409.
-	rec := postBotFile(t, b, path, "# OPERATIONS — @ceo\nstale", first.SHA)
+	rec := postBotFile(t, b, path, "# OPERATIONS — @cos\nstale", first.SHA)
 	if rec.Code != http.StatusConflict {
 		t.Fatalf("stale save: want 409, got %d (%s)", rec.Code, rec.Body.String())
 	}
@@ -164,11 +164,11 @@ func TestBotFileWriteRejectsNonBotPath(t *testing.T) {
 	b := brokerForTest(t, worker)
 
 	for _, bad := range []string{
-		"team/people/ceo.md",       // wiki article subtree
-		"agents/ceo/MEMORY.md",     // not a canonical file
-		"agents/ceo/notebook/x.md", // notebook subtree
+		"team/people/cos.md",       // wiki article subtree
+		"agents/cos/MEMORY.md",     // not a canonical file
+		"agents/cos/notebook/x.md", // notebook subtree
 		"../etc/passwd",            // traversal
-		"agents/ceo/../eng/SOUL.md",
+		"agents/cos/../eng/SOUL.md",
 	} {
 		rec := postBotFile(t, b, bad, "x", "")
 		if rec.Code != http.StatusBadRequest {
@@ -183,7 +183,7 @@ func TestBotFileReadRejectsNonBotPath(t *testing.T) {
 	defer teardown()
 	b := brokerForTest(t, worker)
 
-	rec, _ := getBotFile(t, b, "team/people/ceo.md")
+	rec, _ := getBotFile(t, b, "team/people/cos.md")
 	if rec.Code != http.StatusBadRequest {
 		t.Fatalf("want 400 for non-bot read path, got %d", rec.Code)
 	}
@@ -198,8 +198,8 @@ func TestBotFileWriteRequiresHumanActor(t *testing.T) {
 	b := brokerForTest(t, worker)
 
 	raw, _ := json.Marshal(map[string]any{
-		"path":    "agents/ceo/SOUL.md",
-		"content": "# SOUL — @ceo\nbot self-edit",
+		"path":    "agents/cos/SOUL.md",
+		"content": "# SOUL — @cos\nbot self-edit",
 	})
 	// No actor in context (or a broker actor) must be rejected.
 	for _, actor := range []*requestActor{nil, {Kind: requestActorKindBroker}} {
@@ -345,9 +345,9 @@ func TestCommitBotFileHumanRoundTrip(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("init: %v", err)
 	}
-	rel := botFileRel("ceo", "TOOLS")
+	rel := botFileRel("cos", "TOOLS")
 
-	sha1, n, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @ceo\nv1", "", "seed", HumanIdentity{})
+	sha1, n, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @cos\nv1", "", "seed", HumanIdentity{})
 	if err != nil {
 		t.Fatalf("create: %v", err)
 	}
@@ -355,7 +355,7 @@ func TestCommitBotFileHumanRoundTrip(t *testing.T) {
 		t.Fatalf("unexpected create result sha=%q n=%d", sha1, n)
 	}
 	// Correct-sha replace succeeds and advances HEAD.
-	sha2, _, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @ceo\nv2", sha1, "edit", HumanIdentity{})
+	sha2, _, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @cos\nv2", sha1, "edit", HumanIdentity{})
 	if err != nil {
 		t.Fatalf("replace: %v", err)
 	}
@@ -363,7 +363,7 @@ func TestCommitBotFileHumanRoundTrip(t *testing.T) {
 		t.Fatalf("expected new sha after replace, got %q (was %q)", sha2, sha1)
 	}
 	// Stale-sha replace is rejected.
-	if _, _, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @ceo\nstale", sha1, "stale", HumanIdentity{}); !errors.Is(err, ErrWikiSHAMismatch) {
+	if _, _, err := repo.CommitBotFileHuman(ctx, rel, "# TOOLS — @cos\nstale", sha1, "stale", HumanIdentity{}); !errors.Is(err, ErrWikiSHAMismatch) {
 		t.Fatalf("want ErrWikiSHAMismatch on stale write, got %v", err)
 	}
 }

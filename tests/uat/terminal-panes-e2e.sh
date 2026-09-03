@@ -83,7 +83,7 @@ termwright screenshot --socket "$SOCKET" --output "$ARTIFACTS/01-boot.txt" --for
 termwright screenshot --socket "$SOCKET" --output "$ARTIFACTS/01-boot.png" --format png
 
 # Verify CEO pane is visible (leader is first pane).
-check "CEO pane visible" "ceo\|CEO" "$ARTIFACTS/01-boot.txt"
+check "CEO pane visible" "cos\|CEO" "$ARTIFACTS/01-boot.txt"
 
 # Verify at least one pane border is rendered.
 check "Pane border rendered" "\\[" "$ARTIFACTS/01-boot.txt"

@@ -71,8 +71,8 @@ func TestHeadlessTurnWorkspace_WorktreeElseScratch(t *testing.T) {
 	// A chat turn while the bot has an active worktree task keeps the
 	// legacy single-task fallback (botActiveTask) — still inside the
 	// office workspace. A bot with NO active task gets the scratch dir.
-	dir, isWorktree = l.headlessTurnWorkspace("ceo", "")
-	wantScratch := filepath.Join(home, ".wuphf", "agent-scratch", "ceo")
+	dir, isWorktree = l.headlessTurnWorkspace("cos", "")
+	wantScratch := filepath.Join(home, ".wuphf", "agent-scratch", "cos")
 	if isWorktree || !samePath(dir, wantScratch) {
 		t.Fatalf("chat turn: got (%q, %v), want (%q, false)", dir, isWorktree, wantScratch)
 	}
@@ -113,12 +113,12 @@ func TestRunHeadlessClaudeTurn_NoWorktreeRunsInAgentScratch(t *testing.T) {
 
 	// Parse error from /bin/true's empty output is expected; cmd.Dir is set
 	// before Start so the captured command carries the resolved dir.
-	_ = l.runHeadlessClaudeTurn(t.Context(), "ceo", "answer the human in #team")
+	_ = l.runHeadlessClaudeTurn(t.Context(), "cos", "answer the human in #team")
 
 	if captured == nil {
 		t.Fatal("headlessClaudeCommandContext hook was not called")
 	}
-	wantScratch := filepath.Join(home, ".wuphf", "agent-scratch", "ceo")
+	wantScratch := filepath.Join(home, ".wuphf", "agent-scratch", "cos")
 	if !samePath(captured.Dir, wantScratch) {
 		t.Fatalf("claude cmd.Dir = %q, want bot scratch %q", captured.Dir, wantScratch)
 	}

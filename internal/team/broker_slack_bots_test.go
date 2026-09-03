@@ -78,10 +78,10 @@ func TestRegisterSlackAgent_IdempotentAndConflicts(t *testing.T) {
 
 	// A slug already naming a native member → conflict, and the native member's
 	// provider binding must be untouched.
-	if _, err := b.RegisterSlackBot("ceo", "Hijack", "U999"); err == nil {
+	if _, err := b.RegisterSlackBot("cos", "Hijack", "U999"); err == nil {
 		t.Fatal("hijacking a native member slug must error")
 	}
-	if got := b.MemberProviderKind("ceo"); got == provider.KindSlack {
+	if got := b.MemberProviderKind("cos"); got == provider.KindSlack {
 		t.Fatal("conflicting registration must not mutate the native member")
 	}
 }

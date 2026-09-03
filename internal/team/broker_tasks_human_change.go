@@ -43,7 +43,7 @@ func (b *Broker) postHumanTaskChangeLocked(actor string, task *teamTask, changes
 
 	owner := strings.TrimSpace(task.Owner)
 	if owner == "" || b.findMemberLocked(owner) == nil {
-		owner = "ceo"
+		owner = "cos"
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)

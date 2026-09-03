@@ -122,7 +122,7 @@ const ROLE_ALIASES: Record<string, string> = {
   lead: "lead",
   "chief of staff": "lead",
   "chief-of-staff": "lead",
-  ceo: "lead",
+  cos: "lead",
 };
 
 /**

@@ -226,11 +226,11 @@ func TestCatalogExcludesCategoryPages(t *testing.T) {
 	if err := repo.Init(ctx); err != nil {
 		t.Fatalf("Init: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/.categories/sales.md",
+	if _, _, err := repo.Commit(ctx, "cos", "team/.categories/sales.md",
 		"---\nparent_categories: [revenue]\n---\n# Sales\n", "create", "add cat"); err != nil {
 		t.Fatalf("commit cat page: %v", err)
 	}
-	if _, _, err := repo.Commit(ctx, "ceo", "team/companies/acme.md", "# Acme\n", "create", "add acme"); err != nil {
+	if _, _, err := repo.Commit(ctx, "cos", "team/companies/acme.md", "# Acme\n", "create", "add acme"); err != nil {
 		t.Fatalf("commit acme: %v", err)
 	}
 

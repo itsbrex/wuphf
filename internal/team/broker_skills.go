@@ -731,7 +731,7 @@ func (b *Broker) createSkillRunTaskLocked(sk *teamSkill, channel, invoker, now s
 		owner = strings.TrimSpace(invoker)
 	}
 	if owner == "" {
-		owner = "ceo"
+		owner = "cos"
 	}
 
 	title := strings.TrimSpace(sk.Title)

@@ -73,7 +73,7 @@ describe("<ChannelParticipants>", () => {
     mocks.useChannelMembers.mockReturnValue({
       data: [
         member({ slug: "human", name: "Human" }),
-        member({ slug: "ceo", name: "CEO", role: "Lead" }),
+        member({ slug: "cos", name: "CEO", role: "Lead" }),
         member({
           slug: "ops",
           name: "Ops",
@@ -85,7 +85,7 @@ describe("<ChannelParticipants>", () => {
     });
     mocks.useOfficeMembers.mockReturnValue({
       data: [
-        member({ slug: "ceo", name: "CEO", role: "Lead", built_in: true }),
+        member({ slug: "cos", name: "CEO", role: "Lead", built_in: true }),
         member({ slug: "ops", name: "Ops", role: "Operations" }),
       ],
     });
@@ -121,12 +121,12 @@ describe("<ChannelParticipants>", () => {
 
   it("adds an available office member to the channel", async () => {
     mocks.useChannelMembers.mockReturnValue({
-      data: [member({ slug: "ceo", name: "CEO" })],
+      data: [member({ slug: "cos", name: "CEO" })],
       isLoading: false,
     });
     mocks.useOfficeMembers.mockReturnValue({
       data: [
-        member({ slug: "ceo", name: "CEO", built_in: true }),
+        member({ slug: "cos", name: "CEO", built_in: true }),
         member({ slug: "planner", name: "Planner", role: "Research bot" }),
       ],
     });
@@ -244,11 +244,11 @@ describe("<ChannelParticipants>", () => {
 
   it("does not expose remove for the lead bot", () => {
     mocks.useChannelMembers.mockReturnValue({
-      data: [member({ slug: "ceo", name: "CEO" })],
+      data: [member({ slug: "cos", name: "CEO" })],
       isLoading: false,
     });
     mocks.useOfficeMembers.mockReturnValue({
-      data: [member({ slug: "ceo", name: "CEO", built_in: true })],
+      data: [member({ slug: "cos", name: "CEO", built_in: true })],
     });
 
     render(<ChannelParticipants channelSlug="general" />);

@@ -26,7 +26,7 @@ import (
 // the switches become silent behaviour changes on persisted data — so pin it.
 func TestNormaliserDivergenceIsExactlyThreeCases(t *testing.T) {
 	agree := []string{
-		"ceo", "app-builder", "gtm-lead", "founding-engineer",
+		"cos", "app-builder", "gtm-lead", "founding-engineer",
 		"librarian", "designer", "pm", "a", "agent-9",
 	}
 	for _, in := range agree {
@@ -44,7 +44,7 @@ func TestNormaliserDivergenceIsExactlyThreeCases(t *testing.T) {
 	}{
 		{"", "", GeneralChannelSlug, "the laundering bug: empty becomes the lobby"},
 		{"   ", "", GeneralChannelSlug, "whitespace-only is the same case"},
-		{"#ceo", "#ceo", "ceo", "the channel normaliser strips a leading #"},
+		{"#cos", "#cos", "cos", "the channel normaliser strips a leading #"},
 		{"a__b", "a--b", "a__b", "the channel normaliser preserves the DM separator"},
 	}
 	for _, c := range diverge {
@@ -120,7 +120,7 @@ func TestRefusalsFireOnEmptyInput(t *testing.T) {
 	})
 
 	t.Run("uniqueSlugs drops a blank entry instead of injecting the lobby", func(t *testing.T) {
-		got := uniqueSlugs([]string{"ceo", "", "  ", "designer"})
+		got := uniqueSlugs([]string{"cos", "", "  ", "designer"})
 		for _, s := range got {
 			if s == GeneralChannelSlug {
 				t.Fatalf("a blank member entry became %q: %v — "+
@@ -128,7 +128,7 @@ func TestRefusalsFireOnEmptyInput(t *testing.T) {
 			}
 		}
 		if len(got) != 2 {
-			t.Errorf("got %v, want exactly [ceo designer]", got)
+			t.Errorf("got %v, want exactly [cos designer]", got)
 		}
 	})
 }
@@ -193,7 +193,7 @@ func TestEmptyFilterMeansNoFilter(t *testing.T) {
 		b := newTestBroker(t)
 		b.mu.Lock()
 		b.requests = []humanInterview{
-			{ID: "r1", Kind: "interview", Status: "pending", From: "ceo", Channel: "product", Question: "q1"},
+			{ID: "r1", Kind: "interview", Status: "pending", From: "cos", Channel: "product", Question: "q1"},
 		}
 		n := b.cancelActiveHumanInterviewsLocked("human", "done", "", "")
 		b.mu.Unlock()
@@ -207,7 +207,7 @@ func TestEmptyFilterMeansNoFilter(t *testing.T) {
 		b := newTestBroker(t)
 		b.mu.Lock()
 		b.requests = []humanInterview{
-			{ID: "r1", Kind: "interview", Status: "pending", From: "ceo", Channel: "product", Question: "q1"},
+			{ID: "r1", Kind: "interview", Status: "pending", From: "cos", Channel: "product", Question: "q1"},
 		}
 		n := b.cancelActiveHumanInterviewsLocked("human", "done", "gtm", "")
 		b.mu.Unlock()
@@ -229,9 +229,9 @@ func TestEmptyFilterMeansNoFilter(t *testing.T) {
 // the canonical-slug migration in one move, and every symptom would look like
 // a routing bug rather than a normalisation one.
 func TestDMSlugsRequireTheChannelNormaliser(t *testing.T) {
-	dm := DMSlugFor("ceo")
+	dm := DMSlugFor("cos")
 	if dm == "" || !strings.Contains(dm, "__") {
-		t.Fatalf("DMSlugFor(\"ceo\") = %q, expected a %q-separated pair slug", dm, "__")
+		t.Fatalf("DMSlugFor(\"cos\") = %q, expected a %q-separated pair slug", dm, "__")
 	}
 
 	if got := normalizeChannelSlug(dm); got != dm {
@@ -249,7 +249,7 @@ func TestDMSlugsRequireTheChannelNormaliser(t *testing.T) {
 	if IsDMSlug(normalizeActorSlug(dm)) {
 		t.Error("an actor-normalised DM slug still parsed as a DM — the hazard has moved, re-check broker_dm.go")
 	}
-	if got := DMTargetBot(normalizeActorSlug(dm)); got == "ceo" {
+	if got := DMTargetBot(normalizeActorSlug(dm)); got == "cos" {
 		t.Error("DMTargetBot survived actor normalisation; re-check the DO-NOT-CHANGE note in broker_dm.go")
 	}
 }

@@ -61,7 +61,7 @@ func evalJobKnowledgeIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error
 		"action": "create", "channel": "general",
 		"title":   "Close the Q3 renewals",
 		"details": "Coordinate the renewal motions for both accounts.",
-		"owner":   "eng", "created_by": "ceo",
+		"owner":   "eng", "created_by": "cos",
 	})
 	if err != nil {
 		return err
@@ -76,7 +76,7 @@ func evalJobKnowledgeIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error
 	}
 	taskID := createParsed.Task.ID
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: taskID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: taskID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Secure the Q3 renewals for Acme Corp and Brightline Labs",
 			Deliverables:    []TaskDeliverable{{Name: "renewals brief", Format: "markdown in the wiki"}},
@@ -218,7 +218,7 @@ func evalJobKnowledgeIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error
 	fID, err := func() (string, error) {
 		status, body, err := client.postJSON("/tasks", map[string]any{
 			"action": "create", "channel": "general", "title": "Prepare the QBR one-pager",
-			"details": "Assemble the QBR one-pager.", "owner": "eng", "created_by": "ceo",
+			"details": "Assemble the QBR one-pager.", "owner": "eng", "created_by": "cos",
 		})
 		if err != nil || status != http.StatusOK {
 			return "", fmt.Errorf("create f: status=%d body=%s err=%w", status, body, err)
@@ -237,7 +237,7 @@ func evalJobKnowledgeIntegrity(fx *officeEvalFixture, r *OfficeEvalReport) error
 		return err
 	}
 	if _, err := fx.broker.MutateTask(TaskPostRequest{
-		Action: "define", ID: fID, Channel: "general", CreatedBy: "ceo",
+		Action: "define", ID: fID, Channel: "general", CreatedBy: "cos",
 		Definition: &TaskDefinition{
 			Goal:            "Ship the QBR one-pager to the wiki",
 			Deliverables:    []TaskDeliverable{{Name: "one-pager", Format: "markdown in the wiki"}},

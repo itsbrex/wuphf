@@ -97,7 +97,7 @@ func TestE2EWikiWriteReadAndEvent(t *testing.T) {
 
 	// Write an article via the HTTP endpoint.
 	writeBody := map[string]string{
-		"slug":           "ceo",
+		"slug":           "cos",
 		"path":           "team/people/customer-x.md",
 		"content":        "# Customer X\n\nA mid-market logistics company.\n",
 		"mode":           "create",
@@ -132,8 +132,8 @@ func TestE2EWikiWriteReadAndEvent(t *testing.T) {
 		if ev.Path != "team/people/customer-x.md" {
 			t.Errorf("event.Path = %q", ev.Path)
 		}
-		if ev.AuthorSlug != "ceo" {
-			t.Errorf("event.AuthorSlug = %q, want ceo", ev.AuthorSlug)
+		if ev.AuthorSlug != "cos" {
+			t.Errorf("event.AuthorSlug = %q, want cos", ev.AuthorSlug)
 		}
 		if ev.CommitSHA == "" {
 			t.Error("event.CommitSHA is empty")
@@ -171,7 +171,7 @@ func TestE2EWikiArticleBacklinks(t *testing.T) {
 	// Write two articles: B is the target; A links to B via [[people/b]].
 	writes := []map[string]string{
 		{
-			"slug":           "ceo",
+			"slug":           "cos",
 			"path":           "team/people/b.md",
 			"content":        "# Article B\n\nThe target article.\n",
 			"mode":           "create",
@@ -210,8 +210,8 @@ func TestE2EWikiArticleBacklinks(t *testing.T) {
 	if meta.Revisions != 1 {
 		t.Errorf("Revisions = %d, want 1", meta.Revisions)
 	}
-	if meta.LastEditedBy != "ceo" {
-		t.Errorf("LastEditedBy = %q, want ceo", meta.LastEditedBy)
+	if meta.LastEditedBy != "cos" {
+		t.Errorf("LastEditedBy = %q, want cos", meta.LastEditedBy)
 	}
 	if len(meta.Backlinks) != 1 {
 		t.Fatalf("Backlinks len = %d, want 1 (entries=%+v)", len(meta.Backlinks), meta.Backlinks)
@@ -242,7 +242,7 @@ func TestE2EWikiConcurrentBots(t *testing.T) {
 	defer cleanup()
 
 	bots := []struct{ slug, path string }{
-		{"ceo", "team/people/alice.md"},
+		{"cos", "team/people/alice.md"},
 		{"pm", "team/people/bob.md"},
 		{"cro", "team/people/carol.md"},
 		{"eng-1", "team/people/dave.md"},

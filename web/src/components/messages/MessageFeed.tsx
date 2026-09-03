@@ -172,7 +172,7 @@ function ChannelMessageFeed({
           </span>
           <div className="channel-empty-hints">
             <div>
-              Try <code>@ceo what should we build this week?</code>
+              Try <code>@cos what should we build this week?</code>
             </div>
             <div>
               Type <code>/</code> for commands, <code>@</code> to mention a bot.

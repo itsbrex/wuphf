@@ -42,7 +42,7 @@ example_artifacts:
     title: "MVP scope document"
   - kind: plan
     title: "Go-to-market launch plan"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/product/**": eng
   "team/growth/**": growth
@@ -51,11 +51,11 @@ employee_blueprints:
   - workflow-automation-builder
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} founding team."
   kickoff_prompt: "Stand up the {{brand_name}} founding team end to end. Find the wedge, ship the smallest MVP that proves the loop, run the first go-to-market motion, and keep outbound, spend, and account changes behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

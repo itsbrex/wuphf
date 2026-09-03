@@ -102,7 +102,7 @@ await page.evaluate(async (slugs) => {
   { slug: "pam", note: "Wiki desk" },
   { slug: "archivist", note: "wiki byline identity" },
   { slug: "librarian", note: "librarian label" },
-  { slug: "ceo", note: "different agent" },
+  { slug: "cos", note: "different agent" },
 ]);
 
 await page.waitForTimeout(300);

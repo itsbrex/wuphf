@@ -572,7 +572,7 @@ func botDisplayNameFromSlug(slug string) string {
 
 // selfHealingTaskTitle composes a title a non-tech operator can read at
 // a glance. Format: "[@<bot>] <reason verb>: <parent issue title>" —
-// e.g. "[@ceo] Bot stuck on: Send VC outreach email". The `[@slug]`
+// e.g. "[@cos] Bot stuck on: Send VC outreach email". The `[@slug]`
 // prefix carries provenance (preserved for overflow-merge lookups that
 // scan titles per bot) and is stripped on the FE for display. Falls
 // back gracefully when the parent title is missing.

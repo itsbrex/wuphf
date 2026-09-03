@@ -31,7 +31,7 @@ if (!OUT) {
 // openclaw-http alias.
 const OFFICE_MEMBERS = [
   {
-    slug: "ceo",
+    slug: "cos",
     name: "CEO",
     role: "Lead agent on claude-code",
     expertise: ["coordination"],
@@ -95,7 +95,7 @@ const MESSAGES = [
   },
   {
     id: "msg-2",
-    from: "ceo",
+    from: "cos",
     channel: "general",
     content: "CEO here, running on **Claude Sonnet 4.6**.",
     timestamp: "2026-05-17T20:00:30Z",

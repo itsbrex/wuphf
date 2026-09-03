@@ -35,7 +35,7 @@ const CONFIG = {
   provider_endpoints: {},
   memory_backend: "markdown",
   action_provider: "auto",
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
   company_name: "Northwind",
   config_path: "/Users/you/.wuphf/config.json",
 };
@@ -43,7 +43,7 @@ const CONFIG = {
 const MEMBERS = {
   members: [
     {
-      slug: "ceo",
+      slug: "cos",
       name: "CEO",
       role: "Office lead",
       emoji: "🎯",
@@ -117,7 +117,7 @@ Direct and concrete. Lead with the number, then the plan.
 - Prefer the smallest real action over a proof or preview artifact unless the task explicitly asks for one.
 - Request a skill or capability when one is missing rather than faking the result.
 `,
-  "agents/ceo/SOUL.md": `# SOUL — @ceo
+  "agents/cos/SOUL.md": `# SOUL — @cos
 
 ## Who you are
 The office lead. You coordinate, decompose, and make the final call.
@@ -256,7 +256,7 @@ try {
 // ── 04: lead office USER.md ────────────────────────────────────────────
 await installCommonMocks(context, { extra: mockFeature });
 await bootShell(page, { afterFlipSelector: ".status-bar" });
-await openProfile("ceo");
+await openProfile("cos");
 await page
   .locator(".bot-file-office-label")
   .first()

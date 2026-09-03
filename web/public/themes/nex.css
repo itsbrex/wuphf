@@ -269,8 +269,8 @@ html[data-theme^="nex"] .sidebar .sidebar-scroll-wrap.is-agents {
 html[data-theme^="nex"] .sidebar .sidebar-section + .sidebar-section {
   border-top-color: rgba(255, 255, 255, 0.08);
 }
-html[data-theme^="nex"] .sidebar .sidebar-agent-task,
-html[data-theme^="nex"] .sidebar .sidebar-agent-activity {
+html[data-theme^="nex"] .sidebar .sidebar-bot-task,
+html[data-theme^="nex"] .sidebar .sidebar-bot-activity {
   color: rgba(255, 255, 255, 0.45);
 }
 html[data-theme^="nex"] .sidebar .usage-toggle,
@@ -355,7 +355,7 @@ html[data-theme^="nex"] .sidebar .sidebar-hint {
   /* 0.55 measured 3.94:1 on the purple rail; 0.68 clears AA. */
   color: rgba(255, 255, 255, 0.68);
 }
-html[data-theme^="nex"] .sidebar .sidebar-agent-name {
+html[data-theme^="nex"] .sidebar .sidebar-bot-name {
   color: inherit;
 }
 
@@ -469,16 +469,16 @@ html[data-theme^="nex"] .sidebar-item-emoji {
 }
 
 /* ── Agent row internals (layout from layout.css) ── */
-html[data-theme^="nex"] .sidebar-agent-name {
+html[data-theme^="nex"] .sidebar-bot-name {
   white-space: nowrap;
 }
-html[data-theme^="nex"] .sidebar-agent-task,
-html[data-theme^="nex"] .sidebar-agent-activity {
+html[data-theme^="nex"] .sidebar-bot-task,
+html[data-theme^="nex"] .sidebar-bot-activity {
   font-size: 11px;
   color: var(--text-tertiary);
   max-width: none;
 }
-html[data-theme^="nex"] .sidebar-agent-stream {
+html[data-theme^="nex"] .sidebar-bot-stream {
   font-size: 11px;
   color: var(--accent);
   max-width: none;
@@ -510,7 +510,7 @@ html[data-theme^="nex"] .sidebar-agent .status-dot.lurking {
 }
 
 /* ── DM button on agent rows ── */
-html[data-theme^="nex"] .sidebar-agent-dm-btn {
+html[data-theme^="nex"] .sidebar-bot-dm-btn {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: var(--radius-sm);

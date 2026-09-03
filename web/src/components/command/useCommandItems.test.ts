@@ -52,7 +52,7 @@ describe("matchesQuery", () => {
   });
 
   it("matches meta", () => {
-    expect(matchesQuery(item({ meta: "@ceo" }), "ceo")).toBe(true);
+    expect(matchesQuery(item({ meta: "@cos" }), "cos")).toBe(true);
   });
 
   it("returns false when nothing matches", () => {

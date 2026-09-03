@@ -185,7 +185,7 @@ func TestMutateTaskPrescaffoldsNewAppBuild(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"cos", appBuilderSlug}},
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
@@ -194,7 +194,7 @@ func TestMutateTaskPrescaffoldsNewAppBuild(t *testing.T) {
 		Title:     "Build app: Lead Scorer",
 		Details:   "Score inbound leads by ICP fit.",
 		Owner:     appBuilderSlug,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -234,14 +234,14 @@ func TestMutateTaskImproveDoesNotPrescaffold(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"cos", appBuilderSlug}},
 	}
 	created, err := b.MutateTask(TaskPostRequest{
 		Action:    "create",
 		Channel:   "team",
 		Title:     "Improve app: Lead Scorer",
 		Owner:     appBuilderSlug,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -390,7 +390,7 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"cos", appBuilderSlug}},
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
@@ -399,7 +399,7 @@ func TestMutateTaskStampsEditChannelOnBuild(t *testing.T) {
 		Title:     "Build app: Lead Scorer",
 		Details:   "Score inbound leads by ICP fit.",
 		Owner:     appBuilderSlug,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -444,7 +444,7 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", appBuilderSlug}},
+		{Slug: "team", Name: "team", Members: []string{"cos", appBuilderSlug}},
 	}
 	// An already-published app the improve task targets.
 	id := customAppID("lead-scorer", "Lead Scorer", "team")
@@ -458,7 +458,7 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 		Title:     "Improve app: Lead Scorer",
 		Details:   "Improve the existing app `" + id + "`.\n\nAdd a CSV export button.\n\nWhen the build passes, register it with register_app (app_id=" + id + ") so it appears under Apps.",
 		Owner:     appBuilderSlug,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask create: %v", err)
@@ -483,7 +483,7 @@ func TestMutateTaskStampsEditChannelOnImprove(t *testing.T) {
 		Title:     "Improve app: Lead Scorer",
 		Details:   "Improve the existing app `" + id + "`.\n\nAdd a date filter.\n\nWhen the build passes, register it with register_app (app_id=" + id + ") so it appears under Apps.",
 		Owner:     appBuilderSlug,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("second MutateTask create: %v", err)
@@ -512,7 +512,7 @@ func TestMutateTaskPrescaffoldsForAnyAgentWithAppBuilding(t *testing.T) {
 	b.mu.Lock()
 	b.members = append(b.members, officeMember{Slug: "designer", Name: "Designer", Role: "Designer"})
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", "designer"}},
+		{Slug: "team", Name: "team", Members: []string{"cos", "designer"}},
 	}
 	b.mu.Unlock()
 
@@ -556,7 +556,7 @@ func TestMutateTaskSkipsPrescaffoldWhenAppBuildingDisabled(t *testing.T) {
 	b.mu.Lock()
 	b.members = append(b.members, officeMember{Slug: "designer", Name: "Designer", Role: "Designer"})
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo", "designer"}},
+		{Slug: "team", Name: "team", Members: []string{"cos", "designer"}},
 	}
 	for i := range b.skills {
 		if b.skills[i].System && b.skills[i].Name == systemSkillAppBuilding {

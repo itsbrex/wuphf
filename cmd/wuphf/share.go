@@ -835,7 +835,7 @@ func writeShareSyntheticHostOnlyResponse(w http.ResponseWriter, r *http.Request,
 		writeShareProxyJSON(w, http.StatusOK, map[string]any{
 			"llm_provider":   "claude-code",
 			"memory_backend": "markdown",
-			"team_lead_slug": "ceo",
+			"team_lead_slug": "cos",
 		})
 		return true
 	}

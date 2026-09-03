@@ -107,7 +107,7 @@ status=$(curl -sS -o "$sandbox/post-resp.json" -w '%{http_code}' \
   -X POST "http://127.0.0.1:$broker_port/channels" \
   -H "Authorization: Bearer $token" \
   -H "Content-Type: application/json" \
-  -d '{"action":"create","slug":"smoke-channel","name":"Smoke","description":"canary","created_by":"ceo"}')
+  -d '{"action":"create","slug":"smoke-channel","name":"Smoke","description":"canary","created_by":"cos"}')
 if [ "$status" != "200" ]; then
   echo "[smoke] POST /channels failed: status=$status body=$(cat "$sandbox/post-resp.json")" >&2
   exit 1

@@ -56,6 +56,6 @@ export const PartiallyLit: Story = {
 /** The all-ticks end state: every bot and channel row is complete. */
 export const AllTicks: Story = {
   args: {
-    litRows: ["ceo", "analyst", "engineer", "general", "engineering"],
+    litRows: ["cos", "analyst", "engineer", "general", "engineering"],
   },
 };

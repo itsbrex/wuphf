@@ -19,7 +19,7 @@ func TestPRLoop_RequestChangesBouncesToOwnerWithFeedback(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "ceo"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "cos"}},
 	}
 	b.tasks = []teamTask{
 		{
@@ -206,7 +206,7 @@ func TestPRLoop_RejectIsTerminalAndDoesNotUnblockDependents(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "ceo"}},
+		{Slug: "team", Name: "team", Members: []string{"executor", "reviewer", "cos"}},
 	}
 	b.tasks = []teamTask{
 		{
@@ -233,7 +233,7 @@ func TestPRLoop_RejectIsTerminalAndDoesNotUnblockDependents(t *testing.T) {
 		ID:        "task-rej-1",
 		Channel:   "team",
 		Details:   reason,
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("MutateTask reject: %v", err)
@@ -348,8 +348,8 @@ func TestPRLoop_CommentEndpointResolvesActorFromAuth(t *testing.T) {
 func TestPRLoop_RejectRequiresNonEmptyReason(t *testing.T) {
 	t.Parallel()
 	b := newTestBroker(t)
-	// CreatedBy below is "ceo", a member of #general in every real workspace.
-	b.channels = []teamChannel{{Slug: "team", Members: []string{"reviewer", "executor", "ceo"}}}
+	// CreatedBy below is "cos", a member of #general in every real workspace.
+	b.channels = []teamChannel{{Slug: "team", Members: []string{"reviewer", "executor", "cos"}}}
 	b.tasks = []teamTask{{
 		ID: "task-rej-empty-1", Channel: "team", Title: "Blank-reason reject",
 		Owner: "executor", status: "review",
@@ -360,7 +360,7 @@ func TestPRLoop_RejectRequiresNonEmptyReason(t *testing.T) {
 		ID:        "task-rej-empty-1",
 		Channel:   "team",
 		Details:   "   ",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 	})
 	if err == nil {
 		t.Fatalf("expected error for empty reject reason, got nil")

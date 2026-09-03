@@ -113,11 +113,11 @@ func TestHumanWikiIntent_AgentSenderProducesNoWrite(t *testing.T) {
 	b, _, teardown := brokerWithHumanWikiWriter(t)
 	defer teardown()
 
-	if !b.IsBotMemberSlug("ceo") {
-		t.Skip("default manifest missing 'ceo'; cannot exercise bot-sender path")
+	if !b.IsBotMemberSlug("cos") {
+		t.Skip("default manifest missing 'cos'; cannot exercise bot-sender path")
 	}
 
-	if _, err := b.PostMessage("ceo", "team",
+	if _, err := b.PostMessage("cos", "team",
 		"remember this: bots must not trigger this path", nil, ""); err != nil {
 		t.Fatalf("PostMessage: %v", err)
 	}

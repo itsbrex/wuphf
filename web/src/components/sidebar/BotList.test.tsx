@@ -558,11 +558,11 @@ describe("<BotList> on-its-computer glyph", () => {
   it("shows the monitor glyph only when the computer is ready AND the bot is working", () => {
     setMembers([
       { slug: "growth", name: "Growth", role: "growth", status: "active" },
-      { slug: "ceo", name: "CEO", role: "lead", status: "idle" },
+      { slug: "cos", name: "CEO", role: "lead", status: "idle" },
       { slug: "ops", name: "Ops", role: "ops", status: "active" },
     ]);
     seedComputer("growth", "ready");
-    seedComputer("ceo", "ready");
+    seedComputer("cos", "ready");
     seedComputer("ops", "asleep");
 
     const { queryByTestId } = renderList();

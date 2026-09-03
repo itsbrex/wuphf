@@ -65,7 +65,7 @@ func TestWriteHeadlessOpencodeMCPConfigConcurrent(t *testing.T) {
 	l := &Launcher{}
 
 	const goroutines = 20
-	slugs := []string{"ceo", "planner", "reviewer"}
+	slugs := []string{"cos", "planner", "reviewer"}
 	paths := make(map[string]string)
 	var pathsMu sync.Mutex
 	var wg sync.WaitGroup
@@ -163,11 +163,11 @@ func TestWriteHeadlessOpencodeMCPConfigLogsBaseConfigParseFailure(t *testing.T) 
 	defer func() { headlessOpencodeExecutablePath = orig }()
 
 	l := &Launcher{}
-	if _, err := l.writeHeadlessOpencodeMCPConfig("ceo"); err != nil {
+	if _, err := l.writeHeadlessOpencodeMCPConfig("cos"); err != nil {
 		t.Fatalf("writeHeadlessOpencodeMCPConfig: %v", err)
 	}
 
-	logBytes, err := os.ReadFile(filepath.Join(logDir, "headless-codex-ceo.log"))
+	logBytes, err := os.ReadFile(filepath.Join(logDir, "headless-codex-cos.log"))
 	if err != nil {
 		t.Fatalf("read bot log: %v", err)
 	}

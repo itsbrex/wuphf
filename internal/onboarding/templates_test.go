@@ -41,7 +41,7 @@ func TestDefaultTemplatesExpectedIDs(t *testing.T) {
 }
 
 func TestDefaultTemplatesOwnerSlugs(t *testing.T) {
-	// Verify the expected owner distribution: executor×2, planner×2, ceo×1.
+	// Verify the expected owner distribution: executor×2, planner×2, cos×1.
 	counts := map[string]int{}
 	for _, tmpl := range DefaultTemplates() {
 		counts[tmpl.OwnerSlug]++
@@ -52,8 +52,8 @@ func TestDefaultTemplatesOwnerSlugs(t *testing.T) {
 	if counts["planner"] != 2 {
 		t.Errorf("expected 2 planner templates, got %d", counts["planner"])
 	}
-	if counts["ceo"] != 1 {
-		t.Errorf("expected 1 ceo template, got %d", counts["ceo"])
+	if counts["cos"] != 1 {
+		t.Errorf("expected 1 cos template, got %d", counts["cos"])
 	}
 }
 
@@ -94,7 +94,7 @@ func TestRevOpsTemplatesNonEmptyFields(t *testing.T) {
 
 func TestRevOpsTemplatesOwnerSlugsMatchPack(t *testing.T) {
 	// Every owner slug should be one of the slugs present in the RevOps pack.
-	validSlugs := map[string]bool{"ceo": true, "ops-lead": true, "ae": true, "sdr": true, "analyst": true}
+	validSlugs := map[string]bool{"cos": true, "ops-lead": true, "ae": true, "sdr": true, "analyst": true}
 	for _, tmpl := range RevOpsTemplates() {
 		if !validSlugs[tmpl.OwnerSlug] {
 			t.Errorf("revops template %q: OwnerSlug %q not in RevOps pack", tmpl.ID, tmpl.OwnerSlug)

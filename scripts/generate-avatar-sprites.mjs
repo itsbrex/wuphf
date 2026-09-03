@@ -15,7 +15,7 @@ const goOut = path.join(rootDir, 'internal/avatar/office_sprites.go')
 const portraitSize = 16
 
 const avatarRoleSpecs = {
-  ceo: { baseSpriteId: 'office05', aliases: ['ceo'], face: 'michael', outfit: 'suit' },
+  cos: { baseSpriteId: 'office05', aliases: ['cos'], face: 'michael', outfit: 'suit' },
   pm: { baseSpriteId: 'office15', aliases: ['pm', 'planner', 'product', 'product-manager'], face: 'warm', outfit: 'manager' },
   fe: { baseSpriteId: 'office23', aliases: ['fe', 'frontend'], face: 'warmEngineer', outfit: 'engineer' },
   be: { baseSpriteId: 'office19', aliases: ['be', 'backend'], face: 'preserve', outfit: 'engineer' },

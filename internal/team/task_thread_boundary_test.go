@@ -23,7 +23,7 @@ import (
 // root message in its channel.
 func TestTaskPlanAnchorsThreadRoot(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "team", "ceo", "CEO")
+	ensureTestMemberAccess(b, "team", "cos", "CEO")
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -31,9 +31,9 @@ func TestTaskPlanAnchorsThreadRoot(t *testing.T) {
 
 	body, _ := json.Marshal(map[string]any{
 		"channel":    "team",
-		"created_by": "ceo",
+		"created_by": "cos",
 		"tasks": []map[string]any{
-			{"title": "Compare two plans", "details": "TESTING run.", "assignee": "ceo", "execution_mode": "office"},
+			{"title": "Compare two plans", "details": "TESTING run.", "assignee": "cos", "execution_mode": "office"},
 		},
 	})
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("http://%s/task-plan", b.Addr()), bytes.NewReader(body))
@@ -71,7 +71,7 @@ func TestTaskPlanAnchorsThreadRoot(t *testing.T) {
 	// The owner's next channel message must get SourceTaskID stamped + chained
 	// into the task thread — the live path that was silently broken.
 	b.mu.Lock()
-	stamped := b.appendMessageLocked(channelMessage{From: "ceo", Channel: result.Tasks[0].Channel, Content: "on it"})
+	stamped := b.appendMessageLocked(channelMessage{From: "cos", Channel: result.Tasks[0].Channel, Content: "on it"})
 	b.mu.Unlock()
 	if stamped.SourceTaskID != result.Tasks[0].ID {
 		t.Fatalf("owner message not stamped with the task: %q", stamped.SourceTaskID)
@@ -100,9 +100,9 @@ func TestTaskPlanAnchorsThreadRoot(t *testing.T) {
 // must not see task B's chatter (the bleed), while still seeing A's own work.
 func TestNotificationContext_ThreadRootExcludesSiblingTaskBleed(t *testing.T) {
 	msgs := []channelMessage{
-		{ID: "a-root", Channel: "c", From: "ceo", Content: "Task A opened", ReplyTo: "", SourceTaskID: "A"},
+		{ID: "a-root", Channel: "c", From: "cos", Content: "Task A opened", ReplyTo: "", SourceTaskID: "A"},
 		{ID: "a1", Channel: "c", From: "hermes", Content: "Plan B totals $5,220 over 3 years", ReplyTo: "a-root", SourceTaskID: "A"},
-		{ID: "b-root", Channel: "c", From: "ceo", Content: "Task B opened", ReplyTo: "", SourceTaskID: "B"},
+		{ID: "b-root", Channel: "c", From: "cos", Content: "Task B opened", ReplyTo: "", SourceTaskID: "B"},
 		{ID: "b1", Channel: "c", From: "hermes", Content: "Hermes hit the GitHub rate limit", ReplyTo: "b-root", SourceTaskID: "B"},
 	}
 	cb := &notificationContextBuilder{
@@ -113,7 +113,7 @@ func TestNotificationContext_ThreadRootExcludesSiblingTaskBleed(t *testing.T) {
 	}
 
 	// Scoped to task A's thread root.
-	scoped := cb.NotificationContext("ceo", "c", "", "a-root", 20)
+	scoped := cb.NotificationContext("cos", "c", "", "a-root", 20)
 	if !strings.Contains(scoped, "Plan B totals") {
 		t.Fatalf("scoped context should include task A's own work: %q", scoped)
 	}
@@ -122,7 +122,7 @@ func TestNotificationContext_ThreadRootExcludesSiblingTaskBleed(t *testing.T) {
 	}
 
 	// Contrast: with no thread root the old behavior bleeds (both tasks).
-	bled := cb.NotificationContext("ceo", "c", "", "", 20)
+	bled := cb.NotificationContext("cos", "c", "", "", 20)
 	if !strings.Contains(bled, "rate limit") {
 		t.Fatalf("unscoped context should show the bleed for contrast: %q", bled)
 	}

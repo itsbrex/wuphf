@@ -21,7 +21,7 @@ const CATALOG: WikiCatalogEntry[] = [
   ...["Ana", "Arturo", "Eng", "Elena", "Nazz", "Zoe"].map((name) => ({
     path: `team/people/${name.toLowerCase()}.md`,
     title: name,
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T12:00:00Z",
     group: "people",
   })),
@@ -37,7 +37,7 @@ const CATALOG: WikiCatalogEntry[] = [
   {
     path: "team/playbooks/hiring-loop.md",
     title: "Hiring Loop",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-11T12:00:00Z",
     group: "playbooks",
     categories: ["people"],

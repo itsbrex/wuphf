@@ -467,14 +467,14 @@ func TestBrokerBotRateLimitTripsOnRunawayLoop(t *testing.T) {
 	}
 
 	for i := 0; i < 5; i++ {
-		resp := doRequest("ceo")
+		resp := doRequest("cos")
 		resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected request %d within bot budget to succeed, got %d", i+1, resp.StatusCode)
 		}
 	}
 
-	resp := doRequest("ceo")
+	resp := doRequest("cos")
 	resp.Body.Close()
 	if resp.StatusCode != http.StatusTooManyRequests {
 		t.Fatalf("expected 6th request to trip per-bot bucket, got %d", resp.StatusCode)
@@ -534,7 +534,7 @@ func TestBrokerBotRateLimitExemptsSSEPaths(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, path, nil)
 		req.RemoteAddr = "127.0.0.1:6666"
 		req.Header.Set("Authorization", "Bearer "+b.Token())
-		req.Header.Set("X-WUPHF-Agent", "ceo")
+		req.Header.Set("X-WUPHF-Agent", "cos")
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, req)
 		return rec.Result()
@@ -546,7 +546,7 @@ func TestBrokerBotRateLimitExemptsSSEPaths(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected /events subscribe %d to bypass bot limiter, got %d", i+1, resp.StatusCode)
 		}
-		resp = doRequest("/agent-stream/ceo")
+		resp = doRequest("/agent-stream/cos")
 		resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
 			t.Fatalf("expected /bot-stream subscribe %d to bypass bot limiter, got %d", i+1, resp.StatusCode)

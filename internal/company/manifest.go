@@ -15,10 +15,10 @@ import (
 	"github.com/nex-crm/wuphf/internal/provider"
 )
 
-// The lead bot is the Chief of Staff. The SLUG stays "ceo" on purpose.
+// The lead bot is the Chief of Staff. The SLUG stays "cos" on purpose.
 //
 // The slug is an identifier, not a label: it appears in DM slugs
-// ("ceo__human"), task owners, channel membership, and saved rosters on
+// ("cos__human"), task owners, channel membership, and saved rosters on
 // users' disks. Renaming it would orphan every one of those rows for anyone
 // with an existing workspace, in exchange for changing a string nobody sees.
 // The same reasoning applies to the other bot slugs.
@@ -259,7 +259,7 @@ func DefaultManifest() Manifest {
 	manifest := Manifest{
 		Name:        "Your gawkbot team",
 		Description: "Autonomous bot team runtime.",
-		Lead:        "ceo",
+		Lead:        "cos",
 		UpdatedAt:   now,
 	}
 	if blueprintID != "" {
@@ -283,7 +283,7 @@ func DefaultManifest() Manifest {
 	// demand, not preinstalled. App building and wiki contribution are system
 	// skills every bot carries, not bots of their own.
 	manifest.Members = []MemberSpec{
-		{Slug: "ceo", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
+		{Slug: "cos", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
 	}
 	// #general kill switch, gate 3b of 7. See internal/channel/general.go.
 	if channel.GeneralEnabled() {
@@ -316,7 +316,7 @@ func fromScratchDefaultManifest(now string) Manifest {
 	// builder/reviewer set was an invented team of default specialists, which
 	// the founder retired.
 	members := []MemberSpec{
-		{Slug: "ceo", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
+		{Slug: "cos", Name: chiefOfStaffName, Role: chiefOfStaffRole, System: true},
 	}
 	channelMembers := make([]string, 0, len(members))
 	for _, member := range members {
@@ -347,7 +347,7 @@ func normalizeManifest(manifest Manifest) Manifest {
 		manifest.Name = "Your gawkbot team"
 	}
 	if strings.TrimSpace(manifest.Lead) == "" {
-		manifest.Lead = "ceo"
+		manifest.Lead = "cos"
 	}
 	manifest.BlueprintRefs = normalizeBlueprintRefs(manifest.BlueprintRefs)
 
@@ -372,7 +372,7 @@ func normalizeManifest(manifest Manifest) Manifest {
 		}
 		member.Expertise = normalizeStrings(member.Expertise)
 		member.AllowedTools = normalizeStrings(member.AllowedTools)
-		member.System = member.Slug == manifest.Lead || member.Slug == "ceo" || member.System
+		member.System = member.Slug == manifest.Lead || member.Slug == "cos" || member.System
 		members = append(members, member)
 	}
 	if len(members) == 0 {
@@ -499,7 +499,7 @@ func defaultChannelDescription(slug, name string) string {
 func ensureLeadMember(members []string, lead string) []string {
 	lead = normalizeSlug(lead)
 	if lead == "" {
-		lead = "ceo"
+		lead = "cos"
 	}
 	if containsSlug(members, lead) {
 		return normalizeSlugs(members)

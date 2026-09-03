@@ -1274,7 +1274,7 @@ func (b *Broker) postRequestRaisedChatMessageLocked(req *humanInterview) {
 	// From stays "system" on the wire: notifyBotsLoop skips system senders,
 	// and attributing this to req.From would make the announcement wake other
 	// bots. The card reads `from` out of this payload for its byline, so the
-	// human sees "@ceo asks you" and never a phantom "Office" speaker.
+	// human sees "@cos asks you" and never a phantom "Office" speaker.
 	payload, err := json.Marshal(humanRequestRaisedPayload{
 		RequestID: strings.TrimSpace(req.ID),
 		From:      strings.TrimSpace(req.From),

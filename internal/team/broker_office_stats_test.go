@@ -45,16 +45,16 @@ func TestOfficeStats_MatchesListEndpoints(t *testing.T) {
 
 	b := newTestBroker(t)
 
-	// Roster: two bots + the human seat. ceo has a live "active"
+	// Roster: two bots + the human seat. cos has a live "active"
 	// snapshot; ada is idle.
 	b.mu.Lock()
 	b.members = []officeMember{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "ada", Name: "Ada"},
 		{Slug: "human", Name: "You"},
 	}
 	b.activity = map[string]botActivitySnapshot{
-		"ceo": {Slug: "ceo", Status: "active", Activity: "tool_use"},
+		"cos": {Slug: "cos", Status: "active", Activity: "tool_use"},
 		"ada": {Slug: "ada", Status: "idle"},
 	}
 
@@ -92,9 +92,9 @@ func TestOfficeStats_MatchesListEndpoints(t *testing.T) {
 	b.tasks = append(b.tasks, legacy)
 
 	b.requests = []humanInterview{
-		{ID: "req-blocking", From: "ceo", Channel: "team", Question: "Approve spend?", Kind: "approval", Blocking: true},
+		{ID: "req-blocking", From: "cos", Channel: "team", Question: "Approve spend?", Kind: "approval", Blocking: true},
 		{ID: "req-notice", From: "ada", Channel: "team", Question: "FYI", Kind: "notice"},
-		{ID: "req-answered", From: "ceo", Channel: "team", Question: "Old", Kind: "approval", Blocking: true, Status: "answered"},
+		{ID: "req-answered", From: "cos", Channel: "team", Question: "Old", Kind: "approval", Blocking: true, Status: "answered"},
 	}
 	b.mu.Unlock()
 
@@ -207,7 +207,7 @@ func TestOfficeStats_MatchesListEndpoints(t *testing.T) {
 		t.Fatalf("stats.BotsActive = %d, want members-derived %d", stats.BotsActive, wantActive)
 	}
 	if stats.BotsActive != 1 {
-		t.Fatalf("stats.BotsActive = %d, want seeded 1 (ceo active, ada idle)", stats.BotsActive)
+		t.Fatalf("stats.BotsActive = %d, want seeded 1 (cos active, ada idle)", stats.BotsActive)
 	}
 
 	// No wiki worker in this fixture: count must degrade to zero, not error.
@@ -261,7 +261,7 @@ func TestCountArticles_MatchesBuildCatalog(t *testing.T) {
 		{"team/inbox/raw/episode.md", "# Episode\n"},
 	}
 	for _, c := range commits {
-		if _, _, err := repo.Commit(ctx, "ceo", c.path, c.body, "create", "seed "+c.path); err != nil {
+		if _, _, err := repo.Commit(ctx, "cos", c.path, c.body, "create", "seed "+c.path); err != nil {
 			t.Fatalf("Commit %s: %v", c.path, err)
 		}
 	}

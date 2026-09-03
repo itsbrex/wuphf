@@ -38,7 +38,7 @@ function setRequests(reqs: BotRequest[]): void {
 function prospectorRequest(over: Partial<BotRequest> = {}): BotRequest {
   return {
     id: "request-3",
-    from: "ceo",
+    from: "cos",
     question: "Add Prospector to the team?",
     kind: "decision",
     blocking: true,
@@ -53,7 +53,7 @@ function prospectorRequest(over: Partial<BotRequest> = {}): BotRequest {
 
 const payload = {
   request_id: "request-3",
-  from: "ceo",
+  from: "cos",
   question: "Add Prospector to the team?",
   label: "request",
   blocking: true,
@@ -69,7 +69,7 @@ describe("<HumanRequestCard>", () => {
 
     render(wrap(<HumanRequestCard payload={payload} />));
 
-    expect(screen.getByText("@ceo")).toBeInTheDocument();
+    expect(screen.getByText("@cos")).toBeInTheDocument();
     expect(screen.getByText("Add Prospector to the team?")).toBeInTheDocument();
     // The options are real buttons, not prose.
     expect(

@@ -44,7 +44,7 @@ func TestCreateCodexCLIStreamFnStreamsFinalMessage(t *testing.T) {
 	restore := stubCodexRuntime(t, recordFile, "success", cwd)
 	defer restore()
 
-	fn := CreateCodexCLIStreamFn("ceo")
+	fn := CreateCodexCLIStreamFn("cos")
 	chunks := collectStreamChunks(fn([]bot.Message{
 		{Role: "system", Content: "You are the CEO."},
 		{Role: "user", Content: "Ship it."},
@@ -73,7 +73,7 @@ func TestCreateCodexCLIStreamFnShowsLoginError(t *testing.T) {
 	restore := stubCodexRuntime(t, recordFile, "login-required", cwd)
 	defer restore()
 
-	fn := CreateCodexCLIStreamFn("ceo")
+	fn := CreateCodexCLIStreamFn("cos")
 	chunks := collectStreamChunks(fn([]bot.Message{{Role: "user", Content: "hello"}}, nil))
 	if !hasErrorChunkContaining(chunks, "Codex CLI requires login") {
 		t.Fatalf("expected login guidance error, got %#v", chunks)

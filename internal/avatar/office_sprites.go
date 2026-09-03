@@ -3202,7 +3202,7 @@ var knownOfficeSprites = map[string]knownOfficeSprite{
 }
 
 var knownOfficeSlugMap = map[string]string{
-	"ceo":                "hybridCeo",
+	"cos":                "hybridCeo",
 	"pm":                 "hybridPm",
 	"planner":            "hybridPm",
 	"product":            "hybridPm",

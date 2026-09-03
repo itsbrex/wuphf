@@ -16,10 +16,10 @@ func TestRichArtifactNaturalWorkflowPromptAndToolLoop(t *testing.T) {
 		isOneOnOne:  func() bool { return false },
 		isFocusMode: func() bool { return false },
 		packName:    func() string { return "WUPHF Office" },
-		leadSlug:    func() string { return "ceo" },
+		leadSlug:    func() string { return "cos" },
 		members: func() []officeMember {
 			return []officeMember{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "pm", Name: "Product Manager"},
 			}
 		},

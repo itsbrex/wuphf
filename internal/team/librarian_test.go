@@ -52,7 +52,7 @@ func TestLibrarianIsInTheRoomTheTaskLandsIn(t *testing.T) {
 		Channel:       createdFrom,
 		Title:         "Build the thing",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "office",
 	})
@@ -89,18 +89,18 @@ func TestLibrarianTaskChannelSeedNoopsWithoutMember(t *testing.T) {
 	b.mu.Lock()
 	b.members = []officeMember{{Slug: "eng", Name: "Engineer", Role: "Engineer"}}
 	b.memberIndex = nil
-	// "ceo" is the CreatedBy below and is a member of #general in every real
+	// "cos" is the CreatedBy below and is a member of #general in every real
 	// workspace; membership is authoritative for bots now, so the fixture
 	// has to say so. The librarian is still deliberately absent — that
 	// absence is what this test is about.
-	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"eng", "ceo"}}}
+	b.channels = []teamChannel{{Slug: "team", Name: "team", Members: []string{"eng", "cos"}}}
 	b.mu.Unlock()
 
 	task, _, err := b.EnsurePlannedTask(plannedTaskInput{
 		Channel:       "team",
 		Title:         "Legacy task",
 		Owner:         "eng",
-		CreatedBy:     "ceo",
+		CreatedBy:     "cos",
 		TaskType:      "feature",
 		ExecutionMode: "office",
 	})

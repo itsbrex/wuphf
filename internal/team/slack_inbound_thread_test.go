@@ -12,16 +12,16 @@ import (
 
 func TestInboundThreadReplyFoldsIntoTask(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "slack-office", "ceo", "CEO")
+	ensureTestMemberAccess(b, "slack-office", "cos", "CEO")
 	b.mu.Lock()
 	b.channels = append(b.channels, teamChannel{
-		Slug: "slack-office", Name: "slack-office", Members: []string{"ceo"},
+		Slug: "slack-office", Name: "slack-office", Members: []string{"cos"},
 		Surface: &channelSurface{Provider: "slack", RemoteID: "C0123"},
 	})
 	// A task with an internal thread root + a Slack root card at ts "171.5".
 	b.tasks = append(b.tasks, teamTask{
 		ID: "OFFICE-7", Channel: "slack-office", Title: "Compare plans",
-		Owner: "ceo", ThreadID: "msg-root-internal", LifecycleState: LifecycleStateRunning,
+		Owner: "cos", ThreadID: "msg-root-internal", LifecycleState: LifecycleStateRunning,
 	})
 	b.slackTaskCards = map[string]slackTaskCardRecord{
 		"OFFICE-7": {ChannelID: "C0123", Timestamp: "171.5", State: "running"},
@@ -44,13 +44,13 @@ func TestInboundThreadReplyFoldsIntoTask(t *testing.T) {
 
 func TestInboundOutsideThreadIsNotTaskScoped(t *testing.T) {
 	b := newTestBroker(t)
-	ensureTestMemberAccess(b, "slack-office", "ceo", "CEO")
+	ensureTestMemberAccess(b, "slack-office", "cos", "CEO")
 	b.mu.Lock()
 	b.channels = append(b.channels, teamChannel{
-		Slug: "slack-office", Name: "slack-office", Members: []string{"ceo"},
+		Slug: "slack-office", Name: "slack-office", Members: []string{"cos"},
 		Surface: &channelSurface{Provider: "slack", RemoteID: "C0123"},
 	})
-	b.tasks = append(b.tasks, teamTask{ID: "OFFICE-7", Channel: "slack-office", Owner: "ceo", ThreadID: "msg-root-internal"})
+	b.tasks = append(b.tasks, teamTask{ID: "OFFICE-7", Channel: "slack-office", Owner: "cos", ThreadID: "msg-root-internal"})
 	b.slackTaskCards = map[string]slackTaskCardRecord{"OFFICE-7": {ChannelID: "C0123", Timestamp: "171.5"}}
 	b.mu.Unlock()
 
@@ -76,7 +76,7 @@ func TestSlackOutboundNeverImpersonatesHuman(t *testing.T) {
 		}
 	}
 	// Bot messages still relay.
-	if _, ok := tr.FormatOutbound(channelMessage{From: "ceo", Channel: "slack-general", Content: "on it"}); !ok {
+	if _, ok := tr.FormatOutbound(channelMessage{From: "cos", Channel: "slack-general", Content: "on it"}); !ok {
 		t.Fatal("bot message should still relay to Slack")
 	}
 }
@@ -85,7 +85,7 @@ func TestSlackConventionNoteThreadAndQuoteRules(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.channels = append(b.channels, teamChannel{
-		Slug: "slack-office", Name: "slack-office", Members: []string{"ceo"},
+		Slug: "slack-office", Name: "slack-office", Members: []string{"cos"},
 		Surface: &channelSurface{Provider: "slack", RemoteID: "C0123"},
 	})
 	b.mu.Unlock()

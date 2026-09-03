@@ -45,12 +45,12 @@ func TestMailboxInboxIncludesHumanAndDirectTags(t *testing.T) {
 		t.Fatalf("messages from human should land in any bot's inbox")
 	}
 
-	directTag := channelui.BrokerMessage{ID: "m2", From: "ceo", Content: "do this", Tagged: []string{"fe"}}
+	directTag := channelui.BrokerMessage{ID: "m2", From: "cos", Content: "do this", Tagged: []string{"fe"}}
 	if !channelui.MailboxMessageBelongsToViewerInbox(directTag, "fe", idx) {
 		t.Fatalf("messages tagging the viewer should land in their inbox")
 	}
 
-	allTag := channelui.BrokerMessage{ID: "m3", From: "ceo", Content: "team-wide", Tagged: []string{"all"}}
+	allTag := channelui.BrokerMessage{ID: "m3", From: "cos", Content: "team-wide", Tagged: []string{"all"}}
 	if !channelui.MailboxMessageBelongsToViewerInbox(allTag, "fe", idx) {
 		t.Fatalf("messages tagged @all should land in every viewer's inbox")
 	}
@@ -131,14 +131,14 @@ func TestBuildInboxLinesShowsRequestsAndMessages(t *testing.T) {
 	requests := []channelui.Interview{{
 		ID:        "req-1",
 		Kind:      "decision",
-		From:      "ceo",
+		From:      "cos",
 		Question:  "Approve the launch?",
 		Context:   "Need green light",
 		CreatedAt: "2026-04-29T10:00:00Z",
 	}}
 	messages := []channelui.BrokerMessage{{
 		ID:        "m1",
-		From:      "ceo",
+		From:      "cos",
 		Content:   "FYI here is the plan",
 		Timestamp: "2026-04-29T10:00:00Z",
 	}}

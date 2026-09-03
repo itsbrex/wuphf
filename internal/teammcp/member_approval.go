@@ -21,7 +21,7 @@ func requireTeamMemberApproval(ctx context.Context, actor string, args TeamMembe
 	slug := normalizeSlug(args.Slug)
 	actor = strings.TrimSpace(actor)
 	if actor == "" {
-		actor = "ceo"
+		actor = "cos"
 	}
 	name := strings.TrimSpace(args.Name)
 	if name == "" {

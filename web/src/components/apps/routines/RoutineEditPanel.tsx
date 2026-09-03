@@ -76,8 +76,8 @@ export function RoutineEditPanel({
   // Seed the owner once members load if it's blank (legacy routine).
   useEffect(() => {
     if (ownerSlug || ownerCandidates.length === 0) return;
-    const ceo = ownerCandidates.find((m) => m.slug === "ceo");
-    setOwnerSlug((ceo ?? ownerCandidates[0]).slug);
+    const cos = ownerCandidates.find((m) => m.slug === "cos");
+    setOwnerSlug((cos ?? ownerCandidates[0]).slug);
   }, [ownerCandidates, ownerSlug]);
 
   const mutation = useMutation({

@@ -161,7 +161,7 @@ func TestDetectWorkflowsSingleRunExternalizingOnly(t *testing.T) {
 // office MCP) never count toward a shape, so a chatty turn is not a "workflow".
 func TestDetectWorkflowsFiltersOrchestration(t *testing.T) {
 	got := DetectWorkflows([]TurnManifest{
-		manifestFor("t1", "ceo", "Bash", "Read", "mcp__wuphf-office__team_task", "Edit"),
+		manifestFor("t1", "cos", "Bash", "Read", "mcp__wuphf-office__team_task", "Edit"),
 	}, DetectOptions{RecurrenceFloor: 2})
 	if len(got) != 0 {
 		t.Fatalf("orchestration-only turn must not surface, got %d candidates", len(got))
@@ -196,7 +196,7 @@ func TestTurnManifestInlineScope(t *testing.T) {
 		for _, name := range tools {
 			tc = append(tc, HeadlessManifestEntry{ToolName: name, Count: 1})
 		}
-		return HeadlessEvent{Type: HeadlessEventTypeManifest, TaskID: taskID, TurnID: turnID, Bot: "ceo", ToolCalls: tc}
+		return HeadlessEvent{Type: HeadlessEventTypeManifest, TaskID: taskID, TurnID: turnID, Bot: "cos", ToolCalls: tc}
 	}
 
 	// Task turn → recorded under the task id.

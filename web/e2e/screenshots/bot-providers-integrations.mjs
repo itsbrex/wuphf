@@ -42,7 +42,7 @@ function configResponse({
     provider_endpoints: {},
     memory_backend: "markdown",
     action_provider: "auto",
-    team_lead_slug: "ceo",
+    team_lead_slug: "cos",
     company_name: "Acme Co",
     openclaw_gateway_url: openclawUrl,
     openclaw_token_set: openclawTokenSet,
@@ -70,7 +70,7 @@ const HERMES_REACHABLE = {
 const MEMBERS_FIXTURE = {
   members: [
     {
-      slug: "ceo",
+      slug: "cos",
       name: "CEO",
       role: "Office lead",
       emoji: "🎯",

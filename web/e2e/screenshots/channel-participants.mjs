@@ -19,7 +19,7 @@ if (!OUT) {
 
 const OFFICE_MEMBERS = [
   {
-    slug: "ceo",
+    slug: "cos",
     name: "CEO",
     role: "Lead agent",
     status: "active",
@@ -60,7 +60,7 @@ let channelMembers = [
 const messages = [
   {
     id: "msg-1",
-    from: "ceo",
+    from: "cos",
     channel: "general",
     content: "Builder and Designer are assigned to this channel.",
     timestamp: "2026-05-11T12:00:00Z",
@@ -89,7 +89,7 @@ await installCommonMocks(context, {
               slug: "general",
               name: "general",
               description: "Team discussion",
-              members: ["human", "ceo", "builder", "design"],
+              members: ["human", "cos", "builder", "design"],
             },
           ],
         }),

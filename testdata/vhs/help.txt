@@ -18,7 +18,7 @@ Usage:
 
 Flags:
   --1o1
-        Launch a direct 1:1 session with a single bot (default ceo)
+        Launch a direct 1:1 session with a single bot (default cos)
   --api-key
         API key for authentication
   --blueprint

@@ -8,7 +8,7 @@ import (
 func TestBuildNeedsYouLinesPrefersBlockingRequests(t *testing.T) {
 	requests := []Interview{
 		{ID: "req-1", Kind: "approval", Status: "pending", Title: "Optional note", Question: "Optional note?", From: "pm"},
-		{ID: "req-2", Kind: "approval", Status: "pending", Title: "Ship launch copy", Question: "Ship launch copy?", Context: "Need approval before publishing.", From: "ceo", Blocking: true, RecommendedID: "approve"},
+		{ID: "req-2", Kind: "approval", Status: "pending", Title: "Ship launch copy", Question: "Ship launch copy?", Context: "Need approval before publishing.", From: "cos", Blocking: true, RecommendedID: "approve"},
 	}
 
 	lines := BuildNeedsYouLines(requests, 96)

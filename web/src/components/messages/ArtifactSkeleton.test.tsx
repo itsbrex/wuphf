@@ -169,11 +169,11 @@ describe("shouldShowArtifactSkeleton — unmount on marker arrival", () => {
         message: buildMessage(),
         newerMessages: [
           {
-            from: "ceo",
+            from: "cos",
             content: "FYI\n\nvisual-artifact:ra_aaaaaaaaaaaaaaaa",
           },
         ],
-        members: [PM_MEMBER, { slug: "ceo", status: "active" }],
+        members: [PM_MEMBER, { slug: "cos", status: "active" }],
         nowMs: BASE_NOW,
       }),
     ).toBe(true);

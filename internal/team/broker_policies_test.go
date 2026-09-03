@@ -275,14 +275,14 @@ func TestRecordPolicyScoped_AgentMergeSemantics(t *testing.T) {
 // bots; a non-empty list scopes to exactly those slugs.
 func TestPolicyAppliesToBot(t *testing.T) {
 	all := officePolicy{Rule: "r"}
-	if !policyAppliesToBot(all, "eng") || !policyAppliesToBot(all, "ceo") {
+	if !policyAppliesToBot(all, "eng") || !policyAppliesToBot(all, "cos") {
 		t.Fatal("nil Bots must apply to everyone")
 	}
 	scoped := officePolicy{Rule: "r", Bots: []string{"eng"}}
 	if !policyAppliesToBot(scoped, "eng") {
 		t.Fatal("scoped policy must apply to its bot")
 	}
-	if policyAppliesToBot(scoped, "ceo") {
+	if policyAppliesToBot(scoped, "cos") {
 		t.Fatal("scoped policy must NOT apply to other bots")
 	}
 }
@@ -314,7 +314,7 @@ func TestHandlePolicies_POSTAcceptsAgents(t *testing.T) {
 func TestHandlePoliciesSubpath_AssignUnassign(t *testing.T) {
 	b := newTestBroker(t)
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}}
 	b.mu.Unlock()
 
 	p, err := b.RecordPolicy("human_directed", "never deploy on Friday")
@@ -339,8 +339,8 @@ func TestHandlePoliciesSubpath_AssignUnassign(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if len(out.Bots) != 1 || out.Bots[0] != "ceo" {
-		t.Fatalf("expected [ceo] after unassigning eng from all-bots policy, got %v", out.Bots)
+	if len(out.Bots) != 1 || out.Bots[0] != "cos" {
+		t.Fatalf("expected [cos] after unassigning eng from all-bots policy, got %v", out.Bots)
 	}
 
 	// Assign eng back → union.
@@ -351,8 +351,8 @@ func TestHandlePoliciesSubpath_AssignUnassign(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&out); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if len(out.Bots) != 2 || out.Bots[0] != "ceo" || out.Bots[1] != "eng" {
-		t.Fatalf("expected [ceo eng] after re-assign, got %v", out.Bots)
+	if len(out.Bots) != 2 || out.Bots[0] != "cos" || out.Bots[1] != "eng" {
+		t.Fatalf("expected [cos eng] after re-assign, got %v", out.Bots)
 	}
 
 	// Assigning a slug that is not in the roster is rejected.
@@ -365,7 +365,7 @@ func TestHandlePoliciesSubpath_AssignUnassign(t *testing.T) {
 	if rec := call("unassign", "eng"); rec.Code != http.StatusOK {
 		t.Fatalf("unassign eng: expected 200, got %d", rec.Code)
 	}
-	if rec := call("unassign", "ceo"); rec.Code != http.StatusConflict {
+	if rec := call("unassign", "cos"); rec.Code != http.StatusConflict {
 		t.Fatalf("unassign last bot: expected 409, got %d: %s", rec.Code, rec.Body.String())
 	}
 }

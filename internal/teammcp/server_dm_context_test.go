@@ -33,7 +33,7 @@ func hasTool(names []string, want string) bool {
 var escapeTools = []string{"team_channel", "team_bridge"}
 
 func TestCanonicalDMSlugGetsTheMinimalToolSet(t *testing.T) {
-	names := listRegisteredToolsWithSlug(t, "ceo", "human__ceo", false)
+	names := listRegisteredToolsWithSlug(t, "cos", "human__cos", false)
 
 	for _, tool := range escapeTools {
 		if hasTool(names, tool) {
@@ -49,10 +49,10 @@ func TestCanonicalDMSlugGetsTheMinimalToolSet(t *testing.T) {
 }
 
 func TestBotToBotDMSlugAlsoGetsTheMinimalToolSet(t *testing.T) {
-	// "ceo__designer" has no human side. The old canonicalDMTargetBot-based
+	// "cos__designer" has no human side. The old canonicalDMTargetBot-based
 	// recognition returned "" for it, so it was not a DM at any layer and the
 	// lead kept its full structural tool set inside someone's DM.
-	names := listRegisteredToolsWithSlug(t, "ceo", "ceo__designer", false)
+	names := listRegisteredToolsWithSlug(t, "cos", "cos__designer", false)
 
 	for _, tool := range escapeTools {
 		if hasTool(names, tool) {
@@ -79,7 +79,7 @@ func TestCanonicalDMTrimsASpecialistsOfficeTools(t *testing.T) {
 func TestNonDMChannelKeepsTheFullToolSet(t *testing.T) {
 	// The control, same actor: widening DM recognition must not strip tools
 	// from a bot working in a real channel.
-	names := listRegisteredToolsWithSlug(t, "ceo", "general", false)
+	names := listRegisteredToolsWithSlug(t, "cos", "general", false)
 	for _, tool := range escapeTools {
 		if !hasTool(names, tool) {
 			t.Errorf("lead in #general must keep %q; got %v", tool, names)
@@ -113,7 +113,7 @@ func channelsStub(t *testing.T, regular, dms []map[string]any) *[]string {
 func TestFetchAccessibleChannelsFindsTheBotsOwnDM(t *testing.T) {
 	seen := channelsStub(t,
 		[]map[string]any{
-			{"slug": "general", "members": []string{"pm", "ceo"}},
+			{"slug": "general", "members": []string{"pm", "cos"}},
 		},
 		[]map[string]any{
 			{"slug": "human__pm", "members": []string{"human", "pm"}},
@@ -148,12 +148,12 @@ func TestFetchAccessibleChannelsStillFiltersByMembership(t *testing.T) {
 		[]map[string]any{
 			{"slug": "human__pm", "members": []string{"human", "pm"}},
 			{"slug": "human__eng", "members": []string{"human", "eng"}},
-			{"slug": "ceo__designer", "members": []string{"ceo", "designer"}},
+			{"slug": "cos__designer", "members": []string{"cos", "designer"}},
 		},
 	)
 
 	for _, ch := range fetchAccessibleChannels(context.Background(), "pm") {
-		if ch.Slug == "human__eng" || ch.Slug == "ceo__designer" {
+		if ch.Slug == "human__eng" || ch.Slug == "cos__designer" {
 			t.Errorf("pm must not see a DM it is not a member of: %q", ch.Slug)
 		}
 	}

@@ -64,8 +64,8 @@ describe("OnboardingDMRoute", () => {
     render(<OnboardingDMRoute />, { wrapper });
 
     const stub = await screen.findByTestId("dm-view-stub");
-    expect(stub).toHaveAttribute("data-channel", "ceo__human");
-    expect(stub).toHaveAttribute("data-agent", "ceo");
+    expect(stub).toHaveAttribute("data-channel", "cos__human");
+    expect(stub).toHaveAttribute("data-agent", "cos");
   });
 
   it("exposes the phase via data-phase attribute", async () => {

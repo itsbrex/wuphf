@@ -46,7 +46,7 @@ func TestWikiRefsOmittedWhenEmpty(t *testing.T) {
 func TestMutateTaskCreateDedupesWikiRefs(t *testing.T) {
 	b := newTestBroker(t)
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"ceo"}},
+		{Slug: "team", Name: "team", Members: []string{"cos"}},
 	}
 
 	created, err := b.MutateTask(TaskPostRequest{
@@ -54,7 +54,7 @@ func TestMutateTaskCreateDedupesWikiRefs(t *testing.T) {
 		Channel:   "team",
 		Title:     "Reconcile invoices",
 		Owner:     "alice",
-		CreatedBy: "ceo",
+		CreatedBy: "cos",
 		// Duplicates (incl. after trimming) and blanks: dedupePaths normalizes.
 		WikiRefs: []string{
 			"team/playbooks/billing.md",

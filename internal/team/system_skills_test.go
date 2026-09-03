@@ -12,7 +12,7 @@ func newSystemSkillsTestBroker(t *testing.T) *Broker {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.members = append(b.members,
-		officeMember{Slug: "ceo", Name: "Chief of Staff", Role: "lead", BuiltIn: true},
+		officeMember{Slug: "cos", Name: "Chief of Staff", Role: "lead", BuiltIn: true},
 		officeMember{Slug: "writer", Name: "Writer", Role: "specialist"},
 	)
 	b.rebuildMemberIndexLocked()
@@ -132,8 +132,8 @@ func TestSystemSkillPerBotToggle(t *testing.T) {
 	if b.SystemSkillEnabledFor(systemSkillAppBuilding, "writer") {
 		t.Error("writer should be disabled for app-building")
 	}
-	if !b.SystemSkillEnabledFor(systemSkillAppBuilding, "ceo") {
-		t.Error("ceo should stay enabled for app-building")
+	if !b.SystemSkillEnabledFor(systemSkillAppBuilding, "cos") {
+		t.Error("cos should stay enabled for app-building")
 	}
 	if !b.SystemSkillEnabledFor(systemSkillWikiMaintenance, "writer") {
 		t.Error("writer should stay enabled for wiki-maintenance")
@@ -148,8 +148,8 @@ func TestSystemSkillPerBotToggle(t *testing.T) {
 			}
 		}
 	}
-	if owners["writer"] || !owners["ceo"] {
-		t.Errorf("summary owners = %v, want ceo without writer", owners)
+	if owners["writer"] || !owners["cos"] {
+		t.Errorf("summary owners = %v, want cos without writer", owners)
 	}
 
 	// enable-for lifts the switch-off.
@@ -201,7 +201,7 @@ func TestDefaultOfficeMembersIsChiefOfStaffOnly(t *testing.T) {
 		}
 		t.Fatalf("default roster = %v, want exactly the lead", slugs)
 	}
-	if members[0].Slug != "ceo" {
+	if members[0].Slug != "cos" {
 		t.Fatalf("default lead slug = %q", members[0].Slug)
 	}
 }

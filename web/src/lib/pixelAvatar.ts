@@ -9,7 +9,7 @@ import {
 } from "./avatarSprites.generated";
 
 const AGENT_COLORS: Record<string, string> = {
-  ceo: "#E8A838",
+  cos: "#E8A838",
   eng: "#3FB950",
   gtm: "#FFA657",
   human: "#38BDF8",

@@ -13,7 +13,7 @@ import (
 func TestReportIncidentRoutesAuthErrorThroughSystemCard(t *testing.T) {
 	b := newTestBroker(t)
 
-	msg, _, posted, err := b.ReportIncident("ceo", "team", "", "Claude CLI requires login. Run `claude login` or use /init to choose a different provider.")
+	msg, _, posted, err := b.ReportIncident("cos", "team", "", "Claude CLI requires login. Run `claude login` or use /init to choose a different provider.")
 	if err != nil {
 		t.Fatalf("ReportIncident: %v", err)
 	}
@@ -44,12 +44,12 @@ func TestReportIncidentRoutesAuthErrorThroughSystemCard(t *testing.T) {
 func TestReportIncidentAuthErrorIdentifiesCodex(t *testing.T) {
 	b := newTestBroker(t)
 
-	// "ceo" is the bot slug; the test asserts on provider=codex detected
+	// "cos" is the bot slug; the test asserts on provider=codex detected
 	// from the message text (the Codex CLI's auth-error string), not on the
-	// bot's identity. Using "ceo" keeps the canAccessChannelLocked gate
+	// bot's identity. Using "cos" keeps the canAccessChannelLocked gate
 	// happy in a fresh broker where non-built-in bots aren't channel
 	// members yet.
-	msg, _, posted, err := b.ReportIncident("ceo", "team", "", "Codex CLI requires login. Run `codex login` or use /provider to choose a different provider.")
+	msg, _, posted, err := b.ReportIncident("cos", "team", "", "Codex CLI requires login. Run `codex login` or use /provider to choose a different provider.")
 	if err != nil {
 		t.Fatalf("ReportIncident: %v", err)
 	}
@@ -73,11 +73,11 @@ func TestReportIncidentAuthErrorIdentifiesCodex(t *testing.T) {
 func TestReportIncidentAuthErrorDedupesWithinChannel(t *testing.T) {
 	b := newTestBroker(t)
 
-	_, _, posted1, err := b.ReportIncident("ceo", "team", "", "claude requires login. run `claude login`")
+	_, _, posted1, err := b.ReportIncident("cos", "team", "", "claude requires login. run `claude login`")
 	if err != nil || !posted1 {
 		t.Fatalf("first auth error: posted=%v err=%v", posted1, err)
 	}
-	_, _, posted2, err := b.ReportIncident("ceo", "team", "", "claude requires login. run `claude login`")
+	_, _, posted2, err := b.ReportIncident("cos", "team", "", "claude requires login. run `claude login`")
 	if err != nil {
 		t.Fatalf("second auth error: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestReportIncidentAuthErrorDedupesWithinChannel(t *testing.T) {
 // in it via the auth fork.
 func TestReportIncidentAuthErrorEnforcesChannelACL(t *testing.T) {
 	b := newTestBroker(t)
-	// "eng" is not a built-in, not channel ceo/system/nex/human, and not
+	// "eng" is not a built-in, not channel cos/system/nex/human, and not
 	// a member of the default #general channel created at boot.
 	_, _, posted, err := b.ReportIncident("eng", "team", "", "Claude CLI requires login. Run `claude login`.")
 	if err == nil {
@@ -124,11 +124,11 @@ func TestReportIncidentAuthErrorEnforcesChannelACL(t *testing.T) {
 func TestReportIncidentLeavesNonAuthErrorsAsBotIssue(t *testing.T) {
 	b := newTestBroker(t)
 
-	msg, _, posted, err := b.ReportIncident("ceo", "team", "", "browser access is not available")
+	msg, _, posted, err := b.ReportIncident("cos", "team", "", "browser access is not available")
 	if err != nil || !posted {
 		t.Fatalf("non-auth incident: posted=%v err=%v", posted, err)
 	}
-	if msg.From != "ceo" {
+	if msg.From != "cos" {
 		t.Errorf("expected non-auth incident to stay bot-authored, got From=%q", msg.From)
 	}
 	if msg.Kind != "agent_issue" {

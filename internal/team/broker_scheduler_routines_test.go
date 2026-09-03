@@ -57,7 +57,7 @@ func validRoutineBody() map[string]any {
 		"channel":    "general",
 		"owner":      "eng",
 		"prompt":     "Pull renewals within 60 days and post a risk summary.",
-		"created_by": "ceo",
+		"created_by": "cos",
 	}
 }
 
@@ -358,8 +358,8 @@ func TestRegisterRoutine_FiresThroughScheduler(t *testing.T) {
 	b := newTestBroker(t)
 	defer b.Stop()
 	b.mu.Lock()
-	b.members = []officeMember{{Slug: "ceo", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}}
-	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"human", "ceo", "eng"}}}
+	b.members = []officeMember{{Slug: "cos", Name: "CEO"}, {Slug: "eng", Name: "Engineer"}}
+	b.channels = []teamChannel{{Slug: "general", Name: "general", Members: []string{"human", "cos", "eng"}}}
 	b.mu.Unlock()
 	srv := newRoutineTestServer(t, b)
 

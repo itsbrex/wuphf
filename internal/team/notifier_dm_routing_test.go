@@ -17,9 +17,9 @@ func dmRoutingTestLauncher(t *testing.T) *Launcher {
 	t.Helper()
 	return &Launcher{
 		pack: &bot.PackDefinition{
-			LeadSlug: "ceo",
+			LeadSlug: "cos",
 			Bots: []bot.BotConfig{
-				{Slug: "ceo", Name: "CEO"},
+				{Slug: "cos", Name: "CEO"},
 				{Slug: "designer", Name: "Designer"},
 				{Slug: "eng", Name: "Engineer"},
 			},
@@ -40,13 +40,13 @@ func TestDMRouting_AgentToAgentReachesTheOtherAgent(t *testing.T) {
 
 	immediate, delayed := l.notificationTargetsForMessage(channelMessage{
 		ID:      "dm-msg-1",
-		From:    "ceo",
-		Channel: "ceo__designer",
+		From:    "cos",
+		Channel: "cos__designer",
 		Content: "what do you think of the pricing page?",
 	})
 
 	if got := onlyTarget(t, immediate); got != "designer" {
-		t.Errorf("CEO's message in ceo__designer must wake designer; woke %q", got)
+		t.Errorf("CEO's message in cos__designer must wake designer; woke %q", got)
 	}
 	if len(delayed) != 0 {
 		t.Errorf("DMs are isolated: no delayed targets, got %v", delayed)
@@ -59,12 +59,12 @@ func TestDMRouting_AgentToAgentIsSymmetric(t *testing.T) {
 	immediate, _ := l.notificationTargetsForMessage(channelMessage{
 		ID:      "dm-msg-2",
 		From:    "designer",
-		Channel: "ceo__designer",
+		Channel: "cos__designer",
 		Content: "shipping the mock now",
 	})
 
-	if got := onlyTarget(t, immediate); got != "ceo" {
-		t.Errorf("designer's reply must wake ceo; woke %q", got)
+	if got := onlyTarget(t, immediate); got != "cos" {
+		t.Errorf("designer's reply must wake cos; woke %q", got)
 	}
 }
 
@@ -120,11 +120,11 @@ func TestDMRouting_AgentReplyToHumanNotifiesNobody(t *testing.T) {
 func TestDMRouting_NeverEchoesBackToTheSender(t *testing.T) {
 	l := dmRoutingTestLauncher(t)
 
-	for _, sender := range []string{"ceo", "designer"} {
+	for _, sender := range []string{"cos", "designer"} {
 		immediate, _ := l.notificationTargetsForMessage(channelMessage{
 			ID:      "dm-msg-6",
 			From:    sender,
-			Channel: "ceo__designer",
+			Channel: "cos__designer",
 			Content: "thinking out loud",
 		})
 		for _, target := range immediate {
@@ -161,7 +161,7 @@ func TestDMRouting_SystemPostInAnAgentDMWakesNobody(t *testing.T) {
 	immediate, delayed := l.notificationTargetsForMessage(channelMessage{
 		ID:      "dm-msg-8",
 		From:    "system",
-		Channel: "ceo__designer",
+		Channel: "cos__designer",
 		Content: "task DUNDE-4 moved to review",
 	})
 	if len(immediate) != 0 || len(delayed) != 0 {

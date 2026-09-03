@@ -16,7 +16,7 @@ describe("botFiles client", () => {
   });
 
   it("builds canonical bot file paths", () => {
-    expect(botFilePath("ceo", "SOUL")).toBe("agents/ceo/SOUL.md");
+    expect(botFilePath("cos", "SOUL")).toBe("agents/cos/SOUL.md");
     expect(botFilePath("growth-ops", "OPERATIONS")).toBe(
       "agents/growth-ops/OPERATIONS.md",
     );
@@ -24,32 +24,32 @@ describe("botFiles client", () => {
 
   it("reads a file via GET /bot-files/read with the path query", async () => {
     getMock.mockResolvedValue({
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
       content: "# SOUL",
       sha: "abc",
       exists: true,
     });
-    const res = await readBotFile("agents/ceo/SOUL.md");
+    const res = await readBotFile("agents/cos/SOUL.md");
     expect(getMock).toHaveBeenCalledWith("/agent-files/read", {
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
     });
     expect(res.sha).toBe("abc");
   });
 
   it("returns the OK envelope on a successful write", async () => {
     postMock.mockResolvedValue({
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
       commit_sha: "def456",
       bytes_written: 42,
     });
     const res = await writeBotFile({
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
       content: "# SOUL\nv2",
       commitMessage: "tighten",
       expectedSha: "abc123",
     });
     expect(postMock).toHaveBeenCalledWith("/agent-files/write", {
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
       content: "# SOUL\nv2",
       commit_message: "tighten",
       expected_sha: "abc123",
@@ -70,7 +70,7 @@ describe("botFiles client", () => {
       ),
     );
     const res = await writeBotFile({
-      path: "agents/ceo/SOUL.md",
+      path: "agents/cos/SOUL.md",
       content: "# SOUL\nmy edit",
       commitMessage: "x",
       expectedSha: "stale",
@@ -86,7 +86,7 @@ describe("botFiles client", () => {
     postMock.mockRejectedValue(new Error("human session required"));
     await expect(
       writeBotFile({
-        path: "agents/ceo/SOUL.md",
+        path: "agents/cos/SOUL.md",
         content: "x",
         commitMessage: "x",
         expectedSha: "",

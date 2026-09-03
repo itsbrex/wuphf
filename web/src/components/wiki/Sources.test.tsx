@@ -16,7 +16,7 @@ describe("<Sources>", () => {
       },
       {
         commitSha: "7c2e8810000",
-        authorSlug: "ceo",
+        authorSlug: "cos",
         authorName: "CEO",
         msg: "Pilot update",
         date: "2026-01-17T00:00:00Z",

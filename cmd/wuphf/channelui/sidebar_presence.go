@@ -46,7 +46,7 @@ const (
 // SidebarBotColors maps bot slugs to their sidebar/avatar colors.
 // Mirrors BotColorMap (in styles.go) but for the sidebar palette.
 var SidebarBotColors = map[string]string{
-	"ceo": "#EAB308", "pm": "#22C55E", "fe": "#3B82F6",
+	"cos": "#EAB308", "pm": "#22C55E", "fe": "#3B82F6",
 	"be": "#8B5CF6", "ai": "#14B8A6", "designer": "#EC4899",
 	"cmo": "#F97316", "cro": "#06B6D4", "you": "#38BDF8", "human": "#38BDF8",
 }
@@ -152,11 +152,11 @@ func RenderOfficeCharacter(m Member, act MemberActivity, now time.Time) OfficeCh
 // rebuild a 20-key map literal on every sidebar tick. Read-only;
 // callers must not mutate the slices.
 var asidePhrases = map[string][]string{
-	"ceo:talking": {
+	"cos:talking": {
 		"Delegating.",
 		"Have a plan.",
 	},
-	"ceo:plotting": {
+	"cos:plotting": {
 		"Smells strategic.",
 		"Possible reorg.",
 	},

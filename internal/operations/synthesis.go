@@ -154,7 +154,7 @@ func inferOperationWorkstreams(kind string) []string {
 }
 
 func synthesizeStarterPlan(name string, input SynthesisInput, workstreams []string) StarterPlan {
-	leadSlug := "ceo"
+	leadSlug := "cos"
 	return StarterPlan{
 		LeadSlug:                  leadSlug,
 		GeneralChannelDescription: fmt.Sprintf("Command deck for %s. Use this room to steer the operation, approve risky actions, and unblock the specialists.", name),
@@ -203,11 +203,11 @@ func synthesizedStarterChannels(name string) []StarterChannel {
 		return nil
 	}
 	return []StarterChannel{
-		{Slug: "command", Name: "command", Description: fmt.Sprintf("Executive control room for %s.", name), Members: []string{"ceo"}},
-		{Slug: "planning", Name: "planning", Description: "Scope the workstreams, milestones, and artifact plan.", Members: []string{"ceo"}},
-		{Slug: "delivery", Name: "delivery", Description: "Build the first deliverables and execution bundles.", Members: []string{"ceo"}},
-		{Slug: "systems", Name: "systems", Description: "Wire integrations, approvals, and repeatable workflow loops.", Members: []string{"ceo"}},
-		{Slug: "review", Name: "review", Description: "Track metrics, review outcomes, and update the scorecard.", Members: []string{"ceo"}},
+		{Slug: "command", Name: "command", Description: fmt.Sprintf("Executive control room for %s.", name), Members: []string{"cos"}},
+		{Slug: "planning", Name: "planning", Description: "Scope the workstreams, milestones, and artifact plan.", Members: []string{"cos"}},
+		{Slug: "delivery", Name: "delivery", Description: "Build the first deliverables and execution bundles.", Members: []string{"cos"}},
+		{Slug: "systems", Name: "systems", Description: "Wire integrations, approvals, and repeatable workflow loops.", Members: []string{"cos"}},
+		{Slug: "review", Name: "review", Description: "Track metrics, review outcomes, and update the scorecard.", Members: []string{"cos"}},
 	}
 }
 

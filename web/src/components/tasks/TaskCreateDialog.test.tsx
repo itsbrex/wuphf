@@ -13,7 +13,7 @@ vi.mock("../../hooks/useCreateTask", () => ({
 }));
 
 const SAMPLE_MEMBERS: OfficeMember[] = [
-  { slug: "ceo", name: "CEO", role: "supervisor", emoji: "👔" },
+  { slug: "cos", name: "CEO", role: "supervisor", emoji: "👔" },
   { slug: "bookkeeper", name: "Bookkeeper", role: "specialist", emoji: "📒" },
 ];
 
@@ -22,7 +22,7 @@ vi.mock("../../hooks/useMembers", () => ({
 }));
 
 vi.mock("../../api/client", () => ({
-  getConfig: async () => ({ team_lead_slug: "ceo" }),
+  getConfig: async () => ({ team_lead_slug: "cos" }),
 }));
 
 vi.mock("../../lib/router", () => ({

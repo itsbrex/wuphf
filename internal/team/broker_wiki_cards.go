@@ -83,5 +83,5 @@ func (b *Broker) postWikiArticleCreatedCardLocked(path, title, author string) {
 		authorTag = "@" + authorTag
 	}
 	content := fmt.Sprintf("New wiki article: %s (by %s)", title, authorTag)
-	b.emitCardLocked("wiki_article_created", title, content, payload, []string{"ceo"})
+	b.emitCardLocked("wiki_article_created", title, content, payload, []string{"cos"})
 }

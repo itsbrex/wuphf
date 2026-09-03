@@ -18,7 +18,7 @@ const (
 	// CEO routes work for the whole office and burns through context faster
 	// than any specialist, so it gets a much larger working window before the
 	// loop archives older turns into an Office Insight.
-	ceoSlug         = "ceo"
+	ceoSlug         = "cos"
 	ceoTokenLimit   = 200000
 	compactionRatio = 0.8
 )

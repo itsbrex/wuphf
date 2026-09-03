@@ -26,6 +26,7 @@ import { Eye } from "iconoir-react";
 import type { OfficeMember } from "../../api/client";
 import { useDefaultHarness } from "../../hooks/useConfig";
 import { resolveHarness } from "../../lib/harness";
+import { humanizeActivity } from "../../lib/humanizeActivity";
 import { router } from "../../lib/router";
 import { BotKnowledgePanel } from "../knowledge/BotKnowledgePanel";
 import { HarnessBadge } from "../ui/HarnessBadge";
@@ -150,8 +151,11 @@ function ShellHeader({ agent, onTeachWorkflow }: ShellHeaderProps) {
               </span>
             )}
             {agent.task && agent.status === "active" ? (
-              <span className="bot-subspace-task-chip" title={agent.task}>
-                {agent.task}
+              <span
+                className="bot-subspace-task-chip"
+                title={humanizeActivity(agent.task)}
+              >
+                {humanizeActivity(agent.task)}
               </span>
             ) : null}
           </div>

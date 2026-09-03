@@ -6,7 +6,7 @@ import { TaskComposer } from "./TaskComposer";
 
 const SAMPLE_MEMBERS: OfficeMember[] = [
   {
-    slug: "ceo",
+    slug: "cos",
     name: "CEO",
     role: "supervisor",
     emoji: "👔",
@@ -40,7 +40,7 @@ const SAMPLE_MEMBERS: OfficeMember[] = [
 const SAMPLE_CONFIG: Partial<ConfigSnapshot> = {
   llm_provider: "claude-code",
   llm_provider_kinds: ["claude-code", "codex", "opencode", "ollama"],
-  team_lead_slug: "ceo",
+  team_lead_slug: "cos",
 };
 
 function buildClient(members: OfficeMember[] = SAMPLE_MEMBERS) {

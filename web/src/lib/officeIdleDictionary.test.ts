@@ -129,7 +129,7 @@ describe("a populated roster does not show one line for everybody", () => {
   // fixture is now user-created bots with distinct roles. That is the case
   // that can still regress.
   const ROSTER: readonly { slug: string; role: string }[] = [
-    { slug: "ceo", role: "Chief of Staff" },
+    { slug: "cos", role: "Chief of Staff" },
     { slug: "ada", role: "Engineer" },
     { slug: "kit", role: "Designer" },
     { slug: "rey", role: "PM" },

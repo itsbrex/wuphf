@@ -75,7 +75,7 @@ func TestSearchPickerIncludesOfficeApps(t *testing.T) {
 func TestSearchSelectionOpensThread(t *testing.T) {
 	m := newChannelModel(false)
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Root thread"},
+		{ID: "msg-1", From: "cos", Content: "Root thread"},
 		{ID: "msg-2", From: "pm", Content: "Reply", ReplyTo: "msg-1"},
 	}
 
@@ -105,7 +105,7 @@ func TestSearchSelectionSupportsOfficeAppTargets(t *testing.T) {
 
 func TestRewindCommandOpensRecoveryPromptPicker(t *testing.T) {
 	m := newChannelModel(false)
-	m.messages = []channelui.BrokerMessage{{ID: "msg-1", From: "ceo", Content: "Need a summary."}}
+	m.messages = []channelui.BrokerMessage{{ID: "msg-1", From: "cos", Content: "Need a summary."}}
 
 	next, _ := m.runCommand("/rewind", "")
 	got := next.(channelModel)

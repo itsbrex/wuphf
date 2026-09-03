@@ -687,7 +687,7 @@ func (t *SlackTransport) FormatOutbound(msg channelMessage) (transport.Outbound,
 	// Participant field (see slack_spawned_agents.go).
 	spawnedSender := t.spawnedSenderParticipant(msg.From)
 	// Resolve the office-internal sender to a Slack-facing display name BEFORE
-	// rendering: "@ceo" means nothing to real Slack users, so attribution is a
+	// rendering: "@cos" means nothing to real Slack users, so attribution is a
 	// plain bold name, never a fake tag.
 	addressed := leadingMentionSlugs(msg.Content)
 	msg.From = t.displayNameForOffice(msg.From)
@@ -728,7 +728,7 @@ func leadingMentionSlugs(content string) map[string]bool {
 
 // displayNameForOffice maps an office sender identity to the name real Slack
 // users should see. WUPHF presents as ONE coordinating bot in Slack: internal
-// office bots (ceo, planner, …) are an implementation detail, so their
+// office bots (cos, planner, …) are an implementation detail, so their
 // messages carry NO sender attribution — Slack already shows the bot as the
 // speaker. Humans keep a minimal attribution (they are a genuinely different
 // speaker), and gate actors (human:<slack user id>) resolve to their cached

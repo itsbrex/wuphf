@@ -15,9 +15,9 @@ func TestDefaultHumanMessageTitleByKind(t *testing.T) {
 		"":               "has an update for you",
 	}
 	for kind, want := range cases {
-		got := channelui.DefaultHumanMessageTitle(kind, "ceo")
+		got := channelui.DefaultHumanMessageTitle(kind, "cos")
 		if !strings.Contains(got, want) {
-			t.Errorf("channelui.DefaultHumanMessageTitle(%q, ceo) = %q, want substring %q", kind, got, want)
+			t.Errorf("channelui.DefaultHumanMessageTitle(%q, cos) = %q, want substring %q", kind, got, want)
 		}
 	}
 }
@@ -69,7 +69,7 @@ func TestBuildRequestLinesIncludesQuestionAndContext(t *testing.T) {
 	requests := []channelui.Interview{{
 		ID:            "req-1",
 		Kind:          "decision",
-		From:          "ceo",
+		From:          "cos",
 		Status:        "open",
 		Title:         "Launch decision",
 		Question:      "Approve the rollout?",
@@ -111,7 +111,7 @@ func TestBuildPolicyLinesEmptyShowsGuidance(t *testing.T) {
 
 func TestBuildPolicyLinesShowsSignalsDecisionsWatchdogs(t *testing.T) {
 	signals := []channelui.Signal{{ID: "s1", Title: "Spike", Content: "Latency rising", Owner: "be"}}
-	decisions := []channelui.Decision{{ID: "d1", Summary: "Roll forward", Reason: "Risk acceptable", Owner: "ceo"}}
+	decisions := []channelui.Decision{{ID: "d1", Summary: "Roll forward", Reason: "Risk acceptable", Owner: "cos"}}
 	watchdogs := []channelui.Watchdog{{ID: "w1", Summary: "Build flaking", Status: "active", Kind: "ci"}}
 	lines := channelui.BuildPolicyLines(signals, decisions, watchdogs, nil, 80)
 	plain := stripANSI(joinRenderedLines(lines))

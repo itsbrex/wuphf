@@ -120,11 +120,11 @@ for m in d.get('members',[]):
 fi
 
 echo ""
-echo "=== TEST 2: Direct @ceo mention ==="
+echo "=== TEST 2: Direct @cos mention ==="
 curl -s -X POST "http://127.0.0.1:7890/messages" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"channel":"general","from":"you","content":"@ceo give me a one sentence status update","tagged":["ceo"]}' 2>/dev/null
+  -d '{"channel":"general","from":"you","content":"@cos give me a one sentence status update","tagged":["cos"]}' 2>/dev/null
 
 RESPONDED2=false
 for i in $(seq 1 30); do
@@ -136,7 +136,7 @@ for i in $(seq 1 30); do
 import json,sys
 d=json.load(sys.stdin)
 for m in d.get('messages',[]):
-    if m['from'] == 'ceo' and 'status' in m.get('content','').lower():
+    if m['from'] == 'cos' and 'status' in m.get('content','').lower():
         print(m['content'][:120])
         break
 " 2>/dev/null)
@@ -210,6 +210,6 @@ fi
 echo ""
 echo "=== SUMMARY ==="
 echo "Test 1 (untagged → CEO triage): $([ "$RESPONDED" = true ] && echo 'PASS' || echo 'FAIL')"
-echo "Test 2 (direct @ceo): $([ "$RESPONDED2" = true ] && echo 'PASS' || echo 'FAIL')"
+echo "Test 2 (direct @cos): $([ "$RESPONDED2" = true ] && echo 'PASS' || echo 'FAIL')"
 echo "Test 3 (direct @fe, skip CEO): $([ "$RESPONDED3" = true ] && echo 'PASS' || echo 'FAIL')"
 echo "Artifacts: $ARTIFACTS"

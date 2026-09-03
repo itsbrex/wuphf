@@ -151,7 +151,7 @@ test_single_turn() {
 
   local token
   token=$(get_token)
-  local agents=("ceo" "eng" "gtm")
+  local agents=("cos" "eng" "gtm")
   local wait_time=90
 
   echo -e "  Sending: ${BOLD}\"What is the team working on right now?\"${NC}"
@@ -233,11 +233,11 @@ test_session() {
     local msg="${messages[$i]}"
 
     # Capture CEO stream
-    capture_agent_stream "ceo" "$wait_per_turn" "$token" "$REPORT_DIR/session-turn${turn}.sse" &
+    capture_agent_stream "cos" "$wait_per_turn" "$token" "$REPORT_DIR/session-turn${turn}.sse" &
     local cap_pid=$!
 
     sleep 1
-    send_message "dm-ceo" "$msg" "[\"ceo\"]" "$token"
+    send_message "dm-ceo" "$msg" "[\"cos\"]" "$token"
     wait $cap_pid
 
     parse_usage "$REPORT_DIR/session-turn${turn}.sse" > "$REPORT_DIR/session-turn${turn}.json"
@@ -287,7 +287,7 @@ test_idle() {
   local token
   token=$(get_token)
   local duration=120
-  local agents=("ceo" "eng" "gtm")
+  local agents=("cos" "eng" "gtm")
 
   echo -e "  Capturing all agent streams for ${duration}s of idle time..."
   for agent in "${agents[@]}"; do
@@ -339,7 +339,7 @@ test_fanout() {
 
   local token
   token=$(get_token)
-  local agents=("ceo" "eng" "gtm")
+  local agents=("cos" "eng" "gtm")
   local wait_time=90
 
   echo -e "  Sending: ${BOLD}\"@eng what is the build status? @gtm what is the pipeline status?\"${NC}"
@@ -458,7 +458,7 @@ if session_lines:
 
 # Idle
 idle_total = 0
-for agent in ["ceo", "eng", "gtm"]:
+for agent in ["cos", "eng", "gtm"]:
     d = load(f"idle-{agent}.json")
     if d:
         idle_total += d["total_billed"]

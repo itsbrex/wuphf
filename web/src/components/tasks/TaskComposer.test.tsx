@@ -64,7 +64,7 @@ function renderComposer() {
 
 beforeEach(() => {
   getConfigMock.mockResolvedValue({
-    team_lead_slug: "ceo",
+    team_lead_slug: "cos",
     llm_provider: "claude-code",
     llm_provider_kinds: ["claude-code", "codex"],
   });
@@ -72,7 +72,7 @@ beforeEach(() => {
   createTasksMock.mockResolvedValue({ tasks: [] });
   useOfficeMembersMock.mockReturnValue({
     data: [
-      { slug: "ceo", name: "CEO", role: "lead" },
+      { slug: "cos", name: "CEO", role: "lead" },
       { slug: "builder", name: "Builder", role: "engineer" },
     ],
   } as unknown as ReturnType<typeof useOfficeMembers>);
@@ -93,7 +93,7 @@ describe("TaskComposer owner default", () => {
       "task-composer-owner",
     ) as HTMLSelectElement;
     await waitFor(() => {
-      expect(select.value).toBe("ceo");
+      expect(select.value).toBe("cos");
     });
   });
 
@@ -116,7 +116,7 @@ describe("TaskComposer owner default", () => {
       expect(createTasksMock).toHaveBeenCalled();
     });
     const [tasks] = createTasksMock.mock.calls[0];
-    expect(tasks[0].assignee).toBe("ceo");
+    expect(tasks[0].assignee).toBe("cos");
   });
 });
 

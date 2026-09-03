@@ -246,7 +246,7 @@ func (b *Broker) createTelegramChannel(slug, title string, chatID int64, chType 
 		return nil, fmt.Errorf("load company manifest: %w", err)
 	}
 	// Mirror the TUI exactly: lead first, then every other manifest member.
-	// "ceo" is prepended by createChannelLocked itself, so we don't add it here.
+	// "cos" is prepended by createChannelLocked itself, so we don't add it here.
 	members := []string{manifest.Lead}
 	for _, m := range manifest.Members {
 		if m.Slug != "" && m.Slug != manifest.Lead {

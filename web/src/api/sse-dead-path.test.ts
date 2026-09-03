@@ -84,7 +84,7 @@ describe("SSE dead-path fix", () => {
     expect(handler).not.toHaveBeenCalled();
     src.emit("wiki:write", {
       path: "team/people/sarah.md",
-      author_slug: "ceo",
+      author_slug: "cos",
       date: "2026-04-21T10:00:00Z",
     });
     expect(handler).toHaveBeenCalledTimes(1);

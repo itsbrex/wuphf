@@ -294,8 +294,8 @@ save_screenshot "maya-01-boot"
 if assert_screen_not_blank "m1"; then pass; else fail; fi
 assert_quality "maya-boot"
 
-run_test "M2" "Leader pane visible: [ceo] CEO pane header"
-if assert_pane_header "ceo" "CEO" "m2"; then pass; else fail; fi
+run_test "M2" "Leader pane visible: [cos] CEO pane header"
+if assert_pane_header "cos" "CEO" "m2"; then pass; else fail; fi
 
 run_test "M3" "Specialist panes visible: at least PM, Frontend, Backend, or AI visible"
 save_screenshot "maya-03-specialists"
@@ -332,7 +332,7 @@ else
 fi
 
 run_test "M6" "CEO pane is focused by default (has * marker)"
-if assert_focus_on "ceo" "m6"; then pass; else fail; fi
+if assert_focus_on "cos" "m6"; then pass; else fail; fi
 
 # ═══════════════════════════════════════════════════════════════════════
 # PERSONA 2: Raj (Power user, 10+ daily sessions)
@@ -352,8 +352,8 @@ if assert_focus_on "pm" "r1"; then
   pass
 else
   # Might focus a different pane — just check CEO lost focus
-  if assert_not_text "\[ceo\].*\*" "r1-alt"; then
-    echo "    PASS: focus moved away from ceo"
+  if assert_not_text "\[cos\].*\*" "r1-alt"; then
+    echo "    PASS: focus moved away from cos"
     pass
   else
     fail
@@ -415,12 +415,12 @@ run_test "S1" "Navigate focus back to CEO pane"
 # From Raj tests we ended on PM (index 1). One Ctrl+P wraps to CEO (index 0).
 send_ctrl_p; sleep 0.3
 save_screenshot "sarah-01-focus-ceo"
-if assert_focus_on "ceo" "s1"; then
+if assert_focus_on "cos" "s1"; then
   pass
 else
   # If not on CEO, try one more Ctrl+P (in case focus drifted)
   send_ctrl_p; sleep 0.3
-  if assert_focus_on "ceo" "s1-retry"; then pass; else fail; fi
+  if assert_focus_on "cos" "s1-retry"; then pass; else fail; fi
 fi
 
 run_test "S2" "Type message into focused CEO pane"
@@ -471,7 +471,7 @@ run_test "A1" "Layout: leader pane (CEO) occupies top section"
 save_screenshot "alex-01-layout"
 screen_a1=$(get_screen)
 # CEO pane header should be near the top of the screen
-first_ceo_line=$(echo "$screen_a1" | grep -n "\[ceo\]" | head -1 | cut -d: -f1)
+first_ceo_line=$(echo "$screen_a1" | grep -n "\[cos\]" | head -1 | cut -d: -f1)
 if [ -n "$first_ceo_line" ] && [ "$first_ceo_line" -lt 5 ]; then
   echo "    PASS: CEO pane at top (line $first_ceo_line)"
   pass
@@ -495,7 +495,7 @@ fi
 run_test "A3" "Pane count: at least 4 agent panes visible"
 screen_a3=$(get_screen)
 visible_panes=0
-for slug in "ceo" "pm" "fe" "be" "designer" "cmo" "cro"; do
+for slug in "cos" "pm" "fe" "be" "designer" "cmo" "cro"; do
   if echo "$screen_a3" | grep -q "\[$slug\]"; then
     visible_panes=$((visible_panes + 1))
   fi
@@ -564,7 +564,7 @@ run_test "K1" "Team overview: CEO + at least 3 specialists visible simultaneousl
 save_screenshot "kim-01-overview"
 screen_k1=$(get_screen)
 team_visible=0
-for slug in "ceo" "pm" "fe" "be"; do
+for slug in "cos" "pm" "fe" "be"; do
   if echo "$screen_k1" | grep -q "\[$slug\]"; then
     team_visible=$((team_visible + 1))
   fi
@@ -612,7 +612,7 @@ run_test "K4" "Pane alive: at least leader pane shows claude content"
 for attempt in 1 2 3 4 5 6 7; do
   send_ctrl_p; sleep 0.3
   screen_nav=$(get_screen)
-  if echo "$screen_nav" | grep -q '\[ceo\].*\*'; then
+  if echo "$screen_nav" | grep -q '\[cos\].*\*'; then
     break
   fi
 done
@@ -688,7 +688,7 @@ echo ""
 echo "  [Q5] Pane layout consistency: leader pane above specialist row"
 QUALITY_TOTAL=$((QUALITY_TOTAL + 1))
 screen_q5=$(get_screen)
-ceo_line=$(echo "$screen_q5" | grep -n "\[ceo\]" | head -1 | cut -d: -f1)
+ceo_line=$(echo "$screen_q5" | grep -n "\[cos\]" | head -1 | cut -d: -f1)
 pm_line=$(echo "$screen_q5" | grep -n "\[pm\]" | head -1 | cut -d: -f1)
 if [ -n "$ceo_line" ] && [ -n "$pm_line" ] && [ "$ceo_line" -lt "$pm_line" ]; then
   echo "    QUALITY OK [layout]: CEO (line $ceo_line) above PM (line $pm_line)"

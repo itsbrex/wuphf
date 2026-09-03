@@ -504,7 +504,7 @@ func TestRouteOpenclawMentionsLoopIgnoresUnrelated(t *testing.T) {
 
 	cases := []channelMessage{
 		{ID: "msg-neg-1", From: "system", Channel: "general", Content: "sys", Tagged: []string{"openclaw-only"}},
-		{ID: "msg-neg-2", From: "ceo", Channel: "general", Content: "agent", Tagged: []string{"openclaw-only"}},
+		{ID: "msg-neg-2", From: "cos", Channel: "general", Content: "agent", Tagged: []string{"openclaw-only"}},
 		{ID: "msg-neg-3", From: "human", Channel: "general", Content: "wrong", Tagged: []string{"someone-else"}},
 	}
 	for _, m := range cases {

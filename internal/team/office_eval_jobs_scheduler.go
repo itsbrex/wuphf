@@ -72,7 +72,7 @@ func evalJobSchedulerTruth(fx *officeEvalFixture, r *OfficeEvalReport) error {
 		"channel":    "general",
 		"owner":      "eng",
 		"prompt":     "Pull all accounts with renewals within 60 days, score by risk, post a one-line-per-account summary.",
-		"created_by": "ceo",
+		"created_by": "cos",
 	})
 	if err != nil {
 		return fmt.Errorf("register routine: %w", err)

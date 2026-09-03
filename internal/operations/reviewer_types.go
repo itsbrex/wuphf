@@ -15,7 +15,7 @@ const ReviewerHumanOnly = "human-only"
 
 // ReviewerFallback is the final fallback when a blueprint declares no
 // default_reviewer and no matching reviewer_paths entry.
-const ReviewerFallback = "ceo"
+const ReviewerFallback = "cos"
 
 // ReviewerPathRule is a single entry in a blueprint's reviewer_paths map,
 // preserving declaration order so "first match wins" is deterministic.

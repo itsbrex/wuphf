@@ -34,7 +34,7 @@ func newPlanApprovalBroker(t *testing.T) *Broker {
 	b := newTestBroker(t)
 	b.mu.Lock()
 	b.channels = []teamChannel{
-		{Slug: "team", Name: "team", Members: []string{"human", "ceo", "eng"}},
+		{Slug: "team", Name: "team", Members: []string{"human", "cos", "eng"}},
 	}
 	b.mu.Unlock()
 	return b
@@ -47,7 +47,7 @@ func TestNewIssueLandsInPlanning(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the onboarding revamp",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -63,12 +63,12 @@ func TestNewIssueLandsInPlanning(t *testing.T) {
 func TestAppBuilderBuildSkipsPlanGate(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	appBuilderTask := &teamTask{Owner: appBuilderSlug}
-	if b.issueShouldPlanFirstLocked(appBuilderTask, "ceo") {
+	if b.issueShouldPlanFirstLocked(appBuilderTask, "cos") {
 		t.Fatalf("app-builder build should skip the plan gate, but it would plan first")
 	}
 	// Guard: a normal owner still plans first, so the exemption is scoped.
 	normalTask := &teamTask{Owner: "eng"}
-	if !b.issueShouldPlanFirstLocked(normalTask, "ceo") {
+	if !b.issueShouldPlanFirstLocked(normalTask, "cos") {
 		t.Fatalf("a normal owner-set issue should still plan first")
 	}
 }
@@ -78,7 +78,7 @@ func TestApprovePlanStartsExecution(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the onboarding revamp",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -97,14 +97,14 @@ func TestPlanGateBlocksSubtaskCreation(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Build the billing system",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create parent: %v", err)
 	}
 	_, err = b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
-		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
+		Owner: "eng", CreatedBy: "cos", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {
 		t.Fatal("expected sub-issue creation under a planning parent to be refused")
@@ -116,7 +116,7 @@ func TestPlanGateBlocksSubtaskCreation(t *testing.T) {
 	startPlanning(t, b, parent.Task.ID)
 	if _, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
-		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
+		Owner: "eng", CreatedBy: "cos", ParentIssueID: parent.Task.ID,
 	}); err != nil {
 		t.Fatalf("sub-issue after approval should succeed: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestShallowSubtaskRestatingParentRejected(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the MVP",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create parent: %v", err)
@@ -135,7 +135,7 @@ func TestShallowSubtaskRestatingParentRejected(t *testing.T) {
 	startPlanning(t, b, parent.Task.ID)
 	_, err = b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the MVP!",
-		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
+		Owner: "eng", CreatedBy: "cos", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {
 		t.Fatal("expected a sub-issue restating the parent to be rejected")
@@ -151,7 +151,7 @@ func TestRaisePlanApprovalIdempotent(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Build the billing system",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -180,7 +180,7 @@ func TestRejectPlanLeavesTaskInPlanning(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Ship the redesign",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -203,7 +203,7 @@ func TestCompleteFromPlanningRefused(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	created, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Write the launch post",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create: %v", err)
@@ -225,7 +225,7 @@ func TestDuplicateSiblingSubtaskRejected(t *testing.T) {
 	b := newPlanApprovalBroker(t)
 	parent, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Build the billing system",
-		Owner: "eng", CreatedBy: "ceo",
+		Owner: "eng", CreatedBy: "cos",
 	})
 	if err != nil {
 		t.Fatalf("create parent: %v", err)
@@ -233,13 +233,13 @@ func TestDuplicateSiblingSubtaskRejected(t *testing.T) {
 	startPlanning(t, b, parent.Task.ID)
 	if _, err := b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "Wire Stripe webhooks",
-		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
+		Owner: "eng", CreatedBy: "cos", ParentIssueID: parent.Task.ID,
 	}); err != nil {
 		t.Fatalf("first sibling: %v", err)
 	}
 	_, err = b.MutateTask(TaskPostRequest{
 		Action: "create", Channel: "team", Title: "wire the stripe webhook",
-		Owner: "eng", CreatedBy: "ceo", ParentIssueID: parent.Task.ID,
+		Owner: "eng", CreatedBy: "cos", ParentIssueID: parent.Task.ID,
 	})
 	if err == nil {
 		t.Fatal("expected a sub-issue duplicating a sibling to be rejected")

@@ -7,7 +7,7 @@ import { Button } from "../ui/Button";
 import { TaskCreateDialog } from "./TaskCreateDialog";
 
 const SAMPLE_MEMBERS: OfficeMember[] = [
-  { slug: "ceo", name: "CEO", role: "supervisor", emoji: "👔" },
+  { slug: "cos", name: "CEO", role: "supervisor", emoji: "👔" },
   { slug: "bookkeeper", name: "Bookkeeper", role: "specialist", emoji: "📒" },
   { slug: "planner", name: "Planner", role: "specialist", emoji: "🗓️" },
   { slug: "researcher", name: "Researcher", role: "specialist", emoji: "🔍" },

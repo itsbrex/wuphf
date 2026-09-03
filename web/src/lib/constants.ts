@@ -27,11 +27,11 @@ export const APP_BUILDER_SLUG = "app-builder";
 
 /**
  * The lead's roster slug. The DISPLAY name is "Chief of Staff"; the slug stays
- * "ceo" because it is an identifier that owns DMs (ceo__human), task
+ * "cos" because it is an identifier that owns DMs (cos__human), task
  * ownership, and message history on existing disks. Rename the copy, never
  * the slug.
  */
-export const CHIEF_OF_STAFF_SLUG = "ceo";
+export const CHIEF_OF_STAFF_SLUG = "cos";
 
 export const ONBOARDING_COPY = {
   step1_headline: "AI employees with a shared brain",

@@ -50,7 +50,7 @@ export const OnboardingDMContextProvider = OnboardingDMContext.Provider;
 // ── CEO DM channel slug ────────────────────────────────────────────────────
 
 /** The bot slug for the CEO (matches existing broker configuration). */
-const CEO_AGENT_SLUG = "ceo";
+const CEO_AGENT_SLUG = "cos";
 
 /** The broker stores DMs as canonical pair-sorted slugs. */
 const CEO_ONBOARDING_CHANNEL = directChannelSlug(CEO_AGENT_SLUG);

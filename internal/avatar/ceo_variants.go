@@ -108,5 +108,5 @@ func RenderCEOVariant(variant string, frame int) []string {
 	default:
 		sprite = SpriteCEO()
 	}
-	return RenderToANSI(sprite, PaletteForSlug("ceo"))
+	return RenderToANSI(sprite, PaletteForSlug("cos"))
 }

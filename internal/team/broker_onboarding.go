@@ -258,22 +258,22 @@ func scratchFoundingTeamBlueprint(companyName, description, directive string) op
 		displayName = "Your company"
 	}
 	bots := []operations.StarterBot{
-		{Slug: "ceo", Name: "Chief of Staff", Role: "lead", Checked: true, Type: "assistant", BuiltIn: true, Expertise: []string{"strategy", "prioritization", "delegation"}, Personality: "Sets direction, breaks directives into specialist assignments, and owns the outcome."},
+		{Slug: "cos", Name: "Chief of Staff", Role: "lead", Checked: true, Type: "assistant", BuiltIn: true, Expertise: []string{"strategy", "prioritization", "delegation"}, Personality: "Sets direction, breaks directives into specialist assignments, and owns the outcome."},
 		{Slug: "gtm-lead", Name: "GTM Lead", Role: "go-to-market", Checked: true, Type: "assistant", Expertise: []string{"positioning", "sales", "marketing", "growth"}, Personality: "Turns the product into pipeline — messaging, outbound, launches, and early revenue."},
 		{Slug: "founding-engineer", Name: "Founding Engineer", Role: "engineering", Checked: true, Type: "assistant", Expertise: []string{"full-stack", "architecture", "infrastructure", "shipping"}, Personality: "Full-stack engineer who ships end-to-end and makes pragmatic architectural calls."},
 		{Slug: "pm", Name: "Product Manager", Role: "product", Checked: true, Type: "assistant", Expertise: []string{"roadmap", "user-stories", "requirements", "specs"}, Personality: "Translates business goals into specs the engineering and design functions can execute against."},
 		{Slug: "designer", Name: "Designer", Role: "design", Checked: true, Type: "assistant", Expertise: []string{"UI-UX-design", "branding", "prototyping"}, Personality: "Owns the look, feel, and flow — from first sketch to shipped interface."},
 	}
 	channels := []operations.StarterChannel{
-		{Slug: "general", Name: "general", Description: "Primary coordination channel.", Members: []string{"ceo", "gtm-lead", "founding-engineer", "pm", "designer"}},
-		{Slug: "product", Name: "product", Description: "Roadmap, specs, and design reviews.", Members: []string{"ceo", "pm", "designer", "founding-engineer"}},
-		{Slug: "gtm", Name: "gtm", Description: "Positioning, pipeline, and launches.", Members: []string{"ceo", "gtm-lead", "pm"}},
+		{Slug: "general", Name: "general", Description: "Primary coordination channel.", Members: []string{"cos", "gtm-lead", "founding-engineer", "pm", "designer"}},
+		{Slug: "product", Name: "product", Description: "Roadmap, specs, and design reviews.", Members: []string{"cos", "pm", "designer", "founding-engineer"}},
+		{Slug: "gtm", Name: "gtm", Description: "Positioning, pipeline, and launches.", Members: []string{"cos", "gtm-lead", "pm"}},
 	}
 	var tasks []operations.StarterTask
 	if directive != "" {
 		tasks = []operations.StarterTask{{
 			Channel: "general",
-			Owner:   "ceo",
+			Owner:   "cos",
 			Title:   "Kick off the directive",
 			Details: directive,
 		}}
@@ -285,7 +285,7 @@ func scratchFoundingTeamBlueprint(companyName, description, directive string) op
 		Description: description,
 		Objective:   directive,
 		Starter: operations.StarterPlan{
-			LeadSlug:                  "ceo",
+			LeadSlug:                  "cos",
 			GeneralChannelDescription: "Primary coordination channel.",
 			KickoffPrompt:             directive,
 			Bots:                      bots,
@@ -390,10 +390,10 @@ func (b *Broker) postKickoffLocked(bp operations.Blueprint, selectedBots []strin
 	// an unreachable kickoff is worse than one that refuses to seed.
 	lead := officeLeadSlugFromMembers(b.members)
 	if lead == "" {
-		// Every shipped blueprint declares ceo as lead (guarded by
+		// Every shipped blueprint declares cos as lead (guarded by
 		// TestAllOperationBlueprintsUseCEOLead). The fallback here only fires
 		// for malformed/synthesized blueprints with no identifiable lead.
-		lead = "ceo"
+		lead = "cos"
 	}
 	leadHome, err := b.homeChannelForLocked(lead)
 	if err != nil {
@@ -571,7 +571,7 @@ func blankSlateOfficeMembersFromBlueprint(blueprint operations.Blueprint, select
 	// creates specialists on demand instead of shipping an invented team.
 	now := time.Now().UTC().Format(time.RFC3339)
 	return []officeMember{
-		{Slug: "ceo", Name: company.ChiefOfStaffName(), Role: company.ChiefOfStaffRole(), BuiltIn: true, CreatedBy: "wuphf", CreatedAt: now},
+		{Slug: "cos", Name: company.ChiefOfStaffName(), Role: company.ChiefOfStaffRole(), BuiltIn: true, CreatedBy: "wuphf", CreatedAt: now},
 	}
 }
 
@@ -606,7 +606,7 @@ func blankSlateOfficeMembersFromBots(bots []operations.StarterBot, leadSlug stri
 		// reconciler only fixes that on the NEXT boot — so without this, the
 		// very first session (including the Chief of Staff's intro message,
 		// which interpolates the name) ran under the retired title.
-		if slug == "ceo" {
+		if slug == "cos" {
 			name = company.ChiefOfStaffName()
 			role = company.ChiefOfStaffRole()
 		}
@@ -619,7 +619,7 @@ func blankSlateOfficeMembersFromBots(bots []operations.StarterBot, leadSlug stri
 			AllowedTools: nil,
 			CreatedBy:    "wuphf",
 			CreatedAt:    now,
-			BuiltIn:      bot.BuiltIn || slug == leadSlug || slug == "operator" || slug == "founder" || slug == "ceo",
+			BuiltIn:      bot.BuiltIn || slug == leadSlug || slug == "operator" || slug == "founder" || slug == "cos",
 		})
 	}
 	return members
@@ -822,7 +822,7 @@ func memberSlugsFromMembers(members []officeMember) []string {
 //
 // The CEO pass mirrors officeLeadSlugFrom and is load-bearing, not cosmetic.
 // The Librarian and the App Builder are BuiltIn service bots present in
-// every office, and "app-builder" sorts ahead of "ceo", so a BuiltIn-first
+// every office, and "app-builder" sorts ahead of "cos", so a BuiltIn-first
 // scan handed the lead to the App Builder on every seeded roster: the
 // onboarding kickoff issue was tagged to it instead of the CEO, and the
 // non-general starter channels listed it as their lead. Every other lead
@@ -832,8 +832,8 @@ func officeLeadSlugFromMembers(members []officeMember) string {
 	sorted := append([]officeMember(nil), members...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].Slug < sorted[j].Slug })
 	for _, member := range sorted {
-		if strings.TrimSpace(member.Slug) == "ceo" {
-			return "ceo"
+		if strings.TrimSpace(member.Slug) == "cos" {
+			return "cos"
 		}
 	}
 	for _, member := range sorted {

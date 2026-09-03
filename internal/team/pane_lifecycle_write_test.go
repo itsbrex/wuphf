@@ -21,7 +21,7 @@ func TestPaneLifecycle_ClearAgentPanesKillsHigherIndicesFirst(t *testing.T) {
 	// ClearBotPanes sorts descending to avoid that. This test pins the
 	// invariant.
 	fake := newFakeTmuxRunner()
-	fake.outputs["list-panes"] = []byte("0 channel\n1 ceo\n2 fe\n3 be\n")
+	fake.outputs["list-panes"] = []byte("0 channel\n1 cos\n2 fe\n3 be\n")
 	setTmuxRunnerForTest(t, fake)
 
 	if err := newPaneLifecycle("wuphf-team").ClearBotPanes(); err != nil {

@@ -140,12 +140,12 @@ func main() {
 	// CEO → specialist. Watch for CEO's routing message followed by the
 	// specialist's reply, both in #general.
 	fmt.Println("\n═══ PHASE 4: Chief of Staff assigns work ═══")
-	ceoPrompt := "@ceo please ask one of your product managers (pm-alpha or pm-beta) to give us a one-sentence " +
+	ceoPrompt := "@cos please ask one of your product managers (pm-alpha or pm-beta) to give us a one-sentence " +
 		"positioning statement for a new CRM tool. Just delegate it; they'll answer."
 	beforeCEO := len(fetchMessages())
-	mustPost(postMessage("general", ceoPrompt, []string{"ceo"}))
-	fmt.Printf("→ #general (@ceo): %q\n", truncate(ceoPrompt, 120))
-	// We don't know which PM CEO picks, so wait for ANY reply from ceo + at
+	mustPost(postMessage("general", ceoPrompt, []string{"cos"}))
+	fmt.Printf("→ #general (@cos): %q\n", truncate(ceoPrompt, 120))
+	// We don't know which PM CEO picks, so wait for ANY reply from cos + at
 	// least one reply from a PM in the next 180s.
 	time.Sleep(180 * time.Second)
 	postCEO := fetchMessages()

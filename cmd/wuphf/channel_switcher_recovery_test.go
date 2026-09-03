@@ -25,7 +25,7 @@ func TestBuildWorkspaceSwitcherOptionsIncludesActiveWorkAndThreads(t *testing.T)
 		Status:    "pending",
 		Title:     "Approve launch copy",
 		Question:  "Approve launch copy?",
-		From:      "ceo",
+		From:      "cos",
 		CreatedAt: time.Now().Add(-2 * time.Minute).Format(time.RFC3339),
 	}}
 	m.tasks = []channelui.Task{{
@@ -37,7 +37,7 @@ func TestBuildWorkspaceSwitcherOptionsIncludesActiveWorkAndThreads(t *testing.T)
 		UpdatedAt: time.Now().Add(-time.Minute).Format(time.RFC3339),
 	}}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
+		{ID: "msg-1", From: "cos", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
 		{ID: "msg-2", From: "pm", Content: "Reply in thread", ReplyTo: "msg-1", Timestamp: time.Now().Add(-2 * time.Minute).Format(time.RFC3339)},
 	}
 
@@ -73,7 +73,7 @@ func TestApplyWorkspaceSwitcherSelectionSupportsTaskAndRequestTargets(t *testing
 		Status:   "pending",
 		Title:    "Approve launch copy",
 		Question: "Approve launch copy?",
-		From:     "ceo",
+		From:     "cos",
 	}}
 
 	if cmd := m.applyWorkspaceSwitcherSelection("task:task-1"); cmd == nil {
@@ -113,12 +113,12 @@ func TestBuildRecoveryLinesIncludesActionCards(t *testing.T) {
 		Title:         "Approve launch copy",
 		Question:      "Approve launch copy?",
 		Context:       "Need final sign-off before launch.",
-		From:          "ceo",
+		From:          "cos",
 		Blocking:      true,
 		RecommendedID: "approve",
 	}}
 	m.messages = []channelui.BrokerMessage{
-		{ID: "msg-1", From: "ceo", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
+		{ID: "msg-1", From: "cos", Content: "Need launch review.", Timestamp: time.Now().Add(-3 * time.Minute).Format(time.RFC3339)},
 		{ID: "msg-2", From: "pm", Content: "Reply in thread", ReplyTo: "msg-1", Timestamp: time.Now().Add(-2 * time.Minute).Format(time.RFC3339)},
 	}
 

@@ -44,7 +44,7 @@ func TestNormalizeTaskPlanMarksLiveExternalTasks(t *testing.T) {
 	task := &teamTask{
 		Title:   "Post the consulting update to Slack",
 		Details: "Use live external execution for the customer-facing announcement.",
-		Owner:   "ceo",
+		Owner:   "cos",
 	}
 
 	normalizeTaskPlan(task)

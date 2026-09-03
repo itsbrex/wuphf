@@ -21,7 +21,7 @@ func TestSlackHomeTabRendersBoardWikiAndWebSurfaces(t *testing.T) {
 	b.SetWebURL("http://127.0.0.1:7905")
 	seedTask := func(id, title, status string) {
 		b.mu.Lock()
-		b.tasks = append(b.tasks, teamTask{ID: id, Title: title, Owner: "ceo", Channel: "slack-general", status: status})
+		b.tasks = append(b.tasks, teamTask{ID: id, Title: title, Owner: "cos", Channel: "slack-general", status: status})
 		b.mu.Unlock()
 	}
 	seedTask("OFFICE-1", "Ship the pricing facts", "in_progress")

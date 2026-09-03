@@ -99,7 +99,7 @@ func TestDefaultPrepareTaskWorktreeOverlaysDirtyWorkspace(t *testing.T) {
 	if err := os.WriteFile(untrackedPath, []byte("id: vid_01\n"), 0o644); err != nil {
 		t.Fatalf("write untracked file: %v", err)
 	}
-	skippedCachePath := filepath.Join(repoDir, ".wuphf", "cache", "go-build", "ceo", "trim.txt")
+	skippedCachePath := filepath.Join(repoDir, ".wuphf", "cache", "go-build", "cos", "trim.txt")
 	if err := os.MkdirAll(filepath.Dir(skippedCachePath), 0o755); err != nil {
 		t.Fatalf("mkdir skipped cache parent: %v", err)
 	}
@@ -154,7 +154,7 @@ func TestDefaultPrepareTaskWorktreeOverlaysDirtyWorkspace(t *testing.T) {
 		t.Fatalf("expected untracked overlay in worktree, got %q", got)
 	}
 
-	if _, err := os.Stat(filepath.Join(path, ".wuphf", "cache", "go-build", "ceo", "trim.txt")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(path, ".wuphf", "cache", "go-build", "cos", "trim.txt")); !os.IsNotExist(err) {
 		t.Fatalf("expected generated cache file to be skipped, stat err=%v", err)
 	}
 	if _, err := os.Stat(filepath.Join(path, ".wuphf", "browser-home-test", ".wuphf", "team", "broker-state.json")); !os.IsNotExist(err) {

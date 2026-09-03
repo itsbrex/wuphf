@@ -141,12 +141,12 @@ echo "--- Create blocking request ---"
 REQUEST=$(curl -s -X POST http://127.0.0.1:7890/requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"kind":"approval","from":"ceo","channel":"general","title":"Approval needed","question":"Ship the current direction?","blocking":true,"required":true,"reply_to":"msg-1"}')
+  -d '{"kind":"approval","from":"cos","channel":"general","title":"Approval needed","question":"Ship the current direction?","blocking":true,"required":true,"reply_to":"msg-1"}')
 printf '%s\n' "$REQUEST" > "$ARTIFACTS/request-create.json"
 REQ_ID=$(printf '%s\n' "$REQUEST" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("id",""))')
 sleep 3
 tmux -L wuphf capture-pane -p -t wuphf-team:team.0 > "$ARTIFACTS/channel-blocking.txt"
-grep -Eq 'Human decision needed|Approval needed|Ship the current direction|Answer @ceo|Request pending' "$ARTIFACTS/channel-blocking.txt"
+grep -Eq 'Human decision needed|Approval needed|Ship the current direction|Answer @cos|Request pending' "$ARTIFACTS/channel-blocking.txt"
 HTTP_CODE=$(curl -s -o "$ARTIFACTS/request-blocked-response.txt" -w "%{http_code}" -X POST http://127.0.0.1:7890/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
@@ -171,25 +171,25 @@ echo "--- Inject explicit human directive ---"
 curl -s -X POST http://127.0.0.1:7890/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"from":"you","channel":"general","content":"CEO, triage this request first and have PM suggest the tightest v1 scope.","tagged":["ceo","pm"]}' > "$ARTIFACTS/human-directive.json"
+  -d '{"from":"you","channel":"general","content":"CEO, triage this request first and have PM suggest the tightest v1 scope.","tagged":["cos","pm"]}' > "$ARTIFACTS/human-directive.json"
 sleep 3
 SIGNAL_ID=$(curl -s -H "Authorization: Bearer $BROKER_TOKEN" http://127.0.0.1:7890/signals | python3 -c 'import sys,json; data=json.load(sys.stdin); signals=data.get("signals",[]); print(signals[-1]["id"] if signals else "")')
 DECISION_ID=$(curl -s -H "Authorization: Bearer $BROKER_TOKEN" http://127.0.0.1:7890/decisions | python3 -c 'import sys,json; data=json.load(sys.stdin); decisions=data.get("decisions",[]); print(decisions[-1]["id"] if decisions else "")')
 curl -s -X POST http://127.0.0.1:7890/tasks \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d "{\"action\":\"create\",\"channel\":\"general\",\"title\":\"Tighten v1 scope\",\"details\":\"Own the initial scope cut and keep it focused.\",\"owner\":\"pm\",\"created_by\":\"ceo\",\"thread_id\":\"msg-1\",\"task_type\":\"feature\",\"source_signal_id\":\"$SIGNAL_ID\",\"source_decision_id\":\"$DECISION_ID\"}" > "$ARTIFACTS/task-create.json"
+  -d "{\"action\":\"create\",\"channel\":\"general\",\"title\":\"Tighten v1 scope\",\"details\":\"Own the initial scope cut and keep it focused.\",\"owner\":\"pm\",\"created_by\":\"cos\",\"thread_id\":\"msg-1\",\"task_type\":\"feature\",\"source_signal_id\":\"$SIGNAL_ID\",\"source_decision_id\":\"$DECISION_ID\"}" > "$ARTIFACTS/task-create.json"
 sleep 2
 
 echo "--- Create bridge target and bridge context ---"
 curl -s -X POST http://127.0.0.1:7890/channels \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"action":"create","slug":"launch","name":"Launch","description":"Launch planning, messaging, and rollout work.","members":["pm","cmo"],"created_by":"ceo"}' > "$ARTIFACTS/create-launch.json"
+  -d '{"action":"create","slug":"launch","name":"Launch","description":"Launch planning, messaging, and rollout work.","members":["pm","cmo"],"created_by":"cos"}' > "$ARTIFACTS/create-launch.json"
 curl -s -X POST http://127.0.0.1:7890/bridges \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $BROKER_TOKEN" \
-  -d '{"actor":"ceo","source_channel":"general","target_channel":"launch","summary":"Use the sharper product narrative from #general before drafting launch messaging.","tagged":["cmo"]}' > "$ARTIFACTS/bridge.json"
+  -d '{"actor":"cos","source_channel":"general","target_channel":"launch","summary":"Use the sharper product narrative from #general before drafting launch messaging.","tagged":["cmo"]}' > "$ARTIFACTS/bridge.json"
 
 echo "--- Live office surface checks ---"
 curl -s -H "Authorization: Bearer $BROKER_TOKEN" "http://127.0.0.1:7890/messages?limit=100&channel=launch" > "$ARTIFACTS/launch-messages.json"

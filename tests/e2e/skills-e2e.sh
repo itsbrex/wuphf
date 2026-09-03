@@ -293,7 +293,7 @@ RESPONSE=$(curl -s -w "\n%{http_code}" -X POST http://127.0.0.1:7890/skills \
     "title": "Daily Standup Summary",
     "description": "Summarize what each agent worked on in the last 24h",
     "content": "1. Query messages from last 24h\n2. Group by agent\n3. Summarize",
-    "created_by": "ceo",
+    "created_by": "cos",
     "channel": "general",
     "tags": ["standup", "reporting"]
   }' 2>/dev/null)
@@ -380,7 +380,7 @@ curl -s -X POST http://127.0.0.1:7890/skills \
     "title": "Deploy Verification Sequence",
     "description": "Standard post-deploy verification checklist",
     "content": "1. Check health endpoints\n2. Verify response times\n3. Check error rates",
-    "created_by": "ceo",
+    "created_by": "cos",
     "channel": "general",
     "tags": ["deploy", "verification", "ops"]
   }' 2>/dev/null >/dev/null

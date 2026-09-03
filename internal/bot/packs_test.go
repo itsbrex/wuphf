@@ -11,8 +11,8 @@ func TestPacksRegistered(t *testing.T) {
 	if founding == nil {
 		t.Fatal("founding-team pack not found")
 	}
-	if founding.LeadSlug != "ceo" {
-		t.Errorf("expected lead slug 'ceo', got '%s'", founding.LeadSlug)
+	if founding.LeadSlug != "cos" {
+		t.Errorf("expected lead slug 'cos', got '%s'", founding.LeadSlug)
 	}
 	if len(founding.Bots) != 8 {
 		t.Errorf("expected 8 bots in founding team, got %d", len(founding.Bots))
@@ -55,8 +55,8 @@ func TestCodingTeamPack(t *testing.T) {
 	if p == nil {
 		t.Fatal("coding-team pack not found")
 	}
-	if p.LeadSlug != "ceo" {
-		t.Errorf("expected lead 'ceo', got '%s'", p.LeadSlug)
+	if p.LeadSlug != "cos" {
+		t.Errorf("expected lead 'cos', got '%s'", p.LeadSlug)
 	}
 	if len(p.Bots) != 4 {
 		t.Errorf("expected 4 bots, got %d", len(p.Bots))
@@ -68,8 +68,8 @@ func TestLeadGenAgencyPack(t *testing.T) {
 	if p == nil {
 		t.Fatal("lead-gen-agency pack not found")
 	}
-	if p.LeadSlug != "ceo" {
-		t.Errorf("expected lead 'ceo', got '%s'", p.LeadSlug)
+	if p.LeadSlug != "cos" {
+		t.Errorf("expected lead 'cos', got '%s'", p.LeadSlug)
 	}
 	if len(p.Bots) != 4 {
 		t.Errorf("expected 4 bots, got %d", len(p.Bots))
@@ -81,22 +81,22 @@ func TestRevOpsPack(t *testing.T) {
 	if p == nil {
 		t.Fatal("revops pack not found")
 	}
-	if p.LeadSlug != "ceo" {
-		t.Errorf("expected lead 'ceo', got '%s'", p.LeadSlug)
+	if p.LeadSlug != "cos" {
+		t.Errorf("expected lead 'cos', got '%s'", p.LeadSlug)
 	}
 	if len(p.Bots) != 5 {
 		t.Errorf("expected 5 bots, got %d", len(p.Bots))
 	}
 	// CEO (Chief Revenue Officer) must be present so the broker's CEO-routed
-	// delegation and hardcoded "ceo" checks keep working.
+	// delegation and hardcoded "cos" checks keep working.
 	hasCEO := false
 	for _, a := range p.Bots {
-		if a.Slug == "ceo" {
+		if a.Slug == "cos" {
 			hasCEO = true
 			break
 		}
 	}
 	if !hasCEO {
-		t.Error("revops pack missing required 'ceo' bot")
+		t.Error("revops pack missing required 'cos' bot")
 	}
 }

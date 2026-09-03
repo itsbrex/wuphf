@@ -207,7 +207,7 @@ func isBotPairDM(channel, slug string) bool {
 }
 
 func suppressBroadcastReason(slug, content, replyTo string, messages []brokerMessage, tasks []brokerTaskSummary) string {
-	if strings.TrimSpace(slug) == "" || slug == "ceo" {
+	if strings.TrimSpace(slug) == "" || slug == "cos" {
 		return ""
 	}
 	threadRoot := threadRootForReply(replyTo, messages)
@@ -451,7 +451,7 @@ func normalizePollScope(value string) (string, error) {
 
 func applyBotMessageScope(values url.Values, slug, scope string) {
 	slug = strings.TrimSpace(slug)
-	if slug == "" || slug == "ceo" || isOneOnOneMode() {
+	if slug == "" || slug == "cos" || isOneOnOneMode() {
 		return
 	}
 	values.Set("viewer_slug", slug)

@@ -90,7 +90,7 @@ func resolveSlug(input string) (string, error) {
 	// The model-supplied my_slug ARG is untrusted (the LLM picks it). The
 	// launcher-set WUPHF_AGENT_SLUG env is the trusted identity for this
 	// bot process. A bot must not be able to claim a reserved human/
-	// system identity or a privileged built-in slug (ceo/librarian) it was
+	// system identity or a privileged built-in slug (cos/librarian) it was
 	// not launched as — otherwise it could forge created_by=human to clear
 	// the Plan-mode approval gate, or my_slug=librarian to gain direct wiki
 	// write authority. Reject a protected arg unless it matches the env slug.
@@ -130,14 +130,14 @@ func trustedEnvBotSlug() string {
 //   - librarian — the only bot with direct wiki-write authority.
 //
 // These may only be claimed via the launcher-set env slug (the trusted
-// identity), never via the bot-chosen arg. "ceo" is intentionally NOT here:
+// identity), never via the bot-chosen arg. "cos" is intentionally NOT here:
 // it is a normal managed bot slug, it does not clear the Plan-mode gate
 // (the gate is human-only), and it grants no wiki authority — so the legitimate
-// CEO process uses my_slug=ceo without the env caveat.
+// CEO process uses my_slug=cos without the env caveat.
 func isProtectedActorSlug(slug string) bool {
 	s := strings.ToLower(strings.TrimSpace(slug))
 	switch s {
-	case "human", "you", "system", "nex", "broker", "librarian", "ceo":
+	case "human", "you", "system", "nex", "broker", "librarian", "cos":
 		return true
 	}
 	return strings.HasPrefix(s, "human:")

@@ -42,7 +42,7 @@ example_artifacts:
     title: "MVP scope document"
   - kind: plan
     title: "Design-partner outreach plan"
-default_reviewer: ceo
+default_reviewer: cos
 reviewer_paths:
   "team/product/**": builder
   "team/customers/**": growth
@@ -51,11 +51,11 @@ employee_blueprints:
   - workflow-automation-builder
 
 starter:
-  lead_slug: ceo
+  lead_slug: cos
   general_channel_description: "Command deck for the {{brand_name}} CRM operation."
   kickoff_prompt: "Stand up the {{brand_name}} CRM operation end to end. Use the starter lanes, turn the objective into a repeatable delivery system, create the first product artifacts, and keep outbound and account changes behind human approval."
   agents:
-    - slug: ceo
+    - slug: cos
       emoji: "⚙️"
       name: CEO
       role: Owns priorities, approvals, and escalation decisions

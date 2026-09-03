@@ -9,7 +9,7 @@ func TestCompactionTokenLimitPerSlug(t *testing.T) {
 		t.Errorf("specialist limit: got %d, want %d", got, defaultTokenLimit)
 	}
 	if got := compactionTokenLimit(ceoSlug); got != ceoTokenLimit {
-		t.Errorf("ceo limit: got %d, want %d", got, ceoTokenLimit)
+		t.Errorf("cos limit: got %d, want %d", got, ceoTokenLimit)
 	}
 
 	// Env override wins for both, so operators retain control.
@@ -18,6 +18,6 @@ func TestCompactionTokenLimitPerSlug(t *testing.T) {
 		t.Errorf("specialist env override: got %d, want 5000", got)
 	}
 	if got := compactionTokenLimit(ceoSlug); got != 5000 {
-		t.Errorf("ceo env override: got %d, want 5000", got)
+		t.Errorf("cos env override: got %d, want 5000", got)
 	}
 }

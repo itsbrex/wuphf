@@ -27,7 +27,7 @@ func TestApprovalAuditRoundTrip(t *testing.T) {
 					Outcome:              ApprovalOutcomeExecutedOK,
 					OutcomeSummary:       "Sent email to alex@nex.ai",
 					OutcomeChatMessageID: "msg-101",
-					Actor:                "ceo",
+					Actor:                "cos",
 					Channel:              "team",
 					CreatedAt:            "2026-05-27T13:16:00Z",
 				},

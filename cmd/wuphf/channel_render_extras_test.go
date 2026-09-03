@@ -26,7 +26,7 @@ func TestBuildSkillLinesRendersAllMetadata(t *testing.T) {
 		Description:         "Boil down a pull request to its decisions.",
 		Status:              "active",
 		UsageCount:          7,
-		CreatedBy:           "ceo",
+		CreatedBy:           "cos",
 		Tags:                []string{"writing", "code"},
 		Trigger:             "@summarize <pr>",
 		WorkflowKey:         "summarize-pr",
@@ -95,7 +95,7 @@ func TestBuildOneOnOneMessageLinesPopulatedDelegatesToOffice(t *testing.T) {
 func TestRequestCalendarEventsProducesEventForEachTimeField(t *testing.T) {
 	req := channelui.Interview{
 		ID:         "req-1",
-		From:       "ceo",
+		From:       "cos",
 		Question:   "Approve?",
 		Channel:    "office",
 		Status:     "open",
@@ -126,7 +126,7 @@ func TestRequestCalendarEventsProducesEventForEachTimeField(t *testing.T) {
 }
 
 func TestRequestCalendarEventsSkipsBlankTimestamps(t *testing.T) {
-	req := channelui.Interview{ID: "req-2", From: "ceo", Question: "x", DueAt: "2026-04-29T10:00:00Z"}
+	req := channelui.Interview{ID: "req-2", From: "cos", Question: "x", DueAt: "2026-04-29T10:00:00Z"}
 	events := channelui.RequestCalendarEvents(req, "office", nil)
 	if len(events) != 1 {
 		t.Fatalf("only DueAt set, expected 1 event, got %d", len(events))
@@ -137,7 +137,7 @@ func TestRequestCalendarEventsSkipsBlankTimestamps(t *testing.T) {
 }
 
 func TestRequestCalendarEventsBlankStatusDefaultsToPending(t *testing.T) {
-	req := channelui.Interview{ID: "req-3", From: "ceo", DueAt: "2026-04-29T10:00:00Z"}
+	req := channelui.Interview{ID: "req-3", From: "cos", DueAt: "2026-04-29T10:00:00Z"}
 	events := channelui.RequestCalendarEvents(req, "office", nil)
 	if len(events) != 1 || events[0].Status != "pending" {
 		t.Fatalf("blank status should default to pending, got %#v", events)
@@ -146,7 +146,7 @@ func TestRequestCalendarEventsBlankStatusDefaultsToPending(t *testing.T) {
 
 func TestCalendarParticipantsForRequestUsesRequester(t *testing.T) {
 	members := []channelui.Member{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "fe", Name: "Frontend"},
 	}
 	req := channelui.Interview{ID: "r1", From: "fe", Channel: "office"}
@@ -178,7 +178,7 @@ func TestCalendarParticipantsForRequestUsesRequester(t *testing.T) {
 
 func TestCalendarParticipantsForRequestEmptyFromUsesChannelMembers(t *testing.T) {
 	members := []channelui.Member{
-		{Slug: "ceo", Name: "CEO"},
+		{Slug: "cos", Name: "CEO"},
 		{Slug: "fe", Name: "Frontend"},
 	}
 	req := channelui.Interview{ID: "r1", From: "", Channel: "office"}

@@ -22,7 +22,7 @@ const CATALOG: WikiCatalogEntry[] = [
   {
     path: "team/people/eng.md",
     title: "Eng",
-    author_slug: "ceo",
+    author_slug: "cos",
     last_edited_ts: "2026-06-09T12:00:00Z",
     group: "people",
   },
