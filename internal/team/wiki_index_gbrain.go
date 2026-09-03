@@ -125,8 +125,11 @@ func (s *gbrainFactStore) putPage(ctx context.Context, slug, content string) err
 	}); err != nil {
 		return err
 	}
-	if err := s.client.RestorePage(ctx, slug); err != nil && !isNotFound(err) {
-		return err
+	// Only needed before 0.48; see gbrain.NeedsPutPageRestore.
+	if gbrain.NeedsPutPageRestore(ctx) {
+		if err := s.client.RestorePage(ctx, slug); err != nil && !isNotFound(err) {
+			return err
+		}
 	}
 	return nil
 }

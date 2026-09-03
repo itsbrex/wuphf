@@ -116,6 +116,11 @@ func newWikiIndexForBackend(ctx context.Context, root string) (*WikiIndex, error
 		// degradation to keyword-only is the failure mode this area invites:
 		// retrieval keeps answering, just worse, with nothing in the logs.
 		log.Printf("wiki: context layer backed by gbrain — retrieval: %s", gbrain.RetrievalMode())
+		// A stale gbrain is a silent-data-loss risk the operator can fix in one
+		// command, so say it once rather than compensating quietly forever.
+		if advisory := gbrain.VersionAdvisory(ctx); advisory != "" {
+			log.Printf("WARNING wiki: %s", advisory)
+		}
 		return idx, nil
 	}
 	if explicit {

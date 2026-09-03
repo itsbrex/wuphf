@@ -46,6 +46,27 @@ This matters because gbrain **rewrites** two fields on write: it title-cases
 
 Recorded here because none are documented and all are load-bearing.
 
+**Status on 0.48.1.0, re-probed 2026-09-02.** Three of these were fixed
+upstream. The workarounds are now gated on `gbrain.NeedsPutPageRestore` and
+friends, so they cost nothing on a current gbrain and still protect an old one:
+
+| Behaviour | 0.42 | 0.48 |
+|---|---|---|
+| `put_page` leaves `deleted_at` set | broken | **fixed** |
+| `list_pages` ignores `offset` | broken | **fixed** |
+| `add_link` rejects a missing endpoint | broken | **fixed** |
+| `query` ignores the `type` filter | broken | **still broken** |
+
+`MinRecommendedVersion` is 0.48.0.0. Below it the office logs one warning naming
+the risk (a write to a previously deleted page can be silently lost) and the
+one-command fix, rather than compensating silently forever. An UNKNOWN version
+keeps the workarounds: they are correct on every version, so when in doubt be
+slow rather than lossy.
+
+The cursor in `ListAllPages` is deliberately KEPT even though `offset` now
+works. It is correct on both, and it does not depend on a server-side paging
+guarantee that was already broken once.
+
 1. **`put_page` does not clear `deleted_at`.** Writing to a soft-deleted slug
    updates the row but leaves it invisible to `get_page` and to search. A fact
    that was retired and later re-extracted would vanish permanently with no

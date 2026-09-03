@@ -82,8 +82,10 @@ func (s *gbrainEntityStore) ensurePlainPage(ctx context.Context, slug, pageType,
 	}); err != nil {
 		return err
 	}
-	if err := s.client.RestorePage(ctx, slug); err != nil && !isNotFound(err) {
-		return err
+	if gbrain.NeedsPutPageRestore(ctx) {
+		if err := s.client.RestorePage(ctx, slug); err != nil && !isNotFound(err) {
+			return err
+		}
 	}
 	return nil
 }

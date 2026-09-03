@@ -132,10 +132,14 @@ func (s *gbrainEntityStore) flushPage(ctx context.Context, slug string, st *enti
 	}); err != nil {
 		return err
 	}
-	// put_page does not clear deleted_at; see the note on the atom backend's
-	// putPage. Without this a re-created entity stays invisible.
-	if err := s.client.RestorePage(ctx, pageSlug); err != nil && !isNotFound(err) {
-		return err
+	// Pre-0.48 gbrain left deleted_at set on a write to a soft-deleted slug, so
+	// a re-created entity stayed invisible to get_page AND search. Fixed
+	// upstream in 0.48, verified by re-probe, so this costs an extra call per
+	// write only where it is actually needed.
+	if gbrain.NeedsPutPageRestore(ctx) {
+		if err := s.client.RestorePage(ctx, pageSlug); err != nil && !isNotFound(err) {
+			return err
+		}
 	}
 	return nil
 }
