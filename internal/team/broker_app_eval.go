@@ -63,7 +63,7 @@ func (b *Broker) sweepStalledAppBuildsLocked() []string {
 	var due []string
 	for i := range b.tasks {
 		t := &b.tasks[i]
-		if t.System || !strings.EqualFold(strings.TrimSpace(t.Owner), appBuilderSlug) {
+		if t.System || !isAppBuildTask(t) {
 			continue
 		}
 		stalledSince := strings.TrimSpace(t.StalledSince)
@@ -133,8 +133,7 @@ const (
 func (b *Broker) evaluateAppAcceptanceForTask(taskID string) {
 	b.mu.Lock()
 	task := b.taskByIDLocked(taskID)
-	if task == nil || task.System ||
-		!strings.EqualFold(strings.TrimSpace(task.Owner), appBuilderSlug) {
+	if task == nil || task.System || !isAppBuildTask(task) {
 		b.mu.Unlock()
 		return
 	}

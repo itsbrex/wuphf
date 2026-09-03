@@ -585,7 +585,7 @@ func (b *Broker) requestKnowledgePromotion(bot, sourcePath, targetPath, reason s
 		Kind:          "approval",
 		Status:        "pending",
 		From:          bot,
-		Channel:       channel,
+		Channel:       b.requestChannelForLocked(bot, channel),
 		Title:         "Promote to the team wiki: " + spec.Title,
 		Question:      question,
 		Context:       ctxb.String(),

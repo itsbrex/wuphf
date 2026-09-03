@@ -653,6 +653,7 @@ func (b *Broker) CreateRequest(req humanInterview) (humanInterview, error) {
 	if b.findChannelLocked(channel) == nil {
 		return humanInterview{}, fmt.Errorf("channel not found")
 	}
+	channel = b.requestChannelForLocked(req.From, channel)
 	b.counter++
 	now := time.Now().UTC().Format(time.RFC3339)
 	req.ID = fmt.Sprintf("request-%d", b.counter)
@@ -863,6 +864,12 @@ func messageBelongsToViewerOutbox(msg channelMessage, viewerSlug string) bool {
 
 func messageBelongsToViewerInbox(msg channelMessage, viewerSlug string, messagesByID map[string]channelMessage) bool {
 	viewerSlug = strings.TrimSpace(viewerSlug)
+	// A DM belongs to its two participants only. Without this, every human
+	// message in every DM landed in every agent's inbox — the Designer
+	// answered an ask the human made in the Chief of Staff's private thread.
+	if !messageDMAdmitsViewer(msg, viewerSlug) {
+		return false
+	}
 	if viewerSlug == "" || viewerSlug == "ceo" {
 		return true
 	}
@@ -883,6 +890,22 @@ func messageBelongsToViewerInbox(msg channelMessage, viewerSlug string, messages
 		}
 	}
 	return messageRepliesToViewerThread(msg, viewerSlug, messagesByID)
+}
+
+// messageDMAdmitsViewer reports whether a message that lives in a 1:1 DM may
+// be shown to viewerSlug at all: only the DM's two participants (and the
+// human, who owns every DM in their office). Non-DM channels admit everyone
+// here; membership for those is decided elsewhere.
+func messageDMAdmitsViewer(msg channelMessage, viewerSlug string) bool {
+	a, c, ok := DMParticipants(msg.Channel)
+	if !ok {
+		return true
+	}
+	v := normalizeActorSlug(viewerSlug)
+	if v == "" || isHumanMessageSender(viewerSlug) {
+		return true
+	}
+	return v == normalizeActorSlug(a) || v == normalizeActorSlug(c)
 }
 
 func messageRepliesToViewerThread(msg channelMessage, viewerSlug string, messagesByID map[string]channelMessage) bool {

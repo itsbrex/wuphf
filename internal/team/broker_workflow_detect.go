@@ -86,9 +86,9 @@ func (b *Broker) detectWorkflowAppForTask(taskID string) {
 		return
 	}
 	t := *task
-	// Skip the App Builder's OWN build/edit tasks — that work IS an app, not a
-	// workflow to turn into one.
-	if strings.EqualFold(strings.TrimSpace(t.Owner), appBuilderSlug) {
+	// Skip app build/edit tasks — that work IS an app, not a workflow to turn
+	// into one.
+	if isAppBuildTask(&t) {
 		b.mu.Unlock()
 		return
 	}
@@ -517,7 +517,7 @@ func (b *Broker) raiseDetectedAppProposal(channel, from string, spec appProposal
 		Kind:          "approval",
 		Status:        "pending",
 		From:          from,
-		Channel:       channel,
+		Channel:       b.requestChannelForLocked(from, channel),
 		Title:         question,
 		Question:      question,
 		Context:       ctxText.String(),

@@ -485,8 +485,10 @@ func markdownKnowledgeToolBlock() string {
 // same demo turn, so they live next to the selectivity rule to keep the
 // failure-mode cluster together.
 func visualArtifactForcingBlock() string {
-	return "HTML ARTICLE RULE — selectivity, not reflex:\n" +
-		"The visual_artifact_create tool produces a heavyweight, self-contained HTML article with embedded SVG figures. It is NOT the default answer format. Use it only when the answer genuinely benefits from a rich visual document. For most chat — questions, status updates, short answers, coordination, confirmations, conversational explanations — answer in plain text in the channel and STOP. The bot must judge fit; do not produce an artifact for everything.\n\n" +
+	return "APP RULE — an app is not an article:\n" +
+		"When the human asks for an app, tool, dashboard, tracker, calculator, countdown, form, or anything they will USE rather than READ, build a real app and publish it with register_app (the app-building system skill every agent carries): scaffold the project, build a single self-contained dist/index.html, then register_app so it appears under Apps. Never deliver an app as an HTML article via visual_artifact_create — an article is for reading, and an app filed as an article is a failed deliverable. If app-building is disabled for you, say so and hand the build to a teammate who has it.\n\n" +
+		"HTML ARTICLE RULE — selectivity, not reflex:\n" +
+		"The visual_artifact_create tool produces a heavyweight, self-contained HTML article with embedded SVG figures. It is NOT the default answer format. Use it only when the answer genuinely benefits from a rich visual document. For most chat — questions, status updates, short answers, coordination, confirmations, conversational explanations — answer in plain text in the channel and STOP. The agent must judge fit; do not produce an artifact for everything.\n\n" +
 		"USE an HTML article ONLY when ALL THREE of these are true:\n" +
 		"  (1) The request is one of: an explicit ask for a visual / diagram / chart / illustration / mockup / \"show me\", OR an answer that naturally requires comparing two-or-more things side by side, OR walking a multi-step process or timeline, OR mapping a 2D variable space (control chart, matrix, decision grid).\n" +
 		"  (2) The answer is a multi-section explainer with at least THREE distinct sections that each carry their own structure.\n" +

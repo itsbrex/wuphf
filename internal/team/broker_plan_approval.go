@@ -145,7 +145,7 @@ func (b *Broker) raisePlanApprovalInterviewLocked(taskID, actor, plan string) st
 		Kind:          "approval",
 		Status:        "pending",
 		From:          from,
-		Channel:       channel,
+		Channel:       b.requestChannelForLocked(from, channel),
 		Title:         "Start work on " + title + "?",
 		Question:      qb.String(),
 		Options:       options,

@@ -195,6 +195,7 @@ func handleTeamTask(ctx context.Context, _ *mcp.CallToolRequest, args TeamTaskAr
 			ExecutionMode  string `json:"execution_mode"`
 			WorktreePath   string `json:"worktree_path"`
 			WorktreeBranch string `json:"worktree_branch"`
+			Details        string `json:"details"`
 		} `json:"task"`
 	}
 	if err := brokerPostJSON(ctx, "/tasks", payload, &result); err != nil {
@@ -211,7 +212,33 @@ func handleTeamTask(ctx context.Context, _ *mcp.CallToolRequest, args TeamTaskAr
 		text += " · working_directory " + path
 	}
 	text += " — " + result.Task.Title
+	// An app build gets a project pre-scaffolded by the broker; the brief
+	// naming it is appended to the task details, which the creating agent
+	// never re-reads. Echo it here so the agent builds in that project (a
+	// human eval watched an agent rebuild from scratch in /tmp and run out
+	// of turns before publishing).
+	if brief := appWorkspaceBriefFrom(result.Task.Details); brief != "" {
+		text += "\n\n" + brief
+	}
 	return textResult(text), nil, nil
+}
+
+// appWorkspaceBriefMarker mirrors team.appWorkspaceBriefMarker; the teammcp
+// package cannot import team.
+const appWorkspaceBriefMarker = "App workspace ready:"
+
+// appWorkspaceBriefFrom returns the workspace brief paragraph embedded in
+// task details, or "" when the task has none.
+func appWorkspaceBriefFrom(details string) string {
+	idx := strings.Index(details, appWorkspaceBriefMarker)
+	if idx < 0 {
+		return ""
+	}
+	brief := details[idx:]
+	if end := strings.Index(brief, "\n\n"); end >= 0 {
+		brief = brief[:end]
+	}
+	return strings.TrimSpace(brief)
 }
 
 func fetchTeamTasks(ctx context.Context, args TeamTasksArgs) (string, []brokerTaskSummary, error) {

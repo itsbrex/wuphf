@@ -49,8 +49,10 @@ func systemSkillSpecs() []systemSkillSpec {
 			description: "Build and update internal tools (Apps) for the office. A system skill every bot carries.",
 			content: "Every bot can build Apps — small internal tools published under the Apps rail.\n\n" +
 				"1. Call list_apps first. If a related app exists, improve it (propose_app with app_id) instead of duplicating it.\n" +
-				"2. When the human asked for an app (or approved a proposal), scaffold a real Vite/React/TS project in your build directory, build a single self-contained dist/index.html, and publish it with register_app.\n" +
-				"3. When you merely notice a repeatable workflow, raise propose_app and keep working — never block on the answer.\n\n" +
+				"2. When the human asked for an app (or approved a proposal), create the task FIRST: team_task action=create, title \"Build app: <Name>\", owner yourself. The reply carries \"App workspace ready: … as `app_…`\" with the ABSOLUTE path of a project the broker already scaffolded for you (Vite/React/TS, bun.lock committed, src/wuphf-bridge.ts for office data). Work in THAT directory — never scaffold from scratch, never build in /tmp.\n" +
+				"3. Implement in src/, then `bun install && bun run verify` there (tsc, then vite build → dist/index.html). Fix errors until it passes.\n" +
+				"4. Publish with register_app(app_id=<the id from the brief>, html_path=<absolute path to dist/index.html>, source_path=<absolute project root>). Then tell the human it is live under Apps and complete the task. Keep the whole build to a handful of tool calls — your turn budget is finite.\n" +
+				"5. When you merely notice a repeatable workflow, raise propose_app and keep working — never block on the answer.\n\n" +
 				"Builds flow through the host-owned build and publish gates regardless of which bot registers them.",
 		},
 		{
@@ -134,12 +136,18 @@ func (b *Broker) systemSkillEffectiveOwnersLocked(sk *teamSkill) []string {
 // to honor an explicit per-bot switch-off, and a broken skills read must
 // never brick every bot's core capabilities.
 func (b *Broker) SystemSkillEnabledFor(skillName, bot string) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.systemSkillEnabledForLocked(skillName, bot)
+}
+
+// systemSkillEnabledForLocked is SystemSkillEnabledFor for callers already
+// holding b.mu.
+func (b *Broker) systemSkillEnabledForLocked(skillName, bot string) bool {
 	bot = normalizeActorSlug(bot)
 	if bot == "" {
 		return true
 	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
 	for i := range b.skills {
 		sk := &b.skills[i]
 		if !sk.System || skillSlug(sk.Name) != skillSlug(skillName) {

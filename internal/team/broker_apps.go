@@ -55,11 +55,12 @@ func (b *Broker) handleApps(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, status, map[string]string{"error": err.Error()})
 			return
 		}
-		// Only the App Builder (the lone bot with register_app) or a human
-		// session may write app bytes. A random bot holding the broker token
-		// must not register apps directly and bypass the build path.
+		// Only an bot carrying the app-building system skill (or a human
+		// session) may write app bytes. A slug that is not on the roster, or
+		// one the human switched app-building off for, must not register
+		// apps directly and bypass the build path.
 		if !b.appWriterAllowed(r, actor) {
-			writeJSON(w, http.StatusForbidden, map[string]string{"error": "only the App Builder may register apps"})
+			writeJSON(w, http.StatusForbidden, map[string]string{"error": appWriterForbiddenMessage})
 			return
 		}
 		body.Actor = actor
@@ -636,7 +637,12 @@ func buildAppImprovePrompt(app CustomApp, change string) string {
 // UI's own edit path (submitAppEdit → POST /apps/{id}/improve) 403'd for the
 // only human in a single-owner workspace.
 func (b *Broker) appWriterAllowed(r *http.Request, actor string) bool {
-	if strings.EqualFold(strings.TrimSpace(actor), appBuilderSlug) {
+	// App building is a system skill every agent carries, so any roster
+	// agent with it enabled may publish — not only the retired App Builder.
+	// A third human eval (2026-09-03) watched the Designer finish a build and
+	// then get "only the App Builder may register apps", hand off to
+	// @app-builder, and end up with two copies of the app.
+	if b.ownerCanBuildApps(actor) {
 		return true
 	}
 	a, ok := requestActorFromContext(r.Context())
@@ -648,6 +654,11 @@ func (b *Broker) appWriterAllowed(r *http.Request, actor string) bool {
 	}
 	return a.Kind == requestActorKindBroker && strings.TrimSpace(actor) == ""
 }
+
+// appWriterForbiddenMessage is the 403 body for app writes by a caller that
+// may not publish apps. Agents quote it back to the human, so it names the
+// actual rule.
+const appWriterForbiddenMessage = "only agents with the app-building skill enabled (or a human session) may register apps"
 
 func writeAppError(w http.ResponseWriter, err error) {
 	switch {

@@ -268,6 +268,15 @@ func shouldWakeLeadForTaskAction(action officeActionLog, task teamTask) bool {
 	if isAppBuilderSlug(strings.TrimSpace(task.Owner)) {
 		return false
 	}
+	// The same holds for ANY agent that opened a task for itself — typically
+	// from the human's ask in that agent's own DM. The owner is already
+	// executing under the human's eye; waking the lead produced a second,
+	// duplicate "Start work on …?" plan card for a task the owner had already
+	// delivered (human eval, 2026-09-03), and the lead's card landed in the
+	// owner's private DM.
+	if owner := normalizeActorSlug(task.Owner); owner != "" && owner == normalizeActorSlug(task.CreatedBy) && !isHumanMessageSender(owner) {
+		return false
+	}
 	if strings.TrimSpace(action.Kind) != "task_updated" {
 		return true
 	}
