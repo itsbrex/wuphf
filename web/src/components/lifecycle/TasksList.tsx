@@ -747,7 +747,16 @@ export function TasksList({
     );
   }
 
-  if (tasks.length === 0) {
+  // The empty state claims nothing is waiting on you, so it may only render
+  // when that is actually true. Attention items — blocking requests and
+  // pending reviews — are counted by needsYouCount and folded into the
+  // Needs-human lane below, but they are NOT tasks. Gating this on task count
+  // alone printed "No tasks yet" underneath a "1 NEED YOU" header chip, a lit
+  // sidebar badge, and a desktop notification, with the request itself
+  // rendered nowhere at all (observed 2026-09-03: a blocking "Add Prospector
+  // to the team?" ask). Anything the header counts, the body must be able to
+  // show.
+  if (tasks.length === 0 && attentionItems.length === 0) {
     return (
       <>
         <TasksEmptyState onOpenCreate={() => setCreateOpen(true)} />

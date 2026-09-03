@@ -280,6 +280,61 @@ describe("<TasksList>", () => {
     expect(screen.getByText("Wire up Stripe webhooks")).toBeInTheDocument();
   });
 
+  it("renders the board, not the empty state, when the only thing waiting is a blocking request", () => {
+    // Observed live 2026-09-03: the board printed "1 NEED YOU" in the header
+    // chips, the sidebar badge showed 1, and a desktop notification + sound
+    // fired — while the body said "No tasks yet". The header counts
+    // needsYouCount (tasks.needs_human + requests.blocking) but the empty
+    // state was gated on issue-task count alone, so a blocking request with
+    // no accompanying task was counted everywhere and rendered nowhere.
+    //
+    // The empty state means "nothing is waiting on you". A blocking request
+    // IS something waiting on you, so it must open the board.
+    const inboxItems: InboxItem[] = [
+      {
+        kind: "request",
+        requestId: "request-3",
+        title: "Add Prospector to the team?",
+        request: {
+          kind: "decision",
+          question: "Add Prospector to the team?",
+          from: "ceo",
+          blocking: true,
+        },
+      },
+    ];
+
+    renderList(
+      [],
+      {
+        backlog: 0,
+        active: 0,
+        blocked: 0,
+        review: 0,
+        needs_human: 0,
+        done: 0,
+        archive: 0,
+      },
+      inboxItems,
+      { requests: { blocking: 1, notices: 0 } },
+    );
+
+    expect(screen.queryByTestId("issues-list-empty")).not.toBeInTheDocument();
+    expect(screen.getByTestId("issues-list")).toBeInTheDocument();
+    expect(screen.getByText("Add Prospector to the team?")).toBeInTheDocument();
+  });
+
+  it("still shows the empty state when nothing is waiting on the human", () => {
+    // The counterpart to the test above: with no tasks AND no attention
+    // items, the empty state is the correct render. Guards the fix from
+    // over-correcting into "never show the empty state".
+    renderList([], undefined, []);
+
+    expect(screen.getByTestId("issues-list-empty")).toHaveTextContent(
+      "No tasks yet.",
+    );
+  });
+
   it("folds blocking requests and pending reviews into the Needs-human lane", () => {
     // The standalone Inbox was consolidated into the board: its non-task
     // attention items (agent questions + promotion reviews) render as cards
