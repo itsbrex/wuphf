@@ -8,7 +8,7 @@ gawkbots automate your menial work via AI models and build you microapps to mana
   <img src="https://raw.githubusercontent.com/najmuzzaman-mohammad/gawkbot/main/assets/hero.png" alt="gawkbot onboarding — Your AI team, visible and working." width="720" />
 </p>
 
-[![npm](https://img.shields.io/npm/v/wuphf?color=A87B4F)](https://www.npmjs.com/package/wuphf)
+[![npm](https://img.shields.io/npm/v/gawkbot?color=A87B4F)](https://www.npmjs.com/package/gawkbot)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/gjSySC3PzV)
 [![License: Sustainable Use License](https://img.shields.io/badge/license-Sustainable%20Use%20License-A87B4F)](https://github.com/najmuzzaman-mohammad/gawkbot/blob/main/LICENSE)
 
@@ -17,7 +17,7 @@ One command. One shared office. CEO, PM, engineers, designer, CMO, CRO — all v
 > *"WUPHF. When you type it in, it contacts someone via phone, text, email, IM, Facebook, Twitter, and then... WUPHF."*
 > — Ryan Howard, Season 7
 
-[▶ 30-second teaser and full walkthrough on GitHub](https://github.com/najmuzzaman-mohammad/gawkbot#readme)
+[▶ Watch the demo](https://github.com/user-attachments/assets/312256d8-718a-44d1-8b42-fcf5019708d3)
 
 ## Get Started
 
