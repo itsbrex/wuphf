@@ -10,7 +10,7 @@
   </a>
 </p>
 
-### Open source grok bot. Local VMs as computers for each bot. They build microapps to manage all your work.
+### open source grok bot. gawkbots use local VMs as computers (cloud option available) and build microapps to manage all your work.
 
 https://github.com/user-attachments/assets/84c4b8cf-fb5d-4e9b-b720-213648c2e20b
 
