@@ -387,6 +387,7 @@ func (b *Broker) normalizeLoadedStateLocked() {
 	// members already on disk load unchanged — the migration's data-safety half
 	// — but nothing is ever appended.
 	b.members = normalizedMembers
+	b.ensureSystemSkillsLocked()
 	for i := range b.channels {
 		b.channels[i].Slug = normalizeChannelSlug(b.channels[i].Slug)
 		if strings.TrimSpace(b.channels[i].Name) == "" {

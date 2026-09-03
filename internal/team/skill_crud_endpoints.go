@@ -345,6 +345,11 @@ func (b *Broker) handleSkillArchive(w http.ResponseWriter, r *http.Request, name
 		http.Error(w, "skill not found", http.StatusNotFound)
 		return
 	}
+	if reason := guardSystemSkillMutation(sk, "archive"); reason != "" {
+		b.mu.Unlock()
+		http.Error(w, reason, http.StatusForbidden)
+		return
+	}
 	sk.Status = "archived"
 	sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
 	skCopy := *sk
@@ -404,6 +409,11 @@ func (b *Broker) handleSkillDisable(w http.ResponseWriter, r *http.Request, name
 	if sk == nil {
 		b.mu.Unlock()
 		http.Error(w, "skill not found", http.StatusNotFound)
+		return
+	}
+	if reason := guardSystemSkillMutation(sk, "disable"); reason != "" {
+		b.mu.Unlock()
+		http.Error(w, reason, http.StatusForbidden)
 		return
 	}
 	if sk.Status != "active" && sk.Status != "proposed" {
@@ -680,6 +690,11 @@ func (b *Broker) handleSkillReject(w http.ResponseWriter, r *http.Request, name 
 	if sk == nil {
 		b.mu.Unlock()
 		http.Error(w, "skill not found", http.StatusNotFound)
+		return
+	}
+	if reason := guardSystemSkillMutation(sk, "reject"); reason != "" {
+		b.mu.Unlock()
+		http.Error(w, reason, http.StatusForbidden)
 		return
 	}
 	skCopy := *sk
@@ -1150,23 +1165,44 @@ func (b *Broker) handleSkillEnableForAgent(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "skill must be active to enable for an agent", http.StatusConflict)
 		return
 	}
-	already := false
-	for _, slug := range sk.OwnerAgents {
-		if slug == agent {
-			already = true
-			break
+	changed := false
+	if sk.System {
+		// A system skill is owned by the whole roster; enabling means
+		// lifting the per-agent switch-off.
+		filtered := make([]string, 0, len(sk.DisabledAgents))
+		for _, slug := range sk.DisabledAgents {
+			if normalizeActorSlug(slug) != agent {
+				filtered = append(filtered, slug)
+			}
 		}
-	}
-	if !already {
-		sk.OwnerAgents = append(sk.OwnerAgents, agent)
-		sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+		if len(filtered) != len(sk.DisabledAgents) {
+			sk.DisabledAgents = filtered
+			sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+			changed = true
+		}
+	} else {
+		already := false
+		for _, slug := range sk.OwnerAgents {
+			if slug == agent {
+				already = true
+				break
+			}
+		}
+		if !already {
+			sk.OwnerAgents = append(sk.OwnerAgents, agent)
+			sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+			changed = true
+		}
 	}
 	out := *sk
 	saveErr := b.saveLocked()
 	wikiWorker := b.wikiWorker
 	wikiPath := skillWikiPath(out.Name)
-	enqueueCtx := b.brokerLifecycleContext()
 	b.mu.Unlock()
+	// Acquired AFTER b.mu is released: brokerLifecycleContext takes b.mu
+	// itself, so calling it under the lock self-deadlocks and froze the
+	// whole broker the first time either per-agent toggle was used.
+	enqueueCtx := b.brokerLifecycleContext()
 	if saveErr != nil {
 		http.Error(w, "save failed: "+saveErr.Error(), http.StatusInternalServerError)
 		return
@@ -1176,7 +1212,7 @@ func (b *Broker) handleSkillEnableForAgent(w http.ResponseWriter, r *http.Reques
 	// in broker-state.json and the wiki preview goes stale. Failures are
 	// logged but do not fail the call — broker state is already saved,
 	// and a later mutation (or boot backfill) reconciles disk.
-	if !already && wikiWorker != nil {
+	if changed && wikiWorker != nil {
 		if err := enqueueSkillWikiWrite(enqueueCtx, wikiWorker, out, wikiPath, "wuphf: enable skill "+out.Name+" for @"+agent); err != nil {
 			slog.Warn("handleSkillEnableForAgent: wiki enqueue failed",
 				"name", out.Name, "agent", agent, "err", err)
@@ -1213,26 +1249,47 @@ func (b *Broker) handleSkillDisableForAgent(w http.ResponseWriter, r *http.Reque
 		http.Error(w, "skill not found", http.StatusNotFound)
 		return
 	}
-	before := len(sk.OwnerAgents)
-	// Allocate a fresh slice rather than aliasing sk.OwnerAgents[:0] so the
-	// pre-mutation snapshot stays intact for the change-detection check.
-	filtered := make([]string, 0, before)
-	for _, slug := range sk.OwnerAgents {
-		if slug != agent {
-			filtered = append(filtered, slug)
+	changed := false
+	if sk.System {
+		// A system skill cannot lose owners; disabling records the
+		// per-agent switch-off instead.
+		alreadyOff := false
+		for _, slug := range sk.DisabledAgents {
+			if normalizeActorSlug(slug) == agent {
+				alreadyOff = true
+				break
+			}
 		}
-	}
-	changed := len(filtered) != before
-	sk.OwnerAgents = filtered
-	if changed {
-		sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+		if !alreadyOff {
+			sk.DisabledAgents = append(sk.DisabledAgents, agent)
+			sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+			changed = true
+		}
+	} else {
+		before := len(sk.OwnerAgents)
+		// Allocate a fresh slice rather than aliasing sk.OwnerAgents[:0] so the
+		// pre-mutation snapshot stays intact for the change-detection check.
+		filtered := make([]string, 0, before)
+		for _, slug := range sk.OwnerAgents {
+			if slug != agent {
+				filtered = append(filtered, slug)
+			}
+		}
+		sk.OwnerAgents = filtered
+		if len(filtered) != before {
+			sk.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+			changed = true
+		}
 	}
 	out := *sk
 	saveErr := b.saveLocked()
 	wikiWorker := b.wikiWorker
 	wikiPath := skillWikiPath(out.Name)
-	enqueueCtx := b.brokerLifecycleContext()
 	b.mu.Unlock()
+	// Acquired AFTER b.mu is released: brokerLifecycleContext takes b.mu
+	// itself, so calling it under the lock self-deadlocks and froze the
+	// whole broker the first time either per-agent toggle was used.
+	enqueueCtx := b.brokerLifecycleContext()
 	if saveErr != nil {
 		http.Error(w, "save failed: "+saveErr.Error(), http.StatusInternalServerError)
 		return

@@ -36,6 +36,9 @@ export interface Skill {
   updated_at?: string;
   /** Per-agent scoping (PR 7). Empty/missing = lead-routable shared skill. */
   owner_agents?: OwnerAgents;
+  /** System skills (app building, wiki maintenance) always exist and stay
+   * active. They can be disabled per agent, never archived or removed. */
+  system?: boolean;
   /** Set by the similarity gate when this skill resembles another (legacy records). */
   similar_to_existing?: SkillSimilarRef;
   metadata?: SkillMetadata;

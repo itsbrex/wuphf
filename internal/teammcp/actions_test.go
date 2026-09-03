@@ -840,11 +840,19 @@ func TestHandleTeamActionWorkflowCreateMirrorsSkill(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode skills: %v", err)
 	}
-	if len(result.Skills) != 1 {
+	// The two ever-present system skills ride along; find the mirrored one.
+	mirroredIdx := -1
+	for i, sk := range result.Skills {
+		if sk.WorkflowKey == "daily-digest" {
+			mirroredIdx = i
+			break
+		}
+	}
+	if mirroredIdx == -1 {
 		t.Fatalf("expected mirrored skill, got %+v", result.Skills)
 	}
-	if result.Skills[0].WorkflowProvider != "one" || result.Skills[0].WorkflowKey != "daily-digest" {
-		t.Fatalf("unexpected skill metadata %+v", result.Skills[0])
+	if result.Skills[mirroredIdx].WorkflowProvider != "one" {
+		t.Fatalf("unexpected skill metadata %+v", result.Skills[mirroredIdx])
 	}
 }
 

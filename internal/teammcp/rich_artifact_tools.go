@@ -172,6 +172,9 @@ func handleTeamVisualArtifactPromote(ctx context.Context, _ *mcp.CallToolRequest
 	if err != nil {
 		return toolError(err), nil, nil
 	}
+	if !systemSkillEnabledFor(ctx, systemSkillWikiMaintenance, slug) {
+		return toolError(systemSkillDisabledError(systemSkillWikiMaintenance, slug)), nil, nil
+	}
 	id := strings.TrimSpace(args.ArtifactID)
 	if err := validateRichArtifactIDLocal(id); err != nil {
 		return toolError(err), nil, nil

@@ -33,6 +33,9 @@ func handleTeamWikiWrite(ctx context.Context, _ *mcp.CallToolRequest, args TeamW
 	if err != nil {
 		return toolError(err), nil, nil
 	}
+	if !systemSkillEnabledFor(ctx, systemSkillWikiMaintenance, slug) {
+		return toolError(systemSkillDisabledError(systemSkillWikiMaintenance, slug)), nil, nil
+	}
 	// The Librarian owns the wiki (Phase 4): writing, formatting, and organizing
 	// canonical articles is its job, so it writes directly without the per-write
 	// human-delegation gate that other agents need. Other agents still go

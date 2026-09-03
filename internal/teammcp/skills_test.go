@@ -97,10 +97,18 @@ func TestHandleTeamSkillRunBumpsUsageAndLogsInvocation(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode skills: %v", err)
 	}
-	if len(result.Skills) != 1 {
-		t.Fatalf("expected 1 skill, got %+v", result.Skills)
+	// The two ever-present system skills ride along; find the invoked one.
+	invokedIdx := -1
+	for i, sk := range result.Skills {
+		if sk.Name == "investigate" {
+			invokedIdx = i
+			break
+		}
 	}
-	if got := result.Skills[0].UsageCount; got != 1 {
+	if invokedIdx == -1 {
+		t.Fatalf("expected the invoked skill in the listing, got %+v", result.Skills)
+	}
+	if got := result.Skills[invokedIdx].UsageCount; got != 1 {
 		t.Fatalf("expected usage_count=1 after one invocation, got %d", got)
 	}
 
@@ -147,7 +155,17 @@ func TestHandleTeamSkillRunBumpsUsageAndLogsInvocation(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&result2); err != nil {
 		t.Fatalf("decode skills (2nd): %v", err)
 	}
-	if got := result2.Skills[0].UsageCount; got != 2 {
+	invoked2 := -1
+	for i, sk := range result2.Skills {
+		if sk.Name == "investigate" {
+			invoked2 = i
+			break
+		}
+	}
+	if invoked2 == -1 {
+		t.Fatalf("invoked skill missing from second listing: %+v", result2.Skills)
+	}
+	if got := result2.Skills[invoked2].UsageCount; got != 2 {
 		t.Fatalf("expected usage_count=2 after two invocations, got %d", got)
 	}
 }

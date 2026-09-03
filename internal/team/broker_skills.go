@@ -141,11 +141,15 @@ func (b *Broker) ListActiveSkillSummaries() []SkillSummary {
 		if slug == "" {
 			continue
 		}
+		owners := append([]string(nil), sk.OwnerAgents...)
+		if sk.System {
+			owners = b.systemSkillEffectiveOwnersLocked(&sk)
+		}
 		out = append(out, SkillSummary{
 			Slug:        slug,
 			Title:       strings.TrimSpace(sk.Title),
 			Description: strings.TrimSpace(sk.Description),
-			OwnerAgents: append([]string(nil), sk.OwnerAgents...),
+			OwnerAgents: owners,
 		})
 	}
 	return out
@@ -178,6 +182,13 @@ func (b *Broker) handleGetSkills(w http.ResponseWriter, r *http.Request) {
 	b.mu.Lock()
 	result := make([]teamSkill, 0, len(b.skills))
 	for _, sk := range b.skills {
+		// A system skill's assignment is the roster minus DisabledAgents;
+		// surface that as owner_agents so every consumer (agent Skills tab,
+		// Skills app, prompt debuggers) reads the effective set without
+		// learning the system-skill rule.
+		if sk.System {
+			sk.OwnerAgents = b.systemSkillEffectiveOwnersLocked(&sk)
+		}
 		if sk.Status == "archived" {
 			continue
 		}
@@ -549,6 +560,10 @@ func (b *Broker) handleDeleteSkill(w http.ResponseWriter, r *http.Request) {
 	sk := b.findSkillByNameLocked(body.Name)
 	if sk == nil {
 		http.Error(w, "skill not found", http.StatusNotFound)
+		return
+	}
+	if reason := guardSystemSkillMutation(sk, "delete"); reason != "" {
+		http.Error(w, reason, http.StatusForbidden)
 		return
 	}
 

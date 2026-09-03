@@ -860,8 +860,16 @@ type teamSkill struct {
 	// roster; the human or CEO narrows the set via the agent Skills tab
 	// (/skills/{name}/enable-for and /disable-for).
 	OwnerAgents []string `json:"owner_agents,omitempty"`
-	CreatedAt   string   `json:"created_at"`
-	UpdatedAt   string   `json:"updated_at"`
+	// System marks a built-in capability skill (app building, wiki
+	// maintenance). System skills always exist and stay active: they can be
+	// disabled per agent, never archived, rejected, or deleted. For a
+	// system skill OwnerAgents is ignored — the effective assignment is the
+	// whole roster minus DisabledAgents (see system_skills.go).
+	System bool `json:"system,omitempty"`
+	// DisabledAgents lists agent slugs a SYSTEM skill is switched off for.
+	DisabledAgents []string `json:"disabled_agents,omitempty"`
+	CreatedAt      string   `json:"created_at"`
+	UpdatedAt      string   `json:"updated_at"`
 }
 
 type brokerState struct {

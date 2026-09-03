@@ -123,8 +123,10 @@ func registerAppTools(server *mcp.Server, slug string) {
 	// with that agent retired as a default, the gate would have made apps
 	// unbuildable in a fresh office. Builds still flow through the host-owned
 	// build and publish gates regardless of which agent registers them.
-	// TODO(system-skills): per-agent disable toggle — the founder's model is
-	// "system skills can never be removed but can be disabled per agent".
+	// The founder's model — "system skills can never be removed but can be
+	// disabled per agent" — is live: handlers check systemSkillEnabledFor
+	// against the app-building system skill's per-agent switch
+	// (internal/team/system_skills.go).
 	mcp.AddTool(server, readOnlyTool(
 		"get_app",
 		"Read an existing app's manifest and current HTML so you can edit it.",
@@ -156,6 +158,13 @@ func handleGetApp(ctx context.Context, _ *mcp.CallToolRequest, args GetAppArgs) 
 	id := strings.TrimSpace(args.AppID)
 	if err := validateCustomAppIDLocal(id); err != nil {
 		return toolError(err), nil, nil
+	}
+	// The gate resolves the ambient slug; an unresolvable identity skips the
+	// check rather than blocking a read (fail-open, like the gate itself).
+	if slug, slugErr := resolveSlug(""); slugErr == nil {
+		if !systemSkillEnabledFor(ctx, systemSkillAppBuilding, slug) {
+			return toolError(systemSkillDisabledError(systemSkillAppBuilding, slug)), nil, nil
+		}
 	}
 	var result map[string]any
 	// ?source=1 so the App Builder gets the editable source project back, not
@@ -248,6 +257,9 @@ func handleRegisterApp(ctx context.Context, _ *mcp.CallToolRequest, args Registe
 	slug, err := resolveSlug(args.MySlug)
 	if err != nil {
 		return toolError(err), nil, nil
+	}
+	if !systemSkillEnabledFor(ctx, systemSkillAppBuilding, slug) {
+		return toolError(systemSkillDisabledError(systemSkillAppBuilding, slug)), nil, nil
 	}
 	name := strings.TrimSpace(args.Name)
 	if name == "" {

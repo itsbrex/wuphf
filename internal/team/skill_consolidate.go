@@ -254,6 +254,10 @@ func (b *Broker) mergeSkillClusterLocked(targetName string, clusters []consolida
 			target.Content = mergeSkillContent(target.Content, memberContent, name)
 		}
 
+		// System skills are permanent; consolidation must not fold one away.
+		if sk.System {
+			continue
+		}
 		// Archive the member.
 		sk.Status = "archived"
 		sk.UpdatedAt = now
