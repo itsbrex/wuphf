@@ -195,7 +195,26 @@ jobs:
           cp -R desktop/oswails/build/bin/WUPHF.app "$stage/"
           ln -s /Applications "$stage/Applications"
           mkdir -p dist
-          hdiutil create -volname "WUPHF" -srcfolder "$stage" -ov -format UDZO "dist/WUPHF-$VERSION.dmg"
+          # Size the image explicitly instead of letting -srcfolder estimate it.
+          #
+          # v0.237.0 failed here with "hdiutil: create failed - No space left on
+          # device" followed by "could not access /Volumes/WUPHF/WUPHF.app/... -
+          # No space left on device". That second path is the MOUNTED IMAGE, not
+          # the runner: the same run reported 138Gi free on / after the cleanup
+          # step above. hdiutil's own estimate for this universal bundle simply
+          # comes up short, so the copy overflows the volume it just created.
+          # Reading the message as runner disk pressure is what kept this
+          # failing across v0.1.0, v0.227.0, v0.227.2 and v0.237.0.
+          #
+          # Headroom is free: UDZO compresses the image, and unused space
+          # compresses to almost nothing, so the published .dmg does not grow.
+          # du -s does not follow the /Applications symlink, so it counts only
+          # the real bundle.
+          stage_mb=$(du -sm "$stage" | awk '{print $1}')
+          image_mb=$(( stage_mb + stage_mb / 2 + 100 ))
+          echo "staged ${stage_mb} MB -> image ${image_mb} MB"
+          hdiutil create -volname "WUPHF" -srcfolder "$stage" -size "${image_mb}m" -ov -format UDZO "dist/WUPHF-$VERSION.dmg"
+          ls -lh "dist/WUPHF-$VERSION.dmg"
           codesign --sign "$SIGN_IDENTITY" --timestamp "dist/WUPHF-$VERSION.dmg"
 
       - name: Notarize + staple
