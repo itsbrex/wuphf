@@ -162,6 +162,30 @@ func isAgentToAgentDM(slug string) (string, string, bool) {
 	return a, b, true
 }
 
+// reHomeTaskOutOfHumanDMLocked keeps a human's 1:1 DM private. A task
+// created inside the human's DM with agent A but owned by agent B would
+// otherwise drag B's every working note into that private thread (and the
+// task-owner promotion would hand B membership to make it stick). Such a
+// task lives in the A⇄B pair DM instead: B works there, A is the partner,
+// and the consult markers give the human a read-only window from the DM
+// they were already in. A task the DM's own agent owns stays put. Caller
+// must hold b.mu.
+func (b *Broker) reHomeTaskOutOfHumanDMLocked(slug, owner string) string {
+	agentSide := humanDMAgent(slug)
+	if agentSide == "" {
+		return slug
+	}
+	o := normalizeActorSlug(owner)
+	if o == "" || o == agentSide || b.findMemberLocked(o) == nil {
+		return slug
+	}
+	pair := b.ensureAgentPairDMLocked(normalizeChannelSlug(channel.DirectSlug(agentSide, o)))
+	if pair == nil {
+		return slug
+	}
+	return pair.Slug
+}
+
 // humanDMAgent returns the agent whose 1:1 DM with the human `slug` is, or ""
 // when slug is not a human-to-agent DM.
 func humanDMAgent(slug string) string {

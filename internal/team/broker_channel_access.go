@@ -88,6 +88,13 @@ func (b *Broker) canAccessChannelLocked(slug, channel string) bool {
 	if isHumanMessageSender(slug) || slug == "nex" || slug == "system" {
 		return true
 	}
+	// A DM admits exactly the two participants its SLUG names — never its
+	// stored Members list, which can drift (a member edit through the
+	// channel API, a legacy seed pin). There is no path for a third party
+	// into a DM: not the lead, not a task owner, not a drifted roster row.
+	if a, c, ok := DMParticipants(channel); ok {
+		return slug == normalizeActorSlug(a) || slug == normalizeActorSlug(c)
+	}
 	// Every AGENT is gated by membership. There are no org-wide readers: a
 	// DM is readable and postable by exactly its two participants, which is
 	// the promise the DM packet preamble already makes to the model ("This
@@ -193,6 +200,14 @@ func (b *Broker) ensureTaskOwnerChannelMembershipLocked(channel, owner string) {
 	}
 	ch := b.findChannelLocked(channel)
 	if ch == nil {
+		return
+	}
+	// A human's 1:1 DM has exactly two participants by contract. Promoting
+	// a task owner into someone else's DM is how a third agent ended up
+	// narrating its work inside the human's private thread with the Chief
+	// of Staff; the task is re-homed to a pair DM instead (see
+	// reHomeTaskOutOfHumanDMLocked).
+	if agentSide := humanDMAgent(channel); agentSide != "" && agentSide != owner {
 		return
 	}
 	if !containsString(ch.Members, owner) {

@@ -850,6 +850,13 @@ func (b *Broker) handleChannels(w http.ResponseWriter, r *http.Request) {
 				ch.Surface = body.Surface
 			}
 			if body.Members != nil {
+				// A DM's participants are fixed by its slug. Editing them
+				// here would be the one remaining path for a third party
+				// into a private thread.
+				if ch.isDM() {
+					http.Error(w, "a DM's participants are fixed; open a channel for a group", http.StatusBadRequest)
+					return
+				}
 				members, missing := validateMembers(body.Members)
 				if missing != "" {
 					http.Error(w, "unknown members: "+missing, http.StatusNotFound)

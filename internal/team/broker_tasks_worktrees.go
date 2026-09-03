@@ -279,7 +279,7 @@ func (b *Broker) preferredTaskChannelLocked(requestedChannel, createdBy, owner, 
 	// normalizeChannelSlug("") returns "general", so normalising first would
 	// make the no-channel case indistinguishable from an explicit #general.
 	if raw := strings.TrimSpace(requestedChannel); raw != "" {
-		return normalizeChannelSlug(raw)
+		return b.reHomeTaskOutOfHumanDMLocked(normalizeChannelSlug(raw), owner)
 	}
 	// The owner's DM, but only if the CREATOR may post in it. A DM has exactly
 	// two participants, so a task one agent opens for another would otherwise
