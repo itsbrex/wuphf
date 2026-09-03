@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+import { humanizeActivity } from "../../lib/humanizeActivity";
 import { formatRelative } from "../../lib/relativeTime";
 import type { StoredActivitySnapshot } from "../../stores/app";
 
@@ -252,7 +253,7 @@ export function BotEventPeek({
       {/* Current thought */}
       {showDetailBlock && current ? (
         <div id={`peek-current-${slug}`} className="sidebar-bot-peek-detail">
-          {current.detail}
+          {humanizeActivity(current.detail ?? "")}
         </div>
       ) : null}
 
@@ -281,7 +282,7 @@ export function BotEventPeek({
                 />
                 <span className="sidebar-bot-peek-recent-text">
                   {prefix ? `${prefix} ` : ""}
-                  {entry.activity ?? entry.detail ?? ""}
+                  {humanizeActivity(entry.activity ?? entry.detail ?? "")}
                 </span>
                 <span className="sidebar-bot-peek-recent-time">
                   {formatRelative(entry.receivedAtMs, now)}
