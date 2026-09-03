@@ -13,7 +13,7 @@ the controls. Never `--no-verify`.
 
 ## B1 — Blocking question is not in the chat
 
-**Status:** OPEN
+**Status:** FIXED — commit 797c679f5
 
 **Reported:** "the blocking question is not in the chat. it should be. also
 remove 'Office' entity from here. this should not be a text but the UI should
@@ -51,7 +51,7 @@ composer, not in-thread.
 
 ## B2 — Tasks badge/notification fires with an empty task list
 
-**Status:** OPEN
+**Status:** FIXED — commit d890b9c2b
 
 **Reported:** "it says there is an active task that needs me and even
 notification and notification sound said that but no tasks are visible"
@@ -91,7 +91,7 @@ zero tasks + one blocking request must render the card, not the empty state.
 
 ## B3 — Rename "Agent" → "Bot"
 
-**Status:** OPEN
+**Status:** IN PROGRESS
 
 **Reported:** "rename all 'Agent' stuff to be called 'bot'"
 
@@ -127,7 +127,7 @@ so the ~40 in-flight worktrees rebase onto it once.
 
 ## B4 — Chief of Staff first-response latency
 
-**Status:** OPEN
+**Status:** FIXED (primary cause) — commit a2e605d84
 
 **Reported:** "chief of staff took at least 1 min to answer my first question.
 should have taken less than 2 secs. why the lag?"
@@ -154,7 +154,85 @@ bar showed `running mcp__wuphf-office…`.
 
 | # | Item | Status | Notes |
 |---|------|--------|-------|
-| B1 | Blocking question not in chat | OPEN | |
-| B2 | Tasks badge vs empty list | OPEN | root cause confirmed |
-| B3 | Agent → Bot rename | OPEN | scope locked: surface + code, wire stable |
-| B4 | Chief of Staff latency | OPEN | not yet diagnosed |
+| B1 | Blocking question not in chat | FIXED | 797c679f5 — interactive in-thread card, "Office" gone |
+| B2 | Tasks badge vs empty list | FIXED | d890b9c2b — empty state now gated on attention items too |
+| B3 | Agent → Bot rename | IN PROGRESS | phase A tooling built + validated |
+| B4 | Chief of Staff latency | FIXED | a2e605d84 — token deltas; follow-ups B4a/B4b below |
+| B5 | New Agent wizard unreadable | FIXED | 04802c7ef — 1.26:1 → 12.00:1 / 15.60:1, verified in browser |
+| B6 | Dev script ignores PORT_WEB | OPEN | scripts/dev-mvp.sh only gates its health check |
+
+
+---
+
+## B5 — New Agent wizard unreadable on dark themes
+
+**Status:** FIXED — commit 04802c7ef
+
+**Reported:** "fix new agent flow UI. it is unreadable"
+
+**Observed:** In the Create-agent modal, the "Create agent" heading, every
+field label, and every placeholder rendered near-black on a near-black card.
+Only the help paragraphs and the tab labels were legible.
+
+**Root cause:** `nex-shell.css` and `nex-dark.css` both
+`@import url("./nex.css")` as their base, and `nex.css` scopes its sidebar
+rules with `[data-theme^="nex"]` — a **prefix** match, so those rules also
+apply under `nex-shell` and `nex-dark`.
+
+The sidebar remaps the text ramp to white-on-brand for its rail. A companion
+rule resets that ramp inside dialogs anchored under the sidebar — but it reset
+to a hardcoded LIGHT palette (`--neutral-900` ink), on the assumption its own
+comment stated: "invisible on the modal's white card". Under `nex-shell` the
+card is `hsl(210 5% 10%)`, so the reset painted `#28292a` on `#131416`.
+
+**Fix:** capture the active theme's ramp on `<html>` (where `--text` still
+holds the theme's own value) into `--text-*-root`, and restore from those
+instead of a hardcoded palette. The capture must live on an ancestor that
+never overrides `--text`.
+
+**Verified in gstack browser**, title/label contrast vs the modal card:
+
+| Theme | Before | After |
+|---|---|---|
+| nex-shell | 1.26:1 | **12.00:1** |
+| nex-dark | 1.26:1 | **15.60:1** |
+| nex (light) | 14.57:1 | 14.57:1 (unchanged) |
+
+---
+
+## B4a — First assistant message is always a tool call
+
+**Status:** OPEN (follow-up to B4)
+
+`prompt_builder.go:653` RULE ZERO: "your FIRST tool call MUST be team_task
+action=create". So the first assistant message carries no prose at all — even
+with token streaming, the human waits a full tool round-trip for the first
+word. Worth letting the bot emit a one-line acknowledgement before the tool
+call.
+
+---
+
+## B4b — Cold subprocess + MCP handshake every turn
+
+**Status:** OPEN (follow-up to B4)
+
+Each turn spawns the `claude` CLI fresh (`exec.CommandContext` in
+`internal/provider/claude.go`) and hands it `--mcp-config`
+(`internal/team/headless_claude.go:50`), so the office MCP server is launched
+and its tool list negotiated before the first inference token. A warm pool or
+a persistent MCP connection would cut the floor further.
+
+---
+
+## B6 — scripts/dev-mvp.sh ignores PORT_WEB
+
+**Status:** OPEN
+
+`PORT_WEB` only gates the script's pre-kill and health check; the binary is
+started without `--web-port`, so it always binds the default 7890/7891.
+Running the script with `PORT_WEB=7899` therefore reported "broker failed to
+bind :7899" while the broker had in fact taken 7890/7891 — the ports a
+developer's real office is on. Pass the port through to the binary, or drop
+the variable.
+
+Hit live on 2026-09-03: it displaced the founder's running office.
