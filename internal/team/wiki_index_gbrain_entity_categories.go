@@ -34,6 +34,24 @@ const gbrainDirSources = "sources/"
 // each other outright.
 const entityCategoryDir = "categories/"
 
+// entityCategoryPageType is the page type for category pages.
+//
+// Categories used to be typed "concept", which is also the fallback type for
+// concept-KIND entities (team, workspace, anything the extractor invents). That
+// is the same collision the directory split above fixed, still present in the
+// type dimension: with both sharing one type, a `types` filter cannot separate
+// them, and a category page outranks real entities in entity retrieval
+// (verified — a category page took the #1 slot).
+//
+// "category" is not in gbrain's seed vocabulary, but page types are open
+// strings since v0.38 and a custom type round-trips unchanged (verified on
+// 0.48.1.0). See entityKindToPageType.
+//
+// Migration: pages written before this change keep type "concept" until they
+// are next rewritten, so entity retrieval also keeps a slug-prefix check as a
+// backstop rather than trusting the server-side filter alone.
+const entityCategoryPageType = "category"
+
 // entityCategorySlug returns the page slug for a category.
 func entityCategorySlug(category string) string {
 	return entityCategoryDir + strings.TrimSpace(category)
@@ -131,7 +149,7 @@ func (s *gbrainEntityStore) UpsertArticleCategories(ctx context.Context, article
 		if current[cat] {
 			continue
 		}
-		if err := s.ensurePlainPage(ctx, entityCategorySlug(cat), "concept", cat,
+		if err := s.ensurePlainPage(ctx, entityCategorySlug(cat), entityCategoryPageType, cat,
 			map[string]string{"wuphf_category": cat}); err != nil {
 			return err
 		}
@@ -270,7 +288,7 @@ func (s *gbrainEntityStore) UpsertCategoryParents(ctx context.Context, category 
 		return nil
 	}
 	if len(desired) > 0 {
-		if err := s.ensurePlainPage(ctx, from, "concept", category,
+		if err := s.ensurePlainPage(ctx, from, entityCategoryPageType, category,
 			map[string]string{"wuphf_category": category}); err != nil {
 			return err
 		}
@@ -279,7 +297,7 @@ func (s *gbrainEntityStore) UpsertCategoryParents(ctx context.Context, category 
 		if current[p] {
 			continue
 		}
-		if err := s.ensurePlainPage(ctx, entityCategorySlug(p), "concept", p,
+		if err := s.ensurePlainPage(ctx, entityCategorySlug(p), entityCategoryPageType, p,
 			map[string]string{"wuphf_category": p}); err != nil {
 			return err
 		}

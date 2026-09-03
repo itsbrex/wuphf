@@ -491,3 +491,105 @@ func TestGBrainFactStore_FullScanPastListCap(t *testing.T) {
 		t.Errorf("IterateEntities saw %d entities, want >= %d", seen, total)
 	}
 }
+
+// TestGBrainTextIndex_ExcludesNonEntityPagesServerSide proves the `types`
+// filter reaches the server and does the work the client-side check used to do.
+//
+// The setup is the failure it protects against: a category page whose text
+// matches the query BETTER than either entity page. Live on 0.48.1.0 without
+// the filter, that page took the #1 slot and pushed both entities down. The
+// assertion is not merely "no category page came back" — the client-side slug
+// backstop would satisfy that even with the filter broken — but that the fetch
+// was not diluted: with a limit of 2 chunks, a leaking category page would
+// consume one of them and cost a real entity its hit.
+func TestGBrainTextIndex_ExcludesNonEntityPagesServerSide(t *testing.T) {
+	store := newGBrainTestStore(t)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	es, ok := store.(*gbrainEntityStore)
+	if !ok {
+		t.Fatalf("store is %T, want *gbrainEntityStore", store)
+	}
+	const query = "retrieval ranking infrastructure"
+
+	// Two entities that match the query.
+	for _, e := range []struct{ slug, name, text string }{
+		{"dana-ray", "Dana Ray", "Dana Ray works on retrieval ranking infrastructure."},
+		{"omar-vale", "Omar Vale", "Omar Vale owns retrieval ranking infrastructure."},
+	} {
+		if err := store.UpsertEntity(ctx, IndexEntity{
+			Slug: e.slug, CanonicalSlug: e.slug, Kind: "person",
+			Signals: Signals{PersonName: e.name},
+		}); err != nil {
+			t.Fatalf("UpsertEntity %s: %v", e.slug, err)
+		}
+		f := seedTriplet("f-"+e.slug, e.slug, "works_on", "concept:retrieval")
+		f.Text = e.text
+		if err := store.UpsertFact(ctx, f); err != nil {
+			t.Fatalf("UpsertFact %s: %v", e.slug, err)
+		}
+	}
+
+	// A category page whose BODY matches the query even more strongly than the
+	// entity pages do. The body matters: ensurePlainPage writes a title-only
+	// page, which scores too low to compete and would make this test vacuous —
+	// it passed against a deliberately reintroduced bug until the body was
+	// added. The page is written directly so the fixture is explicit.
+	catSlug := entityCategorySlug("retrieval")
+	catBody := "Retrieval ranking infrastructure. This category covers retrieval, " +
+		"ranking, and search infrastructure work across the team."
+	if _, err := es.client.PutPage(ctx, buildPageContent(map[string]string{
+		"title":          "Retrieval",
+		"type":           entityCategoryPageType,
+		"wuphf_category": "retrieval",
+	}, catBody), gbrain.PutOptions{Slug: catSlug}); err != nil {
+		t.Fatalf("PutPage(category): %v", err)
+	}
+
+	// Guard the fixture itself: unless the category page is genuinely
+	// retrievable for this query, the assertions below prove nothing. An
+	// UNFILTERED query must surface it.
+	unfiltered, err := es.client.Query(ctx, query, 10)
+	if err != nil {
+		t.Fatalf("Query (fixture check): %v", err)
+	}
+	competes := false
+	for _, h := range unfiltered {
+		if strings.HasPrefix(h.Slug, entityCategoryDir) {
+			competes = true
+			break
+		}
+	}
+	if !competes {
+		t.Fatalf("fixture is inert: the category page does not rank for %q even unfiltered, "+
+			"so filtering it out proves nothing", query)
+	}
+
+	// The category page must not be reachable through the entity type filter.
+	text := &gbrainEntityTextIndex{store: es}
+	raw, err := es.client.QueryTypes(ctx, query, 10, entityPageTypes)
+	if err != nil {
+		t.Fatalf("QueryTypes: %v", err)
+	}
+	for _, h := range raw {
+		if strings.HasPrefix(h.Slug, entityCategoryDir) {
+			t.Errorf("category page %q survived the server-side types filter", h.Slug)
+		}
+	}
+
+	// And the undiluted fetch still finds both entities.
+	hits, err := text.Search(ctx, query, 2)
+	if err != nil {
+		t.Fatalf("Search: %v", err)
+	}
+	found := map[string]bool{}
+	for _, h := range hits {
+		found[h.Entity] = true
+	}
+	for _, want := range []string{"dana-ray", "omar-vale"} {
+		if !found[want] {
+			t.Errorf("entity %q missing from hits %v; a non-entity page likely consumed a slot", want, found)
+		}
+	}
+}

@@ -55,7 +55,7 @@ friends, so they cost nothing on a current gbrain and still protect an old one:
 | `put_page` leaves `deleted_at` set | broken | **fixed** |
 | `list_pages` ignores `offset` | broken | **fixed** |
 | `add_link` rejects a missing endpoint | broken | **fixed** |
-| `query` ignores the `type` filter | broken | **still broken** |
+| `query` ignores the `type` filter | not a defect | not a defect |
 
 `MinRecommendedVersion` is 0.48.0.0. Below it the office logs one warning naming
 the risk (a write to a previously deleted page can be silently lost) and the
@@ -63,9 +63,39 @@ one-command fix, rather than compensating silently forever. An UNKNOWN version
 keeps the workarounds: they are correct on every version, so when in doubt be
 slow rather than lossy.
 
-The cursor in `ListAllPages` is deliberately KEPT even though `offset` now
-works. It is correct on both, and it does not depend on a server-side paging
-guarantee that was already broken once.
+The fourth was never a gbrain defect. It was our bug: `list_pages` takes a
+SINGULAR `type` string and `query` takes a PLURAL `types` list, and MCP drops
+unknown arguments without complaint. Sending `type` to `query` therefore looked
+exactly like a server-side filter being ignored — the call succeeded and
+returned byte-identical unfiltered rows — and it was misdiagnosed as such. The
+filter is now sent as `types` and needs no workaround on any version.
+
+This mattered more than an efficiency fix. gbrain applies `types` at the SQL
+level on every retrieval leg, so fusion ranks are computed over the FILTERED
+candidate set; dropping rows client-side afterwards leaves the survivors
+carrying scores fused against the noise. Measured on 0.48.1.0, the same two
+entity hits score 0.5082 / 0.4999 unfiltered and 0.7767 / 0.7767 filtered.
+
+Making the filter useful required giving the category layer a page type of its
+own (`category`). Categories were typed `concept`, which is also the fallback
+type for concept-KIND entities, so no `types` filter could separate them — the
+same collision the `categories/` directory split fixed, still present in the
+type dimension. Verified live: with a category page typed `concept`, it takes
+the #1 result slot ahead of both matching entities. Page types are open strings
+since gbrain v0.38 and a custom type round-trips unchanged (verified by writing
+`category` and reading it back); an earlier note here claiming gbrain coerces
+unknown types to `concept` was wrong. Category pages written before this change
+keep `concept` until rewritten, so entity retrieval keeps a cheap slug-prefix
+check as a backstop rather than trusting the type filter alone.
+
+`ListAllPages` uses plain `offset` paging where it is supported and keeps the
+`updated_after` cursor only below 0.48, gated the same way as the write
+workarounds. The cursor's one failure case — a tie cluster larger than the page
+size, which it reports as an error rather than silently skipping — is
+theoretical rather than live, because gbrain stamps `updated_at` with
+millisecond precision. So this is not a bug fix; it is the same rule applied to
+paging that is applied to writes: run the compensating path only where it is
+needed.
 
 1. **`put_page` does not clear `deleted_at`.** Writing to a soft-deleted slug
    updates the row but leaves it invisible to `get_page` and to search. A fact
@@ -218,9 +248,14 @@ recall@10 0.739 vs 0.845 — because "this entity's facts, newest first" orders
 worse deep in a list than per-fact BM25. That is the one place the dead code was
 genuinely better, and it is worth revisiting if deep recall starts mattering.
 
-## Pagination: FIXED with an updated_after cursor
+## Pagination: offset where supported, updated_after cursor below 0.48
 
-gbrain's `list_pages` caps at ~100 rows and ACCEPTS BUT SILENTLY DROPS `offset`
+**As of 0.48 `offset` works**, so `ListAllPages` uses plain offset paging there
+(`sort=slug` for a stable order) and keeps the cursor below it, gated on
+`gbrain.SupportsListPageOffset`. The rest of this section describes the cursor
+and the 0.42 behaviour that made it necessary.
+
+gbrain's `list_pages` caps at ~100 rows and, BEFORE 0.48, ACCEPTED BUT SILENTLY DROPPED `offset`
 (`core/operations.ts` calls `engine.listPages({type, updated_after, limit,
 ...scope})` — no offset parameter exists; offset=0 and offset=2 return
 byte-identical rows). Both naive loops are wrong: stopping on a short batch

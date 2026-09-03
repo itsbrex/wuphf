@@ -70,11 +70,23 @@ const gbrainFactBlobKey = "wuphf_fact"
 // gbrainEntityBlobKey is the frontmatter key holding the base64 JSON IndexEntity.
 const gbrainEntityBlobKey = "wuphf_entity"
 
+// entityPageTypes is the closed set entityKindToPageType can return, and the
+// `types` filter used to restrict entity retrieval to entity pages.
+//
+// It must stay in sync with the switch below; the test asserts that.
+var entityPageTypes = []string{"person", "company", "project", "concept"}
+
 // entityKindToPageType maps a WUPHF entity kind onto gbrain's page-type
-// vocabulary. gbrain silently coerces unknown types to "concept", so kinds
-// without a native counterpart (team, workspace) are mapped explicitly rather
-// than left to that coercion — an explicit mapping is greppable, a silent
-// coercion is not.
+// vocabulary. Kinds without a native counterpart (team, workspace) are mapped
+// explicitly to "concept" so the stored type is greppable and the set of types
+// an entity page can carry stays closed — which is what makes entityPageTypes
+// a safe retrieval filter.
+//
+// gbrain does NOT coerce unknown types: since v0.38 the page type is an open
+// string and a custom type round-trips unchanged (verified on 0.48.1.0 by
+// writing type "category" and reading it back). An earlier comment here
+// claimed coercion; that was wrong, and correcting it is what allows the
+// category layer to take a type of its own.
 func entityKindToPageType(kind string) string {
 	switch strings.ToLower(strings.TrimSpace(kind)) {
 	case "person":

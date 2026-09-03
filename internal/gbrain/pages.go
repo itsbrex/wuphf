@@ -206,6 +206,10 @@ func (c *Client) ListAllPages(ctx context.Context, opts ListPageOptions) ([]Page
 	if opts.Limit <= 0 {
 		opts.Limit = 100
 	}
+	if SupportsListPageOffset(ctx) {
+		return c.listAllPagesOffset(ctx, opts)
+	}
+
 	seen := map[string]bool{}
 	var out []PageMeta
 	cursor := ""
@@ -241,20 +245,81 @@ func (c *Client) ListAllPages(ctx context.Context, opts ListPageOptions) ([]Page
 	}
 }
 
+// listAllPagesOffset walks list_pages with plain offset paging, for gbrain
+// versions where `offset` is honoured.
+//
+// Preferred over the cursor where available: no boundary rows are re-fetched,
+// there is no ordering requirement, and there is no tie-cluster case at all.
+// The cursor's tie failure is only theoretical — gbrain stamps updated_at with
+// millisecond precision, so >100 pages would have to land in the same
+// millisecond to trigger it — so this is not a bug fix. It is the same rule
+// applied to paging that NeedsPutPageRestore applies to writes: run the
+// compensating path only where it is actually needed.
+func (c *Client) listAllPagesOffset(ctx context.Context, opts ListPageOptions) ([]PageMeta, error) {
+	seen := map[string]bool{}
+	var out []PageMeta
+
+	for iter := 0; ; iter++ {
+		if iter > maxListPageIterations {
+			return nil, fmt.Errorf("gbrain list_pages: offset paging did not terminate after %d pages", maxListPageIterations)
+		}
+		batch, raw, err := c.listPageBatchOffset(ctx, opts, iter*opts.Limit)
+		if err != nil {
+			return nil, err
+		}
+		if raw == 0 {
+			return out, nil
+		}
+		for _, p := range batch {
+			if !seen[p.Slug] {
+				seen[p.Slug] = true
+				out = append(out, p)
+			}
+		}
+		// A short batch means the last page has been read.
+		if raw < opts.Limit {
+			return out, nil
+		}
+	}
+}
+
 // maxListPageIterations bounds ListAllPages. At 100 rows a page this allows a
 // 100k-page brain while still failing fast on a cursor that cannot advance.
 const maxListPageIterations = 1000
 
 // listPageBatchCursor fetches one ascending page starting after `cursor`.
 func (c *Client) listPageBatchCursor(ctx context.Context, opts ListPageOptions, cursor string) (kept []PageMeta, raw int, err error) {
+	// Ascending order is what makes updated_after a forward cursor; the default
+	// is descending, against which the cursor cannot walk.
+	extra := map[string]any{"sort": "updated_asc"}
+	if cursor != "" {
+		extra["updated_after"] = cursor
+	}
+	return c.listPageBatch(ctx, opts, extra)
+}
+
+// listPageBatchOffset fetches one page starting at `offset`.
+func (c *Client) listPageBatchOffset(ctx context.Context, opts ListPageOptions, offset int) (kept []PageMeta, raw int, err error) {
+	// A stable order is required for offset paging to enumerate every row
+	// exactly once; the default updated_desc shifts under concurrent writes.
+	extra := map[string]any{"sort": "slug"}
+	if offset > 0 {
+		extra["offset"] = offset
+	}
+	return c.listPageBatch(ctx, opts, extra)
+}
+
+// listPageBatch performs one list_pages call, applying the shared filters plus
+// whatever paging arguments the caller supplies.
+//
+// NOTE: list_pages takes a SINGULAR `type` string, while query takes a PLURAL
+// `types` list. That asymmetry is real and easy to get backwards.
+func (c *Client) listPageBatch(ctx context.Context, opts ListPageOptions, extra map[string]any) (kept []PageMeta, raw int, err error) {
 	args := map[string]any{
 		"limit": opts.Limit,
-		// Ascending order is what makes updated_after a forward cursor; the
-		// default is descending, against which the cursor cannot walk.
-		"sort": "updated_asc",
 	}
-	if cursor != "" {
-		args["updated_after"] = cursor
+	for k, v := range extra {
+		args[k] = v
 	}
 	if t := strings.TrimSpace(opts.Type); t != "" {
 		args["type"] = t

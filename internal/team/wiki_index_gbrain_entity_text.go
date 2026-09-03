@@ -45,7 +45,7 @@ func (t *gbrainEntityTextIndex) query(ctx context.Context, q string, limit int) 
 	if t.queryFn != nil {
 		return t.queryFn(ctx, q, limit)
 	}
-	return t.store.client.Query(ctx, q, limit)
+	return t.store.client.QueryTypes(ctx, q, limit, entityPageTypes)
 }
 
 // Index is a no-op: the paired store writes the entity page, and gbrain chunks
@@ -102,13 +102,14 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 		topK = 10
 	}
 
-	// gbrain's `query` ACCEPTS a `type` argument and silently IGNORES it
-	// (verified on 0.42.58.0: passing type:"atom" returns byte-identical rows).
-	// So non-entity pages — category pages, article stubs, anything a human put
-	// in the same brain — cannot be excluded server-side; they are filtered
-	// below by slug prefix, but they still consume slots in the ranked result.
-	// The fetch is widened to compensate.
-	results, err := t.query(ctx, query, gbrainChunkFetch(topK)*gbrainNonEntityOverfetch)
+	// Non-entity pages — category pages, article stubs, anything a human put in
+	// the same brain — are excluded server-side by the `types` filter in query.
+	// No overfetch is needed: they no longer consume slots in the ranked result.
+	//
+	// An earlier version of this filtered client-side because it believed the
+	// server-side filter was ignored. It was really sending `type` instead of
+	// `types`; see Client.QueryTypes.
+	results, err := t.query(ctx, query, gbrainChunkFetch(topK))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,11 @@ func (t *gbrainEntityTextIndex) Search(ctx context.Context, query string, topK i
 	for _, r := range results {
 		entity := entitySlugFromPageSlug(r.Slug)
 		if entity == "" {
-			// Client-side stand-in for the `type` filter gbrain ignores.
+			// Backstop, not the primary filter — query already restricted the
+			// types server-side. This catches category pages written BEFORE
+			// they had a type of their own, which are still typed "concept"
+			// and so pass the entity-type filter until they are rewritten.
+			// It is free: the slug has to be mapped to an entity regardless.
 			continue
 		}
 
@@ -196,12 +201,6 @@ func factMap(facts []TypedFact) map[string]TypedFact {
 	}
 	return out
 }
-
-// gbrainNonEntityOverfetch widens the chunk fetch to absorb rows that the
-// ignored server-side `type` filter lets through and that are then dropped
-// client-side. 2x is empirically ample: on the bench corpus non-entity pages
-// are a small minority of any result set.
-const gbrainNonEntityOverfetch = 2
 
 // gbrainChunkFetch converts a desired fact count into a chunk fetch size.
 //

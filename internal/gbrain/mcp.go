@@ -386,7 +386,46 @@ type PutResult struct {
 // Query runs gbrain's hybrid retrieval (vector + keyword + expansion) and
 // returns the parsed hits.
 func (c *Client) Query(ctx context.Context, query string, limit int) ([]Hit, error) {
-	return c.searchLike(ctx, toolQuery, query, limit, map[string]any{"detail": "low"})
+	return c.QueryTypes(ctx, query, limit, nil)
+}
+
+// QueryTypes is Query restricted to pages whose `type` is in types.
+//
+// The parameter is `types` (a LIST), not `type`. This is easy to get wrong and
+// fails silently: list_pages takes a singular `type`, query takes a plural
+// `types`, and MCP drops unknown arguments without complaint, so sending
+// `type` here returns byte-identical unfiltered rows. That mistake is what the
+// client-side slug filter in the entity text index was originally compensating
+// for.
+//
+// Worth using rather than filtering after the fact: gbrain applies this at the
+// SQL level on every retrieval leg, so the fusion ranks are computed over the
+// filtered candidate set. Dropping rows client-side instead leaves the
+// surviving rows carrying scores that were fused against the noise (verified:
+// the same two hits score 0.5082/0.4999 unfiltered and 0.7767/0.7767 filtered).
+// So this is a ranking-quality fix, not only an efficiency one.
+func (c *Client) QueryTypes(ctx context.Context, query string, limit int, types []string) ([]Hit, error) {
+	extra := map[string]any{"detail": "low"}
+	if clean := cleanTypes(types); len(clean) > 0 {
+		extra["types"] = clean
+	}
+	return c.searchLike(ctx, toolQuery, query, limit, extra)
+}
+
+// cleanTypes trims, drops blanks, and de-duplicates while preserving order.
+// gbrain rejects a non-string entry outright rather than ignoring the filter.
+func cleanTypes(types []string) []string {
+	out := make([]string, 0, len(types))
+	seen := make(map[string]bool, len(types))
+	for _, t := range types {
+		t = strings.TrimSpace(t)
+		if t == "" || seen[t] {
+			continue
+		}
+		seen[t] = true
+		out = append(out, t)
+	}
+	return out
 }
 
 // Search runs gbrain's full-text search and returns the parsed hits.

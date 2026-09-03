@@ -12,8 +12,13 @@ package gbrain
 //	put_page left deleted_at set        FIXED in 0.48 (a re-write resurrects)
 //	list_pages ignored `offset`         FIXED in 0.48 (offset is honoured)
 //	add_link rejected a missing endpoint FIXED in 0.48 (tolerated)
-//	query ignores the `type` filter      STILL BROKEN — the client-side filter
-//	                                     in Search stays, unconditionally
+//	query ignores the `type` filter     NOT A DEFECT — the parameter is
+//	                                    `types`, a list. See Client.QueryTypes.
+//
+// The fourth was our bug, not gbrain's: list_pages takes a singular `type` and
+// query takes a plural `types`, and MCP drops unknown arguments silently, so
+// sending `type` to query looked exactly like a server-side filter being
+// ignored. It is now sent correctly and needs no workaround on any version.
 //
 // Carrying a fix for a bug the installed gbrain no longer has is not free: the
 // put_page carve-out costs one extra MCP round-trip on EVERY page write, which
@@ -144,6 +149,16 @@ func AtLeast(ctx context.Context, min string) bool {
 // lost permanently with no error anywhere.
 func NeedsPutPageRestore(ctx context.Context) bool {
 	return !AtLeast(ctx, MinRecommendedVersion)
+}
+
+// SupportsListPageOffset reports whether list_pages honours `offset`.
+//
+// Before 0.48 it accepted offset and silently dropped it, so offset=0 and
+// offset=2 returned byte-identical rows: a paging loop either truncated at the
+// 100-row cap or never terminated. ListAllPages therefore carries a
+// updated_after cursor for older gbrain and uses plain offset here.
+func SupportsListPageOffset(ctx context.Context) bool {
+	return AtLeast(ctx, MinRecommendedVersion)
 }
 
 // VersionAdvisory returns a one-line warning when the installed gbrain predates
