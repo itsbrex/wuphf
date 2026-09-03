@@ -71,7 +71,18 @@ func brokerStateActivityScore(state brokerState) int {
 	score += len(state.Actions) * 4
 	score += len(state.Signals) * 4
 	score += len(state.Decisions) * 4
-	score += len(state.Skills) * 2
+	// System skills only. The office seeds app-building and wiki-maintenance
+	// into every broker on boot, so counting them makes a COMPLETELY EMPTY
+	// office score above zero — and brokerStateShouldSnapshot is exactly the
+	// "is there live work here worth keeping" gate. Counting them let a
+	// clobbered save (no messages, no tasks, no actions) overwrite the
+	// last-good snapshot that was protecting real work, which is the one
+	// thing the snapshot exists to prevent.
+	for _, sk := range state.Skills {
+		if !sk.System {
+			score += 2
+		}
+	}
 	score += len(state.Policies)
 	score += len(state.HumanInvites) * 2
 	score += len(state.HumanSessions) * 2
@@ -134,7 +145,7 @@ func (b *Broker) loadState() error {
 	b.members = state.Members
 	b.channels = state.Channels
 	b.sessionMode = state.SessionMode
-	b.oneOnOneAgent = state.OneOnOneAgent
+	b.oneOnOneBot = state.OneOnOneBot
 	b.focusMode = state.FocusMode
 	b.tasks = state.Tasks
 	if b.tasks == nil {
@@ -166,20 +177,20 @@ func (b *Broker) loadState() error {
 	b.skills = state.Skills
 	b.slackTaskCards = state.SlackTaskCards
 	b.slackSpawns = state.SlackSpawns
-	// Backfill OwnerAgents for skills persisted before per-agent scoping
-	// landed. Agent-created skills get auto-enabled for their creator so
+	// Backfill OwnerBots for skills persisted before per-bot scoping
+	// landed. Bot-created skills get auto-enabled for their creator so
 	// they keep working after upgrade; human-created skills stay
-	// library-only until enabled per agent via the Skills tab.
+	// library-only until enabled per bot via the Skills tab.
 	for i := range b.skills {
 		sk := &b.skills[i]
-		if len(sk.OwnerAgents) > 0 {
+		if len(sk.OwnerBots) > 0 {
 			continue
 		}
 		creator := normalizeActorSlug(sk.CreatedBy)
 		if creator == "" || isHumanMessageSender(creator) {
 			continue
 		}
-		sk.OwnerAgents = []string{creator}
+		sk.OwnerBots = []string{creator}
 	}
 	b.sharedMemory = state.SharedMemory
 	b.counter = state.Counter
@@ -187,8 +198,8 @@ func (b *Broker) loadState() error {
 	b.insightsSince = state.InsightsSince
 	b.pendingInterview = state.PendingInterview
 	b.usage = state.Usage
-	if b.usage.Agents == nil {
-		b.usage.Agents = make(map[string]usageTotals)
+	if b.usage.Bots == nil {
+		b.usage.Bots = make(map[string]usageTotals)
 	}
 	b.usage.Session = usageTotals{}
 	if len(b.requests) == 0 && b.pendingInterview != nil {
@@ -300,7 +311,7 @@ func (b *Broker) prepareBrokerStateWriteLocked() (brokerStateWrite, error) {
 		Members:            b.members,
 		Channels:           b.channels,
 		SessionMode:        b.sessionMode,
-		OneOnOneAgent:      b.oneOnOneAgent,
+		OneOnOneBot:        b.oneOnOneBot,
 		FocusMode:          b.focusMode,
 		Tasks:              tasks,
 		Requests:           requests,
@@ -419,7 +430,7 @@ func (b *Broker) isDefaultBrokerStateLocked() bool {
 		b.insightsSince == "" &&
 		usageStateIsZero(b.usage) &&
 		b.sessionMode == SessionModeOffice &&
-		b.oneOnOneAgent == DefaultOneOnOneAgent
+		b.oneOnOneBot == DefaultOneOnOneBot
 }
 
 // atomicWriteFile writes data to path atomically by creating a uniquely-named

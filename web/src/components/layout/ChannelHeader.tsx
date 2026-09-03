@@ -40,8 +40,8 @@ function headerTitleAndDesc(
     case "task-new":
       return { title: "New task", desc: "" };
     case "agents":
-      return { title: "Agents", desc: "" };
-    case "agent-detail":
+      return { title: "Bots", desc: "" };
+    case "bot-detail":
       return { title: `@${route.agentSlug}`, desc: "" };
     case "skill-detail":
       return { title: `Skill: ${route.skillName}`, desc: "" };
@@ -65,7 +65,7 @@ export function ChannelHeader() {
   const route = useCurrentRoute();
   const setSearchOpen = useAppStore((s) => s.setSearchOpen);
   const { data: channels = [] } = useChannels();
-  // A custom app's breadcrumb should read "Recruiting Agent", not the
+  // A custom app's breadcrumb should read "Recruiting Bot", not the
   // title-cased record id ("App_ad2f6211ad746d37"). The apps list is already
   // polled for the sidebar, so this is a cache read, not a new request.
   const { data: apps = [] } = useQuery({

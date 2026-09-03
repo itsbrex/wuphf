@@ -1,0 +1,261 @@
+/* ═══════════════════════════════════════════════════════════════
+   Agent Knowledge — what one agent knows, and the promotion gate
+   between that and the shared team wiki.
+
+   Self-contained on purpose: this surface mounts inside the per-agent
+   view, which does not load the app-detail sheet. Every value here is a
+   design token so the panel reads correctly in all three themes.
+   ═══════════════════════════════════════════════════════════════ */
+
+.bot-knowledge {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  min-height: 0;
+}
+
+.bot-knowledge-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-knowledge-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.bot-knowledge-lede {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.bot-knowledge-body {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .bot-knowledge-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ─── Page list ─── */
+
+.bot-knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bot-knowledge-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.bot-knowledge-item:hover {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+.bot-knowledge-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.bot-knowledge-item.is-active {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.bot-knowledge-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Promotion state pill ─── */
+
+.bot-knowledge-pill {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.bot-knowledge-pill.is-promoted {
+  border-color: var(--success-200, var(--border));
+  color: var(--success-400, var(--text-secondary));
+}
+
+.bot-knowledge-pill.is-pending {
+  border-color: var(--warning-200, var(--border));
+  color: var(--warning-400, var(--text-secondary));
+}
+
+/* ─── Article ─── */
+
+.bot-knowledge-article {
+  min-width: 0;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.bot-knowledge-article h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.bot-knowledge-article h2 {
+  margin: 16px 0 6px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.bot-knowledge-article p {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.bot-knowledge-meta {
+  margin-bottom: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  word-break: break-all;
+}
+
+/* ─── Promotion bar ─── */
+
+.bot-knowledge-promote {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.bot-knowledge-promote-note {
+  flex: 1 1 220px;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.bot-knowledge-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border-strong, var(--border));
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.bot-knowledge-btn:hover:not(:disabled) {
+  background: var(--bg-card);
+  border-color: var(--accent);
+}
+
+.bot-knowledge-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.bot-knowledge-btn:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* The immutable snapshot on a pending promotion. Rendered verbatim as text:
+   the human approves these exact bytes. */
+.bot-knowledge-snapshot {
+  flex: 1 1 100%;
+  max-height: 320px;
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  background: var(--bg, var(--bg-card));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.bot-knowledge-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--error-400, var(--text-secondary));
+}
+
+/* ─── Empty / loading ─── */
+
+.bot-knowledge-empty {
+  padding: 32px 16px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.bot-knowledge-empty-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.bot-knowledge-empty-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}

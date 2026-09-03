@@ -5,12 +5,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"github.com/nex-crm/wuphf/internal/agent"
+	"github.com/nex-crm/wuphf/internal/bot"
 )
 
 // claudeEnvVarsToStrip are the env vars injected by Claude Code that must be
@@ -103,22 +104,22 @@ func init() {
 
 // CreateClaudeCodeStreamFn returns a StreamFn that runs the `claude` CLI and
 // parses its NDJSON stream output.
-func CreateClaudeCodeStreamFn(agentSlug string) agent.StreamFn {
+func CreateClaudeCodeStreamFn(botSlug string) bot.StreamFn {
 	sessionStore := getClaudeSessionStore()
 
-	return func(msgs []agent.Message, tools []agent.AgentTool) <-chan agent.StreamChunk {
-		ch := make(chan agent.StreamChunk, 64)
+	return func(msgs []bot.Message, tools []bot.BotTool) <-chan bot.StreamChunk {
+		ch := make(chan bot.StreamChunk, 64)
 		go func() {
 			defer close(ch)
 
 			if _, err := claudeLookPath("claude"); err != nil {
-				ch <- agent.StreamChunk{Type: "error", Content: "Claude CLI not found. Run /init to choose a different provider."}
+				ch <- bot.StreamChunk{Type: "error", Content: "Claude CLI not found. Run /init to choose a different provider."}
 				return
 			}
 
 			cwd, err := claudeGetwd()
 			if err != nil {
-				ch <- agent.StreamChunk{Type: "error", Content: fmt.Sprintf("resolve working directory: %v", err)}
+				ch <- bot.StreamChunk{Type: "error", Content: fmt.Sprintf("resolve working directory: %v", err)}
 				return
 			}
 
@@ -127,51 +128,51 @@ func CreateClaudeCodeStreamFn(agentSlug string) agent.StreamFn {
 				prompt = "Proceed with the task."
 			}
 
-			resumeID := sessionStore.resumeSessionID(agentSlug, cwd)
+			resumeID := sessionStore.resumeSessionID(botSlug, cwd)
 			attempt := runClaudeAttempt(ch, prompt, systemPrompt, cwd, resumeID, false)
 			if attempt.sessionID != "" {
-				sessionStore.save(agentSlug, attempt.sessionID, cwd)
+				sessionStore.save(botSlug, attempt.sessionID, cwd)
 			}
 			if attempt.exitErr == nil {
 				return
 			}
 
 			if resumeID != "" && attempt.unknownSession {
-				sessionStore.clear(agentSlug)
-				ch <- agent.StreamChunk{
+				sessionStore.clear(botSlug)
+				ch <- bot.StreamChunk{
 					Type:    "thinking",
-					Content: fmt.Sprintf("%s session expired; retrying with a fresh Claude session.", agentSlug),
+					Content: fmt.Sprintf("%s session expired; retrying with a fresh Claude session.", botSlug),
 				}
 				retry := runClaudeAttempt(ch, prompt, systemPrompt, cwd, "", false)
 				if retry.sessionID != "" {
-					sessionStore.save(agentSlug, retry.sessionID, cwd)
+					sessionStore.save(botSlug, retry.sessionID, cwd)
 				}
 				if retry.exitErr == nil {
 					return
 				}
-				ch <- agent.StreamChunk{Type: "error", Content: describeClaudeAttemptFailure(retry)}
+				ch <- bot.StreamChunk{Type: "error", Content: describeClaudeAttemptFailure(retry)}
 				return
 			}
 
-			ch <- agent.StreamChunk{Type: "error", Content: describeClaudeAttemptFailure(attempt)}
+			ch <- bot.StreamChunk{Type: "error", Content: describeClaudeAttemptFailure(attempt)}
 		}()
 		return ch
 	}
 }
 
-func runClaudeAttempt(ch chan<- agent.StreamChunk, prompt string, systemPrompt string, cwd string, resumeID string, oneShot bool) claudeAttemptResult {
+func runClaudeAttempt(ch chan<- bot.StreamChunk, prompt string, systemPrompt string, cwd string, resumeID string, oneShot bool) claudeAttemptResult {
 	args := buildClaudeArgs(systemPrompt, resumeID, oneShot)
 	cmd := claudeCommand("claude", args...)
 	return runClaudeAttemptCommand(context.Background(), cmd, ch, prompt, cwd)
 }
 
-func runClaudeAttemptCtx(ctx context.Context, ch chan<- agent.StreamChunk, prompt string, systemPrompt string, cwd string, resumeID string, oneShot bool) claudeAttemptResult {
+func runClaudeAttemptCtx(ctx context.Context, ch chan<- bot.StreamChunk, prompt string, systemPrompt string, cwd string, resumeID string, oneShot bool) claudeAttemptResult {
 	args := buildClaudeArgs(systemPrompt, resumeID, oneShot)
 	cmd := claudeCommandContext(ctx, "claude", args...)
 	return runClaudeAttemptCommand(ctx, cmd, ch, prompt, cwd)
 }
 
-func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent.StreamChunk, prompt string, cwd string) claudeAttemptResult {
+func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- bot.StreamChunk, prompt string, cwd string) claudeAttemptResult {
 	cmd.Dir = cwd
 	cmd.Env = filteredEnv(claudeEnvVarsToStrip)
 	cmd.Stdin = strings.NewReader(prompt)
@@ -187,127 +188,9 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 	if err := cmd.Start(); err != nil {
 		return claudeAttemptResult{exitErr: fmt.Errorf("start claude: %w", err)}
 	}
+	result, scanErr := consumeClaudeStream(stdout, ch)
 
-	scanner := bufio.NewScanner(stdout)
-	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
-
-	result := claudeAttemptResult{}
-	gotAssistantText := false
-	// Whether the CURRENT assistant message already reached the human as
-	// token deltas. Guards against printing a block twice: once live, then
-	// again when its completed form arrives.
-	streamedText := false
-	streamedThinking := false
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			continue
-		}
-
-		var msg claudeStreamMsg
-		if err := json.Unmarshal([]byte(line), &msg); err != nil {
-			continue
-		}
-		if msg.SessionID != "" {
-			result.sessionID = msg.SessionID
-		}
-		if msg.Model != "" {
-			result.model = msg.Model
-		}
-
-		switch msg.Type {
-		// Token-level deltas, emitted under --include-partial-messages. These
-		// arrive BEFORE the completed "assistant" message for the same turn,
-		// so they are what actually reaches the human first.
-		case "stream_event":
-			if len(msg.Event) == 0 {
-				continue
-			}
-			var ev claudeStreamEvent
-			if err := json.Unmarshal(msg.Event, &ev); err != nil {
-				continue
-			}
-			if ev.Type != "content_block_delta" || ev.Delta == nil {
-				continue
-			}
-			switch ev.Delta.Type {
-			case "text_delta":
-				if ev.Delta.Text != "" {
-					ch <- agent.StreamChunk{Type: "text", Content: ev.Delta.Text}
-					streamedText = true
-					gotAssistantText = true
-				}
-			case "thinking_delta":
-				if ev.Delta.Thinking != "" {
-					ch <- agent.StreamChunk{Type: "thinking", Content: ev.Delta.Thinking}
-					streamedThinking = true
-				}
-			}
-		case "assistant":
-			if msg.Message == nil {
-				continue
-			}
-			for _, block := range msg.Message.Content {
-				switch block.Type {
-				case "thinking":
-					// Already painted delta-by-delta above; re-emitting the
-					// completed block would print the whole thing twice.
-					if block.Thinking != "" && !streamedThinking {
-						ch <- agent.StreamChunk{Type: "thinking", Content: block.Thinking}
-					}
-				case "text":
-					if block.Text != "" {
-						if !streamedText {
-							streamTextChunks(ch, block.Text)
-						}
-						gotAssistantText = true
-					}
-				case "tool_use":
-					inputJSON, _ := json.Marshal(block.Input)
-					ch <- agent.StreamChunk{
-						Type:      "tool_use",
-						ToolName:  block.Name,
-						ToolUseID: block.ID,
-						ToolInput: string(inputJSON),
-					}
-				}
-			}
-			// One turn emits several assistant messages (a tool call, then
-			// the reply). Each gets its own delta run, so the
-			// already-streamed guards reset once a message is complete —
-			// otherwise the first message's deltas would suppress every later
-			// message's text.
-			streamedText = false
-			streamedThinking = false
-		case "user":
-			if msg.Message != nil {
-				for _, block := range msg.Message.Content {
-					if block.Type != "tool_result" {
-						continue
-					}
-					resultStr := formatClaudeToolResult(block.Content)
-					ch <- agent.StreamChunk{
-						Type:      "tool_result",
-						ToolUseID: block.ID,
-						Content:   resultStr,
-					}
-				}
-			}
-			if msg.ToolUseResult != nil && msg.ToolUseResult.Stdout != "" {
-				ch <- agent.StreamChunk{Type: "tool_result", Content: truncateClaudeOutput(msg.ToolUseResult.Stdout)}
-			}
-		case "result":
-			if msg.Result != "" {
-				result.resultText = msg.Result
-				if !gotAssistantText && msg.Subtype != "error" {
-					streamTextChunks(ch, msg.Result)
-				}
-			}
-			result.errorMessages = append(result.errorMessages, parseClaudeErrors(msg.Errors)...)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
+	if err := scanErr; err != nil {
 		if cmd.Process != nil {
 			_ = cmd.Process.Kill()
 		}
@@ -335,7 +218,7 @@ func runClaudeAttemptCommand(ctx context.Context, cmd *exec.Cmd, ch chan<- agent
 
 func buildClaudeArgs(systemPrompt string, resumeID string, oneShot bool) []string {
 	// A one-shot call (the workspace judge: workflow/app detection + acceptance)
-	// does pure generation — it must emit JSON and nothing else. An agent turn
+	// does pure generation — it must emit JSON and nothing else. A bot turn
 	// needs many turns and tools; a judge needs neither, and must NOT, since its
 	// prompt can carry untrusted transcript content that could otherwise steer it
 	// to execute a built-in tool (Bash/Write/…) before any human sees the output.
@@ -507,7 +390,7 @@ func filteredEnv(strip []string) []string {
 
 // buildClaudePrompts splits conversation history into a Claude system prompt and
 // a printable conversation transcript for stdin-driven `claude --print -`.
-func buildClaudePrompts(msgs []agent.Message) (systemPrompt string, prompt string) {
+func buildClaudePrompts(msgs []bot.Message) (systemPrompt string, prompt string) {
 	var systemParts []string
 	var sb strings.Builder
 	for _, m := range msgs {
@@ -523,19 +406,19 @@ func buildClaudePrompts(msgs []agent.Message) (systemPrompt string, prompt strin
 	return strings.Join(systemParts, "\n\n"), strings.TrimRight(sb.String(), "\n")
 }
 
-func streamTextChunks(ch chan<- agent.StreamChunk, text string) {
+func streamTextChunks(ch chan<- bot.StreamChunk, text string) {
 	text = strings.TrimRight(text, "\n")
 	if text == "" {
 		return
 	}
 	if len(text) <= 40 {
-		ch <- agent.StreamChunk{Type: "text", Content: text}
+		ch <- bot.StreamChunk{Type: "text", Content: text}
 		return
 	}
 
 	words := strings.Fields(text)
 	if len(words) == 0 {
-		ch <- agent.StreamChunk{Type: "text", Content: text}
+		ch <- bot.StreamChunk{Type: "text", Content: text}
 		return
 	}
 
@@ -545,9 +428,139 @@ func streamTextChunks(ch chan<- agent.StreamChunk, text string) {
 		if end > len(words) {
 			end = len(words)
 		}
-		ch <- agent.StreamChunk{Type: "text", Content: strings.Join(words[i:end], " ")}
+		ch <- bot.StreamChunk{Type: "text", Content: strings.Join(words[i:end], " ")}
 		if end < len(words) {
 			time.Sleep(40 * time.Millisecond)
 		}
 	}
+}
+
+// consumeClaudeStream reads the CLI's NDJSON stdout and fans it out onto ch.
+//
+// Split out from runClaudeAttemptCommand so the stream contract can be tested
+// against a plain io.Reader. Driving it through a real subprocess was flaky on
+// CI — the child produced no output at all under the race suite — and a test
+// for "which chunks does this NDJSON produce" has no business spawning a
+// process to answer it.
+func consumeClaudeStream(r io.Reader, ch chan<- bot.StreamChunk) (claudeAttemptResult, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+
+	result := claudeAttemptResult{}
+	gotAssistantText := false
+	// Whether the CURRENT assistant message already reached the human as
+	// token deltas. Guards against printing a block twice: once live, then
+	// again when its completed form arrives.
+	streamedText := false
+	streamedThinking := false
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line == "" {
+			continue
+		}
+
+		var msg claudeStreamMsg
+		if err := json.Unmarshal([]byte(line), &msg); err != nil {
+			continue
+		}
+		if msg.SessionID != "" {
+			result.sessionID = msg.SessionID
+		}
+		if msg.Model != "" {
+			result.model = msg.Model
+		}
+
+		switch msg.Type {
+		// Token-level deltas, emitted under --include-partial-messages. These
+		// arrive BEFORE the completed "assistant" message for the same turn,
+		// so they are what actually reaches the human first.
+		case "stream_event":
+			if len(msg.Event) == 0 {
+				continue
+			}
+			var ev claudeStreamEvent
+			if err := json.Unmarshal(msg.Event, &ev); err != nil {
+				continue
+			}
+			if ev.Type != "content_block_delta" || ev.Delta == nil {
+				continue
+			}
+			switch ev.Delta.Type {
+			case "text_delta":
+				if ev.Delta.Text != "" {
+					ch <- bot.StreamChunk{Type: "text", Content: ev.Delta.Text}
+					streamedText = true
+					gotAssistantText = true
+				}
+			case "thinking_delta":
+				if ev.Delta.Thinking != "" {
+					ch <- bot.StreamChunk{Type: "thinking", Content: ev.Delta.Thinking}
+					streamedThinking = true
+				}
+			}
+		case "assistant":
+			if msg.Message == nil {
+				continue
+			}
+			for _, block := range msg.Message.Content {
+				switch block.Type {
+				case "thinking":
+					// Already painted delta-by-delta above; re-emitting the
+					// completed block would print the whole thing twice.
+					if block.Thinking != "" && !streamedThinking {
+						ch <- bot.StreamChunk{Type: "thinking", Content: block.Thinking}
+					}
+				case "text":
+					if block.Text != "" {
+						if !streamedText {
+							streamTextChunks(ch, block.Text)
+						}
+						gotAssistantText = true
+					}
+				case "tool_use":
+					inputJSON, _ := json.Marshal(block.Input)
+					ch <- bot.StreamChunk{
+						Type:      "tool_use",
+						ToolName:  block.Name,
+						ToolUseID: block.ID,
+						ToolInput: string(inputJSON),
+					}
+				}
+			}
+			// One turn emits several assistant messages (a tool call, then
+			// the reply). Each gets its own delta run, so the
+			// already-streamed guards reset once a message is complete —
+			// otherwise the first message's deltas would suppress every later
+			// message's text.
+			streamedText = false
+			streamedThinking = false
+		case "user":
+			if msg.Message != nil {
+				for _, block := range msg.Message.Content {
+					if block.Type != "tool_result" {
+						continue
+					}
+					resultStr := formatClaudeToolResult(block.Content)
+					ch <- bot.StreamChunk{
+						Type:      "tool_result",
+						ToolUseID: block.ID,
+						Content:   resultStr,
+					}
+				}
+			}
+			if msg.ToolUseResult != nil && msg.ToolUseResult.Stdout != "" {
+				ch <- bot.StreamChunk{Type: "tool_result", Content: truncateClaudeOutput(msg.ToolUseResult.Stdout)}
+			}
+		case "result":
+			if msg.Result != "" {
+				result.resultText = msg.Result
+				if !gotAssistantText && msg.Subtype != "error" {
+					streamTextChunks(ch, msg.Result)
+				}
+			}
+			result.errorMessages = append(result.errorMessages, parseClaudeErrors(msg.Errors)...)
+		}
+	}
+
+	return result, scanner.Err()
 }

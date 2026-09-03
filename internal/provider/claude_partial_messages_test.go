@@ -1,14 +1,10 @@
 package provider
 
 import (
-	"context"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/nex-crm/wuphf/internal/agent"
+	"github.com/nex-crm/wuphf/internal/bot"
 )
 
 // The office showed a "Working…" pill and nothing else for ~1 minute after the
@@ -33,7 +29,10 @@ func TestClaudeArgsRequestPartialMessages(t *testing.T) {
 // Deltas reach the human as they generate, and the completed block that
 // follows them must NOT be emitted a second time.
 func TestClaudeStreamEmitsDeltasOnceNotTwice(t *testing.T) {
-	t.Parallel()
+	// Deliberately NOT parallel. These drive runClaudeAttemptCommand, which
+	// reads the package-level claudeConfigureProcess; sibling tests reassign
+	// that (and claudeCommand) around their own runs, so interleaving loses
+	// the process entirely — chunks came back empty under -race in CI.
 	lines := []string{
 		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Spinning "}}}`,
 		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"up a prospector."}}}`,
@@ -65,7 +64,7 @@ func TestClaudeStreamEmitsDeltasOnceNotTwice(t *testing.T) {
 // message with no deltas must still be emitted, or the guard from the previous
 // message would swallow it.
 func TestClaudeStreamStillEmitsMessageWithoutDeltas(t *testing.T) {
-	t.Parallel()
+	// Not parallel, for the same reason as the test above.
 	lines := []string{
 		`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Scoping that."}}}`,
 		`{"type":"assistant","message":{"content":[{"type":"text","text":"Scoping that."}]}}`,
@@ -89,28 +88,22 @@ func TestClaudeStreamStillEmitsMessageWithoutDeltas(t *testing.T) {
 	}
 }
 
-// runFixtureStream feeds NDJSON through the real stream reader by pointing the
-// command at a file of canned CLI output.
-func runFixtureStream(t *testing.T, lines []string) []agent.StreamChunk {
+// runFixtureStream feeds canned CLI output through the real stream reader.
+// No subprocess: consumeClaudeStream takes an io.Reader precisely so this
+// contract can be checked without one (spawning a child was flaky on CI).
+func runFixtureStream(t *testing.T, lines []string) []bot.StreamChunk {
 	t.Helper()
-	dir := t.TempDir()
-	fixture := filepath.Join(dir, "stream.ndjson")
-	if err := os.WriteFile(fixture, []byte(strings.Join(lines, "\n")+"\n"), 0o600); err != nil {
-		t.Fatalf("write fixture: %v", err)
-	}
-	// Replay the fixture as the CLI's stdout. No shell: the path goes straight
-	// through as an argv entry, so nothing in it can be read as a metacharacter.
-	// `cat <file>` ignores stdin, which is where the caller writes the prompt —
-	// the unread pipe just closes when the process exits.
-	cmd := exec.Command("cat", fixture)
-
-	ch := make(chan agent.StreamChunk, 64)
+	ch := make(chan bot.StreamChunk, 64)
 	go func() {
 		defer close(ch)
-		runClaudeAttemptCommand(context.Background(), cmd, ch, "spin up a prospector", dir)
+		if _, err := consumeClaudeStream(
+			strings.NewReader(strings.Join(lines, "\n")+"\n"), ch,
+		); err != nil {
+			t.Errorf("consumeClaudeStream: %v", err)
+		}
 	}()
 
-	var chunks []agent.StreamChunk
+	var chunks []bot.StreamChunk
 	for c := range ch {
 		chunks = append(chunks, c)
 	}

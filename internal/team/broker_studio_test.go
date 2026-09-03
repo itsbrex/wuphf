@@ -209,7 +209,7 @@ func TestHandleStudioGeneratePackage_RejectsOversizedBody(t *testing.T) {
 // TestHandleStudioRunWorkflow_RejectsOversizedBody pins the 1 MiB body
 // cap on /studio/run-workflow. The endpoint can spawn external workflow
 // providers and consume budget; an unbounded body would let an
-// authenticated agent ship a massive workflow_definition into the
+// authenticated bot ship a massive workflow_definition into the
 // runner.
 func TestHandleStudioRunWorkflow_RejectsOversizedBody(t *testing.T) {
 	b := newTestBroker(t)
@@ -435,11 +435,12 @@ func TestHandleStudioRunWorkflowExecutesOneDraftAndUpdatesSkill(t *testing.T) {
 		t.Fatalf("unexpected action %+v", lastAction)
 	}
 
-	if len(b.skills) != 1 {
-		t.Fatalf("expected 1 skill, got %d", len(b.skills))
+	sk := userSkills(b.skills)
+	if len(sk) != 1 {
+		t.Fatalf("expected 1 skill, got %d", len(sk))
 	}
-	if b.skills[0].UsageCount != 1 || b.skills[0].LastExecutionStatus != "success" {
-		t.Fatalf("expected skill usage/status updated, got %+v", b.skills[0])
+	if sk[0].UsageCount != 1 || sk[0].LastExecutionStatus != "success" {
+		t.Fatalf("expected skill usage/status updated, got %+v", sk[0])
 	}
 }
 
@@ -516,8 +517,8 @@ func TestHandleStudioRunWorkflowReturnsRateLimitMetadata(t *testing.T) {
 	if lastAction.Kind != "external_workflow_rate_limited" || lastAction.Source != "one" {
 		t.Fatalf("unexpected action %+v", lastAction)
 	}
-	if len(b.skills) != 1 || b.skills[0].LastExecutionStatus != "rate_limited" {
-		t.Fatalf("expected skill status updated, got %+v", b.skills)
+	if sk := userSkills(b.skills); len(sk) != 1 || sk[0].LastExecutionStatus != "rate_limited" {
+		t.Fatalf("expected skill status updated, got %+v", sk)
 	}
 }
 
@@ -535,8 +536,8 @@ func TestBuildOperationBootstrapPackageFromRepoIncludesStarterPlan(t *testing.T)
 	if pkg.Starter.ID == "" || pkg.Starter.Name == "" {
 		t.Fatalf("expected starter metadata, got %+v", pkg.Starter)
 	}
-	if len(pkg.Starter.Agents) < 2 || len(pkg.Starter.Channels) == 0 || len(pkg.Starter.Tasks) == 0 {
-		t.Fatalf("expected starter plan to include agents, channels, and tasks, got %+v", pkg.Starter)
+	if len(pkg.Starter.Bots) < 2 || len(pkg.Starter.Channels) == 0 || len(pkg.Starter.Tasks) == 0 {
+		t.Fatalf("expected starter plan to include bots, channels, and tasks, got %+v", pkg.Starter)
 	}
 	if len(pkg.WorkflowDrafts) != len(pkg.Blueprint.Workflows) {
 		t.Fatalf("expected workflow drafts to come from blueprint, got %d drafts for %d workflows", len(pkg.WorkflowDrafts), len(pkg.Blueprint.Workflows))
@@ -648,18 +649,18 @@ func TestBuildOperationBootstrapPackageSynthesizesWhenNoPackSeedExists(t *testin
 	// to 2 when synthesis stopped minting the planner/executor/reviewer trio
 	// and their per-specialist tasks.
 	//
-	// Agents are asserted by NAME, not by count. The synthesizer pads the
-	// roster with one agent per CONNECTED INTEGRATION, so a count threshold
-	// is a hermeticity bug: "agents >= 4" passed on a dev machine whose
+	// Bots are asserted by NAME, not by count. The synthesizer pads the
+	// roster with one bot per CONNECTED INTEGRATION, so a count threshold
+	// is a hermeticity bug: "bots >= 4" passed on a dev machine whose
 	// Composio config added gmail/drive/notion/slack and failed on CI, which
-	// has none. The environment-independent invariant is the two agents the
+	// has none. The environment-independent invariant is the two bots the
 	// synthesizer always mints.
-	agents := map[string]bool{}
-	for _, a := range pkg.Starter.Agents {
-		agents[a.Slug] = true
+	bots := map[string]bool{}
+	for _, a := range pkg.Starter.Bots {
+		bots[a.Slug] = true
 	}
-	if !agents["operator"] || !agents["capability-scout"] {
-		t.Fatalf("expected synthesized starter agents to include operator and capability-scout, got %+v", pkg.Starter.Agents)
+	if !bots["operator"] || !bots["capability-scout"] {
+		t.Fatalf("expected synthesized starter bots to include operator and capability-scout, got %+v", pkg.Starter.Bots)
 	}
 	if len(pkg.Starter.Channels) != 0 || len(pkg.Starter.Tasks) < 2 {
 		t.Fatalf("expected synthesized starter plan (channels==0, tasks>=2), got %+v", pkg.Starter)

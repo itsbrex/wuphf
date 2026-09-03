@@ -1,0 +1,2358 @@
+/* ═══════════════════════════════════════════════════════════════
+   Agents — Panel slide-in, wizard modal, stream log
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ─── Agent Panel (right slide-in) ─── */
+.bot-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100vh;
+  background: var(--bg-card);
+  border-left: 1px solid var(--border);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+  animation: agentPanelSlideIn 0.2s ease-out;
+}
+
+@keyframes agentPanelSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.bot-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 16px 20px 8px;
+  border-bottom: none;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.bot-panel-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bot-panel-avatar {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.bot-panel-avatar .pixel-avatar,
+.bot-panel-avatar .pixel-avatar-panel {
+  width: 100%;
+  height: 100%;
+}
+.bot-panel-role {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.bot-panel-name {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-panel-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  /* Use specific properties instead of `all` to prevent unintended dimension
+     transitions on hover that could shift surrounding layout. */
+  transition:
+    background var(--duration-base, 0.15s),
+    color var(--duration-base, 0.15s);
+}
+.bot-panel-close:hover {
+  background: var(--bg);
+  color: var(--text);
+}
+.bot-panel-close:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.bot-panel-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.bot-panel-section-title {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+/* ─── Info grid ─── */
+.bot-panel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bot-panel-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.bot-panel-info-label {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  min-width: 72px;
+  flex-shrink: 0;
+}
+
+.bot-panel-info-value {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Expertise tags ─── */
+.bot-panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bot-panel-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+/* ─── Stream log ─── */
+.bot-stream-log {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  max-height: 300px;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+.bot-stream-log,
+.bot-stream-log * {
+  font-weight: 400;
+}
+
+.bot-stream-line {
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.bot-stream-empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 12px 0;
+  text-align: center;
+  font-size: var(--text-xs);
+}
+
+.bot-stream-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+}
+
+.bot-stream-status .status-dot {
+  width: 5px;
+  height: 5px;
+}
+
+/* ─── Actions row ─── */
+.bot-panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.bot-panel-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 20px 16px;
+  border-bottom: 1px solid var(--border-light);
+}
+.bot-panel-actions-stack .btn {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ─── Enable toggle row ─── */
+.bot-panel-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: var(--text-base);
+}
+.bot-panel-stat-label {
+  color: var(--text-secondary);
+}
+
+.bot-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.bot-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.bot-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: var(--border-dark, var(--border));
+  border-radius: 11px;
+  transition: background 0.2s;
+}
+.bot-toggle-slider::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+.bot-toggle input:checked + .bot-toggle-slider {
+  background: var(--accent);
+}
+.bot-toggle input:checked + .bot-toggle-slider::before {
+  transform: translateX(18px);
+}
+.bot-toggle input:disabled + .bot-toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ─── Recent logs ─── */
+.bot-panel-logs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.bot-log-item {
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: var(--text-sm);
+  transition: background 0.1s;
+}
+.bot-log-item:hover {
+  background: var(--bg);
+}
+
+.bot-log-action {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.bot-log-content {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-log-time {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.bot-log-empty {
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+  font-size: var(--text-sm);
+}
+
+/* ─── Agent Wizard (modal overlay) ─── */
+.bot-wizard-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-critical);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.bot-wizard-modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: 500px;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.bot-wizard-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.bot-wizard-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bot-wizard-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-wizard-field .label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.bot-wizard-field .input {
+  height: 40px;
+  font-size: var(--text-md);
+}
+
+.bot-wizard-field select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius-md);
+  height: 40px;
+  font-size: var(--text-md);
+  padding: 0 14px;
+  outline: none;
+  width: 100%;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.bot-wizard-field select:focus,
+.bot-wizard-field select:focus-visible {
+  border-color: var(--accent);
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+.bot-wizard-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.bot-wizard-error {
+  font-size: var(--text-sm);
+  color: var(--red);
+  padding: 8px 12px;
+  background: var(--red-bg);
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Agent workbench pane ─────────────────────────────────────
+   The workbench surface inside DMView. Composes CollapsibleSection
+   sections (active tasks, live terminal, recent activity, recent
+   tasks). The pane scrolls; sections collapse independently to
+   keep dense screens scannable.
+   ────────────────────────────────────────────────────────────── */
+.bot-workbench-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px 18px;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg);
+}
+
+.bot-workbench-empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 6px 4px;
+}
+
+.bot-workbench-task-list,
+.bot-workbench-run-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-workbench-task-row,
+.bot-workbench-run-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.bot-workbench-task-row:hover,
+.bot-workbench-run-row:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.bot-workbench-task-row:focus-visible,
+.bot-workbench-run-row:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-color: var(--accent);
+}
+
+.bot-workbench-task-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-workbench-task-meta,
+.bot-workbench-run-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.bot-workbench-run-id {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The shared `.bot-stream-log` caps height at 300px for the right-rail
+   AgentPanel. Inside the workbench the section has the whole pane to
+   stretch into, so we let the log claim a healthy chunk while staying
+   adaptive: a fixed 320px height was forcing sibling accordions to clip
+   their headers on short viewports (e.g. when the chat drawer's
+   InterviewBar is open). Letting it shrink to a sensible floor keeps
+   every accordion's title visible and lets the pane scroll naturally. */
+.bot-workbench-stream {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 200px;
+}
+.bot-workbench-stream-log {
+  flex: 1;
+  min-height: 160px;
+  max-height: 320px;
+}
+
+/* ─── Agent Profile Panel ─── */
+.bot-profile-panel {
+  /* Inherits .bot-panel layout; adds a scrollable body */
+}
+
+.bot-profile-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.bot-profile-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.bot-profile-section-title {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+}
+
+.bot-profile-empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 2px 0;
+}
+
+.bot-profile-role-text,
+.bot-profile-current-task {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Status badge */
+.bot-profile-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  font-family: var(--font-mono);
+  color: var(--text-tertiary);
+  text-transform: lowercase;
+}
+
+.bot-profile-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--neutral-400);
+  flex-shrink: 0;
+}
+
+.bot-profile-status-badge.active .bot-profile-status-dot {
+  background: var(--green);
+}
+
+.bot-profile-status-badge.paused .bot-profile-status-dot {
+  background: var(--yellow);
+}
+
+/* List (skills, runs, tasks) */
+.bot-profile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bot-profile-list-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--text);
+  min-height: 26px;
+}
+
+.bot-profile-skill-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-profile-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+/* Channels chips */
+.bot-profile-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bot-profile-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+  font-family: var(--font-sans);
+}
+
+.bot-profile-chip:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Run items */
+.bot-profile-run-item {
+  width: 100%;
+}
+
+.bot-profile-run-row,
+.bot-profile-task-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+  padding: 3px 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+}
+
+.bot-profile-task-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+}
+
+.bot-profile-task-btn:hover {
+  color: var(--accent);
+}
+
+/* When a task row also carries a Resume nudge, let the title button take the
+   available space and keep the action pinned to the trailing edge. */
+.bot-profile-list-item .bot-profile-task-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+}
+
+/* "Resume" nudge for a stalled task — re-engages the agent via the proven
+   task wake path. Quiet by default, accent on hover, so it does not compete
+   with the task title. */
+.bot-profile-resume-btn {
+  flex: 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px 9px;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    border-color 0.15s,
+    background 0.15s;
+}
+.bot-profile-resume-btn:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.bot-profile-resume-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.bot-profile-run-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.bot-profile-run-meta {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.bot-profile-task-title {
+  font-size: var(--text-sm);
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bot-profile-see-all {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  color: var(--accent);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-sans);
+  transition: opacity 0.15s;
+}
+
+.bot-profile-see-all:hover {
+  opacity: 0.75;
+}
+
+/* Permissions / runtime grid */
+.bot-profile-permissions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.bot-profile-perm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+
+.bot-profile-perm-label {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  min-width: 72px;
+  flex-shrink: 0;
+}
+
+.bot-profile-perm-value {
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .bot-panel {
+    width: 100%;
+  }
+
+  .bot-wizard-modal {
+    margin: 16px;
+    max-width: none;
+  }
+
+  .bot-workbench-pane {
+    padding: 12px 12px 14px;
+  }
+
+  .bot-workbench-stream-log {
+    max-height: 260px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Agent subspace Skills tab — per-agent enabled list + library browser.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.bot-skills-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--bg);
+}
+
+.bot-skills-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-skills-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.bot-skills-subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: 640px;
+}
+
+.bot-skills-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bot-skills-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.bot-skills-section-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.bot-skills-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary, var(--text-secondary));
+  font-variant-numeric: tabular-nums;
+}
+
+.bot-skills-empty {
+  margin: 0;
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: var(--bg-card, var(--bg));
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.bot-skills-empty--error {
+  color: var(--red);
+  border-color: var(--red);
+  border-style: solid;
+}
+
+.bot-skills-filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--bg-card, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 10px;
+  height: 32px;
+  transition: border-color 120ms ease;
+}
+
+.bot-skills-filter:focus-within {
+  border-color: var(--accent);
+}
+
+.bot-skills-filter-icon {
+  color: var(--text-tertiary, var(--text-secondary));
+  flex-shrink: 0;
+}
+
+.bot-skills-filter-input {
+  flex: 1;
+  margin-left: 8px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.bot-skills-filter-input::placeholder {
+  color: var(--text-tertiary, var(--text-secondary));
+}
+
+.bot-skills-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bot-skills-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-card, var(--bg));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+
+.bot-skills-row:hover {
+  border-color: var(--border-dark, var(--border));
+}
+
+.bot-skills-row--enabled {
+  opacity: 0.7;
+}
+
+.bot-skills-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bot-skills-row-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.bot-skills-row-slug {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-tertiary, var(--text-secondary));
+  line-height: 1.3;
+}
+
+.bot-skills-row-desc {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.bot-skills-row-add,
+.bot-skills-row-remove {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.bot-skills-row-add:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.bot-skills-row-remove {
+  width: 28px;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.bot-skills-row-remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--red) 8%, transparent);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.bot-skills-row-add:disabled,
+.bot-skills-row-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.bot-skills-pill {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--bg-warm, var(--accent-bg, rgba(0, 0, 0, 0.05)));
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Mode switch (Enabled / Library) at top of the Skills tab. */
+.bot-skills-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.bot-skills-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-warm, var(--accent-bg, rgba(0, 0, 0, 0.04)));
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.bot-skills-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+.bot-skills-mode-btn:hover {
+  color: var(--text);
+}
+
+.bot-skills-mode-btn--active {
+  background: var(--bg, #fff);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.bot-skills-mode-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--bg-warm, var(--accent-bg, rgba(0, 0, 0, 0.06)));
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.bot-skills-mode-btn--active .bot-skills-mode-count {
+  background: var(--bg-warm, var(--accent-bg, rgba(0, 0, 0, 0.08)));
+  color: var(--text);
+}
+
+/* PixelSkillCard grid */
+.bot-skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.bot-skills-card-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bot-skills-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card, var(--bg));
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.bot-skills-card-btn:hover:not(:disabled) {
+  border-color: var(--border-dark, var(--border));
+}
+
+.bot-skills-card-btn--add:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+
+.bot-skills-card-btn--remove:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--red) 6%, transparent);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.bot-skills-card-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.bot-skills-card-pill {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--green);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  z-index: 1;
+}
+
+/* ─── Agent instruction files (SOUL / IDENTITY / OPERATIONS / TOOLS + USER) ───
+   The viewer/editor accordion rendered inside the agent profile panel. Each
+   file is loaded into the agent's system prompt; this surface makes that real,
+   inspectable, and editable. Token-only so it holds across every theme. */
+
+.bot-instructions-blurb {
+  margin: 0 0 10px;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.bot-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bot-file-card {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  background: var(--bg-card);
+  overflow: hidden;
+}
+
+.bot-file-card.expanded {
+  border-color: var(--border);
+}
+
+.bot-file-card-header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 11px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background var(--duration-fast) ease;
+}
+
+.bot-file-card-header:hover {
+  background: var(--bg-subtle);
+}
+
+.bot-file-card-chevron {
+  flex-shrink: 0;
+  display: inline-flex;
+  color: var(--text-tertiary);
+}
+
+.bot-file-card-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.bot-file-card-name {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.bot-file-card-desc {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-file-card-body {
+  padding: 11px 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.bot-file-card-loading,
+.bot-file-card-error {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  padding: 4px 0;
+}
+
+.bot-file-card-error {
+  color: var(--error-400, var(--accent));
+}
+
+.bot-file-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.bot-file-card-badge {
+  margin-right: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.bot-file-edit,
+.bot-file-generate {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bot-file-office {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-light);
+}
+
+.bot-file-office-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 7px;
+}
+
+/* Rendered markdown inside a file's view mode. ReactMarkdown emits raw
+   heading, paragraph, list, and code elements; scope the document typography
+   here so instruction files read like a clean operating manual, not raw HTML. */
+.bot-file-view {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.bot-file-view > :first-child {
+  margin-top: 0;
+}
+
+.bot-file-view > :last-child {
+  margin-bottom: 0;
+}
+
+.bot-file-view h1,
+.bot-file-view h2,
+.bot-file-view h3 {
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  margin: 14px 0 6px;
+}
+
+.bot-file-view h1 {
+  font-size: var(--text-base);
+}
+
+.bot-file-view h2 {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.bot-file-view h3 {
+  font-size: var(--text-sm);
+}
+
+.bot-file-view p {
+  margin: 6px 0;
+}
+
+.bot-file-view ul,
+.bot-file-view ol {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.bot-file-view li {
+  margin: 2px 0;
+}
+
+.bot-file-view code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--bg-subtle);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+.bot-file-view pre {
+  background: var(--bg-subtle);
+  padding: 10px 12px;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.bot-file-view pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.bot-file-view a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Agent instruction file maturity enhancements — purpose hints + raw editor
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.bot-file-purpose-hint {
+  margin: 0 0 10px;
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border-left: 2px solid var(--accent);
+  padding: 5px 10px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.bot-file-mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bot-file-mode-note {
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+/* Structured block editor — one labelled block per file section. */
+.bot-file-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bot-file-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-file-block-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.bot-file-block-tag {
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+.bot-file-block-hint {
+  font-size: var(--text-2xs);
+  line-height: 1.45;
+  color: var(--text-tertiary);
+}
+
+.bot-file-block-input {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.bot-file-block-input:focus {
+  border-color: var(--accent);
+}
+
+.bot-file-block-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bot-file-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  padding: 2px;
+  gap: 2px;
+}
+
+.bot-file-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.bot-file-mode-btn.is-active {
+  background: var(--bg-card);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.bot-file-raw-editor {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.bot-file-raw-editor:focus {
+  border-color: var(--accent);
+}
+
+.bot-file-raw-editor:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Agent Subspace — tabbed per-agent HQ
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.bot-subspace {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Shell header ── */
+.bot-subspace-header {
+  padding: 20px 28px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg-card);
+}
+
+.bot-subspace-header-identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bot-subspace-header-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.bot-subspace-header-avatar .pixel-avatar {
+  width: 100%;
+  height: 100%;
+}
+
+.bot-subspace-header-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bot-subspace-header-name-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* The agent name inside the shell header is larger than the panel version */
+.bot-subspace-header-name-row .bot-panel-name {
+  font-size: var(--text-xl, 20px);
+  font-weight: 700;
+}
+
+/* EditableName input */
+.bot-subspace-header-name-row input.input {
+  font-size: var(--text-xl, 20px);
+  font-weight: 700;
+}
+
+.bot-subspace-header-role {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bot-subspace-header-status-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 1px;
+}
+
+.bot-subspace-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  text-transform: lowercase;
+}
+
+.bot-subspace-status-badge--active {
+  background: color-mix(in srgb, var(--green, #22c55e) 12%, transparent);
+  color: var(--green, #22c55e);
+}
+
+.bot-subspace-status-badge--idle {
+  background: var(--bg);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+}
+
+/* Current-task chip */
+.bot-subspace-task-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 280px;
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  background: var(--accent-bg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Tab bar ── */
+.bot-subspace-tabbar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.bot-subspace-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.bot-subspace-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--duration-fast) ease,
+    opacity var(--duration-fast) ease;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.bot-subspace-tab:hover {
+  color: var(--text-secondary);
+}
+
+.bot-subspace-tab.is-active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+.bot-subspace-tab:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: 4px;
+}
+
+/* ── Tab panel content ── */
+.bot-subspace-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat tab — DMView fills the panel */
+.bot-subspace-tab-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Config tab — headless AgentProfilePanel inside */
+.bot-config-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Config tab: the panel sits inline (not fixed-position) */
+.bot-config-tab .bot-panel {
+  position: static;
+  width: 100%;
+  height: auto;
+  box-shadow: none;
+  border-left: 0;
+  animation: none;
+  flex: 1;
+}
+
+/* ── Tasks tab ── */
+.bot-tasks-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px 40px;
+  background: var(--bg);
+}
+
+.bot-tasks-tab--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bot-tasks-empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.bot-tasks-board {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bot-tasks-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bot-tasks-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.bot-tasks-column-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+.bot-tasks-column-count {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.bot-tasks-column-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Policies tab ── */
+.bot-policies-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: var(--bg);
+}
+
+.bot-policies-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-policies-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.bot-policies-subtitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  max-width: 640px;
+}
+
+.bot-policies-add {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.bot-policies-add-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  margin-bottom: 4px;
+}
+
+.bot-policies-add-row {
+  display: flex;
+  gap: 8px;
+}
+
+.bot-policies-input {
+  flex: 1;
+}
+
+.bot-policies-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--error-400, var(--red, #ef4444));
+  padding: 6px 10px;
+  background: color-mix(in srgb, var(--red, #ef4444) 8%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+.bot-policies-empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+  text-align: center;
+  padding: 24px 0;
+}
+
+.bot-policy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bot-policy-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s;
+}
+
+.bot-policy-row:hover {
+  border-color: var(--border-dark, var(--border));
+}
+
+.bot-policy-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bot-policy-rule {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.bot-policy-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bot-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bot-policy-badge--source-human {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.bot-policy-badge--source-auto {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+}
+
+.bot-policy-badge--scope {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-tertiary);
+}
+
+.bot-policy-badge--scoped {
+  background: color-mix(in srgb, var(--yellow, #f59e0b) 12%, transparent);
+  color: var(--yellow, #f59e0b);
+  border-color: transparent;
+}
+
+.bot-policy-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.bot-policy-deactivate {
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
+
+.bot-policy-deactivate:hover:not(:disabled) {
+  color: var(--error-400, var(--red, #ef4444));
+}
+
+/* ── Live Stream tab ── */
+.bot-stream-tab {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 24px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: var(--bg);
+}
+
+.bot-stream-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bot-stream-section-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+}
+
+/* Full-height log inside the tab (overrides the 300px cap from the panel) */
+.bot-stream-log--full {
+  max-height: 420px;
+}
+
+.bot-stream-runs-empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.bot-stream-runs-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bot-stream-run-item {
+  display: flex;
+}
+
+.bot-stream-run-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+
+.bot-stream-run-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+
+.bot-stream-run-id {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.bot-stream-run-meta {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Teach a workflow ──
+ *
+ * The header button plus the screenshare modal it opens
+ * (TeachWorkflowModal.tsx). Tokens only: this surface renders inside the
+ * normal app chrome, so it must resolve under Nex Light, Nex Dark, and Noir
+ * Gold from the same variables the rest of agents.css draws on.
+ */
+.bot-subspace-teach-btn {
+  flex-shrink: 0;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+.teach-workflow-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal-critical);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.teach-workflow-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+  width: 100%;
+  max-width: 560px;
+  padding: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.teach-workflow-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.teach-workflow-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.teach-workflow-close {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--duration-fast) ease;
+}
+
+.teach-workflow-close:hover {
+  color: var(--text);
+}
+
+.teach-workflow-intro,
+.teach-workflow-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.teach-workflow-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.teach-workflow-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.teach-workflow-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── Live capture ── */
+.teach-workflow-live {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.teach-workflow-live-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text);
+}
+
+.teach-workflow-rec {
+  width: 9px;
+  height: 9px;
+  border-radius: var(--radius-full);
+  background: var(--red);
+  flex-shrink: 0;
+  /* Opacity only — a compositor-friendly pulse that never triggers layout. */
+  animation: teach-workflow-rec-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes teach-workflow-rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .teach-workflow-rec {
+    animation: none;
+  }
+}
+
+/* ── Captured screens ── */
+.teach-workflow-screens {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teach-workflow-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+
+.teach-workflow-screen-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.teach-workflow-screen-n {
+  flex: none;
+  min-width: 18px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--accent);
+}
+
+.teach-workflow-screen-app {
+  flex: none;
+  font-size: var(--text-sm);
+  color: var(--text);
+}
+
+.teach-workflow-screen-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teach-workflow-screen-els {
+  /* The raw element labels the observer read. Long and unpredictable, so let
+     them wrap and break rather than push the modal into a horizontal scroll. */
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1.55;
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+/* ── Review + result ── */
+.teach-workflow-review,
+.teach-workflow-result {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.teach-workflow-result-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .bot-subspace-header {
+    padding: 16px 20px 12px;
+  }
+
+  .teach-workflow-modal {
+    margin: 16px;
+    max-width: none;
+  }
+
+  .bot-subspace-tabbar {
+    padding: 0 16px;
+  }
+
+  .bot-tasks-tab,
+  .bot-policies-tab,
+  .bot-stream-tab {
+    padding: 16px 20px 32px;
+  }
+}

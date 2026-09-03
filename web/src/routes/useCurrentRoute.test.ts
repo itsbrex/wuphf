@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  agentDetailRoute,
-  agentsRoute,
   appRoute,
   appTaskDetailRoute,
+  botDetailRoute,
+  botsRoute,
   channelRoute,
   inboxRoute,
   indexRoute,
@@ -47,13 +47,13 @@ describe("deriveCurrentRoute (URL → discriminated union)", () => {
       {},
       { kind: "channel", channelSlug: "general" },
     ],
-    ["agents roster grid", agentsRoute.id, {}, {}, { kind: "agents" }],
+    ["bots roster grid", botsRoute.id, {}, {}, { kind: "agents" }],
     [
-      "agent detail",
-      agentDetailRoute.id,
+      "bot detail",
+      botDetailRoute.id,
       { agentSlug: "pm" },
       {},
-      { kind: "agent-detail", agentSlug: "pm" },
+      { kind: "bot-detail", agentSlug: "pm" },
     ],
     [
       "app",

@@ -13,7 +13,7 @@ export type SlashAction =
   | "citation"
   | "fact"
   | "task-ref"
-  | "agent-mention"
+  | "bot-mention"
   | "decision"
   | "related";
 
@@ -55,9 +55,9 @@ export const SLASH_ACTIONS: SlashActionDef[] = [
     keywords: ["task", "ref", "todo"],
   },
   {
-    id: "agent-mention",
-    title: "Insert agent mention",
-    description: "Reference an agent by their wiki page.",
+    id: "bot-mention",
+    title: "Insert bot mention",
+    description: "Reference a bot by their wiki page.",
     keywords: ["agent", "mention", "@"],
   },
   {
