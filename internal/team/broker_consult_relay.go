@@ -186,6 +186,56 @@ func (b *Broker) reHomeTaskOutOfHumanDMLocked(slug, owner string) string {
 	return pair.Slug
 }
 
+// botPairDMForLocked returns the pair DM slug for two distinct registered
+// bots, creating the channel on demand, or "" when either side is not an
+// bot (human, system, unknown). Caller must hold b.mu.
+func (b *Broker) botPairDMForLocked(a, c string) string {
+	a = normalizeActorSlug(a)
+	c = normalizeActorSlug(c)
+	if a == "" || c == "" || a == c || isHumanMessageSender(a) || isHumanMessageSender(c) {
+		return ""
+	}
+	if b.findMemberLocked(a) == nil || b.findMemberLocked(c) == nil {
+		return ""
+	}
+	pair := b.ensureBotPairDMLocked(normalizeChannelSlug(channel.DirectSlug(a, c)))
+	if pair == nil {
+		return ""
+	}
+	return pair.Slug
+}
+
+// requestChannelForLocked keeps human-facing request cards out of rooms the
+// requester does not belong to. A request raised from a bot pair DM (the
+// human cannot answer there) or from another bot's 1:1 DM (a third party
+// in a private thread) is filed in the requester's OWN DM with the human,
+// which is where the human expects that bot to ask. Channels the
+// requester legitimately shares with the human pass through unchanged.
+// Caller must hold b.mu.
+func (b *Broker) requestChannelForLocked(from, channelSlug string) string {
+	from = normalizeActorSlug(from)
+	if from == "" || isHumanMessageSender(from) || from == "system" || from == "nex" {
+		return channelSlug
+	}
+	slug := normalizeChannelSlug(channelSlug)
+	own := func() string {
+		home := DMSlugFor(from)
+		if b.findChannelLocked(home) == nil {
+			if dm := b.ensureDMConversationLocked(home); dm != nil {
+				return dm.Slug
+			}
+		}
+		return home
+	}
+	if _, _, pair := isBotToBotDM(slug); pair {
+		return own()
+	}
+	if botSide := humanDMBot(slug); botSide != "" && botSide != from {
+		return own()
+	}
+	return channelSlug
+}
+
 // humanDMBot returns the bot whose 1:1 DM with the human `slug` is, or ""
 // when slug is not a human-to-bot DM.
 func humanDMBot(slug string) string {

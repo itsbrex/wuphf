@@ -291,6 +291,15 @@ func (b *Broker) preferredTaskChannelLocked(requestedChannel, createdBy, owner, 
 		b.canAccessChannelLocked(createdBy, slug) {
 		return slug
 	}
+	// The creator cannot post in the owner's DM: an agent opening a task for
+	// another agent. The old fallback was the CREATOR's own DM, which parked
+	// the owner's entire working thread inside the human's private
+	// conversation with the creator (observed: the Chief of Staff's task for
+	// the Designer living in #ceo__human). The creator⇄owner pair DM is the
+	// right room — both can post, and the consult markers keep it observable.
+	if pair := b.botPairDMForLocked(createdBy, owner); pair != "" {
+		return pair
+	}
 	if slug, err := b.homeChannelForLocked(createdBy); err == nil && slug != "" {
 		return slug
 	}

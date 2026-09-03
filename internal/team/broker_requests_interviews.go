@@ -1,10 +1,8 @@
 package team
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -523,7 +521,7 @@ func (b *Broker) raiseDefinitionGapInterviewLocked(task *teamTask, actor string)
 		Kind:          "interview",
 		Status:        "pending",
 		From:          from,
-		Channel:       channel,
+		Channel:       b.requestChannelForLocked(from, channel),
 		Title:         "Missing details for " + task.ID,
 		Question:      qb.String(),
 		Options:       options,
@@ -854,7 +852,7 @@ func (b *Broker) handlePostRequest(w http.ResponseWriter, r *http.Request) {
 			Kind:                 normalizeRequestKind(body.Kind),
 			Status:               "pending",
 			From:                 strings.TrimSpace(body.From),
-			Channel:              channel,
+			Channel:              b.requestChannelForLocked(strings.TrimSpace(body.From), channel),
 			Title:                strings.TrimSpace(body.Title),
 			Question:             strings.TrimSpace(body.Question),
 			Context:              strings.TrimSpace(body.Context),
@@ -1306,6 +1304,7 @@ func (b *Broker) postRequestRaisedChatMessageLocked(req *humanInterview) {
 	if strings.TrimSpace(req.ReplyTo) == "" {
 		req.ReplyTo = msg.ID
 	}
+	b.postRequestPointerToDelegatorLocked(req, channel)
 }
 
 func (b *Broker) unblockTasksForAnsweredRequestLocked(req humanInterview) []pendingTaskTransition {
@@ -1418,81 +1417,4 @@ func reqAnswerSummary(answer *interviewAnswer) string {
 		return text
 	}
 	return strings.TrimSpace(answer.ChoiceID)
-}
-
-func (b *Broker) handleInterview(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		b.handleGetInterview(w, r)
-	case http.MethodPost:
-		b.handlePostInterview(w, r)
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func (b *Broker) handlePostInterview(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		From          string            `json:"from"`
-		Channel       string            `json:"channel"`
-		Question      string            `json:"question"`
-		Context       string            `json:"context"`
-		Options       []interviewOption `json:"options"`
-		RecommendedID string            `json:"recommended_id"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
-	}
-	if strings.TrimSpace(body.From) == "" || strings.TrimSpace(body.Question) == "" {
-		http.Error(w, "from and question required", http.StatusBadRequest)
-		return
-	}
-	reqBody, _ := json.Marshal(map[string]any{
-		"action":         "create",
-		"kind":           "interview",
-		"title":          "Human interview",
-		"from":           body.From,
-		"channel":        body.Channel,
-		"question":       body.Question,
-		"context":        body.Context,
-		"options":        body.Options,
-		"recommended_id": body.RecommendedID,
-		"blocking":       false,
-		"required":       false,
-	})
-	r2 := r.Clone(r.Context())
-	r2.Body = io.NopCloser(bytes.NewReader(reqBody))
-	b.handlePostRequest(w, r2)
-}
-
-func (b *Broker) handleGetInterview(w http.ResponseWriter, r *http.Request) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	w.Header().Set("Content-Type", "application/json")
-	pending := firstActiveHumanInterview(b.requests)
-	if pending == nil {
-		_ = json.NewEncoder(w).Encode(map[string]any{"pending": nil})
-		return
-	}
-	_ = json.NewEncoder(w).Encode(map[string]any{"pending": pending})
-}
-
-func (b *Broker) handleInterviewAnswer(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		b.handleGetInterviewAnswer(w, r)
-	case http.MethodPost:
-		b.handlePostInterviewAnswer(w, r)
-	default:
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-func (b *Broker) handleGetInterviewAnswer(w http.ResponseWriter, r *http.Request) {
-	b.handleGetRequestAnswer(w, r)
-}
-
-func (b *Broker) handlePostInterviewAnswer(w http.ResponseWriter, r *http.Request) {
-	b.handlePostRequestAnswer(w, r)
 }

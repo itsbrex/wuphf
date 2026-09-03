@@ -38,8 +38,14 @@ export function TypingIndicator({ channel }: { channel?: string } = {}) {
   const { data: channelMembers = [] } = useChannelMembers(currentChannel);
   const channelMemberSlugs = new Set(channelMembers.map((m) => m.slug));
 
+  // A 1:1 DM has exactly one agent in it. Without this, every active agent
+  // in the office showed as "typing" inside a DM — a third party's presence
+  // in a private thread, even when it could never post there.
+  const dmAgent = route.kind === "bot-detail" ? route.agentSlug : null;
+
   const active = members.filter((m) => {
     if (m.status !== "active" || m.slug === "human") return false;
+    if (dmAgent) return m.slug === dmAgent;
     return channelMemberSlugs.size === 0 || channelMemberSlugs.has(m.slug);
   });
 

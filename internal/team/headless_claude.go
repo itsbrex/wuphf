@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 
@@ -43,7 +44,7 @@ func (l *Launcher) runHeadlessClaudeTurn(ctx context.Context, slug string, notif
 		"--print", "-",
 		"--output-format", "stream-json",
 		"--verbose",
-		"--max-turns", l.headlessClaudeMaxTurns(slug),
+		"--max-turns", l.headlessClaudeMaxTurns(slug, notification),
 		"--disable-slash-commands",
 		"--setting-sources", "user",
 		"--append-system-prompt", l.buildPrompt(slug) + mount.promptHint(),
@@ -377,7 +378,12 @@ func (l *Launcher) headlessClaudeModel(ctx context.Context, slug string) string 
 // untagged and DM messages, which typically requires looking up tasks, channel
 // members, and posting an assignment — easily more than 5 turns. Specialists
 // get a smaller budget since they focus on a single task.
-func (l *Launcher) headlessClaudeMaxTurns(slug string) string {
+//
+// The budget is fixed when the process launches, before the agent has done
+// anything, so "is this a build?" must be answerable from what is known at
+// launch: an open app build task the agent already owns, or an incoming
+// message that asks for an app.
+func (l *Launcher) headlessClaudeMaxTurns(slug string, notification string) string {
 	if slug == l.targeter().LeadSlug() {
 		return "30"
 	}
@@ -388,7 +394,29 @@ func (l *Launcher) headlessClaudeMaxTurns(slug string) string {
 	if strings.EqualFold(strings.TrimSpace(slug), appBuilderSlug) {
 		return "60"
 	}
+	// App building is a system skill every agent carries, so any agent can
+	// be mid-build. A human eval watched the GTM Lead scaffold, write the
+	// app, and die on "Reached maximum number of turns (15)" at the build
+	// gate. An agent that owns an open app build gets the same headroom.
+	if l.broker != nil && l.broker.ownsOpenAppBuild(slug) {
+		return "60"
+	}
+	// The task is created DURING the turn, so on the first build turn the
+	// only signal is the ask itself. (A Designer published its app and then
+	// died on the 15-turn cap before telling the human, 2026-09-03.)
+	if looksLikeAppBuildRequest(notification) {
+		return "60"
+	}
 	return "15"
+}
+
+// appBuildRequestRe matches a human ask for an app ("build me a Pomodoro
+// app", "create an app that tracks…", "make a unit converter app"). Kept
+// loose on purpose: a false positive only raises a cap.
+var appBuildRequestRe = regexp.MustCompile(`(?i)\b(?:build|create|make|ship)\b[^.\n]{0,120}\b(?:app|apps|application|micro-?app|internal tool)\b`)
+
+func looksLikeAppBuildRequest(text string) bool {
+	return appBuildRequestRe.MatchString(text)
 }
 
 // claudeUsageToTokenUsage adapts the provider-level ClaudeUsage record

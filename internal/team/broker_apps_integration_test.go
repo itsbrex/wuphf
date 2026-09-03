@@ -111,11 +111,25 @@ func TestProposeAppRejectionSpawnsNoTask(t *testing.T) {
 	}
 }
 
-// TestRegisterAppRestrictedToAppBuilder locks the write gate: a random bot
-// holding the broker token must not register apps directly; only the App Builder
-// (or a human session) may. Drives POST /apps with the X-WUPHF-Bot header.
-func TestRegisterAppRestrictedToAppBuilder(t *testing.T) {
+// TestRegisterAppGatedByAppBuildingSkill locks the write gate: app building
+// is a system skill every roster bot carries, so any roster bot with it
+// enabled may register apps; a slug that is not on the roster, or one the
+// human disabled the skill for, is forbidden. The legacy App Builder stays
+// allowed. Drives POST /apps with the X-WUPHF-Bot header.
+func TestRegisterAppGatedByAppBuildingSkill(t *testing.T) {
+	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 	b := newTestBroker(t)
+	b.mu.Lock()
+	b.members = append(b.members,
+		officeMember{Slug: "designer", Name: "Designer", Role: "Designer"},
+		officeMember{Slug: "analyst", Name: "Analyst", Role: "Analyst"},
+	)
+	for i := range b.skills {
+		if b.skills[i].System && b.skills[i].Name == systemSkillAppBuilding {
+			b.skills[i].DisabledBots = append(b.skills[i].DisabledBots, "analyst")
+		}
+	}
+	b.mu.Unlock()
 	if err := b.StartOnPort(0); err != nil {
 		t.Fatalf("start broker: %v", err)
 	}
@@ -127,11 +141,19 @@ func TestRegisterAppRestrictedToAppBuilder(t *testing.T) {
 		"html": validAppHTML,
 	})
 
-	// A non-app-builder bot is forbidden.
-	if code := postAppsStatus(t, base+"/apps", b.Token(), "ceo", body); code != http.StatusForbidden {
-		t.Fatalf("non-app-builder register: got %d, want 403", code)
+	// A slug that is not on the roster is forbidden.
+	if code := postAppsStatus(t, base+"/apps", b.Token(), "intruder", body); code != http.StatusForbidden {
+		t.Fatalf("off-roster register: got %d, want 403", code)
 	}
-	// The App Builder is allowed.
+	// A roster bot with app-building switched off is forbidden.
+	if code := postAppsStatus(t, base+"/apps", b.Token(), "analyst", body); code != http.StatusForbidden {
+		t.Fatalf("app-building-disabled register: got %d, want 403", code)
+	}
+	// A roster bot carrying the skill is allowed.
+	if code := postAppsStatus(t, base+"/apps", b.Token(), "designer", body); code != http.StatusOK {
+		t.Fatalf("designer register: got %d, want 200", code)
+	}
+	// The legacy App Builder is still allowed.
 	if code := postAppsStatus(t, base+"/apps", b.Token(), appBuilderSlug, body); code != http.StatusOK {
 		t.Fatalf("app-builder register: got %d, want 200", code)
 	}

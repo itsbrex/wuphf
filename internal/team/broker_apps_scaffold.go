@@ -24,18 +24,97 @@ import (
 // It deliberately excludes "improve"/"update" (those edit an existing app).
 var newAppBuildTitleRe = regexp.MustCompile(`(?i)^\s*(?:build|create)\s+app:\s*(.+?)\s*$`)
 
+// newAppBuildLooseTitleRe is the way agents actually title app builds when a
+// human asks them directly ("Build Pomodoro timer app", "Create a lead scorer
+// app"). App building is a system skill every agent carries, so those tasks
+// need the same pre-scaffolded workspace as the canonical "Build app: X" form;
+// without it the owner has no app id and files the deliverable as an article
+// (human eval, 2026-09-03).
+var newAppBuildLooseTitleRe = regexp.MustCompile(
+	`(?i)^\s*(?:build|create|make|ship)\s+(?:(?:a|an|the|me|us|new)\s+)*(.+?)\s+(?:app|application|micro-?app|internal tool)\s*$`)
+
 // parseNewAppBuildTitle returns the app name when title is a NEW-app build task,
 // or ("", false) otherwise.
 func parseNewAppBuildTitle(title string) (string, bool) {
 	m := newAppBuildTitleRe.FindStringSubmatch(title)
 	if m == nil {
+		m = newAppBuildLooseTitleRe.FindStringSubmatch(title)
+	}
+	if m == nil {
 		return "", false
 	}
 	name := strings.TrimSpace(m[1])
+	// The loose form's article list is optional, so "Build the app" captures
+	// "the" as the name. Strip filler words; a name made only of them is not
+	// a name.
+	words := strings.Fields(name)
+	for len(words) > 0 && appTitleFillerWords[strings.ToLower(words[0])] {
+		words = words[1:]
+	}
+	name = strings.Join(words, " ")
 	if name == "" {
 		return "", false
 	}
 	return name, true
+}
+
+// appTitleFillerWords are the words a loose app-build title may carry before
+// the app's actual name.
+var appTitleFillerWords = map[string]bool{"a": true, "an": true, "the": true, "me": true, "us": true, "new": true}
+
+// ownerCanBuildAppsLocked reports whether a task owner may publish apps: the
+// legacy App Builder always, and any other agent while the app-building
+// system skill is enabled for it. Humans never own app builds.
+func (b *Broker) ownerCanBuildAppsLocked(owner string) bool {
+	owner = normalizeActorSlug(owner)
+	if owner == "" || isHumanMessageSender(owner) {
+		return false
+	}
+	if isAppBuilderSlug(owner) {
+		return true
+	}
+	return b.findMemberLocked(owner) != nil && b.systemSkillEnabledForLocked(systemSkillAppBuilding, owner)
+}
+
+// ownerCanBuildApps is ownerCanBuildAppsLocked for callers outside b.mu.
+func (b *Broker) ownerCanBuildApps(owner string) bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.ownerCanBuildAppsLocked(owner)
+}
+
+// ownsOpenAppBuild reports whether slug owns an app build task that is still
+// open (not done, cancelled, or archived). Used to size the agent's turn
+// budget: a build is a multi-step job, not a chat reply.
+func (b *Broker) ownsOpenAppBuild(slug string) bool {
+	slug = normalizeActorSlug(slug)
+	if slug == "" {
+		return false
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	for i := range b.tasks {
+		t := &b.tasks[i]
+		if t.System || normalizeActorSlug(t.Owner) != slug || !isAppBuildTask(t) {
+			continue
+		}
+		switch strings.TrimSpace(t.status) {
+		case "done", "cancelled", "canceled", "archived", "closed":
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+// isAppBuildTask reports whether a task IS an app build (as opposed to work
+// that might later be turned into one): the App Builder's own tasks, and any
+// task that was handed a pre-scaffolded app workspace.
+func isAppBuildTask(t *teamTask) bool {
+	if t == nil {
+		return false
+	}
+	return isAppBuilderSlug(t.Owner) || strings.Contains(t.Details, appWorkspaceBriefMarker)
 }
 
 // maybePrescaffoldAppForCreate scaffolds the app for a new app-build task and
@@ -50,7 +129,7 @@ func (b *Broker) maybePrescaffoldAppForCreate(action, channel string, body TaskP
 	if !strings.EqualFold(strings.TrimSpace(action), "create") {
 		return body
 	}
-	if !strings.EqualFold(strings.TrimSpace(body.Owner), appBuilderSlug) {
+	if !b.ownerCanBuildApps(body.Owner) {
 		return body
 	}
 	name, ok := parseNewAppBuildTitle(body.Title)
@@ -254,7 +333,7 @@ func (b *Broker) ensureAppEditChannelLocked(appID, appName string) string {
 // call site should assign the returned slug to its `channel` variable and drop
 // the argument.
 func (b *Broker) stampAppEditChannelForTaskLocked(owner, details string) string {
-	if !strings.EqualFold(strings.TrimSpace(owner), appBuilderSlug) {
+	if !b.ownerCanBuildAppsLocked(owner) {
 		return ""
 	}
 	id, ok := parseAppBuilderTaskAppID(details)

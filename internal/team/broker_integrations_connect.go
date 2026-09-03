@@ -120,7 +120,7 @@ func (b *Broker) ensureIntegrationDecisionLocked(spec integrationDecisionCard) s
 		Kind:          kind,
 		Status:        "pending",
 		From:          from,
-		Channel:       channel,
+		Channel:       b.requestChannelForLocked(from, channel),
 		Title:         title,
 		Question:      strings.TrimSpace(spec.Question),
 		Context:       strings.TrimSpace(spec.Context),

@@ -9,6 +9,7 @@ import { useBotStream } from "../../hooks/useBotStream";
 import { useDefaultHarness } from "../../hooks/useConfig";
 import { useChannelMembers, useOfficeMembers } from "../../hooks/useMembers";
 import { resolveHarness } from "../../lib/harness";
+import { humanizeActivity } from "../../lib/humanizeActivity";
 import { router } from "../../lib/router";
 import {
   type CurrentRoute,
@@ -385,7 +386,9 @@ function BotPanelView({ agent, onClose }: BotPanelViewProps) {
           {agent.task ? (
             <div className="bot-panel-info-row">
               <span className="bot-panel-info-label">task</span>
-              <span className="bot-panel-info-value">{agent.task}</span>
+              <span className="bot-panel-info-value">
+                {humanizeActivity(agent.task)}
+              </span>
             </div>
           ) : null}
         </div>

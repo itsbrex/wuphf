@@ -28,6 +28,10 @@ func TestEnsureWikiWorkerRetriesAfterInitFailure(t *testing.T) {
 	}
 
 	b := newTestBroker(t)
+	// Registered after t.TempDir, so it runs first: the successful retry
+	// below kicks off the async skill backfill, and the temp dir must not
+	// be removed underneath it.
+	t.Cleanup(b.Stop)
 
 	b.ensureWikiWorker()
 	if b.WikiWorker() != nil {

@@ -355,7 +355,7 @@ func (b *Broker) raiseAppActionApproval(r *http.Request, platform, actionID stri
 		Kind:          "approval",
 		Status:        "pending",
 		From:          actor,
-		Channel:       approvalHome,
+		Channel:       b.requestChannelForLocked(actor, approvalHome),
 		Title:         "App action: " + display,
 		Question:      fmt.Sprintf("An app wants to run %s on %s. Approve?", actionID, display),
 		Context:       "Requested by an internal tool you are using.",

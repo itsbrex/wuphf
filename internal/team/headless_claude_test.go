@@ -39,13 +39,13 @@ func minimalLauncher(opusCEO bool) *Launcher {
 // more than a chat specialist's budget.
 func TestHeadlessClaudeMaxTurns_AppBuilderGetsBuildHeadroom(t *testing.T) {
 	l := minimalLauncher(false)
-	if got := l.headlessClaudeMaxTurns(appBuilderSlug); got != "60" {
+	if got := l.headlessClaudeMaxTurns(appBuilderSlug, ""); got != "60" {
 		t.Fatalf("app-builder max turns = %s, want 60 (build headroom)", got)
 	}
-	if got := l.headlessClaudeMaxTurns("ceo"); got != "30" {
+	if got := l.headlessClaudeMaxTurns("ceo", ""); got != "30" {
 		t.Fatalf("lead max turns = %s, want 30", got)
 	}
-	if got := l.headlessClaudeMaxTurns("pm"); got != "15" {
+	if got := l.headlessClaudeMaxTurns("pm", ""); got != "15" {
 		t.Fatalf("chat specialist max turns = %s, want 15", got)
 	}
 }
@@ -305,5 +305,61 @@ func TestBuildMCPServerMap_NeverMountsRetiredNexServer(t *testing.T) {
 	}
 	if _, ok := servers["wuphf-office"]; !ok {
 		t.Fatalf("'wuphf-office' server must always be present, got servers: %v", mapKeys(servers))
+	}
+}
+
+// TestHeadlessClaudeMaxTurns_AnyAgentMidBuildGetsHeadroom: app building is a
+// system skill every agent carries, so an agent that owns an open app build
+// task gets the App Builder's budget; the same agent with no build in flight
+// stays on the chat budget.
+func TestHeadlessClaudeMaxTurns_AnyAgentMidBuildGetsHeadroom(t *testing.T) {
+	b := newTestBroker(t)
+	l := minimalLauncher(false)
+	l.broker = b
+
+	if got := l.headlessClaudeMaxTurns("pm", ""); got != "15" {
+		t.Fatalf("pm with no build = %s, want 15", got)
+	}
+
+	b.mu.Lock()
+	b.tasks = append(b.tasks, teamTask{
+		ID:      "task-build",
+		Title:   "Build app: Tip Calculator",
+		Owner:   "pm",
+		Channel: "team",
+		Details: "Bill amount and tip.\n\n" + appWorkspaceBrief("app_1", "/tmp/app_1/src"),
+		status:  "in_progress",
+	})
+	b.mu.Unlock()
+	if got := l.headlessClaudeMaxTurns("pm", ""); got != "60" {
+		t.Fatalf("pm mid-build = %s, want 60 (build headroom)", got)
+	}
+
+	b.mu.Lock()
+	b.tasks[len(b.tasks)-1].status = "done"
+	b.mu.Unlock()
+	if got := l.headlessClaudeMaxTurns("pm", ""); got != "15" {
+		t.Fatalf("pm after the build is done = %s, want 15", got)
+	}
+}
+
+// TestHeadlessClaudeMaxTurns_AppAskGetsHeadroom: the budget is fixed at
+// launch and the build task is created during the turn, so the human's ask
+// itself must unlock the build budget.
+func TestHeadlessClaudeMaxTurns_AppAskGetsHeadroom(t *testing.T) {
+	l := minimalLauncher(false)
+	cases := map[string]string{
+		"Build me a Unit Converter app: km to miles.":             "60",
+		"create an app that tracks sponsor follow-ups":            "60",
+		"Can you make a small internal tool for expense reports?": "60",
+		"Ship the onboarding checklist app today":                 "60",
+		"what pressure for espresso?":                             "15",
+		"Build the landing page copy":                             "15",
+		"":                                                        "15",
+	}
+	for ask, want := range cases {
+		if got := l.headlessClaudeMaxTurns("pm", ask); got != want {
+			t.Fatalf("max turns for %q = %s, want %s", ask, got, want)
+		}
 	}
 }

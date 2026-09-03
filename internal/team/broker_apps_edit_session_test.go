@@ -128,9 +128,9 @@ func TestAppEditSessionLazilyMintsChannel(t *testing.T) {
 	}
 }
 
-// TestAppEditSessionRestrictedToWriters locks the gate: a random bot holding
-// the broker token must not open an edit session (it spawns an App Builder
-// task); only the App Builder or a human session may.
+// TestAppEditSessionRestrictedToWriters locks the gate: a slug that is not on
+// the roster must not open an edit session (it spawns a build task); only an
+// bot with the app-building skill or a human session may.
 func TestAppEditSessionRestrictedToWriters(t *testing.T) {
 	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
 
@@ -146,7 +146,7 @@ func TestAppEditSessionRestrictedToWriters(t *testing.T) {
 	app, _ := created["app"].(map[string]any)
 	id, _ := app["id"].(string)
 
-	if code := postAppsStatus(t, base+"/apps/"+id+"/edit-session", b.Token(), "ceo", []byte("{}")); code != http.StatusForbidden {
+	if code := postAppsStatus(t, base+"/apps/"+id+"/edit-session", b.Token(), "intruder", []byte("{}")); code != http.StatusForbidden {
 		t.Fatalf("non-writer edit-session: got %d, want 403", code)
 	}
 }

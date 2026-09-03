@@ -135,7 +135,15 @@ function ChannelMessageFeed({
   // Auto-scroll when new messages arrive
   useEffect(() => {
     if (messages.length > prevLengthRef.current && containerRef.current) {
+      // Scroll the newest message into view rather than setting scrollTop
+      // on this container: on the agent-detail chat the overflow lives on
+      // an ancestor, so scrollTop here was a no-op and the human had to
+      // scroll to their own just-sent message (human eval, 2026-09-03).
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
+      const last = containerRef.current.lastElementChild;
+      if (last instanceof HTMLElement) {
+        last.scrollIntoView({ block: "end" });
+      }
     }
     prevLengthRef.current = messages.length;
   }, [messages.length]);

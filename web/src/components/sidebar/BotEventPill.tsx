@@ -13,6 +13,7 @@ import {
   type PillState,
   startEventTimer,
 } from "../../lib/botEventTimer";
+import { humanizeActivity } from "../../lib/humanizeActivity";
 import { pickIdleCopy } from "../../lib/officeIdleDictionary";
 import { useAppStore } from "../../stores/app";
 
@@ -89,17 +90,30 @@ function pillTextFor(
   fallbackTask: string | undefined,
   hasSnapshot: boolean,
 ): string {
+  // Every runtime string crosses humanizeActivity here: the pill is the
+  // most-read line in the sidebar and it was showing tool JSON, file
+  // listings, and runner exhaust verbatim (human eval, 2026-09-03).
+  const live = (raw: string | undefined): string | undefined => {
+    if (!raw) return undefined;
+    const clean = humanizeActivity(raw);
+    return clean || undefined;
+  };
   if (state === "stuck") {
-    return snapshotActivity ?? snapshotDetail ?? "stuck";
+    return live(snapshotActivity) ?? live(snapshotDetail) ?? "stuck";
   }
   if (state === "idle") {
     if (!hasSnapshot && fallbackTask) {
-      return fallbackTask;
+      return live(fallbackTask) ?? idleCopy;
     }
     return idleCopy;
   }
   // halo / holding / dim — live activity wins.
-  return snapshotActivity ?? snapshotDetail ?? fallbackTask ?? idleCopy;
+  return (
+    live(snapshotActivity) ??
+    live(snapshotDetail) ??
+    live(fallbackTask) ??
+    idleCopy
+  );
 }
 
 /**

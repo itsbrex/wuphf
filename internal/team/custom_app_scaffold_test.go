@@ -161,6 +161,14 @@ func TestParseNewAppBuildTitle(t *testing.T) {
 		"Update app: X":            {"", false},
 		"Write the plan":           {"", false},
 		"Build app:":               {"", false},
+		// The loose forms agents use when a human asks them directly.
+		"Build Pomodoro timer app":          {"Pomodoro timer", true},
+		"Create a lead scorer app":          {"lead scorer", true},
+		"build me an expense tracker app":   {"expense tracker", true},
+		"Ship the onboarding checklist app": {"onboarding checklist", true},
+		"Build the app":                     {"", false},
+		"Improve the Pomodoro timer app":    {"", false},
+		"Build a landing page":              {"", false},
 	}
 	for title, want := range cases {
 		name, ok := parseNewAppBuildTitle(title)
@@ -491,4 +499,83 @@ func keysOf(m map[string]string) []string {
 		out = append(out, k)
 	}
 	return out
+}
+
+// TestMutateTaskPrescaffoldsForAnyAgentWithAppBuilding: app building is a
+// system skill every agent carries, so a Designer who is asked directly for
+// an app gets the same pre-scaffolded workspace (and app id) the App Builder
+// used to get. Without it the agent has nothing to publish onto and ships an
+// article instead (human eval, 2026-09-03).
+func TestMutateTaskPrescaffoldsForAnyAgentWithAppBuilding(t *testing.T) {
+	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
+	b := newTestBroker(t)
+	b.mu.Lock()
+	b.members = append(b.members, officeMember{Slug: "designer", Name: "Designer", Role: "Designer"})
+	b.channels = []teamChannel{
+		{Slug: "team", Name: "team", Members: []string{"ceo", "designer"}},
+	}
+	b.mu.Unlock()
+
+	created, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Channel:   "team",
+		Title:     "Build Pomodoro timer app",
+		Details:   "25-minute countdown with start, pause, and reset.",
+		Owner:     "designer",
+		CreatedBy: "designer",
+	})
+	if err != nil {
+		t.Fatalf("MutateTask create: %v", err)
+	}
+	if !strings.Contains(created.Task.Details, appWorkspaceBriefMarker) {
+		t.Fatalf("designer's app build got no workspace brief: %q", created.Task.Details)
+	}
+	if !strings.Contains(created.Task.Details, "register_app(app_id=app_") {
+		t.Fatalf("task details missing app_id publish instruction: %q", created.Task.Details)
+	}
+	apps, err := b.appStore().List()
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	found := false
+	for _, app := range apps {
+		if app.Name == "Pomodoro timer" && app.Status == customAppStatusBuilding {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("expected a building Pomodoro timer draft, got %+v", apps)
+	}
+}
+
+// TestMutateTaskSkipsPrescaffoldWhenAppBuildingDisabled: disabling the
+// system skill for an agent turns the pre-scaffold off for that agent only.
+func TestMutateTaskSkipsPrescaffoldWhenAppBuildingDisabled(t *testing.T) {
+	t.Setenv("WUPHF_RUNTIME_HOME", t.TempDir())
+	b := newTestBroker(t)
+	b.mu.Lock()
+	b.members = append(b.members, officeMember{Slug: "designer", Name: "Designer", Role: "Designer"})
+	b.channels = []teamChannel{
+		{Slug: "team", Name: "team", Members: []string{"ceo", "designer"}},
+	}
+	for i := range b.skills {
+		if b.skills[i].System && b.skills[i].Name == systemSkillAppBuilding {
+			b.skills[i].DisabledBots = append(b.skills[i].DisabledBots, "designer")
+		}
+	}
+	b.mu.Unlock()
+
+	created, err := b.MutateTask(TaskPostRequest{
+		Action:    "create",
+		Channel:   "team",
+		Title:     "Build Pomodoro timer app",
+		Owner:     "designer",
+		CreatedBy: "designer",
+	})
+	if err != nil {
+		t.Fatalf("MutateTask create: %v", err)
+	}
+	if strings.Contains(created.Task.Details, appWorkspaceBriefMarker) {
+		t.Fatalf("app-building is disabled for designer, yet a workspace was scaffolded: %q", created.Task.Details)
+	}
 }

@@ -27,6 +27,7 @@ import {
 import { useDefaultHarness } from "../../hooks/useConfig";
 import type { HarnessKind } from "../../lib/harness";
 import { resolveHarness } from "../../lib/harness";
+import { humanizeActivity } from "../../lib/humanizeActivity";
 import {
   CUSTOM_MODEL_VALUE,
   INHERIT_MODEL_VALUE,
@@ -970,7 +971,9 @@ export function BotProfilePanel({
         {agent.task && agent.status === "active" ? (
           <div className="bot-profile-section">
             <SectionTitle>current task</SectionTitle>
-            <p className="bot-profile-current-task">{agent.task}</p>
+            <p className="bot-profile-current-task">
+              {humanizeActivity(agent.task)}
+            </p>
           </div>
         ) : null}
 
